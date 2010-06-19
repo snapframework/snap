@@ -1,0 +1,51 @@
+name:           snap
+version:        0.3
+synopsis:       Snap: A Haskell Web Framework (Core)
+
+description:
+  This is the first developer prerelease of the Snap framework.  Snap is a
+  simple and fast web development framework and server written in Haskell. For
+  more information or to download the latest version, you can visit the Snap
+  project website at <http://snapframework.com/>.
+  .
+
+license:        BSD3
+license-file:   LICENSE
+author:         James Sanders, Shu-yu Guo, Gregory Collins, Doug Beardsley
+maintainer:     snap@snapframework.com
+build-type:     Simple
+cabal-version:  >= 1.6
+homepage:       http://snapframework.com/
+category:       Web
+
+extra-source-files:
+  CONTRIBUTORS,
+  LICENSE,
+  README.md,
+  README.SNAP.md
+
+Library
+  hs-source-dirs: src
+
+  exposed-modules:
+    Snap.Loader.Static,
+    Snap.Loader.Hint
+
+  build-depends:
+    base >= 4 && < 5,
+    bytestring >= 0.9.1 && < 0.10,
+    directory >= 1.0.0.0 && < 1.1,
+    filepath >= 1.0 && < 1.2,
+    monads-fd >= 0.1 && < 0.2,
+    snap-core >= 0.2.7 && < 0.3,
+    heist >= 0.2.1 && < 0.3,
+    hint >= 0.3.2 && < 0.4,
+    template-haskell >= 2.3 && < 2.5,
+    time >= 1.0 && < 1.3
+
+  if impl(ghc >= 6.12.0)
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-unused-do-bind
+  else
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+
