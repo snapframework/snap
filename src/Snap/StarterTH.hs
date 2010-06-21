@@ -28,18 +28,19 @@ getDirs _ (Failed _ _) = []
 -- encountered and a list of filenames and content strings.
 readTree :: FilePath -> IO ([DirData], [FileData])
 readTree dir = do
-    d <- readDirectory $ dir++"/."
+    d <- readDirectory $ dir ++ "/."
     let ps = zipPaths $ "" :/ (free d)
         fd = F.foldr (:) [] ps
-        dirs = tail $ getDirs [] $ free d
-    return $ (dirs, fd)
+        dirs = tail . getDirs [] $ free d
+
+    return (dirs, fd)
 
 
 ------------------------------------------------------------------------------
 -- Calls readTree and returns it's value in a quasiquote.
 dirQ :: FilePath -> Q Exp
 dirQ tplDir = do
-    d <- runIO $ readTree $ "project_template/"++tplDir
+    d <- runIO . readTree $ "project_template/"++tplDir
     runQ [| d |]
 
 
@@ -52,4 +53,3 @@ buildData dirName tplDir = do
                     (normalB $ dirQ tplDir)
                     []
     return [v]
-

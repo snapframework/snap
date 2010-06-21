@@ -1,0 +1,37 @@
+Name:                projname
+Version:             0.1
+Synopsis:            Project Synopsis Here
+Description:         Project Description Here
+License:             AllRightsReserved
+Author:              Author
+Maintainer:          maintainer@example.com
+Stability:           Experimental
+Category:            Web
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+Flag production
+  Description: Whether to build the server in production (static loading) mode
+  Default: False
+
+Executable projname
+  hs-source-dirs: src
+  main-is: Main.hs
+
+  if flag(production)
+    cpp-options:             -DPRODUCTION
+
+  Build-depends:
+    base >= 4 && < 5,
+    bytestring >= 0.9.1 && < 0.10,
+    directory >= 1.0.0.0 && < 1.1,
+    filepath >= 1.0 && < 1.2,
+    monads-fd >= 0.1 && < 0.2,
+    snap >= 0.3 && < 0.4,
+    snap-core >= 0.3 && < 0.4,
+    snap-server >= 0.3 && < 0.4,
+    heist >= 0.2.1 && < 0.3,
+    hint >= 0.3.2 && < 0.4,
+    template-haskell >= 2.3 && < 2.5
+
+  ghc-options: -O2 -Wall -fwarn-tabs -threaded

@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Snap.Starter where
+module Main where
 
 ------------------------------------------------------------------------------
 import           Data.List
@@ -14,7 +14,7 @@ import Snap.StarterTH
 
 
 ------------------------------------------------------------------------------
--- Creates a value tDir :: ([String], [(String, String)])
+-- Creates a value tDir :: ([String], [(String, ByteString)])
 $(buildData "tDirDefault"   "default")
 $(buildData "tDirBareBones" "barebones")
 $(buildData "tDirHint"      "hint")
@@ -34,6 +34,7 @@ usage = unlines
 ------------------------------------------------------------------------------
 data InitFlag = InitBareBones
               | InitHelp
+              | InitHint
   deriving (Show, Eq)
 
 
@@ -44,7 +45,7 @@ setup projName tDir = do
   where
     write (f,c) =
         if isSuffixOf "foo.cabal" f
-          then writeFile (projName++".cabal") (insertProjName $ T.pack c)
+          then writeFile (projName ++ ".cabal") (insertProjName $ T.pack c)
           else writeFile f c
     insertProjName c = T.unpack $ T.replace
                            (T.pack "projname")
@@ -57,7 +58,7 @@ initProject args = do
       (flags, _, [])
         | InitHelp `elem` flags -> do putStrLn initUsage
                                       exitFailure
-        | otherwise             -> init' (InitBareBones `elem` flags)
+        | otherwise             -> init' flags
 
       (_, _, errs) -> do putStrLn $ concat errs
                          putStrLn initUsage
@@ -77,13 +78,19 @@ initProject args = do
                  "Depend only on -core and -server"
         , Option ['h'] ["help"]      (NoArg InitHelp)
                  "Print this message"
+        , Option ['i'] ["hint"]      (NoArg InitHint)
+                 "Depend on hint"
         ]
 
-    init' isBareBones = do
+    init' flags = do
         cur <- getCurrentDirectory
         let dirs = splitDirectories cur
             projName = last dirs
-        setup projName (if isBareBones then tDirBareBones else tDirDefault)
+            setup' = setup projName
+        case flags of
+          (_:_) | InitHint      `elem` flags -> setup' tDirHint
+                | InitBareBones `elem` flags -> setup' tDirBareBones
+          _                                  -> setup' tDirDefault
 
 
 ------------------------------------------------------------------------------
@@ -94,4 +101,3 @@ main = do
         ("init":args') -> initProject args'
         _              -> do putStrLn usage
                              exitFailure
-
