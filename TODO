@@ -14,3 +14,4 @@ document EVERYTHING.
   -- mid-level per-module documentation
   -- high-level design documentation
 
+Fix whatever is blocking ctrl-C in the hint server.
