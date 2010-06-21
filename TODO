@@ -17,5 +17,3 @@ document EVERYTHING.
 Fix whatever is blocking ctrl-C in the hint server.
 
 Figure out why building the TH splices in StarterTH is SO slow.
-
-Figure out why Static.hs is generating code that reloads the config.
