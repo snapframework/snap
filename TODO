@@ -1,0 +1,16 @@
+TODO
+----
+
+Look at existing default project, and determine how much of that I
+want to keep/integrate.
+
+Integrate extracting ghc options from cabal.
+
+Change back to relying on relative paths for everything.  It's
+acceptable to rely on the current working directory.
+
+document EVERYTHING.
+  -- low-level per-function documentation
+  -- mid-level per-module documentation
+  -- high-level design documentation
+
