@@ -5,10 +5,17 @@
     <link rel="stylesheet" type="text/css" href="screen.css"/>
   </head>
   <body>
-    <h1>It works!</h1>
-    <p>
-      This is a simple demo page served using Heist and the Snap
-      framework.
-    </p>
+    <div style="padding-left: 1em;">
+      <h1>It works!</h1>
+      <p>
+        This is a simple demo page served using
+        <a href="http://snapframework.com/docs/tutorials/heist">Heist</a>
+        and the <a href="http://snapframework.com/">Snap</a> web framework.
+      </p>
+      <p>
+        This site's config was loaded at <loadTime/>, and this page
+        was generated at <renderTime/>.
+      </p>
+    </div>
   </body>
 </html>
