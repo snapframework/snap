@@ -22,7 +22,6 @@ import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
 import           Language.Haskell.TH.Syntax
 
 import           System.Directory (getCurrentDirectory)
-import           System.FilePath ((</>))
 
 ------------------------------------------------------------------------------
 import           Snap.Types
@@ -47,10 +46,9 @@ loadSnapTH initialize action = do
 
         lf = length . loc_filename $ loc
         lm = length . loc_module $ loc
-        relSrc = if lf > lm + 4
-                 then take (lf - (lm + 4)) $ loc_filename loc
-                 else "."
-        src = cwd </> relSrc
+        src = if lf > lm + 4
+              then take (lf - (lm + 4)) $ loc_filename loc
+              else "."
         str = "liftIO " ++ initBase ++ " >>= " ++ actBase
         modules = catMaybes [initMod, actMod]
         opts = [ "-hide-package=mtl" ] :: [String]
