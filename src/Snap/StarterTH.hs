@@ -40,7 +40,7 @@ readTree dir = do
 -- Calls readTree and returns it's value in a quasiquote.
 dirQ :: FilePath -> Q Exp
 dirQ tplDir = do
-    d <- runIO . readTree $ "project_template/"++tplDir
+    d <- runIO . readTree $ "project_template/" ++ tplDir
     runQ [| d |]
 
 
@@ -51,10 +51,10 @@ buildData :: String -> FilePath -> Q [Dec]
 buildData dirName tplDir = do
     let dir = mkName dirName
         typeSig = SigD dir typ
-        t2t = TupleT 2
-        st = ConT ''String
-        lst = AppT ListT st
-        typ = foldl AppT t2t [lst, AppT ListT $ foldl AppT t2t [st, st]]
+        typ = tup2 (listOf str) (listOf $ tup2 str str)
+        tup2 x y = foldl AppT (TupleT 2) [x, y]
+        listOf = AppT ListT
+        str = ConT ''String
 
     v <- valD (varP dir) (normalB $ dirQ tplDir) []
     return [typeSig, v]
