@@ -21,11 +21,10 @@ import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
 
 import           Language.Haskell.TH.Syntax
 
-import           System.Directory (getCurrentDirectory)
-
 ------------------------------------------------------------------------------
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
+
 
 ------------------------------------------------------------------------------
 -- | XXX
@@ -36,7 +35,6 @@ import qualified Snap.Loader.Static as Static
 loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initialize action = do
     loc <- location
-    cwd <- runIO getCurrentDirectory
 
     let initMod = nameModule initialize
         initBase = nameBase initialize
@@ -98,7 +96,7 @@ hintSnap opts sPath mNames action = do
 
 
 ------------------------------------------------------------------------------
--- |
+-- | XXX
 format :: InterpreterError -> S.ByteString
 format (UnknownError e)   =
     S.append "Unknown interpreter error:\r\n\r\n" $ S.pack e
