@@ -49,7 +49,12 @@ dirQ tplDir = do
 -- dirQ.
 buildData :: String -> FilePath -> Q [Dec]
 buildData dirName tplDir = do
-    v <- valD (varP (mkName dirName))
-                    (normalB $ dirQ tplDir)
-                    []
-    return [v]
+    let dir = mkName dirName
+        typeSig = SigD dir typ
+        t2t = TupleT 2
+        st = ConT ''String
+        lst = AppT ListT st
+        typ = foldl AppT t2t [lst, AppT ListT $ foldl AppT t2t [st, st]]
+
+    v <- valD (varP dir) (normalB $ dirQ tplDir) []
+    return [typeSig, v]

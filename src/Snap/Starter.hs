@@ -14,7 +14,7 @@ import Snap.StarterTH
 
 
 ------------------------------------------------------------------------------
--- Creates a value tDir :: ([String], [(String, ByteString)])
+-- Creates a value tDir :: ([String], [(String, String)])
 $(buildData "tDirDefault"   "default")
 $(buildData "tDirBareBones" "barebones")
 $(buildData "tDirHint"      "hint")
