@@ -25,8 +25,7 @@ import           System.Directory (getCurrentDirectory)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-
-
+import qualified Snap.Loader.Static as Static
 
 ------------------------------------------------------------------------------
 -- | XXX
@@ -60,8 +59,15 @@ loadSnapTH initialize action = do
     modulesE <- lift modules
     strE <- lift str
 
-    return $ foldl AppE hintSnapE [optsE, srcE, modulesE, strE]
+    staticE <- Static.loadSnapTH initialize action
 
+    let hintApp = foldl AppE hintSnapE [optsE, srcE, modulesE, strE]
+        nameUnused = mkName "_"
+        body = NormalB staticE
+        clause = Clause [] body []
+        staticDec = FunD nameUnused [clause]
+
+    return $ LetE [staticDec] hintApp
 
 ------------------------------------------------------------------------------
 -- | XXX
