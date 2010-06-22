@@ -11,6 +11,9 @@ document EVERYTHING.
   -- mid-level per-module documentation
   -- high-level design documentation
 
-Fix whatever is blocking ctrl-C in the hint server.
+Fix broken SIGINT handler installed by the ghc api via hint.
+  -- There might be an updated release of hint to fix this
+  -- failing that, either rewrite signal handlers myself, in
+  -- two languages, or abuse the signal handler it does install
 
 Figure out why building the TH splices in StarterTH is SO slow.
