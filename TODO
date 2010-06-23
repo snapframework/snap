@@ -1,9 +1,6 @@
 TODO
 ----
 
-Look at existing default project, and determine how much of that I
-want to keep/integrate.
-
 Integrate extracting ghc options from cabal.
 
 document EVERYTHING.
@@ -17,3 +14,5 @@ Fix broken SIGINT handler installed by the ghc api via hint.
   -- two languages, or abuse the signal handler it does install
 
 Figure out why building the TH splices in StarterTH is SO slow.
+
+Make the initial web page a bit better.
