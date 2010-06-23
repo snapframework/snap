@@ -6,7 +6,7 @@ module Server
     , server
     , quickServer
     ) where
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Char8 as S
 import           Data.ByteString.Char8 (ByteString)
 import           Data.Char
 import           Control.Concurrent
@@ -70,7 +70,7 @@ commandLineConfig = do
 
 server :: ServerConfig -> Snap () -> IO ()
 server config handler = do
-    putStrLn $ "Listening on " ++ (B.unpack $ interface config)
+    putStrLn $ "Listening on " ++ (S.unpack $ interface config)
              ++ ":" ++ show (port config)
     setUTF8Locale (locale config)
     try $ httpServe
