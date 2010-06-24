@@ -6,11 +6,11 @@ module Snap.Loader.Hint where
 ------------------------------------------------------------------------------
 import qualified Data.ByteString.Char8 as S
 
-import           Data.List (nub)
+import           Data.List (nub, isPrefixOf)
 
 import           Control.Concurrent (forkIO)
 import           Control.Concurrent.MVar
-import           Control.Monad (when)
+import           Control.Monad (ap, when)
 import           Control.Monad.Trans (liftIO)
 
 import           Data.Maybe (catMaybes)
@@ -21,10 +21,11 @@ import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
 
 import           Language.Haskell.TH.Syntax
 
+import           System.Environment (getArgs)
+
 ------------------------------------------------------------------------------
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
-
 
 ------------------------------------------------------------------------------
 -- | XXX
@@ -34,6 +35,7 @@ import qualified Snap.Loader.Static as Static
 -- Control.Monad.Trans
 loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initialize action = do
+    args <- runIO getArgs
     loc <- location
 
     let initMod = nameModule initialize
@@ -48,7 +50,7 @@ loadSnapTH initialize action = do
               else "."
         str = "liftIO " ++ initBase ++ " >>= " ++ actBase
         modules = catMaybes [initMod, actMod]
-        opts = [ "-hide-package=mtl" ] :: [String]
+        opts = getHintOpts args
 
         hintSnapE = VarE 'hintSnap
 
@@ -66,6 +68,17 @@ loadSnapTH initialize action = do
         staticDec = FunD nameUnused [clause]
 
     return $ LetE [staticDec] hintApp
+
+
+------------------------------------------------------------------------------
+-- | XXX
+getHintOpts :: [String] -> [String]
+getHintOpts args = "-hide-all-packages" : "-hide-package=mtl"
+                   : (xArgs ++ packageArgs)
+  where
+    packages = map snd . filter ((== "-package") . fst) . ap zip tail $ args
+    packageArgs = map ("-package=" ++) packages
+    xArgs = filter ("-X" `isPrefixOf`) args
 
 ------------------------------------------------------------------------------
 -- | XXX

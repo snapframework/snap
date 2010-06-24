@@ -1,7 +1,9 @@
 TODO
 ----
 
-Integrate extracting ghc options from cabal.
+Extract ghc options via TH to include in hint configuration.
+  -- nearly done.  Is waiting on a hint patch, or some other workaround.
+  -- needs a double-check that it's picking up all the options it should be.
 
 document EVERYTHING.
   -- low-level per-function documentation
