@@ -36,7 +36,6 @@ import qualified Snap.Loader.Static as Static
 loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initialize action = do
     args <- runIO getArgs
-    runIO $ print args
 
     let initMod = nameModule initialize
         initBase = nameBase initialize
@@ -85,7 +84,6 @@ getHintOpts args = "-hide-package=mtl" : filter (not . (`elem` bad)) opts
 -- | XXX
 hintSnap :: [String] -> [String] -> String -> IO (Snap ())
 hintSnap opts mNames action = do
-    print opts
     let interpreter = do
         mapM_ unsafeSetGhcOption opts
         loadModules . nub $ mNames
