@@ -6,11 +6,11 @@ module Snap.Loader.Hint where
 ------------------------------------------------------------------------------
 import qualified Data.ByteString.Char8 as S
 
-import           Data.List (nub, isPrefixOf)
+import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
 import           Control.Concurrent (forkIO)
 import           Control.Concurrent.MVar
-import           Control.Monad (ap, when)
+import           Control.Monad (when)
 import           Control.Monad.Trans (liftIO)
 
 import           Data.Maybe (catMaybes)
@@ -36,18 +36,13 @@ import qualified Snap.Loader.Static as Static
 loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initialize action = do
     args <- runIO getArgs
-    loc <- location
+    runIO $ print args
 
     let initMod = nameModule initialize
         initBase = nameBase initialize
         actMod = nameModule action
         actBase = nameBase action
 
-        lf = length . loc_filename $ loc
-        lm = length . loc_module $ loc
-        src = if lf > lm + 4
-              then take (lf - (lm + 4)) $ loc_filename loc
-              else "."
         str = "liftIO " ++ initBase ++ " >>= " ++ actBase
         modules = catMaybes [initMod, actMod]
         opts = getHintOpts args
@@ -55,13 +50,12 @@ loadSnapTH initialize action = do
         hintSnapE = VarE 'hintSnap
 
     optsE <- lift opts
-    srcE <- lift src
     modulesE <- lift modules
     strE <- lift str
 
     staticE <- Static.loadSnapTH initialize action
 
-    let hintApp = foldl AppE hintSnapE [optsE, srcE, modulesE, strE]
+    let hintApp = foldl AppE hintSnapE [optsE, modulesE, strE]
         nameUnused = mkName "_"
         body = NormalB staticE
         clause = Clause [] body []
@@ -73,20 +67,27 @@ loadSnapTH initialize action = do
 ------------------------------------------------------------------------------
 -- | XXX
 getHintOpts :: [String] -> [String]
-getHintOpts args = "-hide-all-packages" : "-hide-package=mtl"
-                   : (xArgs ++ packageArgs)
+getHintOpts args = "-hide-package=mtl" : filter (not . (`elem` bad)) opts
   where
-    packages = map snd . filter ((== "-package") . fst) . ap zip tail $ args
-    packageArgs = map ("-package=" ++) packages
-    xArgs = filter ("-X" `isPrefixOf`) args
+    bad = ["-threaded"]
+    hideAll = filter (== "-hide-all-packages") args
+
+    srcOpts = filter (\x -> "-i" `isPrefixOf` x
+                            && not ("-idist" `isPrefixOf` x)) args
+
+    toCopy = init $ dropWhile (/= "-package") args
+    copy = map (intercalate " ") . groupBy (\_ s -> not $ "-" `isPrefixOf` s)
+
+    opts = hideAll ++ srcOpts ++ copy toCopy
+
 
 ------------------------------------------------------------------------------
 -- | XXX
-hintSnap :: [String] -> String -> [String] -> String -> IO (Snap ())
-hintSnap opts sPath mNames action = do
+hintSnap :: [String] -> [String] -> String -> IO (Snap ())
+hintSnap opts mNames action = do
+    print opts
     let interpreter = do
         mapM_ unsafeSetGhcOption opts
-        set [ searchPath := [sPath] ]
         loadModules . nub $ mNames
         let allMods = "Prelude":"Snap.Types":"Control.Monad.Trans":mNames
         setImports . nub $ allMods
