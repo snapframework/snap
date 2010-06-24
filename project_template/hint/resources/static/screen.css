@@ -18,3 +18,9 @@ a :hover {
 img {
    border: none;
 }
+#content {
+   padding-left: 1em;
+}
+#info {
+   font-size: 60%;
+}
