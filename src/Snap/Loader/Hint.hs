@@ -19,7 +19,7 @@ import           Data.Maybe (catMaybes)
 import           Data.Time.Clock
 
 import           Language.Haskell.Interpreter hiding (lift, liftIO)
-import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
+import           Language.Haskell.Interpreter.Unsafe
 
 import           Language.Haskell.TH
 
@@ -79,10 +79,7 @@ loadSnapTH initialize cleanup action = do
 -- experimental datapoints regarding the structure of the command-line
 -- arguments cabal produces.
 getHintOpts :: [String] -> [String]
-getHintOpts args = -- These hide-packages will go away with a new
-                   -- version of hint
-                   "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
-                   removeBad opts
+getHintOpts args = removeBad opts
   where
     bad = ["-threaded", "-O"]
     removeBad = filter (\x -> not $ any (`isPrefixOf` x) bad)
@@ -133,19 +130,16 @@ hintSnap opts modules initialization cleanup handler = do
                                  , handler
                                  ]
         interpreter = do
-            mapM_ unsafeSetGhcOption opts
             loadModules . nub $ modules
-
-            -- Add Prelude and Snap.Types to the imports, for the
-            -- "Snap ()" signature.
             let imports = "Prelude" : "Snap.Types" : modules
             setImports . nub $ imports
 
             interpret action (as :: Snap ())
 
-    -- Protect the interpreter from concurrent and high-speed serial
-    -- access.
-    loadAction <- protectedActionEvaluator 3 $ runInterpreter interpreter
+        loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
+
+    loadAction <- protectedActionEvaluator 3 loadInterpreter
+
     return $ do
         interpreterResult <- liftIO loadAction
         case interpreterResult of
