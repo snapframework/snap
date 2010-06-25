@@ -1,19 +1,21 @@
 TODO
 ----
 
-Extract ghc options via TH to include in hint configuration.
-  -- nearly done.  Is waiting on a hint patch, or some other workaround.
+Handle local persistent state.
+  -- Or not?  Rails gets by just fine without local persistent state.
+  -- Would need a state destructor, though.
 
 document EVERYTHING.
   -- low-level per-function documentation
   -- mid-level per-module documentation
   -- high-level design documentation
 
+Extract ghc options via TH to include in hint configuration.
+  -- patch submitted for hint
+
 Fix broken SIGINT handler installed by the ghc api via hint.
-  -- There might be an updated release of hint to fix this
-  -- failing that, either rewrite signal handlers myself, in
-  -- two languages, or abuse the signal handler it does install
+  -- patch submitted for hint
 
 Figure out why building the TH splices in StarterTH is SO slow.
+  -- low priority
 
-Make the initial web page a bit better.
