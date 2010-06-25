@@ -1,10 +1,14 @@
 TODO
 ----
 
+Move Server and Glue out of the template projects, and into libs.
+  -- Server into snap-server
+  -- Glue into snap's lib
+
 Handle local persistent state.
   -- Or not?  Rails gets by just fine without local persistent state.
   -- I'm leaning towards "not", until someone can explain why it's a real
-      problem
+     problem
 
 document EVERYTHING.
   -- low-level per-function documentation
