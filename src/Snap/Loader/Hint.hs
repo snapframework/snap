@@ -33,26 +33,36 @@ import qualified Snap.Loader.Static as Static
 -- dynamically load is located in
 -- Assumes mtl is the only package installed with a conflicting
 -- Control.Monad.Trans
-loadSnapTH :: Name -> Name -> Q Exp
-loadSnapTH initialize action = do
+loadSnapTH :: Name -> Name -> Name -> Q Exp
+loadSnapTH initialize cleanup action = do
     args <- runIO getArgs
 
     let initMod = nameModule initialize
         initBase = nameBase initialize
+        cleanMod = nameModule cleanup
+        cleanBase = nameBase cleanup
         actMod = nameModule action
         actBase = nameBase action
 
-        str = "liftIO " ++ initBase ++ " >>= " ++ actBase
-        modules = catMaybes [initMod, actMod]
+        str = concat [ "do { x <- liftIO "
+                     , initBase
+                     , "; "
+                     , actBase
+                     , " x; liftIO $ "
+                     , cleanBase
+                     , " x; }"
+                     ]
+
+        modules = catMaybes [initMod, cleanMod, actMod]
         opts = getHintOpts args
 
-        hintSnapE = VarE 'hintSnap
+    hintSnapE <- [| \o m s -> fmap ((,) $ return ()) $ hintSnap o m s |]
 
     optsE <- lift opts
     modulesE <- lift modules
     strE <- lift str
 
-    staticE <- Static.loadSnapTH initialize action
+    staticE <- Static.loadSnapTH initialize cleanup action
 
     let hintApp = foldl AppE hintSnapE [optsE, modulesE, strE]
         nameUnused = mkName "_"

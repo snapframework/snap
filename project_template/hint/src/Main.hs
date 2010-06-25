@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP, TemplateHaskell #-}
 module Main where
 
-import Config (getConfig)
+import Config (getConfig, cleanupConfig)
 import Site (site)
 import Server (quickServer)
 
@@ -13,5 +13,6 @@ import Snap.Loader.Hint (loadSnapTH)
 
 main :: IO ()
 main = do
-  snap <- $(loadSnapTH 'getConfig 'site)
-  quickServer snap
+    (cleanup, snap) <- $(loadSnapTH 'getConfig 'cleanupConfig 'site)
+    quickServer snap
+    cleanup

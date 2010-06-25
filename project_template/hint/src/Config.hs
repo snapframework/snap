@@ -15,3 +15,7 @@ getConfig = do
     time <- getCurrentTime
     let ets = loadTemplates "resources/templates" emptyTemplateState
     either error (Config time) <$> ets
+
+
+cleanupConfig :: Config -> IO ()
+cleanupConfig _ = return ()
