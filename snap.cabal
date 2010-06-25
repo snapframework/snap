@@ -36,7 +36,6 @@ extra-source-files:
   project_template/hint/resources/static/screen.css,
   project_template/hint/resources/templates/index.tpl,
   project_template/hint/src/Config.hs,
-  project_template/hint/src/Glue.hs,
   project_template/hint/src/Main.hs,
   project_template/hint/src/Server.hs,
   project_template/hint/src/Site.hs
@@ -45,6 +44,7 @@ Library
   hs-source-dirs: src
 
   exposed-modules:
+    Snap.Heist,
     Snap.Loader.Static,
     Snap.Loader.Hint
 

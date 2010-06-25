@@ -9,7 +9,7 @@ import           Control.Monad.Trans (liftIO)
 import qualified Data.ByteString.Char8 as S
 import           Data.Time.Clock
 
-import           Glue
+import           Snap.Heist
 
 import           Snap.Util.FileServe (fileServe)
 import           Snap.Types
