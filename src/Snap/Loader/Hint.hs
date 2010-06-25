@@ -31,8 +31,6 @@ import qualified Snap.Loader.Static as Static
 -- | XXX
 -- Assumes being spliced into the same source tree as the action to
 -- dynamically load is located in
--- Assumes mtl is the only package installed with a conflicting
--- Control.Monad.Trans
 loadSnapTH :: Name -> Name -> Name -> Q Exp
 loadSnapTH initialize cleanup action = do
     args <- runIO getArgs
@@ -64,6 +62,12 @@ loadSnapTH initialize cleanup action = do
 
     staticE <- Static.loadSnapTH initialize cleanup action
 
+    -- Wrap the hintSnap call in a let block.  This let block
+    -- vacuously pattern-matches the static expression, providing an
+    -- extra check that the types were correct at compile-time, at
+    -- least.  This check isn't infallible, because the type isn't
+    -- fully specified, but it's an extra level of help with
+    -- negligible compile-time cost.
     let hintApp = foldl AppE hintSnapE [optsE, modulesE, strE]
         nameUnused = mkName "_"
         body = NormalB staticE
