@@ -42,13 +42,14 @@ loadSnapTH initialize cleanup action = do
         actMod = nameModule action
         actBase = nameBase action
 
-        str = concat [ "do { x <- liftIO "
-                     , initBase
-                     , "; "
-                     , actBase
-                     , " x; liftIO $ "
-                     , cleanBase
-                     , " x; }"
+        -- this is safe because 3 unknowns can't match 4 options
+        varName = head . dropWhile (`elem` [initBase, cleanBase, actBase])
+                  $ [ "a", "b", "c", "d" ]
+
+        -- run init.  run the handler.  clean up.
+        str = concat [ "do { " , varName , " <- liftIO " , initBase , "; "
+                     , actBase , " " , varName ,"; "
+                     , "liftIO $ " , cleanBase , " " , varName , "; }"
                      ]
 
         modules = catMaybes [initMod, cleanMod, actMod]
