@@ -3,7 +3,8 @@ TODO
 
 Handle local persistent state.
   -- Or not?  Rails gets by just fine without local persistent state.
-  -- Would need a state destructor, though.
+  -- I'm leaning towards "not", until someone can explain why it's a real
+      problem
 
 document EVERYTHING.
   -- low-level per-function documentation
@@ -12,10 +13,8 @@ document EVERYTHING.
 
 Extract ghc options via TH to include in hint configuration.
   -- patch submitted for hint
+  -- seems impossible to work around outside of hint
 
 Fix broken SIGINT handler installed by the ghc api via hint.
   -- patch submitted for hint
-
-Figure out why building the TH splices in StarterTH is SO slow.
-  -- low priority
-
+  -- I can work around this in my code if needed
