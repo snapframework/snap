@@ -42,24 +42,14 @@ loadSnapTH initialize cleanup action = do
         actMod = nameModule action
         actBase = nameBase action
 
-        -- this is safe because 3 unknowns can't match 4 options
-        varName = head . dropWhile (`elem` [initBase, cleanBase, actBase])
-                  $ [ "a", "b", "c", "d" ]
-
-        -- run init.  run the handler.  clean up.
-        str = concat [ "do { " , varName , " <- liftIO " , initBase , "; "
-                     , actBase , " " , varName ,"; "
-                     , "liftIO $ " , cleanBase , " " , varName , "; }"
-                     ]
-
         modules = catMaybes [initMod, cleanMod, actMod]
         opts = getHintOpts args
 
-    hintSnapE <- [| \o m s -> fmap ((,) $ return ()) $ hintSnap o m s |]
+    hintSnapE <- [| \o m i c a ->
+                      fmap ((,) $ return ()) $ hintSnap o m i c a |]
 
-    optsE <- lift opts
-    modulesE <- lift modules
-    strE <- lift str
+    [ optsE, modulesE ]     <- mapM lift [ opts, modules ]
+    [ initE, cleanE, actE ] <- mapM lift [ initBase, cleanBase, actBase ]
 
     staticE <- Static.loadSnapTH initialize cleanup action
 
@@ -69,7 +59,7 @@ loadSnapTH initialize cleanup action = do
     -- least.  This check isn't infallible, because the type isn't
     -- fully specified, but it's an extra level of help with
     -- negligible compile-time cost.
-    let hintApp = foldl AppE hintSnapE [optsE, modulesE, strE]
+    let hintApp = foldl AppE hintSnapE [optsE, modulesE, initE, cleanE, actE]
         nameUnused = mkName "_"
         body = NormalB staticE
         clause = Clause [] body []
@@ -97,14 +87,15 @@ getHintOpts args = "-hide-package=mtl" : filter (not . (`elem` bad)) opts
 
 ------------------------------------------------------------------------------
 -- | XXX
-hintSnap :: [String] -> [String] -> String -> IO (Snap ())
-hintSnap opts mNames action = do
-    let interpreter = do
-        mapM_ unsafeSetGhcOption opts
-        loadModules . nub $ mNames
-        let allMods = "Prelude":"Snap.Types":"Control.Monad.Trans":mNames
-        setImports . nub $ allMods
-        interpret action (as :: Snap ())
+hintSnap :: [String] -> [String] -> String -> String -> String -> IO (Snap ())
+hintSnap opts mNames initBase cleanBase actBase = do
+    let action = intercalate " " ["bracketSnap", initBase, cleanBase, actBase]
+        interpreter = do
+            mapM_ unsafeSetGhcOption opts
+            loadModules . nub $ mNames
+            let allMods = "Prelude" : "Snap.Types" : mNames
+            setImports . nub $ allMods
+            interpret action (as :: Snap ())
 
     loadAction <- protectedActionEvaluator 3 $ runInterpreter interpreter
 
