@@ -26,7 +26,7 @@ frontPage config = ifTop $ do
         ts' = bindStrings [ ("loadTime", loadS)
                           , ("renderTime", renderS)
                           ] ts
-    render ts' "index"
+    renderHtml ts' "index"
 
 
 staticResources :: Snap ()
