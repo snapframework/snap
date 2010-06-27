@@ -1,7 +1,8 @@
 TODO
 ----
 
-Change Snap.Heist to create a fresh response and use finishWith.
+Change Snap.Heist to create a fresh response and use finishWith, in
+the error case.  Not sure about the success case.
 
 Move Server out of the template projects into snap-server
 
