@@ -81,8 +81,8 @@ server config handler = do
              (errorLog  config)
              (catch500 $ compress $ handler)
              :: IO (Either SomeException ())
+    putStrLn " Shutting down..."
     threadDelay 1000000
-    putStrLn "Shutting down"
   where
     catch500 = (`catch` (error500Handler config))
     compress = if compression config then withCompression else id
