@@ -1,7 +1,7 @@
 TODO
 ----
 
-Move Server out of the template projects into snap-server
+Handle runtime exceptions better in Hint server.
 
 Handle local persistent state.
   -- Or not?  Rails gets by just fine without local persistent state.
