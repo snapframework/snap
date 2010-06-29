@@ -3,19 +3,13 @@ TODO
 
 Handle runtime exceptions better in Hint server.
 
-Handle local persistent state.
-  -- Or not?  Rails gets by just fine without local persistent state.
-  -- I'm leaning towards "not", until someone can explain why it's a real
-     problem
-
 document EVERYTHING.
   -- low-level per-function documentation
   -- mid-level per-module documentation
   -- high-level design documentation
 
 Extract ghc options via TH to include in hint configuration.
-  -- patch submitted for hint
-  -- seems impossible to work around outside of hint
+  -- wait for new release of hint
 
 Fix broken SIGINT handler installed by the ghc api via hint.
   -- patch submitted for hint
