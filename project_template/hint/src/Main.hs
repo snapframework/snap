@@ -1,9 +1,13 @@
 {-# LANGUAGE CPP, TemplateHaskell #-}
 module Main where
 
+import Data.Monoid (mappend, mconcat)
+
 import Config (getConfig, cleanupConfig)
 import Site (site)
-import Server (quickServer)
+
+import Snap.Http.Server
+import Snap.Http.Server.Config
 
 #ifdef PRODUCTION
 import Snap.Loader.Static (loadSnapTH)
@@ -14,5 +18,14 @@ import Snap.Loader.Hint (loadSnapTH)
 main :: IO ()
 main = do
     (cleanup, snap) <- $(loadSnapTH 'getConfig 'cleanupConfig 'site)
-    quickServer snap
+
+    let defaultFlags = mconcat [ flagV -- verbose
+                               , flagAL "log/access.log"
+                               , flagEL "log/error.log"
+                               ]
+
+    cmdLineFlags <- readFlagsFromCmdLineArgs
+    let conf = flagsToConfig $ defaultFlags `mappend` cmdLineFlags
+
+    httpServeConfig conf snap
     cleanup
