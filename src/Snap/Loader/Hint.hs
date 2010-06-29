@@ -80,7 +80,7 @@ getHintOpts args = "-hide-package=mtl" : filter (not . (`elem` bad)) opts
     srcOpts = filter (\x -> "-i" `isPrefixOf` x
                             && not ("-idist" `isPrefixOf` x)) args
 
-    toCopy = init $ dropWhile (/= "-package") args
+    toCopy = init $ dropWhile (not . ("-package" `isPrefixOf`)) args
     copy = map (intercalate " ") . groupBy (\_ s -> not $ "-" `isPrefixOf` s)
 
     opts = hideAll ++ srcOpts ++ copy toCopy
