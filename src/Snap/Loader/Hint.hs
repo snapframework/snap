@@ -24,6 +24,7 @@ import           Language.Haskell.TH.Syntax
 import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
+import           Snap.Error
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
 
@@ -102,15 +103,8 @@ hintSnap opts mNames initBase cleanBase actBase = do
     return $ do
         eSnap <- liftIO loadAction
         case eSnap of
-            Left err -> do
-                let msg = format err
-                    len = fromIntegral $ S.length msg
-                modifyResponse $ setContentType "text/plain; charset=utf-8"
-                               . setResponseStatus 500 "Internal Server Error"
-                               . setContentLength len
-                writeBS msg
-
-            Right handler -> handler
+            Left err -> internalError $ format err
+            Right handler -> catch500 handler
 
 
 ------------------------------------------------------------------------------

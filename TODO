@@ -1,8 +1,6 @@
 TODO
 ----
 
-Handle runtime exceptions better in Hint server.
-
 document EVERYTHING.
   -- low-level per-function documentation
   -- mid-level per-module documentation

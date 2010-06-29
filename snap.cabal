@@ -43,6 +43,7 @@ Library
   hs-source-dirs: src
 
   exposed-modules:
+    Snap.Error,
     Snap.Heist,
     Snap.Loader.Static,
     Snap.Loader.Hint
@@ -52,6 +53,7 @@ Library
     bytestring >= 0.9.1 && < 0.10,
     directory >= 1.0.0.0 && < 1.1,
     filepath >= 1.0 && < 1.2,
+    MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     monads-fd >= 0.1 && < 0.2,
     snap-core == 0.3,
     heist >= 0.2.1 && < 0.3,

@@ -3,7 +3,7 @@ module Snap.Heist where
 
 import qualified Data.ByteString.Char8 as S
 
-import           Snap.Iteratee
+import           Snap.Error
 import           Snap.Types
 
 import           Text.Templating.Heist
@@ -21,12 +21,5 @@ render contentType ts template = do
                        . setContentLength (fromIntegral $ S.length x)
         writeBS x
   where
-    missingTemplate = do
-        let msg = S.append "Unable to load template: " template
-            rsp = setContentType "text/plain; charset=utf-8"
-                . setContentLength (fromIntegral $ S.length msg)
-                . setResponseStatus 500 "Internal Server Error"
-                . modifyResponseBody (>. enumBS msg)
-                $ emptyResponse
-
-        finishWith rsp
+    msg = S.append "Unable to load template: " template
+    missingTemplate = internalError msg
