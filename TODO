@@ -1,6 +1,10 @@
 TODO
 ----
 
+Make the protectedActionEvaluator exception-safe.
+  -- The best approach is to just throw whatever exception
+     it catches to all the waiting threads.
+
 document EVERYTHING.
   -- low-level per-function documentation
   -- mid-level per-module documentation

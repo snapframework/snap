@@ -125,7 +125,15 @@ format (WontCompile errs) =
 
 
 ------------------------------------------------------------------------------
--- | XXX
+-- | Create a wrapper for an action that protects the action from
+-- concurrent or rapid evaluation.
+--
+-- There will be at least the passed-in 'NominalDiffTime' delay
+-- between the finish of one execution of the action the start of the
+-- next.  Concurrent calls to the wrapper, and calls within the delay
+-- period, end up with the same calculated value for a.
+--
+-- TODO: make this exception-safe
 protectedActionEvaluator :: NominalDiffTime -> IO a -> IO (IO a)
 protectedActionEvaluator minReEval action = do
     readerContainer <- newMVar []
