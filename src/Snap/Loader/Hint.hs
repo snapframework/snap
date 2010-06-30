@@ -8,8 +8,9 @@ import qualified Data.ByteString.Char8 as S
 
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
-import           Control.Concurrent (forkIO)
+import           Control.Concurrent (forkIO, myThreadId)
 import           Control.Concurrent.MVar
+import           Control.Exception
 import           Control.Monad (when)
 import           Control.Monad.Trans (liftIO)
 
@@ -20,6 +21,8 @@ import           Language.Haskell.Interpreter hiding (lift, liftIO)
 import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
 
 import           Language.Haskell.TH.Syntax
+
+import           Prelude hiding (catch)
 
 import           System.Environment (getArgs)
 
@@ -133,7 +136,9 @@ format (WontCompile errs) =
 -- next.  Concurrent calls to the wrapper, and calls within the delay
 -- period, end up with the same calculated value for a.
 --
--- TODO: make this exception-safe
+-- If an exception is raised during the processing of the action, it
+-- will be thrown to all waiting threads, for all requests made before
+-- the delay time has expired after the exception was raised.
 protectedActionEvaluator :: NominalDiffTime -> IO a -> IO (IO a)
 protectedActionEvaluator minReEval action = do
     readerContainer <- newMVar []
@@ -143,20 +148,35 @@ protectedActionEvaluator minReEval action = do
         now <- getCurrentTime
 
         case existingResult of
-            Just (val, ts) | diffUTCTime now ts < minReEval -> return val
+            Just (res, ts) | diffUTCTime now ts < minReEval ->
+                case res of
+                    Right val -> return val
+                    Left  e   -> throwIO e
             _ -> do
                 reader <- newEmptyMVar
                 readers <- takeMVar readerContainer
 
                 when (null readers) $ do
-                    forkIO $ do
-                        result <- action
-                        allReaders <- takeMVar readerContainer
-                        finishTime <- getCurrentTime
-                        swapMVar resultContainer $ Just (result, finishTime)
-                        putMVar readerContainer []
-                        mapM_ (flip putMVar result) allReaders
+                    let runAndFill = block $ do
+                            a <- unblock action
+                            clearAndNotify (Right a) (flip putMVar a . snd)
+
+                        killWaiting :: SomeException -> IO ()
+                        killWaiting e = block $ do
+                            clearAndNotify (Left e) (flip throwTo e . fst)
+                            throwIO e
+
+                        clearAndNotify r f = do
+                            t <- getCurrentTime
+                            _ <- swapMVar resultContainer $ Just (r, t)
+                            allReaders <- swapMVar readerContainer []
+                            mapM_ f allReaders
+
+                    forkIO $ runAndFill `catch` killWaiting
                     return ()
 
-                putMVar readerContainer $ reader : readers
+                tid <- myThreadId
+                let pair = (tid, reader)
+                    newReaders = pair `seq` (pair : readers)
+                putMVar readerContainer $! newReaders
                 takeMVar reader
