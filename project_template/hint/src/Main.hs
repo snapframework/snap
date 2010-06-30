@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP, TemplateHaskell #-}
 module Main where
 
-import Data.Monoid (mappend, mconcat)
+import Data.Monoid (mappend, mempty)
 
 import Config (getConfig, cleanupConfig)
 import Site (site)
@@ -19,10 +19,10 @@ main :: IO ()
 main = do
     (cleanup, snap) <- $(loadSnapTH 'getConfig 'cleanupConfig 'site)
 
-    let defaultFlags = mconcat [ flagV -- verbose
-                               , flagAL "log/access.log"
-                               , flagEL "log/error.log"
-                               ]
+    let defaultFlags = mempty { flagVerbose = True
+                              , flagAccessLog = Just "log/access.log"
+                              , flagErrorLog = Just "log/error.log"
+                              }
 
     cmdLineFlags <- readFlagsFromCmdLineArgs
     let conf = flagsToConfig $ defaultFlags `mappend` cmdLineFlags
