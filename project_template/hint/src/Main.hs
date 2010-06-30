@@ -18,6 +18,11 @@ import Snap.Loader.Hint   (loadSnapTH)
 -- This is the entry point for this web server application.  It
 -- supports easily switching between interpreting source and running
 -- statically compiled code.
+--
+-- In either mode, the generated program should be run from the root
+-- of the project tree.  It locates its templates, static content, and
+-- source files in development mode, relative to the current working
+-- directory when it is run.
 main :: IO ()
 main = do
     -- override the some of the defaults from Snap.Http.Server.Config
@@ -46,9 +51,9 @@ main = do
     -- loaders are how the action is determined, and when the
     -- getConfig and cleanupConfig functions are killed.
     --
-    --  The Hint loader uses the ghc api to interpret the sources when
-    --  pages are loaded.  It also runs getConfig and cleanupConfig
-    --  for each request it handles.
+    -- The Hint loader uses the ghc api to interpret the sources when
+    -- pages are loaded.  It also runs getConfig and cleanupConfig for
+    -- each request it handles.
     --
     -- The Static loader compiles all the actions when the app is
     -- compiled.  It runs getConfig once, at the start of the program,
