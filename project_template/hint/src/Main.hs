@@ -41,6 +41,18 @@ main = do
     -- and a Snap handler.  The specific behavior of each depends on
     -- whether the Hint loader or the Static loader is imported.  This
     -- interface abstracts across the differences between them.
+    --
+    -- The most significant behavioral differences between the two
+    -- loaders are how the action is determined, and when the
+    -- getConfig and cleanupConfig functions are killed.
+    --
+    --  The Hint loader uses the ghc api to interpret the sources when
+    --  pages are loaded.  It also runs getConfig and cleanupConfig
+    --  for each request it handles.
+    --
+    -- The Static loader compiles all the actions when the app is
+    -- compiled.  It runs getConfig once, at the start of the program,
+    -- and cleanupConfig once, at the end of the program.
     (cleanup, snap) <- $(loadSnapTH 'getConfig 'cleanupConfig 'site)
 
     -- Run the server
