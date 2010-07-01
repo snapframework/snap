@@ -138,7 +138,7 @@ hintSnap opts modules initialization cleanup handler = do
         interpreterResult <- liftIO loadAction
         case interpreterResult of
             Left err -> internalError $ format err
-            Right action -> catch500 action
+            Right handlerAction -> catch500 handlerAction
 
 
 ------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ protectedActionEvaluator minReEval action = do
                 -- Some strictness is employed to ensure the MVar
                 -- isn't holding on to a chain of unevaluated thunks.
                 let pair = (tid, reader)
-                    newReaders = pair `seq` (pair : readers)
+                    newReaders = readers `seq` pair `seq` (pair : readers)
                 putMVar readerContainer $! newReaders
 
                 -- If this is the first reader, kick off evaluation of
