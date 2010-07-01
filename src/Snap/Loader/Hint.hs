@@ -32,7 +32,13 @@ import           Snap.Types
 import qualified Snap.Loader.Static as Static
 
 ------------------------------------------------------------------------------
--- | XXX
+-- | This function derives all the information necessary to use the
+-- interpreter from the compile-time environment, and compiles it in
+-- to the generated code.
+--
+-- This could be considered a TH wrapper around a function
+-- > loadSnap :: IO a -> (a -> IO ()) -> (a -> Snap ()) -> IO (IO (), Snap ())
+-- with a magical implementation.
 loadSnapTH :: Name -> Name -> Name -> Q Exp
 loadSnapTH initialize cleanup action = do
     args <- runIO getArgs
