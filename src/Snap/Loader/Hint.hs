@@ -142,20 +142,51 @@ format (WontCompile errs) =
 -- before the delay time has expired after the exception was raised.
 protectedActionEvaluator :: NominalDiffTime -> IO a -> IO (IO a)
 protectedActionEvaluator minReEval action = do
+    -- The list of requesters waiting for a result.  Contains the
+    -- ThreadId in case of exceptions, and an empty MVar awaiting a
+    -- successful result.
+    --
+    -- type: MVar [(ThreadId, MVar a)]
     readerContainer <- newMVar []
+
+    -- Contains the previous result, and the time it was stored, if a
+    -- previous result has been computed.  The result stored is either
+    -- the actual result, or the exception thrown by the calculation.
+    --
+    -- type: MVar (Maybe (Either SomeException a, UTCTime))
     resultContainer <- newMVar Nothing
+
+    -- The model used for the above MVars in the returned action is
+    -- "keep them full, unless updating them."  In every case, when
+    -- one of those MVars is emptied, the next action is to fill that
+    -- same MVar.  This makes deadlocking on MVar wait impossible.
     return $ do
         existingResult <- readMVar resultContainer
         now <- getCurrentTime
 
         case existingResult of
             Just (res, ts) | diffUTCTime now ts < minReEval ->
+                -- There's an existing result, and it's still valid
                 case res of
                     Right val -> return val
                     Left  e   -> throwIO e
             _ -> do
+                -- Need to calculate a new result
+                tid <- myThreadId
+                reader <- newEmptyMVar
+
                 readers <- takeMVar readerContainer
 
+                -- Some strictness is employed to ensure the MVar
+                -- isn't holding on to a chain of unevaluated thunks.
+                let pair = (tid, reader)
+                    newReaders = pair `seq` (pair : readers)
+                putMVar readerContainer $! newReaders
+
+                -- If this is the first reader, kick off evaluation of
+                -- the action in a new thread. This is slightly
+                -- careful to block asynchronous exceptions to that
+                -- thread except when actually running the action.
                 when (null readers) $ do
                     let runAndFill = block $ do
                             a <- unblock action
@@ -172,12 +203,9 @@ protectedActionEvaluator minReEval action = do
                             allReaders <- swapMVar readerContainer []
                             mapM_ f allReaders
 
-                    forkIO $ runAndFill `catch` killWaiting
+                    _ <- forkIO $ runAndFill `catch` killWaiting
                     return ()
 
-                tid <- myThreadId
-                reader <- newEmptyMVar
-                let pair = (tid, reader)
-                    newReaders = pair `seq` (pair : readers)
-                putMVar readerContainer $! newReaders
+                -- Wait for the evaluation of the action to complete,
+                -- and return its result.
                 takeMVar reader
