@@ -135,11 +135,11 @@ format (WontCompile errs) =
 -- There will be at least the passed-in 'NominalDiffTime' delay
 -- between the finish of one execution of the action the start of the
 -- next.  Concurrent calls to the wrapper, and calls within the delay
--- period, end up with the same calculated value for a.
+-- period, end up with the same calculated value returned.
 --
 -- If an exception is raised during the processing of the action, it
--- will be thrown to all waiting threads, for all requests made before
--- the delay time has expired after the exception was raised.
+-- will be thrown to all waiting threads, and for all requests made
+-- before the delay time has expired after the exception was raised.
 protectedActionEvaluator :: NominalDiffTime -> IO a -> IO (IO a)
 protectedActionEvaluator minReEval action = do
     readerContainer <- newMVar []
@@ -154,7 +154,6 @@ protectedActionEvaluator minReEval action = do
                     Right val -> return val
                     Left  e   -> throwIO e
             _ -> do
-                reader <- newEmptyMVar
                 readers <- takeMVar readerContainer
 
                 when (null readers) $ do
@@ -177,6 +176,7 @@ protectedActionEvaluator minReEval action = do
                     return ()
 
                 tid <- myThreadId
+                reader <- newEmptyMVar
                 let pair = (tid, reader)
                     newReaders = pair `seq` (pair : readers)
                 putMVar readerContainer $! newReaders
