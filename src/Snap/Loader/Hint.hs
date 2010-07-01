@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-
+-- | This module includes the machinery necessary to use hint to load
+-- action code dynamically.  It includes a Template Haskell function
+-- to gather the necessary compile-time information about code
+-- location, compiler arguments, etc, and bind that information into
+-- the calls to the dynamic loader.
 module Snap.Loader.Hint where
 
 ------------------------------------------------------------------------------
