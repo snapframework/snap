@@ -5,6 +5,7 @@ module Snap.StarterTH where
 import qualified Data.Foldable as F
 import           Data.List
 import           Language.Haskell.TH
+import           Language.Haskell.TH.Syntax
 import           System.Directory.Tree
 ------------------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ readTree dir = do
 dirQ :: FilePath -> Q Exp
 dirQ tplDir = do
     d <- runIO . readTree $ "project_template/" ++ tplDir
-    runQ [| d |]
+    lift d
 
 
 ------------------------------------------------------------------------------
@@ -50,11 +51,7 @@ dirQ tplDir = do
 buildData :: String -> FilePath -> Q [Dec]
 buildData dirName tplDir = do
     let dir = mkName dirName
-        typeSig = SigD dir typ
-        typ = tup2 (listOf str) (listOf $ tup2 str str)
-        tup2 x y = foldl AppT (TupleT 2) [x, y]
-        listOf = AppT ListT
-        str = ConT ''String
 
+    typeSig <- SigD dir `fmap` [t| ([String], [(String, String)]) |]
     v <- valD (varP dir) (normalB $ dirQ tplDir) []
     return [typeSig, v]
