@@ -1,6 +1,9 @@
 TODO
 ----
 
+Check for space issues in development vs production modes
+  -- last thing before release
+
 document EVERYTHING.
   -- low-level per-function documentation
   -- mid-level per-module documentation
