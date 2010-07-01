@@ -138,6 +138,8 @@ hintSnap opts modules initialization cleanup handler = do
 
         loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
 
+    -- Protect the interpreter from concurrent and high-speed serial
+    -- access.
     loadAction <- protectedActionEvaluator 3 loadInterpreter
 
     return $ do
