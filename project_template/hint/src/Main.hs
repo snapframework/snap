@@ -3,7 +3,7 @@ module Main where
 
 import Data.Monoid        (mappend, mempty)
 
-import Config             (getConfig, cleanupConfig)
+import AppState           (cleanupAppState, loadAppState)
 import Site               (site)
 
 import Snap.Http.Server
@@ -49,16 +49,16 @@ main = do
     --
     -- The most significant behavioral differences between the two
     -- loaders are how the action is determined, and when the
-    -- getConfig and cleanupConfig functions are killed.
+    -- loadAppState and cleanupAppState functions are executed.
     --
     -- The Hint loader uses the ghc api to interpret the sources when
-    -- pages are loaded.  It also runs getConfig and cleanupConfig for
-    -- each request it handles.
+    -- pages are loaded.  It also runs loadAppState and
+    -- cleanupAppState for each request it handles.
     --
     -- The Static loader compiles all the actions when the app is
-    -- compiled.  It runs getConfig once, at the start of the program,
-    -- and cleanupConfig once, at the end of the program.
-    (cleanup, snap) <- $(loadSnapTH 'getConfig 'cleanupConfig 'site)
+    -- compiled.  It runs loadAppState once, at the start of the
+    -- program, and cleanupAppState once, at the end of the program.
+    (cleanup, snap) <- $(loadSnapTH 'loadAppState 'cleanupAppState 'site)
 
     -- Run the server
     httpServeConfig conf snap

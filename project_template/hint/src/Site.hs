@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Site where
 
-import           Config
+import           AppState
 
+import           Control.Arrow ((&&&))
 import           Control.Monad (msum)
 import           Control.Monad.Trans (liftIO)
 
@@ -17,23 +18,24 @@ import           Snap.Types
 import           Text.Templating.Heist
 
 
-frontPage :: Config -> Snap ()
-frontPage config = ifTop $ do
+frontPage :: StateSnap ()
+frontPage = ifTop $ do
     time <- liftIO getCurrentTime
+    (ts, lt) <- asks (templateState &&& loadTime)
 
-    let [loadS, renderS] = map (S.pack . show) [loadTime config, time]
-        ts = templateState config
+    let [loadS, renderS] = map (S.pack . show) [lt, time]
         ts' = bindStrings [ ("loadTime", loadS)
                           , ("renderTime", renderS)
                           ] ts
     renderHtml ts' "index"
 
 
-staticResources :: Snap ()
+staticResources :: StateSnap ()
 staticResources = fileServe "resources/static"
 
 
-site :: Config -> Snap ()
-site config = msum [ frontPage config
-                   , staticResources
-                   ]
+site :: AppState -> Snap ()
+site = runStateSnap $ do
+    msum [ frontPage
+         , staticResources
+         ]

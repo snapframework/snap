@@ -35,7 +35,7 @@ extra-source-files:
   project_template/hint/log/error.log,
   project_template/hint/resources/static/screen.css,
   project_template/hint/resources/templates/index.tpl,
-  project_template/hint/src/Config.hs,
+  project_template/hint/src/AppState.hs,
   project_template/hint/src/Main.hs,
   project_template/hint/src/Site.hs
 

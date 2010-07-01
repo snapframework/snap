@@ -75,7 +75,8 @@ loadSnapTH initialize cleanup action = do
 ------------------------------------------------------------------------------
 -- | XXX
 getHintOpts :: [String] -> [String]
-getHintOpts args = "-hide-package=mtl" : filter (not . (`elem` bad)) opts
+getHintOpts args = "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
+                   filter (not . (`elem` bad)) opts
   where
     bad = ["-threaded"]
     hideAll = filter (== "-hide-all-packages") args

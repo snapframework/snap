@@ -9,11 +9,12 @@ import           Snap.Types
 import           Text.Templating.Heist
 
 
-renderHtml :: TemplateState Snap -> S.ByteString -> Snap ()
+renderHtml :: (MonadSnap m) => TemplateState m -> S.ByteString -> m ()
 renderHtml = render "text/html; charset=utf-8"
 
 
-render :: S.ByteString -> TemplateState Snap -> S.ByteString -> Snap ()
+render :: (MonadSnap m) =>
+          S.ByteString -> TemplateState m -> S.ByteString -> m ()
 render contentType ts template = do
     bytes <- renderTemplate ts template
     flip (maybe missingTemplate) bytes $ \x -> do
