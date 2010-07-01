@@ -33,8 +33,6 @@ import qualified Snap.Loader.Static as Static
 
 ------------------------------------------------------------------------------
 -- | XXX
--- Assumes being spliced into the same source tree as the action to
--- dynamically load is located in
 loadSnapTH :: Name -> Name -> Name -> Q Exp
 loadSnapTH initialize cleanup action = do
     args <- runIO getArgs
@@ -73,9 +71,14 @@ loadSnapTH initialize cleanup action = do
 
 
 ------------------------------------------------------------------------------
--- | XXX
+-- | Convert the command-line arguments passed in to options for the
+-- hint interpreter.  This is somewhat brittle code, based on a few
+-- experimental datapoints regarding the structure of the command-line
+-- arguments cabal produces.
 getHintOpts :: [String] -> [String]
-getHintOpts args = "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
+getHintOpts args = -- These hide-packages will go away with a new
+                   -- version of hint
+                   "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
                    filter (not . (`elem` bad)) opts
   where
     bad = ["-threaded"]
@@ -91,24 +94,51 @@ getHintOpts args = "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
 
 
 ------------------------------------------------------------------------------
--- | XXX
-hintSnap :: [String] -> [String] -> String -> String -> String -> IO (Snap ())
-hintSnap opts mNames initBase cleanBase actBase = do
-    let action = intercalate " " ["bracketSnap", initBase, cleanBase, actBase]
+-- | This function creates the Snap handler that actually is
+-- responsible for doing the dynamic loading of actions via hint,
+-- given all of the configuration information that the interpreter
+-- needs.  It also ensures safe concurrent access to the interpreter,
+-- and caches the interpreter results for a short time before allowing
+-- it to run again.
+--
+-- This constructs an expression of type Snap (), that is essentially
+-- > bracketSnap initialization cleanup handler
+-- for the values of initialization, cleanup, and handler passed in.
+hintSnap :: [String] -- ^ A list of command-line options for the interpreter
+         -> [String] -- ^ A list of modules that need to be
+                     -- interpreted. This should contain only the
+                     -- modules which contain the initialization,
+                     -- cleanup, and handler actions.  Everything else
+                     -- they require will be loaded transitively.
+         -> String   -- ^ The name of the initialization action
+         -> String   -- ^ The name of the cleanup action
+         -> String   -- ^ The name of the handler action
+         -> IO (Snap ())
+hintSnap opts modules initialization cleanup handler = do
+    let action = intercalate " " [ "bracketSnap"
+                                 , initialization
+                                 , cleanup
+                                 , handler
+                                 ]
         interpreter = do
             mapM_ unsafeSetGhcOption opts
-            loadModules . nub $ mNames
-            let allMods = "Prelude" : "Snap.Types" : mNames
-            setImports . nub $ allMods
+            loadModules . nub $ modules
+
+            -- Add Prelude and Snap.Types to the imports, for the
+            -- "Snap ()" signature.
+            let imports = "Prelude" : "Snap.Types" : modules
+            setImports . nub $ imports
+
             interpret action (as :: Snap ())
 
+    -- Protect the interpreter from concurrent and high-speed serial
+    -- access.
     loadAction <- protectedActionEvaluator 3 $ runInterpreter interpreter
-
     return $ do
         interpreterResult <- liftIO loadAction
         case interpreterResult of
             Left err -> internalError $ format err
-            Right handler -> catch500 handler
+            Right action -> catch500 action
 
 
 ------------------------------------------------------------------------------
