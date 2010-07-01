@@ -7,8 +7,8 @@ module AppState (
   , cleanupAppState
   , StateSnap
   , runStateSnap
-  , ask
-  , asks
+  , ask  -- these functions are re-exported
+  , asks -- from Control.Monad.Reader
 )
 where
 
@@ -32,6 +32,10 @@ data AppState = AppState {
     }
 
 
+-- An example of creating an application-specific MonadSnap instance.
+-- This instance uses the GeneralizedNewtypeDeriving extension to
+-- derive all the necessary instances from the underlying
+-- representation.
 newtype StateSnap a = AS (ReaderT AppState Snap a)
     deriving ( Monad
              , MonadReader AppState
@@ -45,6 +49,8 @@ newtype StateSnap a = AS (ReaderT AppState Snap a)
              )
 
 
+-- Convert the application-specific MonadSnap instance into a Snap
+-- type.
 runStateSnap :: StateSnap a -> AppState -> Snap a
 runStateSnap (AS rt) st = runReaderT rt st
 
