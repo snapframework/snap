@@ -20,7 +20,7 @@ import           Data.Time.Clock
 import           Language.Haskell.Interpreter hiding (lift, liftIO)
 import           Language.Haskell.Interpreter.Unsafe (unsafeSetGhcOption)
 
-import           Language.Haskell.TH.Syntax
+import           Language.Haskell.TH
 
 import           Prelude hiding (catch)
 
@@ -47,27 +47,14 @@ loadSnapTH initialize cleanup action = do
         modules = catMaybes [initMod, cleanMod, actMod]
         opts = getHintOpts args
 
-    hintSnapE <- [| \o m i c a ->
-                      fmap ((,) $ return ()) $ hintSnap o m i c a |]
+    let static = Static.loadSnapTH initialize cleanup action
 
-    [ optsE, modulesE ]     <- mapM lift [ opts, modules ]
-    [ initE, cleanE, actE ] <- mapM lift [ initBase, cleanBase, actBase ]
-
-    staticE <- Static.loadSnapTH initialize cleanup action
-
-    -- Wrap the hintSnap call in a let block.  This let block
-    -- vacuously pattern-matches the static expression, providing an
-    -- extra check that the types were correct at compile-time, at
-    -- least.  This check isn't infallible, because the type isn't
-    -- fully specified, but it's an extra level of help with
-    -- negligible compile-time cost.
-    let hintApp = foldl AppE hintSnapE [optsE, modulesE, initE, cleanE, actE]
-        nameUnused = mkName "_"
-        body = NormalB staticE
-        clause = Clause [] body []
-        staticDec = FunD nameUnused [clause]
-
-    return $ LetE [staticDec] hintApp
+    -- The let in this block causes the static expression to be
+    -- pattern-matched, providing an extra check that the types were
+    -- correct at compile-time, at least.
+    [| do let _ = $static :: IO (IO (), Snap ())
+          hint <- hintSnap opts modules initBase cleanBase actBase
+          return (return (), hint) |]
 
 
 ------------------------------------------------------------------------------
