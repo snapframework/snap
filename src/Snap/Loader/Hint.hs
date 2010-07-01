@@ -105,14 +105,14 @@ hintSnap opts mNames initBase cleanBase actBase = do
     loadAction <- protectedActionEvaluator 3 $ runInterpreter interpreter
 
     return $ do
-        eSnap <- liftIO loadAction
-        case eSnap of
+        interpreterResult <- liftIO loadAction
+        case interpreterResult of
             Left err -> internalError $ format err
             Right handler -> catch500 handler
 
 
 ------------------------------------------------------------------------------
--- | XXX
+-- | Convert an InterpreterError to a ByteString for presentation
 format :: InterpreterError -> S.ByteString
 format (UnknownError e)   =
     S.append "Unknown interpreter error:\r\n\r\n" $ S.pack e
