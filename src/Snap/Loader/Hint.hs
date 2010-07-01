@@ -43,6 +43,16 @@ import qualified Snap.Loader.Static as Static
 -- This could be considered a TH wrapper around a function
 -- > loadSnap :: IO a -> (a -> IO ()) -> (a -> Snap ()) -> IO (IO (), Snap ())
 -- with a magical implementation.
+--
+-- The returned IO action does nothing.  The returned Snap action does
+-- initialization, runs the action, and does the cleanup.  This means
+-- that the whole application state will be loaded and unloaded for
+-- each request.  To make this worthwhile, those steps should be made
+-- quite fast.
+--
+-- The upshot is that you shouldn't need to recompile your server
+-- during development unless your .cabal file changes, or the code
+-- that uses this splice changes.
 loadSnapTH :: Name -> Name -> Name -> Q Exp
 loadSnapTH initialize cleanup action = do
     args <- runIO getArgs
@@ -101,6 +111,10 @@ getHintOpts args = -- These hide-packages will go away with a new
 -- This constructs an expression of type Snap (), that is essentially
 -- > bracketSnap initialization cleanup handler
 -- for the values of initialization, cleanup, and handler passed in.
+--
+-- Generally, this won't be called manually.  Instead, loadSnapTH will
+-- generate a call to it at compile-time, calculating all the
+-- arguments from its environment.
 hintSnap :: [String] -- ^ A list of command-line options for the interpreter
          -> [String] -- ^ A list of modules that need to be
                      -- interpreted. This should contain only the
