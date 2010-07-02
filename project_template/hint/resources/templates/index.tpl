@@ -12,6 +12,12 @@
         <a href="http://snapframework.com/docs/tutorials/heist">Heist</a>
         and the <a href="http://snapframework.com/">Snap</a> web framework.
       </p>
+      <p>
+        Echo test:
+        <a href="/echo/cats">cats</a>
+        <a href="/echo/dogs">dogs</a>
+        <a href="/echo/fish">fish</a>
+      </p>
       <table id="info">
         <tr>
           <td>Config generated at:</td>
