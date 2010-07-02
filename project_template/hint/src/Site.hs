@@ -44,7 +44,8 @@ echo :: StateSnap ()
 echo = do
     message <- fromMaybe "" <$> getParam "stuff"
     ts <- asks templateState
-    let ts' = bindStrings [ ("message", message) ] ts
+    let message' = fromMaybe message $ urlDecode message
+        ts' = bindStrings [ ("message", message') ] ts
     renderHtml ts' "echo"
 
 
