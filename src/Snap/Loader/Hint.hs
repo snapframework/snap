@@ -31,7 +31,7 @@ import           Prelude hiding (catch)
 import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
-import           Snap.Error
+import           Snap.Http.Server
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
 
@@ -149,7 +149,7 @@ hintSnap opts modules initialization cleanup handler = do
         interpreterResult <- liftIO loadAction
         case interpreterResult of
             Left err -> internalError $ format err
-            Right handlerAction -> catch500 handlerAction
+            Right handlerAction -> handlerAction
 
 
 ------------------------------------------------------------------------------

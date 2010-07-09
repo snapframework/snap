@@ -1,18 +1,13 @@
 {-# LANGUAGE CPP, TemplateHaskell #-}
 module Main where
 
-import Data.Monoid        (mappend, mempty)
-
-import AppState           (cleanupAppState, loadAppState)
-import Site               (site)
-
-import Snap.Http.Server
-import Snap.Http.Server.Config
-
+import           AppState
+import           Site
+import           Snap.Http.Server
 #ifdef PRODUCTION
-import Snap.Loader.Static (loadSnapTH)
+import           Snap.Loader.Static
 #else
-import Snap.Loader.Hint   (loadSnapTH)
+import           Snap.Loader.Hint
 #endif
 
 -- This is the entry point for this web server application.  It
@@ -24,7 +19,7 @@ import Snap.Loader.Hint   (loadSnapTH)
 -- source files in development mode, relative to the current working
 -- directory when it is run.
 --
--- When compiled without the production flag only changes to the
+-- When compiled without the production flag, only changes to the
 -- libraries, your cabal file, or this file should require a recompile
 -- to be picked up.  Everything else is interpreted at runtime.  There
 -- are a few consequences of this.
@@ -56,16 +51,6 @@ import Snap.Loader.Hint   (loadSnapTH)
 -- change.
 main :: IO ()
 main = do
-    -- override the some of the defaults from Snap.Http.Server.Config
-    let defaultFlags = mempty { flagVerbose = True
-                              , flagAccessLog = Just "log/access.log"
-                              , flagErrorLog = Just "log/error.log"
-                              }
-
-    -- read command line args, and merge them with the defaults above
-    cmdLineFlags <- readFlagsFromCmdLineArgs
-    let conf = flagsToConfig $ defaultFlags `mappend` cmdLineFlags
-
     -- This is just about the same as calling a function:
     --
     -- loadSnap :: IO a
@@ -92,7 +77,7 @@ main = do
     (cleanup, snap) <- $(loadSnapTH 'loadAppState 'cleanupAppState 'site)
 
     -- Run the server
-    httpServeConfig conf snap
+    quickHttpServe snap
 
     -- Run the cleanup action before exiting
     cleanup

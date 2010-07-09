@@ -3,12 +3,8 @@
 -- Heist templates from Snap.
 module Snap.Heist where
 
-------------------------------------------------------------------------------
 import qualified Data.ByteString.Char8 as S
-
-import           Snap.Error
 import           Snap.Types
-
 import           Text.Templating.Heist
 
 
@@ -21,8 +17,7 @@ renderHtml = render "text/html; charset=utf-8"
 
 ------------------------------------------------------------------------------
 -- | Renders a template with the provided content type.  If the
--- template cannot be loaded, 'internalError' is called with an error
--- message.
+-- template cannot be loaded, 'pass' is called and the next handler is tried.
 render :: (MonadSnap m)
        => S.ByteString -- ^ the content type to include in the response
        -> TemplateState m -- ^ the TemplateState that contains the template
@@ -30,10 +25,7 @@ render :: (MonadSnap m)
        -> m ()
 render contentType ts template = do
     bytes <- renderTemplate ts template
-    flip (maybe missingTemplate) bytes $ \x -> do
+    flip (maybe pass) bytes $ \x -> do
         modifyResponse $ setContentType contentType
                        . setContentLength (fromIntegral $ S.length x)
         writeBS x
-  where
-    msg = S.append "Unable to load template: " template
-    missingTemplate = internalError msg

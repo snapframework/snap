@@ -44,7 +44,6 @@ Library
   hs-source-dirs: src
 
   exposed-modules:
-    Snap.Error,
     Snap.Heist,
     Snap.Loader.Static,
     Snap.Loader.Hint
