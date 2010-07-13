@@ -7,9 +7,6 @@
 -- the calls to the dynamic loader.
 module Snap.Loader.Hint where
 
-------------------------------------------------------------------------------
-import qualified Data.ByteString.Char8 as S
-
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
 import           Control.Concurrent (forkIO, myThreadId)
@@ -152,20 +149,13 @@ hintSnap opts modules initialization cleanup handler = do
 
 
 ------------------------------------------------------------------------------
--- | Convert an InterpreterError to a ByteString for presentation
-format :: InterpreterError -> S.ByteString
-format (UnknownError e)   =
-    S.append "Unknown interpreter error:\r\n\r\n" $ S.pack e
-
-format (NotAllowed e)     =
-    S.append "Interpreter action not allowed:\r\n\r\n" $ S.pack e
-
-format (GhcException e)   =
-    S.append "GHC error:\r\n\r\n" $ S.pack e
-
-format (WontCompile errs) =
-    let formatted = S.intercalate "\r\n" . map S.pack . nub . map errMsg $ errs
-    in S.append "Compile errors:\r\n\r\n" formatted
+-- | Convert an InterpreterError to a String for presentation
+format :: InterpreterError -> String
+format (UnknownError e)   = "Unknown interpreter error:\r\n\r\n" ++ e
+format (NotAllowed e)     = "Interpreter action not allowed:\r\n\r\n" ++ e
+format (GhcException e)   = "GHC error:\r\n\r\n" ++ e
+format (WontCompile errs) = "Compile errors:\r\n\r\n" ++
+    (intercalate "\r\n" $ nub $ map errMsg errs)
 
 
 ------------------------------------------------------------------------------
