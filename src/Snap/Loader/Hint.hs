@@ -90,10 +90,13 @@ getHintOpts args = -- These hide-packages will go away with a new
     srcOpts = filter (\x -> "-i" `isPrefixOf` x
                             && not ("-idist" `isPrefixOf` x)) args
 
-    toCopy = init $ dropWhile (not . ("-package" `isPrefixOf`)) args
+    toCopy = init' $ dropWhile (not . ("-package" `isPrefixOf`)) args
     copy = map (intercalate " ") . groupBy (\_ s -> not $ "-" `isPrefixOf` s)
 
     opts = hideAll ++ srcOpts ++ copy toCopy
+
+    init' [] = []
+    init' xs = init xs
 
 
 ------------------------------------------------------------------------------
