@@ -10,25 +10,27 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.2
 
-Executable projname
+Flag production
+  Description: Whether to build the server in production (static loading) mode
+  Default: False
+
+Executable foo
   hs-source-dirs: src
   main-is: Main.hs
 
+  if flag(production)
+    cpp-options: -DPRODUCTION
+
   Build-depends:
-    base >= 4,
-    haskell98,
-    monads-fd >= 0.1 && <0.2,
-    bytestring >= 0.9.1 && <0.10,
-    snap-core >= 0.2 && <0.3,
-    snap-server >= 0.2 && <0.3,
-    heist >= 0.2.2 && <0.3,
-    hexpat == 0.16,
-    xhtml-combinators,
-    unix,
-    text,
-    containers,
-    MonadCatchIO-transformers,
-    filepath >= 1.1 && <1.2
+    base >= 4 && < 5,
+    bytestring >= 0.9.1 && < 0.10,
+    MonadCatchIO-transformers >= 0.2.1 && < 0.3,
+    monads-fd >= 0.1 && < 0.2,
+    snap >= 0.3 && < 0.4,
+    snap-core >= 0.3 && < 0.4,
+    snap-extensions >= 0.1 && < 0.2,
+    heist >= 0.2.3 && < 0.3,
+    hint >= 0.3.2 && < 0.4
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
