@@ -4,7 +4,7 @@
 module Snap.Heist where
 
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as S
+import qualified Data.ByteString as B
 import           Snap.Types
 import           Text.Templating.Heist
 
@@ -28,5 +28,5 @@ render contentType ts template = do
     bytes <- renderTemplate ts template
     flip (maybe pass) bytes $ \x -> do
         modifyResponse $ setContentType contentType
-                       . setContentLength (fromIntegral $ S.length x)
+                       . setContentLength (fromIntegral $ B.length x)
         writeBS x

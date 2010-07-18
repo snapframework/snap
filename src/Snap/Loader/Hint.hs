@@ -85,7 +85,7 @@ getHintOpts args = -- These hide-packages will go away with a new
                    removeBad opts
   where
     bad = ["-threaded", "-O"]
-    removeBad = filter (\x -> any (`isPrefixOf` x) bad)
+    removeBad = filter (\x -> not $ any (`isPrefixOf` x) bad)
 
     hideAll = filter (== "-hide-all-packages") args
 
