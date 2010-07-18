@@ -82,9 +82,11 @@ getHintOpts :: [String] -> [String]
 getHintOpts args = -- These hide-packages will go away with a new
                    -- version of hint
                    "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
-                   filter (not . (`elem` bad)) opts
+                   removeBad opts
   where
-    bad = ["-threaded"]
+    bad = ["-threaded", "-O"]
+    removeBad = filter (\x -> any (`isPrefixOf` x) bad)
+
     hideAll = filter (== "-hide-all-packages") args
 
     srcOpts = filter (\x -> "-i" `isPrefixOf` x
