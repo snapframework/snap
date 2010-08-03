@@ -29,7 +29,7 @@ Executable foo
     snap >= 0.3 && < 0.4,
     snap-core >= 0.3 && < 0.4,
     snap-extensions >= 0.1 && < 0.2,
-    heist >= 0.2.3 && < 0.3,
+    heist >= 0.3 && < 0.4,
     hint >= 0.3.2 && < 0.4
 
   if impl(ghc >= 6.12.0)
