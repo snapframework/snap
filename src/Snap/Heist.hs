@@ -4,10 +4,12 @@
 module Snap.Heist where
 
 ------------------------------------------------------------------------------
+import           Control.Applicative
 import qualified Data.ByteString.Char8 as S
 
 import           Snap.Error
 import           Snap.Types
+import           Snap.Util.FileServe
 
 import           Text.Templating.Heist
 
@@ -37,3 +39,13 @@ render contentType ts template = do
   where
     msg = S.append "Unable to load template: " template
     missingTemplate = internalError msg
+
+
+------------------------------------------------------------------------------
+-- | Handles the rendering of any template in TemplateState.
+handleAllTemplates :: (MonadSnap m)
+                   => TemplateState m -> m ()
+handleAllTemplates ts =
+    ifTop (renderHtml ts "index") <|>
+    (renderHtml ts . S.pack =<< getSafePath)
+    
