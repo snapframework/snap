@@ -28,6 +28,8 @@ usage = unlines
     ,""
     ,"    <action> can be one of:"
     ,"      init - create a new project directory structure in the current directory"
+    ,""
+    ,"  Note: you can use --help after any of the above actions to get help on that action"
     ]
 
 
@@ -70,16 +72,17 @@ initProject args = do
         ,"  snap init"
         ,""
         ,"    -b  --barebones   Depend only on -core and -server"
+        ,"    -i  --hint        Depend only on hint for dynamic reloading"
         ,"    -h  --help        Print this message"
         ]
 
     options =
         [ Option ['b'] ["barebones"] (NoArg InitBareBones)
                  "Depend only on -core and -server"
-        , Option ['h'] ["help"]      (NoArg InitHelp)
-                 "Print this message"
         , Option ['i'] ["hint"]      (NoArg InitHint)
                  "Depend on hint"
+        , Option ['h'] ["help"]      (NoArg InitHelp)
+                 "Print this message"
         ]
 
     init' flags = do
