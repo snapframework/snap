@@ -7,9 +7,6 @@
 -- the calls to the dynamic loader.
 module Snap.Loader.Hint where
 
-------------------------------------------------------------------------------
-import qualified Data.ByteString.Char8 as S
-
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
 import           Control.Concurrent (forkIO, myThreadId)
@@ -31,7 +28,6 @@ import           Prelude hiding (catch)
 import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
-import           Snap.Error
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
 
@@ -86,18 +82,23 @@ getHintOpts :: [String] -> [String]
 getHintOpts args = -- These hide-packages will go away with a new
                    -- version of hint
                    "-hide-package=mtl" : "-hide-package=MonadCatchIO-mtl" :
-                   filter (not . (`elem` bad)) opts
+                   removeBad opts
   where
-    bad = ["-threaded"]
+    bad = ["-threaded", "-O"]
+    removeBad = filter (\x -> not $ any (`isPrefixOf` x) bad)
+
     hideAll = filter (== "-hide-all-packages") args
 
     srcOpts = filter (\x -> "-i" `isPrefixOf` x
                             && not ("-idist" `isPrefixOf` x)) args
 
-    toCopy = init $ dropWhile (not . ("-package" `isPrefixOf`)) args
+    toCopy = init' $ dropWhile (not . ("-package" `isPrefixOf`)) args
     copy = map (intercalate " ") . groupBy (\_ s -> not $ "-" `isPrefixOf` s)
 
     opts = hideAll ++ srcOpts ++ copy toCopy
+
+    init' [] = []
+    init' xs = init xs
 
 
 ------------------------------------------------------------------------------
@@ -148,25 +149,18 @@ hintSnap opts modules initialization cleanup handler = do
     return $ do
         interpreterResult <- liftIO loadAction
         case interpreterResult of
-            Left err -> internalError $ format err
-            Right handlerAction -> catch500 handlerAction
+            Left err -> error $ format err
+            Right handlerAction -> handlerAction
 
 
 ------------------------------------------------------------------------------
--- | Convert an InterpreterError to a ByteString for presentation
-format :: InterpreterError -> S.ByteString
-format (UnknownError e)   =
-    S.append "Unknown interpreter error:\r\n\r\n" $ S.pack e
-
-format (NotAllowed e)     =
-    S.append "Interpreter action not allowed:\r\n\r\n" $ S.pack e
-
-format (GhcException e)   =
-    S.append "GHC error:\r\n\r\n" $ S.pack e
-
-format (WontCompile errs) =
-    let formatted = S.intercalate "\r\n" . map S.pack . nub . map errMsg $ errs
-    in S.append "Compile errors:\r\n\r\n" formatted
+-- | Convert an InterpreterError to a String for presentation
+format :: InterpreterError -> String
+format (UnknownError e)   = "Unknown interpreter error:\r\n\r\n" ++ e
+format (NotAllowed e)     = "Interpreter action not allowed:\r\n\r\n" ++ e
+format (GhcException e)   = "GHC error:\r\n\r\n" ++ e
+format (WontCompile errs) = "Compile errors:\r\n\r\n" ++
+    (intercalate "\r\n" $ nub $ map errMsg errs)
 
 
 ------------------------------------------------------------------------------

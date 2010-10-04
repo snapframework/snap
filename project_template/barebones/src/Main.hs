@@ -4,11 +4,10 @@ module Main where
 import           Control.Applicative
 import           Snap.Types
 import           Snap.Util.FileServe
-
-import           Server
+import           Snap.Http.Server
 
 main :: IO ()
-main = quickServer $
+main = quickHttpServe $
     ifTop (writeBS "hello world") <|>
     route [ ("foo", writeBS "bar")
           , ("echo/:echoparam", echoHandler)

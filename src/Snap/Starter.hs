@@ -15,9 +15,9 @@ import Snap.StarterTH
 
 ------------------------------------------------------------------------------
 -- Creates a value tDir :: ([String], [(String, String)])
-$(buildData "tDirDefault"   "default")
-$(buildData "tDirBareBones" "barebones")
-$(buildData "tDirHint"      "hint")
+$(buildData "tDirBareBones"  "barebones")
+$(buildData "tDirHint"       "hint")
+$(buildData "tDirExtensions" "extensions")
 
 ------------------------------------------------------------------------------
 usage :: String
@@ -37,6 +37,7 @@ usage = unlines
 data InitFlag = InitBareBones
               | InitHelp
               | InitHint
+              | InitExtensions
   deriving (Show, Eq)
 
 
@@ -66,23 +67,17 @@ initProject args = do
                          putStrLn initUsage
                          exitFailure
   where
-    initUsage = unlines
-        ["Usage:"
-        ,""
-        ,"  snap init"
-        ,""
-        ,"    -b  --barebones   Depend only on -core and -server"
-        ,"    -i  --hint        Depend only on hint for dynamic reloading"
-        ,"    -h  --help        Print this message"
-        ]
+    initUsage = usageInfo "Usage\n  snap init\n\nOptions:" options
 
     options =
-        [ Option ['b'] ["barebones"] (NoArg InitBareBones)
+        [ Option ['b'] ["barebones"]  (NoArg InitBareBones)
                  "Depend only on -core and -server"
-        , Option ['i'] ["hint"]      (NoArg InitHint)
-                 "Depend on hint"
-        , Option ['h'] ["help"]      (NoArg InitHelp)
+        , Option ['h'] ["help"]       (NoArg InitHelp)
                  "Print this message"
+        , Option ['i'] ["hint"]       (NoArg InitHint)
+                 "Depend on hint (default)"
+        , Option ['e'] ["extensions"] (NoArg InitExtensions)
+                 "Depend on hint and snap-extensions"
         ]
 
     init' flags = do
@@ -91,9 +86,10 @@ initProject args = do
             projName = last dirs
             setup' = setup projName
         case flags of
-          (_:_) | InitHint      `elem` flags -> setup' tDirHint
-                | InitBareBones `elem` flags -> setup' tDirBareBones
-          _                                  -> setup' tDirDefault
+          (_:_) | InitHint       `elem` flags -> setup' tDirHint
+                | InitBareBones  `elem` flags -> setup' tDirBareBones
+                | InitExtensions `elem` flags -> setup' tDirExtensions
+          _                                   -> setup' tDirHint
 
 
 ------------------------------------------------------------------------------
