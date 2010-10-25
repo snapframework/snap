@@ -1,14 +1,7 @@
 name:           snap
-version:        0.3
+version:        0.3.0
 synopsis:       Snap: A Haskell Web Framework (Core)
-
-description:
-  This is the first developer prerelease of the Snap framework.  Snap is a
-  simple and fast web development framework and server written in Haskell. For
-  more information or to download the latest version, you can visit the Snap
-  project website at <http://snapframework.com/>.
-  .
-
+description:    Snap Framework project starter executable and glue code library
 license:        BSD3
 license-file:   LICENSE
 author:         James Sanders, Shu-yu Guo, Gregory Collins, Doug Beardsley
@@ -92,7 +85,7 @@ Executable snap
     snap-core == 0.3,
     snap-server == 0.3,
     template-haskell,
-    text >= 0.7.1 && <0.8,
+    text >= 0.10 && <0.11,
     time,
     transformers,
     unix-compat,
