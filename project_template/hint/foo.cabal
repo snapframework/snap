@@ -29,7 +29,7 @@ Executable projname
     snap >= 0.3 && < 0.4,
     snap-core >= 0.3 && < 0.4,
     snap-server >= 0.3 && < 0.4,
-    heist >= 0.3 && < 0.4,
+    heist >= 0.2.4 && < 0.3,
     hint >= 0.3.2 && < 0.4,
     time >= 1.0 && < 1.3
 
