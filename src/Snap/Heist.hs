@@ -3,9 +3,12 @@
 -- Heist templates from Snap.
 module Snap.Heist where
 
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString as B
+------------------------------------------------------------------------------
+import           Control.Applicative
+import           Data.ByteString.Char8 (ByteString)
+import qualified Data.ByteString.Char8 as B
 import           Snap.Types
+import           Snap.Util.FileServe
 import           Text.Templating.Heist
 
 
@@ -30,3 +33,12 @@ render contentType ts template = do
         modifyResponse $ setContentType contentType
                        . setContentLength (fromIntegral $ B.length x)
         writeBS x
+
+
+------------------------------------------------------------------------------
+-- | Handles the rendering of any template in TemplateState.
+handleAllTemplates :: (MonadSnap m)
+                   => TemplateState m -> m ()
+handleAllTemplates ts =
+    ifTop (renderHtml ts "index") <|>
+    (renderHtml ts . B.pack =<< getSafePath)
