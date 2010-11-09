@@ -50,7 +50,7 @@ Library
     monads-fd >= 0.1 && < 0.2,
     snap-core == 0.3.*,
     heist >= 0.2.5 && < 0.3,
-    hint >= 0.3.2 && < 0.4,
+    hint >= 0.3.3.1 && < 0.4,
     template-haskell >= 2.3 && < 2.5,
     time >= 1.0 && < 1.3
 
