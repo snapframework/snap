@@ -37,7 +37,9 @@ import qualified Snap.Loader.Static as Static
 -- to the generated code.
 --
 -- This could be considered a TH wrapper around a function
+--
 -- > loadSnap :: IO a -> (a -> IO ()) -> (a -> Snap ()) -> IO (IO (), Snap ())
+--
 -- with a magical implementation.
 --
 -- The returned IO action does nothing.  The returned Snap action does
@@ -107,7 +109,9 @@ getHintOpts args = removeBad opts
 -- it to run again.
 --
 -- This constructs an expression of type Snap (), that is essentially
+--
 -- > bracketSnap initialization cleanup handler
+--
 -- for the values of initialization, cleanup, and handler passed in.
 --
 -- Generally, this won't be called manually.  Instead, loadSnapTH will
