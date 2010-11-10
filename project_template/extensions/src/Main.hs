@@ -48,8 +48,8 @@ import           Snap.Extension.Server
 import           Snap.Extension.Server.Hint
 #endif
 
-import           App
+import           Application
 import           Site
 
 main :: IO ()
-main = quickHttpServe appRunner site
+main = quickHttpServe applicationRunner site

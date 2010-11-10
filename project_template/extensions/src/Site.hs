@@ -19,7 +19,7 @@ import           Snap.Util.FileServe
 import           Snap.Types
 import           Text.Templating.Heist
 
-import           App
+import           Application
 
 
 ------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ import           App
 -- The 'ifTop' is required to limit this to the top of a route.
 -- Otherwise, the way the route table is currently set up, this action
 -- would be given every request.
-index :: App ()
+index :: Application ()
 index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
   where
     indexSplices = 
@@ -39,7 +39,7 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
 
 ------------------------------------------------------------------------------
 -- | Renders the echo page.
-echo :: App ()
+echo :: Application ()
 echo = do
     message <- decodedParam "stuff"
     heistLocal (bindString "message" message) $ render "echo"
@@ -49,7 +49,7 @@ echo = do
 
 ------------------------------------------------------------------------------
 -- | The main entry point handler.
-site :: App ()
+site :: Application ()
 site = route [ ("/",            index)
              , ("/echo/:stuff", echo)
              ]
