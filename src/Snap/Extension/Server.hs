@@ -103,7 +103,10 @@ defaultConfig = setReloadHandler handler C.defaultConfig
 -- | Completes a partial 'Config' by filling in the unspecified values with
 -- the default values from 'defaultConfig'.
 completeConfig :: ConfigExtend s -> ConfigExtend s
-completeConfig = mappend defaultConfig
+completeConfig c = case getListen c' of
+                    [] -> addListen (ListenHttp "0.0.0.0" 8000) c'
+                    _ -> c'
+  where c' = mappend defaultConfig c
 
 
 ------------------------------------------------------------------------------
