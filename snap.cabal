@@ -47,7 +47,6 @@ Library
     directory >= 1.0.0.0 && < 1.1,
     filepath >= 1.0 && < 1.2,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
-    monads-fd >= 0.1 && < 0.2,
     snap-core == 0.3.*,
     heist >= 0.2.5 && < 0.3,
     hint >= 0.3.3.1 && < 0.4,
@@ -76,10 +75,10 @@ Executable snap
     directory,
     directory-tree,
     dlist >= 0.5 && < 0.6,
+    enumerator == 0.4.*,
     filepath,
     haskell98,
-    iteratee >= 0.3.1 && <0.4,
-    monads-fd,
+    mtl >= 2,
     old-locale,
     old-time,
     snap-core == 0.3.*,
@@ -87,7 +86,6 @@ Executable snap
     template-haskell,
     text >= 0.10 && <0.11,
     time,
-    transformers,
     unix-compat,
     zlib
 
