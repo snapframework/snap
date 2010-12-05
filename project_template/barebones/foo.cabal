@@ -15,18 +15,17 @@ Executable projname
   main-is: Main.hs
 
   Build-depends:
+    MonadCatchIO-transformers,
     base >= 4,
-    haskell98,
-    monads-fd >= 0.1 && <0.2,
     bytestring >= 0.9.1 && <0.10,
+    containers,
+    filepath >= 1.1 && <1.2,
+    haskell98,
+    mtl >= 2 && <3,
     snap-core >= 0.2 && <0.3,
     snap-server >= 0.2 && <0.3,
-    xhtml-combinators,
-    unix,
     text,
-    containers,
-    MonadCatchIO-transformers,
-    filepath >= 1.1 && <1.2
+    unix
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2

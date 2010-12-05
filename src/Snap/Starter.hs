@@ -16,9 +16,8 @@ import Snap.StarterTH
 
 ------------------------------------------------------------------------------
 -- Creates a value tDir :: ([String], [(String, String)])
-$(buildData "tDirBareBones"  "barebones")
-$(buildData "tDirHint"       "hint")
-$(buildData "tDirExtensions" "extensions")
+$(buildData "tDirBareBones" "barebones")
+$(buildData "tDirDefault"   "default")
 
 ------------------------------------------------------------------------------
 usage :: String
@@ -37,7 +36,6 @@ usage = unlines
 ------------------------------------------------------------------------------
 data InitFlag = InitBareBones
               | InitHelp
-              | InitHint
               | InitExtensions
   deriving (Show, Eq)
 
@@ -76,10 +74,8 @@ initProject args = do
                  "Depend only on -core and -server"
         , Option ['h'] ["help"]       (NoArg InitHelp)
                  "Print this message"
-        , Option ['i'] ["hint"]       (NoArg InitHint)
-                 "Depend on hint (default)"
         , Option ['e'] ["extensions"] (NoArg InitExtensions)
-                 "Depend on hint and snap-extensions"
+                 "Depend on snap w/ extensions (default)"
         ]
 
     init' flags = do
@@ -88,10 +84,9 @@ initProject args = do
             projName = last dirs
             setup' = setup projName
         case flags of
-          (_:_) | InitHint       `elem` flags -> setup' tDirHint
-                | InitBareBones  `elem` flags -> setup' tDirBareBones
-                | InitExtensions `elem` flags -> setup' tDirExtensions
-          _                                   -> setup' tDirHint
+          (_:_) | InitBareBones  `elem` flags -> setup' tDirBareBones
+                | InitExtensions `elem` flags -> setup' tDirDefault
+          _                                   -> setup' tDirDefault
 
 
 ------------------------------------------------------------------------------
