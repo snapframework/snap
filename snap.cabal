@@ -19,36 +19,51 @@ extra-source-files:
   project_template/barebones/foo.cabal,
   project_template/barebones/src/Main.hs,
   project_template/barebones/src/Server.hs,
+  project_template/default,
   project_template/default/foo.cabal,
-  project_template/default/src/Glue.hs,
+  project_template/default/log,
+  project_template/default/log/access.log,
+  project_template/default/log/error.log,
+  project_template/default/resources,
+  project_template/default/resources/static,
+  project_template/default/resources/static/screen.css,
+  project_template/default/resources/templates,
+  project_template/default/resources/templates/echo.tpl,
+  project_template/default/resources/templates/index.tpl,
+  project_template/default/src,
+  project_template/default/src/Application.hs,
   project_template/default/src/Main.hs,
-  project_template/default/src/Server.hs,
-  project_template/hint/foo.cabal,
-  project_template/hint/log/access.log,
-  project_template/hint/log/error.log,
-  project_template/hint/resources/static/screen.css,
-  project_template/hint/resources/templates/echo.tpl,
-  project_template/hint/resources/templates/index.tpl,
-  project_template/hint/src/AppState.hs,
-  project_template/hint/src/Main.hs,
-  project_template/hint/src/Site.hs
-
+  project_template/default/src/Site.hs,
+  project_template/default/src/Snap,
+  project_template/default/src/Snap/Extension,
+  project_template/default/src/Snap/Extension/Timer,
+  project_template/default/src/Snap/Extension/Timer/Timer.hs,
+  project_template/default/src/Snap/Extension/Timer.hs
+  
 Library
   hs-source-dirs: src
 
   exposed-modules:
+    Snap.Extension.Heist,
+    Snap.Extension.Server.Hint,
+    Snap.Extension.Server,
+    Snap.Extension,
     Snap.Heist,
-    Snap.Loader.Static,
-    Snap.Loader.Hint
+    Snap.Loader.Hint,
+    Snap.Loader.Static
+
+  other-modules:
+    Snap.Extension.Heist.Heist
 
   build-depends:
     base >= 4 && < 5,
     bytestring >= 0.9.1 && < 0.10,
     directory >= 1.0.0.0 && < 1.1,
+    enumerator == 0.4.*,
     filepath >= 1.0 && < 1.2,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     snap-core == 0.3.*,
-    heist >= 0.2.5 && < 0.3,
+    heist >= 0.3 && < 0.4,
     hint >= 0.3.3.1 && < 0.4,
     template-haskell >= 2.3 && < 2.5,
     time >= 1.0 && < 1.3
