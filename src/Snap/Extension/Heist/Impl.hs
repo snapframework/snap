@@ -6,7 +6,7 @@
 
 {-|
 
-'Snap.Extension.Heist.Heist' is an implementation of the 'MonadHeist'
+'Snap.Extension.Heist.Impl' is an implementation of the 'MonadHeist'
 interface defined in 'Snap.Extension.Heist'.
 
 As always, to use, add 'HeistState' to your application's state, along with an
@@ -14,7 +14,7 @@ instance of 'HasHeistState' for your application's state, making sure to
 use a 'heistInitializer' in your application's 'Initializer', and then you're
 ready to go.
 
-'Snap.Extension.Heist.Heist' is a little different to other Snap Extensions,
+'Snap.Extension.Heist.Impl' is a little different to other Snap Extensions,
 which is unfortunate as it is probably the most widely useful one. As
 explained below, 'HeistState' takes your application's monad as a type
 argument, and 'HasHeistState' is a multi-parameter type class, the additional
@@ -46,11 +46,11 @@ interfaces from any other Snap Extension.
 
 -}
 
-module Snap.Extension.Heist.Heist
+module Snap.Extension.Heist.Impl
   ( HeistState
+  , MonadHeist(..)
   , HasHeistState(..)
   , heistInitializer
-  , persistSplices
   ) where
 
 import           Control.Applicative
@@ -126,7 +126,7 @@ heistInitializer path = do
 
 ------------------------------------------------------------------------------
 instance MonadSnap m => InitializerState (HeistState m) where
-    extensionId = const "Heist/Heist"
+    extensionId = const "Heist/Impl"
     mkCleanup   = const $ return ()
     mkReload (HeistState path origTs tsMVar sts _) = do
         clearStaticTagCache $ sts
@@ -161,24 +161,3 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
-
-
-------------------------------------------------------------------------------
--- | Take your application's state and persistently add these splices to it so
--- that you don't have to re-list them in every handler.
---
--- Typical use cases are dynamically generated components that are present in
--- many of your views.
-persistSplices
-  :: (MonadSnap m, MonadIO n) 
-  => HeistState m   
-  -- ^ Heist state that you are going to embed in your application's state.
-  -> [(B.ByteString, Splice m)]   
-  -- ^ Your splices.
-  -> n ()
-persistSplices s sps = liftIO $ do
-  let mv = _tsMVar s
-  modifyMVar_ mv $ (return . bindSplices sps) 
-
-
-  

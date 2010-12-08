@@ -45,7 +45,7 @@ Library
 
   exposed-modules:
     Snap.Extension.Heist,
-    Snap.Extension.Heist.Heist,
+    Snap.Extension.Heist.Impl,
     Snap.Extension.Server.Hint,
     Snap.Extension.Server,
     Snap.Extension,
