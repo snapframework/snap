@@ -50,6 +50,7 @@ module Snap.Extension.Heist.Heist
   ( HeistState
   , HasHeistState(..)
   , heistInitializer
+  , persistSplices
   ) where
 
 import           Control.Applicative
@@ -160,3 +161,24 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
+
+
+------------------------------------------------------------------------------
+-- | Take your application's state and persistently add these splices to it so
+-- that you don't have to re-list them in every handler.
+--
+-- Typical use cases are dynamically generated components that are present in
+-- many of your views.
+persistSplices
+  :: (MonadSnap m, MonadIO n) 
+  => HeistState m   
+  -- ^ Heist state that you are going to embed in your application's state.
+  -> [(B.ByteString, Splice m)]   
+  -- ^ Your splices.
+  -> n ()
+persistSplices s sps = liftIO $ do
+  let mv = _tsMVar s
+  modifyMVar_ mv $ (return . bindSplices sps) 
+
+
+  
