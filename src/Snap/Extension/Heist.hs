@@ -18,7 +18,9 @@ always, also your application's monad.
 
 -}
 
-module Snap.Extension.Heist (MonadHeist(..)) where
+module Snap.Extension.Heist 
+  ( MonadHeist(..)
+  , renderWithSplices ) where
 
 import           Control.Applicative
 import           Data.ByteString (ByteString)
@@ -51,3 +53,14 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
     heistServeSingle :: ByteString -> m ()
     heistServeSingle t = render t
         <|> error ("Template " ++ show t ++ " not found.")
+
+
+------------------------------------------------------------------------------
+-- | Helper function for common use case: 
+-- Render a template with a given set of splices.
+renderWithSplices 
+  :: (MonadHeist n m) => [(ByteString, Splice n)]   -- ^ Splice mapping
+  -> ByteString   -- ^ Template to render
+  -> m ()
+renderWithSplices sps t = heistLocal bsps $ render t
+  where bsps = bindSplices sps
