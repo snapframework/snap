@@ -45,6 +45,7 @@ Library
 
   exposed-modules:
     Snap.Extension.Heist,
+    Snap.Extension.Heist.Heist,
     Snap.Extension.Server.Hint,
     Snap.Extension.Server,
     Snap.Extension,
@@ -53,7 +54,6 @@ Library
     Snap.Loader.Static
 
   other-modules:
-    Snap.Extension.Heist.Heist
 
   build-depends:
     base >= 4 && < 5,
