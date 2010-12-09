@@ -29,8 +29,10 @@ module Snap.Extension.Server
   , module Snap.Http.Server.Config
   ) where
 
-import           Control.Applicative
+#ifndef HINT
 import           Control.Arrow
+#endif
+
 import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO
@@ -44,7 +46,7 @@ import           Snap.Extension
 #ifdef HINT
 import           Snap.Loader.Hint
 #endif
-import           Snap.Http.Server (simpleHttpServe, setUnicodeLocale)
+import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Http.Server.Config as C
 import           Snap.Http.Server.Config hiding ( defaultConfig
                                                 , completeConfig
@@ -120,13 +122,13 @@ httpServe :: ConfigExtend s
           -> SnapExtend s ()
           -- ^ The application to be served
           -> IO ()
-httpServe config init handler = do
-    (state, mkCleanup, mkSnap) <-
-        runInitializerHint verbose init (catch500 handler) reloader
+httpServe config i handler = do
+    (state, makeCleanup, mkSnap) <-
+        runInitializerHint verbose i (catch500 handler) reloader
 #ifdef HINT
-    (cleanup, snap) <- $(loadSnapTH 'state 'mkCleanup 'mkSnap)
+    (cleanup, snap) <- $(loadSnapTH 'state 'makeCleanup 'mkSnap)
 #else
-    (cleanup, snap) <- fmap (mkCleanup &&& mkSnap) state
+    (cleanup, snap) <- fmap (makeCleanup &&& mkSnap) state
 #endif
     let site = compress $ snap
     mapM_ printListen $ C.getListen config
@@ -136,8 +138,8 @@ httpServe config init handler = do
     output "Shutting down..."
 
   where
-    handle   :: SomeException -> IO ()
-    handle e = print e
+--    handle   :: SomeException -> IO ()
+--    handle e = print e
     conf     = completeConfig config
     verbose  = fromJust $ getVerbose conf
     output   = when verbose . hPutStrLn stderr

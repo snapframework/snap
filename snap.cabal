@@ -70,9 +70,10 @@ Library
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-unused-do-bind
+                 -fno-warn-orphans -fno-warn-unused-do-bind
   else
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-orphans
 
 Executable snap
   hs-source-dirs: src
@@ -108,9 +109,10 @@ Executable snap
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-unused-do-bind
+                 -fno-warn-orphans -fno-warn-unused-do-bind
   else
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-orphans
 
 source-repository head
   type:     git

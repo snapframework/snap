@@ -53,11 +53,8 @@ module Snap.Extension.Heist.Impl
   , heistInitializer
   ) where
 
-import           Control.Applicative
 import           Control.Concurrent.MVar
-import           Control.Monad
 import           Control.Monad.Reader
-import           Control.Monad.Trans
 import qualified Data.ByteString as B
 import           Snap.Extension
 import           Snap.Extension.Heist
@@ -115,12 +112,12 @@ class MonadSnap m => HasHeistState m s | s -> m where
 -- | The 'Initializer' for 'HeistState'. It takes one argument, a path to a
 -- template directory containing @.tpl@ files.
 heistInitializer :: MonadSnap m => FilePath -> Initializer (HeistState m)
-heistInitializer path = do
+heistInitializer p = do
     heistState <- liftIO $ do
         (origTs,sts) <- bindStaticTag emptyTemplateState
-        loadTemplates path origTs >>= either error (\ts -> do
+        loadTemplates p origTs >>= either error (\ts -> do
             tsMVar <- newMVar ts
-            return $ HeistState path origTs tsMVar sts id)
+            return $ HeistState p origTs tsMVar sts id)
     mkInitializer heistState
 
 
@@ -128,10 +125,10 @@ heistInitializer path = do
 instance MonadSnap m => InitializerState (HeistState m) where
     extensionId = const "Heist/Impl"
     mkCleanup   = const $ return ()
-    mkReload (HeistState path origTs tsMVar sts _) = do
+    mkReload (HeistState p origTs tsMVar sts _) = do
         clearStaticTagCache $ sts
         either error (modifyMVar_ tsMVar . const . return) =<<
-            loadTemplates path origTs
+            loadTemplates p origTs
 
 
 ------------------------------------------------------------------------------
@@ -153,7 +150,6 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
     render t     = ReaderT $ \s -> do
         let (HeistState _ _ tsMVar _ modifier) = getHeistState s
         ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        mt <- renderTemplate ts t
         renderTemplate ts t >>= maybe pass (\html -> do
             modifyResponse $ setContentType "text/html; charset=utf-8"
             modifyResponse $ setContentLength (fromIntegral $ B.length html)
