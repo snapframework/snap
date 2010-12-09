@@ -51,6 +51,7 @@ module Snap.Extension.Heist.Impl
   , MonadHeist(..)
   , HasHeistState(..)
   , heistInitializer
+  , registerSplices
   ) where
 
 import           Control.Concurrent.MVar
@@ -157,3 +158,22 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
+
+
+------------------------------------------------------------------------------
+-- | Take your application's state and register these splices in it so
+-- that you don't have to re-list them in every handler. Should be called from
+-- inside your application's 'Initializer'.
+--
+-- Typical use cases are dynamically generated components that are present in
+-- many of your views. 
+registerSplices
+  :: (MonadSnap m, MonadIO n) 
+  => HeistState m   
+  -- ^ Heist state that you are going to embed in your application's state.
+  -> [(B.ByteString, Splice m)]   
+  -- ^ Your splices.
+  -> n ()
+registerSplices s sps = liftIO $ do
+  let mv = _tsMVar s
+  modifyMVar_ mv $ (return . bindSplices sps) 
