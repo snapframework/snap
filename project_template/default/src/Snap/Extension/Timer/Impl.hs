@@ -2,7 +2,7 @@
 
 {-|
 
-'Snap.Extension.Timer.Timer' is an implementation of the 'MonadTimer'
+'Snap.Extension.Timer.Impl' is an implementation of the 'MonadTimer'
 interface defined in 'Snap.Extension.Timer'.
 
 As always, to use, add 'TimerState' to your application's state, along with an
@@ -14,14 +14,14 @@ interfaces from any other Snap Extension.
 
 -}
 
-module Snap.Extension.Timer.Timer
+module Snap.Extension.Timer.Impl
   ( TimerState
   , HasTimerState(..)
   , timerInitializer
+  , module Snap.Extension.Timer
   ) where
 
 import           Control.Monad.Reader
-import           Control.Monad.Trans
 import           Data.Time.Clock
 import           Snap.Extension
 import           Snap.Extension.Timer

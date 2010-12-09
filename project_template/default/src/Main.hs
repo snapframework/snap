@@ -23,7 +23,7 @@ resources it depends on.
 Second, the generated server binary is MUCH larger, since it links in the GHC
 API (via the hint library).
 
-Third, it results in initialization\/cleanup code defined by the @Runner@
+Third, it results in initialization\/cleanup code defined by the @Initializer@
 being called for each request.  This is to ensure that the current state is
 compatible with the running action.  If your application state takes a long
 time to load or clean up, the penalty will be visible.
@@ -52,4 +52,4 @@ import           Application
 import           Site
 
 main :: IO ()
-main = quickHttpServe applicationRunner site
+main = quickHttpServe applicationInitializer site

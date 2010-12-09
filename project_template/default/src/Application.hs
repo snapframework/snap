@@ -7,13 +7,12 @@ information it requires.
 
 module Application
   ( Application
-  , applicationRunner
+  , applicationInitializer
   ) where
 
 import           Snap.Extension
-import           Snap.Extension.Heist
-import           Snap.Extension.Timer
-import           Text.Templating.Heist
+import           Snap.Extension.Heist.Impl
+import           Snap.Extension.Timer.Impl
 
 
 ------------------------------------------------------------------------------
@@ -35,7 +34,7 @@ data ApplicationState = ApplicationState
 
 
 ------------------------------------------------------------------------------
-instance HasHeistState ApplicationState where
+instance HasHeistState Application ApplicationState where
     getHeistState     = templateState
     setHeistState s a = a { templateState = s }
 
@@ -47,12 +46,13 @@ instance HasTimerState ApplicationState where
 
 
 ------------------------------------------------------------------------------
--- | The 'Runner' for ApplicationState. For more on 'Runner's, see the README
--- from the snap-extensions package. Briefly, this is used to generate the
--- 'ApplicationState' needed for our application and will automatically
--- generate reload\/cleanup actions for us which we don't need to worry about.
-applicationRunner :: Runner ApplicationState
-applicationRunner = do
-    heist <- heistRunner "resources/templates" emptyTemplateState
-    timer <- timerRunner
+-- | The 'Initializer' for ApplicationState. For more on 'Initializer's, see
+-- the documentation from the snap package. Briefly, this is used to
+-- generate the 'ApplicationState' needed for our application and will
+-- automatically generate reload\/cleanup actions for us which we don't need
+-- to worry about.
+applicationInitializer :: Initializer ApplicationState
+applicationInitializer = do
+    heist <- heistInitializer "resources/templates"
+    timer <- timerInitializer
     return $ ApplicationState heist timer

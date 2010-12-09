@@ -23,8 +23,9 @@ module Snap.Extension.Timer
   ) where
 
 import           Control.Monad.Trans
-import qualified Data.ByteString.UTF8 as U
 import           Data.Time.Clock
+import qualified Data.Text as T
+import           Data.Text.Encoding
 import           Snap.Types
 import           Text.Templating.Heist
 import           Text.XML.Expat.Tree hiding (Node)
@@ -42,7 +43,7 @@ class MonadSnap m => MonadTimer m where
 startTimeSplice :: MonadTimer m => Splice m
 startTimeSplice = do
     time <- lift startTime
-    return $ [mkText $ U.fromString $ show $ time]
+    return $ [mkText $ encodeUtf8 $ T.pack $ show $ time]
 
 
 ------------------------------------------------------------------------------
@@ -50,4 +51,4 @@ startTimeSplice = do
 currentTimeSplice :: MonadTimer m => Splice m
 currentTimeSplice = do
     time <- lift $ liftIO getCurrentTime
-    return $ [mkText $ U.fromString $ show $ time]
+    return $ [mkText $ encodeUtf8 $ T.pack $ show $ time]
