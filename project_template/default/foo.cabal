@@ -14,7 +14,7 @@ Flag development
   Description: Whether to build the server in development (interpreted) mode
   Default: False
 
-Executable foo
+Executable projname
   hs-source-dirs: src
   main-is: Main.hs
 
@@ -26,13 +26,20 @@ Executable foo
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     base >= 4 && < 5,
     bytestring >= 0.9.1 && < 0.10,
-    heist >= 0.3 && <0.4,
-    mtl >= 2 && <3,
+    heist >= 0.3 && < 0.4,
+    hexpat >= 0.19 && < 0.20,
+    mtl >= 2 && < 3,
     snap >= 0.3 && < 0.4,
-    snap-core >= 0.3 && < 0.4
+    snap-core >= 0.3 && < 0.4,
+    text >= 0.10 && < 0.12,
+    time >= 1.1 && < 1.2
+
+  extensions: TypeSynonymInstances MultiParamTypeClasses
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-unused-do-bind
+                 -fno-warn-orphans -fno-warn-unused-do-bind
   else
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-orphans
+
