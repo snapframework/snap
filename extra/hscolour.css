@@ -1,0 +1,15 @@
+body { font-size: 90%; }
+
+pre, code, body {
+  font-family: Monaco,
+               "DejaVu Sans Mono",
+               "Bitstream Vera Sans Mono",
+               "Lucida Console",
+               monospace;
+}
+
+.hs-keyglyph, .hs-layout {color: #5200A3;}
+.hs-keyword {color: #3465a4; font-weight: bold;}
+.hs-comment, .hs-comment a {color: #579; }
+.hs-str, .hs-chr {color: #141B24;}
+.hs-keyword, .hs-conid, .hs-varid, .hs-conop, .hs-varop, .hs-num, .hs-cpp, .hs-sel, .hs-definition {}

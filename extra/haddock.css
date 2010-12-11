@@ -1,0 +1,478 @@
+/* -------- Global things --------- */
+
+@font-face {
+	font-family: 'DroidSerif';
+	src: url('fonts/DroidSerif-Regular.eot');
+	src: local('Droid Serif'),
+             url('fonts/DroidSerif-Regular.woff') format('woff'),
+             url('fonts/DroidSerif-Regular.ttf') format('truetype'),
+             url('fonts/DroidSerif-Regular.svg#DroidSerif') format('svg');
+}
+
+@font-face {
+	font-family: 'DroidSerif';
+        font-style: italic;
+	src: url('fonts/DroidSerif-Italic.eot');
+	src: local('Droid Serif'),
+             url('fonts/DroidSerif-Italic.woff') format('woff'),
+             url('fonts/DroidSerif-Italic.ttf') format('truetype'),
+             url('fonts/DroidSerif-Italic.svg#DroidSerif-Italic') format('svg');
+}
+
+@font-face {
+	font-family: 'DroidSerif';
+        font-weight: bold;
+	src: url('fonts/DroidSerif-Bold.eot');
+	src: local('Droid Serif'),
+             url('fonts/DroidSerif-Bold.woff') format('woff'),
+             url('fonts/DroidSerif-Bold.ttf') format('truetype'),
+             url('fonts/DroidSerif-Bold.svg#DroidSerif-Bold') format('svg');
+}
+
+@font-face {
+	font-family: 'DroidSerif';
+	src: url('fonts/DroidSerif-BoldItalic.eot');
+        font-weight: bold;
+        font-style: italic;
+	src: local('Droid Serif'),
+             url('fonts/DroidSerif-BoldItalic.woff') format('woff'),
+             url('fonts/DroidSerif-BoldItalic.ttf') format('truetype'),
+             url('fonts/DroidSerif-BoldItalic.svg#DroidSerif-BoldItalic') format('svg');
+}
+
+
+
+HTML {
+  background-color: #f0f3ff;
+  width: 100%;
+}
+
+BODY { 
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  width: 50em;
+  margin: 2em auto;
+  padding: 0;
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 110%;
+  font-family: DroidSerif, Georgia, serif;
+  }
+
+A:link    { color: #5200A3; text-decoration: none }
+A:visited { color: #5200A3; text-decoration: none }
+A:hover   { color: #5200A3; text-decoration: none; border-bottom:#5200A3 dashed 1px; }
+
+TABLE.vanilla {
+  width: 100%;
+  border-width: 0px;
+  /* I can't seem to specify cellspacing or cellpadding properly using CSS... */
+}
+
+DL {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.vanilla .vanilla dl { font-size: 80%; }
+.vanilla .vanilla dl dl { padding-left: 0; font-size: 95%; }
+
+TD.section1, TD.section2, TD.section3, TD.section4, TD.doc, DL {
+  padding: 0 30px 0 34px;
+}
+
+TABLE.vanilla2 {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  border-width: 0px;
+}
+
+/* <TT> font is a little too small in MSIE */
+TT, PRE, CODE  {
+  font-family: Monaco,
+               "DejaVu Sans Mono",
+               "Bitstream Vera Sans Mono",
+               "Lucida Console",
+               monospace;
+  font-size: 90%;
+}
+
+LI P { margin: 0pt } 
+
+P { margin-top: 0; margin-bottom: 0.75em; }
+
+TD {
+  border-width: 0px;
+}
+
+TABLE.narrow {
+  border-width: 0px;
+}
+
+TD.s8  {  height: 0; margin:0; padding: 0  }
+TD.s15 {  height: 20px; }
+
+SPAN.keyword { text-decoration: underline; }
+
+/* Resize the buttom image to match the text size */
+IMG.coll { width : 0.75em; height: 0.75em; margin-bottom: 0; margin-right: 0.5em }
+
+/* --------- Contents page ---------- */
+
+DIV.node {
+  padding-left: 3em;
+}
+
+DIV.cnode {
+  padding-left: 1.75em;
+}
+
+SPAN.pkg {
+  position: absolute;
+  left: 50em;
+}
+
+/* --------- Documentation elements ---------- */
+
+TD FONT { font-weight: bold; letter-spacing: -0.02em; }
+
+TD.children {
+  padding-left: 25px;
+  }
+
+TD.synopsis {
+  padding: 2px;
+  background-color: #f0f0f0;
+  font-size: 80%;
+  font-family: Monaco,
+               "DejaVu Sans Mono",
+               "Bitstream Vera Sans Mono",
+               "Lucida Console",
+               monospace;
+
+ }
+
+TD.decl { 
+  padding: 4px 8px;
+  background-color: #FAFAFA; 
+  border-bottom: #F2F2F2 solid 1px;
+  border-top: #FCFCFC solid 1px;
+  font-size: 80%;
+  font-family: Monaco,
+               "DejaVu Sans Mono",
+               "Bitstream Vera Sans Mono",
+               "Lucida Console",
+               monospace;
+
+  vertical-align: top;
+  }
+
+TD.decl TD.decl {
+  font-size: 100%;
+  padding: 4px 0;
+  border: 0;
+}
+
+TD.topdecl {
+  padding: 20px 30px 0.5ex 30px;
+  font-size: 80%;
+  font-family: Monaco,
+               "DejaVu Sans Mono",
+               "Bitstream Vera Sans Mono",
+               "Lucida Console",
+               monospace;
+;
+  vertical-align: top;
+}
+
+.vanilla .vanilla .vanilla .topdecl {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.vanilla .vanilla .vanilla {
+  padding-left: 30px;
+}
+
+.decl .vanilla {
+  padding-left: 0px !important;
+}
+
+.body .vanilla .body {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.body .vanilla .body .decl {
+  padding-left: 12px;
+}
+
+.body .vanilla .body div .vanilla .decl {
+  padding-left: 12px;
+}
+
+TABLE.declbar {
+  background-color: #f0f0f0;
+  border-spacing: 0px;
+  border-bottom:1px solid #d7d7df;
+  border-right:1px solid #d7d7df;
+  border-top:1px solid #f4f4f9;
+  border-left:1px solid #f4f4f9;
+  padding: 4px;
+ }
+
+TD.declname {
+  width: 100%;
+  padding-right: 4px;
+ }
+
+TD.declbut {
+  padding-left: 8px;
+  padding-right: 5px;
+  border-left-width: 1px;
+  border-left-color: #000099;
+  border-left-style: solid;
+  white-space: nowrap;
+  font-size: x-small;
+ }
+
+/* 
+  arg is just like decl, except that wrapping is not allowed.  It is
+  used for function and constructor arguments which have a text box
+  to the right, where if wrapping is allowed the text box squashes up
+  the declaration by wrapping it.
+*/
+TD.arg { 
+  padding: 2px 12px;
+  background-color: #f0f0f0; 
+  font-size: 80%;
+  font-family: Monaco,
+             "DejaVu Sans Mono",
+             "Bitstream Vera Sans Mono",
+             "Lucida Console",
+             monospace;
+
+  vertical-align: top;
+  white-space: nowrap;
+  }
+
+TD.recfield { padding-left: 20px }
+
+TD.doc  { 
+  padding-left: 38px;
+  font-size: 95%;
+  line-height: 1.66;
+  }
+
+TD.ndoc  { 
+  font-size: 95%;
+  line-height: 1.66;
+  padding: 2px 4px 2px 8px;
+  }
+
+TD.rdoc  { 
+  padding: 2px;
+  padding-left: 30px;
+  width: 100%;
+  font-size: 80%;
+  font-style: italic;
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  }
+
+TD.body  { 
+  padding: 0 30px;
+  }
+
+TD.pkg {
+  width: 100%;
+  padding-left: 30px
+}
+
+TABLE.indexsearch TR.indexrow {
+  display: none;
+}
+TABLE.indexsearch TR.indexshow {
+  display: table-row;
+}
+
+TD.indexentry {
+  vertical-align: top;
+  padding: 0 30px
+  }
+
+TD.indexannot {
+  vertical-align: top;
+  padding-left: 20px;
+  white-space: nowrap
+  }
+
+TD.indexlinks {
+  width: 100%
+  }
+
+/* ------- Section Headings ------- */
+
+TD.section1, TD.section2, TD.section3, TD.section4, TD.section5 {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+}
+
+TD.section1 {
+  padding-top: 14px;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  font-size: 140%
+  }
+
+TD.section2 {
+  padding-top: 4px;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  font-size: 120%
+  }
+
+TD.section3 {
+  padding-top: 5px;
+  font-weight: bold;
+  letter-spacing: -0.02em;
+  font-size: 105%
+  }
+
+TD.section4 {
+  font-weight: bold;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  letter-spacing: -0.02em;
+  font-size: 90%
+  }
+
+/* -------------- The title bar at the top of the page */
+
+TD.infohead {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  color: #ffffff;
+  font-weight: bold;
+  padding: 0 30px;
+  text-align: left;
+}
+
+TD.infoval {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  color: #ffffff;
+  padding: 0 30px;
+  text-align: left;
+}
+
+TD.topbar {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  background-color: #3465a4;
+  padding: 5px;
+  -moz-border-radius-topleft:5px;
+  -moz-border-radius-topright:5px;
+  -webkit-border-radius-topleft:5px;
+  -webkit-border-radius-topright:5px;
+}
+
+TD.title {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  color: #ffffff;
+  padding-left: 30px;
+  letter-spacing: -0.02em;
+  font-weight: bold;
+  width: 100%
+  }
+
+TD.topbut {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-left-width: 1px;
+  border-left-color: #ffffff;
+  border-left-style: solid;
+  letter-spacing: -0.02em;
+  font-weight: bold;
+  white-space: nowrap;
+  }
+
+TD.topbut A:link {
+  color: #ffffff
+  }
+
+TD.topbut A:visited {
+  color: #ffff00
+  }
+
+TD.topbut A:hover {
+  background-color: #C9D3DE;
+  }
+
+TD.topbut:hover {
+  background-color: #C9D3DE;
+  }
+
+TD.modulebar { 
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  color: #141B24;
+  background-color: #C9D3DE;
+  padding: 5px;
+  border-top-width: 1px;
+  border-top-color: #ffffff;
+  border-top-style: solid;
+  -moz-border-radius-bottomleft:5px;
+  -moz-border-radius-bottomright:5px;
+  -webkit-border-radius-bottomleft:5px;
+  -webkit-border-radius-bottomright:5px;
+
+  }
+
+/* --------- The page footer --------- */
+
+TD.botbar {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  -moz-border-radius:5px;
+  -webkit-border-radius:5px;
+  background-color: #3465a4;
+  color: #ffffff;
+  padding: 5px
+  }
+TD.botbar A:link {
+  color: #ffffff;
+  text-decoration: underline
+  }
+TD.botbar A:visited {
+  color: #ffff00
+  }
+TD.botbar A:hover {
+  background-color: #6060ff
+  }
+
+/* --------- Mini Synopsis for Frame View --------- */
+
+.outer {
+  margin: 0 0;
+  padding: 0 0;
+}
+
+.mini-synopsis {
+  padding: 0.25em 0.25em;
+}
+
+.mini-synopsis H1 { font-size: 120%; }
+.mini-synopsis H2 { font-size: 107%; }
+.mini-synopsis H3 { font-size: 100%; }
+.mini-synopsis H1, .mini-synopsis H2, .mini-synopsis H3 {
+  font-family: "Gill Sans", "Helvetica Neue","Arial",sans-serif;
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+  padding: 0 0;
+  font-weight: bold; letter-spacing: -0.02em;
+}
+
+.mini-synopsis H1 { border-bottom: 1px solid #ccc; }
+
+.mini-topbar {
+  font-size: 120%;
+  background: #0077dd;
+  padding: 0.25em;
+}
+
+
