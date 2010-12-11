@@ -31,7 +31,7 @@ Executable projname
     mtl >= 2 && < 3,
     snap >= 0.3 && < 0.4,
     snap-core >= 0.3 && < 0.4,
-    text >= 0.10 && < 0.12,
+    text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.2
 
   extensions: TypeSynonymInstances MultiParamTypeClasses
