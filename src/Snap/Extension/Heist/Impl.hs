@@ -115,7 +115,7 @@ class MonadSnap m => HasHeistState m s | s -> m where
 heistInitializer :: MonadSnap m => FilePath -> Initializer (HeistState m)
 heistInitializer p = do
     heistState <- liftIO $ do
-        (origTs,sts) <- bindStaticTag emptyTemplateState
+        (origTs,sts) <- bindStaticTag $ emptyTemplateState p
         loadTemplates p origTs >>= either error (\ts -> do
             tsMVar <- newMVar ts
             return $ HeistState p origTs tsMVar sts id)
