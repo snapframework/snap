@@ -1,10 +1,9 @@
 Snap Framework
 --------------
 
-This is the first developer prerelease of the Snap framework.  Snap is a simple
-and fast web development framework and server written in Haskell. For more
-information or to download the latest version, you can visit the Snap project
-website at http://snapframework.com/.
+Snap is a simple and fast web development framework and server written in
+Haskell. For more information or to download the latest version, you can visit
+the Snap project website at http://snapframework.com/.
 
 
 Snap Status and Features
@@ -23,8 +22,8 @@ This developer prerelease contains only the Snap core system, namely:
     bind Haskell functionality to XML tags without getting PHP-style tag soup
     all over your pants
 
-Snap currently only runs on Unix platforms; it has been tested on Linux and Mac
-OSX Snow Leopard.
+Snap is currently only officially supported on Unix platforms; it has been
+tested on Linux and Mac OSX Snow Leopard, and is reported to work on Windows.
 
 
 Snap Philosophy
@@ -41,15 +40,3 @@ Snap aims to be the *de facto* web toolkit for Haskell, on the basis of:
   * Excellent documentation
 
   * Robustness and high test coverage
-
-
-Snap Roadmap
-------------
-
-Where are we going?
-
-1. First prerelease: HTTP server, monad, template system
-
-2. Second prerelease: component system with a collection of useful stock
-modules (called "Snaplets") for things like user and session management,
-caching, an administrative interface, etc.
