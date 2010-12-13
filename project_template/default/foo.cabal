@@ -10,17 +10,11 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.2
 
-Flag development
-  Description: Whether to build the server in development (interpreted) mode
-  Default: False
-
 Executable projname
   hs-source-dirs: src
   main-is: Main.hs
 
-  if !flag(development)
-    cpp-options: -DPRODUCTION
-    build-depends: hint >= 0.3.2 && < 0.4
+  cpp-options: -DPRODUCTION
 
   Build-depends:
     base >= 4 && < 5,
