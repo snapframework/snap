@@ -144,10 +144,11 @@ hintSnap opts modules initialization handler = do
     -- access.
     loadAction <- protectedActionEvaluator 3 loadInterpreter
 
-    interpreterResult <- liftIO loadAction
-    case interpreterResult of
-        Left err -> error $ format err
-        Right handlerAction -> return handlerAction
+    return $ do
+        interpreterResult <- liftIO loadAction
+        case interpreterResult of
+            Left err -> error $ format err
+            Right handlerAction -> handlerAction
 
 
 ------------------------------------------------------------------------------
