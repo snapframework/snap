@@ -1,8 +1,27 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+
 module Snap.Extension
-  ( SnapExtend
+  ( -- * Introduction
+    -- $introduction
+    
+    -- ** Using Snap Extensions
+    -- $using
+    
+    -- *** Define Application State and Monad
+    -- $definingtypes
+  
+    -- *** Provide Instances For \"HasState\" Classes
+    -- $hasstateclasses
+
+    -- *** Define The Initializer
+    -- $initializer
+    
+    -- *** Simplified Snap Extension Server
+    -- $httpserve
+
+    SnapExtend
   , Initializer
   , InitializerState(..)
   , runInitializer
@@ -28,6 +47,235 @@ import           Snap.Iteratee (enumBS, (>==>))
 import           Snap.Types
 import           System.IO
 
+
+{- $introduction
+
+  Snap Extensions is a library which makes it easy to create reusable plugins
+  that extend your Snap application with modular chunks of functionality such
+  as session management, user authentication, templating and database
+  connection pooling.
+
+  We achieve this by requiring that you create a datatype that holds an
+  environment for your application and wrap it around the Snap monad. This new
+  construct becomes your application's handler monad and gives you access to
+  your application state throughout your handlers.
+
+-}
+
+{- $using
+ 
+  Every extension has an interface and at least one implementation of that
+  interface. 
+  
+  For some extensions, like Heist, there is only ever going to be one
+  implementation of the interface. In these cases, both the interface and the
+  implementation are exported from the same module, Snap.Extension.Heist.Impl.
+  
+  For something like session management though, there could be multiple
+  implementations, one using a HDBC backend, one using a MongoDB backend and
+  one just using an encrypted cookie as backend. In these cases, the interface
+  is exported from Snap.Extension.Session, and the implementations live in
+  Snap.Extension.Session.HDBC, Snap.Extension.Session.MongoDB and
+  Snap.Extension.Session.CookieStore.
+
+  Keeping this in mind, there are a number of things you need to do to use Snap
+  extensions in your application. Let's walk through how to set up a simple
+  application with the Heist extension turned on.
+
+-}
+
+{- $definingtypes
+    
+  First, we define a record type AppState for holding our application's state,
+  including the state needed by the extensions we're using.
+
+  At the same time, we also define the monad for our application, App, as
+  a type alias to @SnapExtend AppState@. 'SnapExtend' is a 'MonadSnap' and
+  a 'MonadReader', whose environment is a given type; in our case, AppState.
+
+  @
+module App where
+
+import Database.HDBC
+import Database.HDBC.ODBC
+import Snap.Extension
+import Snap.Extension.Heist
+import Snap.Types
+
+type App = SnapExtend AppState
+
+data AppState = AppState
+    { heistState  :: HeistState App }
+  @
+
+  An important thing to note is that the -State types that we use in the fields
+  of AppState are specific to each implementation of a extension's interface.
+  That is, Snap.Extension.Session.HDBC will export a different SessionState to
+  Snap.Extension.Session.CookieStore, whose internal representation might be
+  completely different.
+
+  This state is what the extension's implementation needs to be able to do its
+  job.
+  
+-}
+
+{- $hasstateclasses
+
+  Now we have a datatype that contains all the internal state needed by our
+  application and the extensions it uses. That's a great start! But when do we
+  actually get to use this interface and all the functionality that these
+  extensions export?  What is actually being extended?
+
+  We use the interface provided by an extension inside our application's monad,
+  App. Snap extensions extend our App with new functionality by allowing us to
+  user their exported functions inside of our handlers. For example, the Heist
+  extension provides the function:
+
+  @render :: MonadHeist m => ByteString -> m ()@ that renders a template by its
+  name.
+  
+  Is App a 'MonadHeist'? Well, not quite yet. Any 'MonadReader' which is also
+  a 'MonadSnap' whose environment contains a 'HeistState' is a 'MonadHeist'.
+  That sounds a lot like our App, doesn't it? We just have to tell the Heist
+  extension how to find the 'HeistState' in our AppState:
+
+  @
+instance HasHeistState AppState where
+    getHeistState = heistState
+    setHeistState hs as = as { heistState = hs }
+  @
+
+  Stated another way, if we give our AppState the ability to hold a HeistState
+  and let the HasHeistState typeclass know how to get/set this state, we are
+  /automagically/ given the ability to render heist templates in our handlers.
+
+  With these instances, our application's monad App is now a MonadHeist 
+  giving it access to operations like:
+  
+  @render :: MonadHeist m => ByteString -> m ()@ 
+  
+  and
+
+  @heistLocal :: (TemplateState n -> TemplateState n) -> m a -> m a@
+
+-}
+
+{- $initializer
+ 
+  So, our monad is now a 'MonadHeist', but how do we actually construct our
+  AppState and turn an App () into a 'Snap' ()? We need to do this upfront,
+  once and right before our web server starts listening for connections.
+  
+  Snap extensions have a thing called an 'Initializer' that does these things.
+  Each implementation of a Snap extension interface provides an 'Initializer'
+  for its -State type. We must construct an initializer type for our -State
+  type, AppState. An 'Initializer' monad is provided in this library to make
+  it easy to do this. For your convenience, 'Initializer' is an instance of
+  'MonadIO'.
+
+  @
+appInitializer :: Initializer AppState
+appInitializer = do
+    hs <- heistInitializer \"resources/templates\"
+    return $ AppState hs
+  @
+
+  In addition to constructing the AppState, the Initializer monad also
+  constructs the init, destroy and reload functions for our application from
+  the init, reload and destroy functions for the extensions. 
+  
+  Although it won't cause a compile-time error, it is important to get the
+  order of the initializers correct as much as possible, otherwise they may be
+  reloaded and destroyed in the wrong order. The "right" order is an order
+  where every extension's dependencies are initialised before that extension.
+  For example, Snap.Extension.Session.HDBC would depend on something which
+  would extend the monad with MonadConnectionPool, i.e.,
+  Snap.Extension.ConnectionPool. If you had this configuration it would be
+  important that you put the connectionPoolInitializer before the
+  sessionInitializer in your appInitializer.
+
+  This Initializer AppState can then be passed to 'runInitializer', whose type
+  signature is:
+
+  @Bool -> Initializer s -> SnapExtend s () -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])@ 
+  
+  Essentially, this function takes an initializer action, our entire App () and
+  returns the 'Snap' action (which can be passed to 'httpServe'), a cleanup
+  action (which you run after 'httpServe') and a reload action (which you may
+  want to use in your handler for the path \"admin/reload\". The list it
+  returns is for error reporting - there is one tuple in the list for each Snap
+  extension; the first element of the tuple is the name of the Snap extension
+  and the second is a Maybe which contains Nothing if there was no error
+  reloading that extension and a Just with the ByteString containing the error
+  message if there was) and a cleanup action which you would run after
+  'httpServe'. 
+  
+  The following is an example of how you might use this in main:
+
+  @
+main :: IO ()
+
+main = do
+    (snap,cleanup,reload) <- runInitializer appInitializer site
+    let site = snap 
+               <|> path "admin/reload" $ defaultReloadHandler reload cleanup
+    quickHttpServe site
+  @
+
+  You'll notice we're using defaultReloadHandler. This is a function exported
+  by "Snap.Extension" with the type signature 
+
+  @MonadSnap m => IO [(ByteString, Maybe ByteString)] -> m ()@
+  
+  It takes the reload action returned by 'runInitializer' and returns a 'Snap'
+  action which renders a simple page showing how the reload went.
+
+-}
+
+{- $httpserve
+ 
+ This is, of course, a lot of avoidable boilerplate. Snap extensions framework
+ comes with another module "Snap.Extension.Server", which provides an interface
+ mimicking that of "Snap.Http.Server". Their function names clash, so if you
+ need to use both of them in the same module, use a qualified import. Using
+ this module, the example above becomes:
+
+  @
+import Snap.Extension.Server
+
+main :: IO ()
+main = quickHttpServe appRunner site
+  @
+
+  All it needs is a Initializer AppState and an App () and it is ready to go.
+  You might be wondering what happened to all the reload handler bits we
+  had before: That stuff has been absorbed into the config for the server.
+
+  One quick note: 'quickHttpServe' doesn't take a config, instead it uses the
+  defaults augmented with any options specified on the command-line.  The
+  default reload handler path in this case is "admin/reload". 
+  	
+  If you wanted to change this to nullReloadHandler, this is what you would do:
+
+  @
+import Snap.Extension.Server
+
+main :: IO ()
+main = do
+    config <- commandLineConfig emptyConfig
+    httpServe (setReloadHandler nullReloadHandler config) appRunner site
+  @
+
+  This behaves exactly as the above example apart from the reload handler.
+
+  With this, we now have a fully functional base application that makes use of
+  the Snap Extensions mechanism.
+
+  To initialize a directory with all of this setup provided as a starting
+  point, simply @cd@ into the desired location and type: @snap init@. An
+  example \"Timer\" extension will also be included for your convenience.
+
+-}
 
 ------------------------------------------------------------------------------
 -- | A 'SnapExtend' is a 'MonadReader' and a 'MonadSnap' whose environment is

@@ -47,10 +47,17 @@ interfaces from any other Snap Extension.
 -}
 
 module Snap.Extension.Heist.Impl
-  ( HeistState
-  , MonadHeist(..)
+  ( 
+  
+    -- * Heist State Definitions
+    HeistState
   , HasHeistState(..)
   , heistInitializer
+
+    -- * The MonadHeist Interface
+  , MonadHeist(..)
+
+    -- * Convenience Functions
   , registerSplices
   ) where
 
@@ -167,6 +174,17 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 --
 -- Typical use cases are dynamically generated components that are present in
 -- many of your views. 
+--
+-- Example Usage:
+--
+-- @
+-- appInit :: Initializer AppState
+-- appInit = do
+--  hs <- heistInitializer \"templates\"
+--  registerSplices hs $ 
+--   [ (\"tabs\", tabsSplice)
+--   , (\"loginLogout\", loginLogoutSplice) ] 
+-- @
 registerSplices
   :: (MonadSnap m, MonadIO n) 
   => HeistState m   

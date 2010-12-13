@@ -5,16 +5,20 @@
 
 'Snap.Extension.Heist' exports the 'MonadHeist' interface which allows you to
 integrate Heist templates into your Snap application. The interface's
-operations are 'heistServe', 'heistServeSingle', 'heistLocal' and 'render'.
+operations are 'heistServe', 'heistServeSingle', 'heistLocal' and 'render'. As
+a convenience, we also provide 'renderWithSplices' that combines 'heistLocal'
+and 'render' into a single function call.
 
-'Snap.Extension.Heist.Heist' contains the only implementation of this
-interface and can be used to turn your application's monad into a
-'MonadHeist'.
+'Snap.Extension.Heist.Impl' contains the only implementation of this interface
+and can be used to turn your application's monad into a 'MonadHeist'.
 
 'MonadHeist' is unusual among Snap extensions in that it's a multi-parameter
-typeclass. The last parameter is your application's monad, and the first is
-the monad you want the 'TemplateState' to use. This is usually, but not
-always, also your application's monad.
+typeclass. The last parameter is your application's monad, and the first is the
+monad you want the 'TemplateState' to use. This is usually, but not always,
+also your application's monad.
+
+This module should not be used directly. Instead, import
+"Snap.Extension.Heist.Impl" in your application.
 
 -}
 
