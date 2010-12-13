@@ -4,7 +4,9 @@ module Main where
 ------------------------------------------------------------------------------
 import           Char
 import           Data.List
+import qualified Data.ByteString.Char8 as S
 import qualified Data.Text as T
+import           Snap.Http.Server (snapServerVersion)
 import           System
 import           System.Directory
 import           System.Console.GetOpt
@@ -22,14 +24,18 @@ $(buildData "tDirDefault"   "default")
 ------------------------------------------------------------------------------
 usage :: String
 usage = unlines
-    ["Usage:"
-    ,""
-    ,"  snap <action>"
-    ,""
-    ,"    <action> can be one of:"
-    ,"      init - create a new project directory structure in the current directory"
-    ,""
-    ,"  Note: you can use --help after any of the above actions to get help on that action"
+    [ "Snap " ++ (S.unpack snapServerVersion) ++ " Project Kickstarter"
+    , ""
+    , "Usage:"
+    , ""
+    , "  snap <action>"
+    , ""
+    , "    <action> can be one of:"
+    , "      init - create a new project directory structure in the " ++
+        "current directory"
+    , ""
+    , "  Note: you can use --help after any of the above actions to get help "
+    , "  on that action"
     ]
 
 
