@@ -13,6 +13,7 @@ module Snap.Loader.Static where
 import           Control.Arrow
 import           Language.Haskell.TH
 
+import Snap.Extension
 
 ------------------------------------------------------------------------------
 -- | This function is a shim for source compatibility with loadSnapTH
@@ -23,8 +24,11 @@ import           Language.Haskell.TH
 -- > loadSnap initialize cleanup action = do
 -- >     i <- initialize
 -- >     return (cleanup i, action i)
-loadSnapTH :: Name -> Name -> Name -> Q Exp
-loadSnapTH initialize cleanup action = do
-    let [initE, cleanE, actE] = map varE [initialize, cleanup, action]
 
-    [| fmap ($cleanE &&& $actE) $initE |]
+-- FIXME: change docs to match two arguments. In particular "initializer" is
+-- now an "Initializer s" and "action" is a "SnapExtend s ()"
+loadSnapTH :: Name -> Name -> Q Exp
+loadSnapTH initializer action = do
+    let [initE, actE] = map varE [initializer, action]
+    -- FIXME: rename runInitializerHint2
+    [| return (runInitializerHint2 $initE $actE) |]

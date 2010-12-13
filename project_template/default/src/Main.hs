@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 {-|
 
@@ -45,11 +46,19 @@ module Main where
 #ifdef PRODUCTION
 import           Snap.Extension.Server
 #else
-import           Snap.Extension.Server.Hint
+import           Snap.Loader.Hint
+import           Snap.Http.Server (quickHttpServe)
 #endif
 
 import           Application
 import           Site
 
+-- FIXME: re-prettify this
 main :: IO ()
+#ifdef PRODUCTION
 main = quickHttpServe applicationInitializer site
+#else
+main = do
+    snap <- $(loadSnapTH 'applicationInitializer 'site)
+    quickHttpServe snap
+#endif

@@ -51,28 +51,28 @@ import qualified Snap.Loader.Static as Static
 -- The upshot is that you shouldn't need to recompile your server
 -- during development unless your .cabal file changes, or the code
 -- that uses this splice changes.
-loadSnapTH :: Name -> Name -> Name -> Q Exp
-loadSnapTH initialize cleanup action = do
+--
+-- FIXME: redo docs to match new reality of two arguments, the initializer and
+-- the action. Return type is also different now, should be just "Snap ()"
+loadSnapTH :: Name -> Name -> Q Exp
+loadSnapTH initializer action = do
     args <- runIO getArgs
 
-    let initMod = nameModule initialize
-        initBase = nameBase initialize
-        cleanMod = nameModule cleanup
-        cleanBase = nameBase cleanup
+    let initMod = nameModule initializer
+        initBase = nameBase initializer
         actMod = nameModule action
         actBase = nameBase action
 
-        modules = catMaybes [initMod, cleanMod, actMod]
+        modules = catMaybes [initMod, actMod]
         opts = getHintOpts args
 
-    let static = Static.loadSnapTH initialize cleanup action
+    let static = Static.loadSnapTH initializer action
 
     -- The let in this block causes the static expression to be
     -- pattern-matched, providing an extra check that the types were
     -- correct at compile-time, at least.
-    [| do let _ = $static :: IO (IO (), Snap ())
-          hint <- hintSnap opts modules initBase cleanBase actBase
-          return (return (), hint) |]
+    [| let _ = $static :: IO (Snap ())
+       in hintSnap opts modules initBase actBase |]
 
 
 ------------------------------------------------------------------------------
@@ -123,19 +123,17 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
                      -- modules which contain the initialization,
                      -- cleanup, and handler actions.  Everything else
                      -- they require will be loaded transitively.
-         -> String   -- ^ The name of the initialization action
-         -> String   -- ^ The name of the cleanup action
-         -> String   -- ^ The name of the handler action
+         -> String   -- ^ The name of the initializer action
+         -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
-hintSnap opts modules initialization cleanup handler = do
-    let action = intercalate " " [ "bracketSnap"
+hintSnap opts modules initialization handler = do
+    let action = intercalate " " [ "runInitializerHint2"
                                  , initialization
-                                 , cleanup
                                  , handler
                                  ]
         interpreter = do
             loadModules . nub $ modules
-            let imports = "Prelude" : "Snap.Types" : modules
+            let imports = ["Prelude", "Snap.Types", "Snap.Extension"] ++ modules
             setImports . nub $ imports
 
             interpret action (as :: Snap ())
@@ -146,11 +144,10 @@ hintSnap opts modules initialization cleanup handler = do
     -- access.
     loadAction <- protectedActionEvaluator 3 loadInterpreter
 
-    return $ do
-        interpreterResult <- liftIO loadAction
-        case interpreterResult of
-            Left err -> error $ format err
-            Right handlerAction -> handlerAction
+    interpreterResult <- liftIO loadAction
+    case interpreterResult of
+        Left err -> error $ format err
+        Right handlerAction -> return handlerAction
 
 
 ------------------------------------------------------------------------------

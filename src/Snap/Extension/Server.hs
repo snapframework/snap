@@ -5,21 +5,13 @@
 {-|
 
 This module provides replacements for the 'httpServe' and 'quickHttpServe'
-functions exported by 'Snap.Http.Server'. By taking a 'Initializer' as an argument,
-these functions simplify the glue code that is needed to use Snap Extensions.
-In particular, 'Snap.Extension.Server.Hint' provides function with identical
-type signatures to the ones exported by this module, but which dynamically
-reload their code on each request. See the README for details.
+functions exported by 'Snap.Http.Server'. By taking a 'Initializer' as an
+argument, these functions simplify the glue code that is needed to use Snap
+Extensions.
 
 -}
 
--- N.B.: the HINT cpp macro is defined by the file "Server/Hint.hs" and this
--- file is then included via cpp
-#ifdef HINT
-module Snap.Extension.Server.Hint
-#else
 module Snap.Extension.Server
-#endif
   ( ConfigExtend
   , httpServe
   , quickHttpServe
@@ -29,10 +21,7 @@ module Snap.Extension.Server
   , module Snap.Http.Server.Config
   ) where
 
-#ifndef HINT
 import           Control.Arrow
-#endif
-
 import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO
@@ -43,9 +32,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Prelude hiding (catch)
 import           Snap.Extension
-#ifdef HINT
-import           Snap.Loader.Hint
-#endif
 import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Http.Server.Config as C
 import           Snap.Http.Server.Config hiding ( defaultConfig
@@ -125,11 +111,7 @@ httpServe :: ConfigExtend s
 httpServe config i handler = do
     (state, makeCleanup, mkSnap) <-
         runInitializerHint verbose i (catch500 handler) reloader
-#ifdef HINT
-    (cleanup, snap) <- $(loadSnapTH 'state 'makeCleanup 'mkSnap)
-#else
     (cleanup, snap) <- fmap (makeCleanup &&& mkSnap) state
-#endif
     let site = compress $ snap
     mapM_ printListen $ C.getListen config
     _   <- try $ serve $ site :: IO (Either SomeException ())
@@ -138,8 +120,6 @@ httpServe config i handler = do
     output "Shutting down..."
 
   where
---    handle   :: SomeException -> IO ()
---    handle e = print e
     conf     = completeConfig config
     verbose  = fromJust $ getVerbose conf
     output   = when verbose . hPutStrLn stderr

@@ -25,7 +25,9 @@ module Snap.Extension
   , Initializer
   , InitializerState(..)
   , runInitializer
+    -- FIXME: rename this
   , runInitializerHint
+  , runInitializerHint2
   , mkInitializer
   , defaultReloadHandler
   , nullReloadHandler
@@ -377,6 +379,7 @@ runInitializer v (Initializer r) (SnapExtend m) = r v >>= \e -> case e of
     Right (SCR s a b) -> return (runReaderT m s, a, b)
 
 
+-- FIXME: doesn't have anything to do with hint anymore
 ------------------------------------------------------------------------------
 -- | Serves the same purpose as 'runInitializer', but can be used with Hint.
 -- This is explained in the README.
@@ -395,6 +398,23 @@ runInitializerHint v (Initializer r) se@(SnapExtend m) f = r v >>= \e -> case e 
     Left s            -> return (return s, const $ return (), runReaderT m)
     Right (SCR s a b) -> let (SnapExtend m') = f b <|> se
                          in return (return s, const a, runReaderT m')
+
+------------------------------------------------------------------------------
+-- | Runs an initializer, obtains state, runs the handler, and tears everything
+-- down all in one request. Used with the hint backend which reloads everything
+-- every time.
+runInitializerHint2 :: Initializer s
+                    -- ^ The Initializer value
+                    -> SnapExtend s ()
+                    -- ^ An action in your application's monad.
+                    -> Snap ()
+runInitializerHint2 (Initializer r) se@(SnapExtend m) = do
+    liftIO (r True) >>= either
+                          -- Left s: no cleanup action
+                          (\s -> runReaderT m s)
+                          f
+  where
+    f (SCR s a _) = runReaderT m s `finally` liftIO a
 
 
 ------------------------------------------------------------------------------

@@ -10,11 +10,18 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.2
 
+Flag development
+  Description: Whether to build the server in development (interpreted) mode
+  Default: False
+
 Executable projname
   hs-source-dirs: src
   main-is: Main.hs
 
-  cpp-options: -DPRODUCTION
+  if !flag(development)
+    cpp-options: -DPRODUCTION
+  else
+    build-depends: hint >= 0.3.2 && < 0.4
 
   Build-depends:
     base >= 4 && < 5,
@@ -25,6 +32,7 @@ Executable projname
     mtl >= 2 && < 3,
     snap >= 0.3 && < 0.4,
     snap-core >= 0.3 && < 0.4,
+    snap-server >= 0.3 && <0.4,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.2
 
