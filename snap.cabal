@@ -39,7 +39,7 @@ extra-source-files:
   project_template/default/src/Snap/Extension/Timer,
   project_template/default/src/Snap/Extension/Timer/Timer.hs,
   project_template/default/src/Snap/Extension/Timer.hs
-  
+
 Library
   hs-source-dirs: src
 
