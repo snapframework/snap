@@ -30,6 +30,7 @@ import           System.Environment (getArgs)
 ------------------------------------------------------------------------------
 import           Snap.Types
 import qualified Snap.Loader.Static as Static
+import           Snap.Loader.Hint.Helper
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the
@@ -142,7 +143,7 @@ hintSnap opts modules initialization handler = do
 
     -- Protect the interpreter from concurrent and high-speed serial
     -- access.
-    loadAction <- protectedActionEvaluator 3 loadInterpreter
+    loadAction <- protectedActionEvaluator 3 $ protectHandlers loadInterpreter
 
     return $ do
         interpreterResult <- liftIO loadAction
