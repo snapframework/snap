@@ -5,7 +5,7 @@
 -- to gather the necessary compile-time information about code
 -- location, compiler arguments, etc, and bind that information into
 -- the calls to the dynamic loader.
-module Snap.Extension.Loader.Hint
+module Snap.Extension.Loader.Devel
   ( loadSnapTH
   ) where
 
@@ -32,7 +32,7 @@ import           System.Environment (getArgs)
 ------------------------------------------------------------------------------
 import           Snap.Types
 import           Snap.Extension (runInitializerHint)
-import           Snap.Extension.Loader.Hint.Helper
+import           Snap.Extension.Loader.Devel.Helper
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the

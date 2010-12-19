@@ -46,7 +46,7 @@ module Main where
 #ifdef PRODUCTION
 import           Snap.Extension.Server
 #else
-import           Snap.Loader.Hint
+import           Snap.Loader.Devel
 import           Snap.Http.Server (quickHttpServe)
 #endif
 

@@ -46,14 +46,13 @@ Library
   exposed-modules:
     Snap.Extension.Heist,
     Snap.Extension.Heist.Impl,
-    Snap.Extension.Loader.Hint,
-    Snap.Extension.Server.Hint,
+    Snap.Extension.Loader.Devel,
     Snap.Extension.Server,
     Snap.Extension,
     Snap.Heist
 
   other-modules:
-    Snap.Extension.Loader.Hint.Helper
+    Snap.Extension.Loader.Devel.Helper
 
   build-depends:
     base >= 4 && < 5,
