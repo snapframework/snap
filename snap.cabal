@@ -47,7 +47,6 @@ Library
     Snap.Extension.Heist,
     Snap.Extension.Heist.Impl,
     Snap.Extension.Loader.Hint,
-    Snap.Extension.Loader.Static,
     Snap.Extension.Server.Hint,
     Snap.Extension.Server,
     Snap.Extension,

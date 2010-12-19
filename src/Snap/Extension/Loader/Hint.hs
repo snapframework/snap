@@ -31,7 +31,7 @@ import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-import qualified Snap.Extension.Loader.Static as Static
+import           Snap.Extension (runInitializerHint)
 import           Snap.Extension.Loader.Hint.Helper
 
 ------------------------------------------------------------------------------
@@ -65,13 +65,20 @@ loadSnapTH initializer action = do
         modules = catMaybes [initMod, actMod]
         opts = getHintOpts args
 
-    let static = Static.loadSnapTH initializer action
+    let static = typecheck initializer action
 
     -- The let in this block causes the static expression to be
     -- pattern-matched, providing an extra check that the types were
     -- correct at compile-time, at least.
     [| let _ = $static :: IO (Snap ())
        in hintSnap opts modules initBase actBase |]
+
+
+-- Used to typecheck the initializer & action splices.
+typecheck :: Name -> Name -> Q Exp
+typecheck initializer action = do
+    let [initE, actE] = map varE [initializer, action]
+    [| return (runInitializerHint $initE $actE) |]
 
 
 ------------------------------------------------------------------------------
