@@ -25,9 +25,8 @@ module Snap.Extension
   , Initializer
   , InitializerState(..)
   , runInitializer
-    -- FIXME: rename this
+  , runInitializerWithReloadAction
   , runInitializerHint
-  , runInitializerHint2
   , mkInitializer
   , defaultReloadHandler
   , nullReloadHandler
@@ -54,13 +53,16 @@ import           System.IO
 
   Snap Extensions is a library which makes it easy to create reusable plugins
   that extend your Snap application with modular chunks of functionality such
-  as session management, user authentication, templating and database
+  as session management, user authentication, templating, or database
   connection pooling.
 
   We achieve this by requiring that you create a datatype that holds an
   environment for your application and wrap it around the Snap monad. This new
   construct becomes your application's handler monad and gives you access to
   your application state throughout your handlers.
+
+  Warning: this interface is still EXPERIMENTAL and has a very high likelihood
+  of changing substantially in coming versions of Snap.
 
 -}
 
@@ -73,12 +75,12 @@ import           System.IO
   implementation of the interface. In these cases, both the interface and the
   implementation are exported from the same module, Snap.Extension.Heist.Impl.
   
-  For something like session management though, there could be multiple
-  implementations, one using a HDBC backend, one using a MongoDB backend and
-  one just using an encrypted cookie as backend. In these cases, the interface
-  is exported from Snap.Extension.Session, and the implementations live in
-  Snap.Extension.Session.HDBC, Snap.Extension.Session.MongoDB and
-  Snap.Extension.Session.CookieStore.
+  Hypothetically, for something like session management though, there could be
+  multiple implementations, one using a HDBC backend, one using a MongoDB
+  backend and one just using an encrypted cookie as backend. In these cases,
+  the interface is exported from Snap.Extension.Session, and the
+  implementations live in Snap.Extension.Session.HDBC,
+  Snap.Extension.Session.MongoDB and Snap.Extension.Session.CookieStore.
 
   Keeping this in mind, there are a number of things you need to do to use Snap
   extensions in your application. Let's walk through how to set up a simple
@@ -196,41 +198,30 @@ appInitializer = do
   important that you put the connectionPoolInitializer before the
   sessionInitializer in your appInitializer.
 
-  This Initializer AppState can then be passed to 'runInitializer', whose type
-  signature is:
+  This Initializer AppState can then be passed to 'runInitializer', which
+  combines our initializer action with our application's handler to produce a
+  'Snap' handler (which can be passed to 'httpServe'), a cleanup action (which
+  you can run after 'httpServe' finishes), and a reload action (which, for
+  example, you may want to use in your handler for the path \"admin/reload\".
 
-  @Bool -> Initializer s -> SnapExtend s () -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])@ 
-  
-  Essentially, this function takes an initializer action, our entire App () and
-  returns the 'Snap' action (which can be passed to 'httpServe'), a cleanup
-  action (which you run after 'httpServe') and a reload action (which you may
-  want to use in your handler for the path \"admin/reload\". The list it
-  returns is for error reporting - there is one tuple in the list for each Snap
-  extension; the first element of the tuple is the name of the Snap extension
-  and the second is a Maybe which contains Nothing if there was no error
-  reloading that extension and a Just with the ByteString containing the error
-  message if there was) and a cleanup action which you would run after
-  'httpServe'. 
-  
   The following is an example of how you might use this in main:
 
   @
 main :: IO ()
-
 main = do
-    (snap,cleanup,reload) <- runInitializer appInitializer site
+    (snap,cleanup,reload) <- runInitializer appInitializer appSite
     let site = snap 
                <|> path "admin/reload" $ defaultReloadHandler reload cleanup
-    quickHttpServe site
+    quickHttpServe site `finally` cleanup
   @
 
-  You'll notice we're using defaultReloadHandler. This is a function exported
-  by "Snap.Extension" with the type signature 
+  You'll notice we're using 'defaultReloadHandler'. This is a function exported
+  by "Snap.Extension" with the type signature
 
-  @MonadSnap m => IO [(ByteString, Maybe ByteString)] -> m ()@
-  
-  It takes the reload action returned by 'runInitializer' and returns a 'Snap'
-  action which renders a simple page showing how the reload went.
+  @MonadSnap m => IO [(ByteString, Maybe ByteString)] -> m ()@ It takes the
+  reload action returned by 'runInitializer' and returns a 'Snap' action which
+  renders a simple page showing how the reload went. To avoid denial-of-service
+  attacks, the reload handler only works for requests made from the local host.
 
 -}
 
@@ -366,49 +357,65 @@ mkInitializer s = Initializer $ \v -> setup v $ Right $ mkSCR v
 -- | Given the Initializer for your application's state, and a value in the
 -- monad formed by 'SnapExtend' wrapped it, this returns a 'Snap' action, a
 -- cleanup action and a reload action.
-runInitializer :: Bool
-               -- ^ Verbosity; info is printed to 'stderr' when this is 'True'
-               -> Initializer s
-               -- ^ The Initializer value
-               -> SnapExtend s ()
-               -- ^ An action in your application's monad
-               -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])
-               -- ^ This is documented thoroughly in the README
-runInitializer v (Initializer r) (SnapExtend m) = r v >>= \e -> case e of
-    Left s            -> return (runReaderT m s, return (), return [])
-    Right (SCR s a b) -> return (runReaderT m s, a, b)
+runInitializer
+  :: Bool
+    -- ^ Verbosity; info is printed to 'stderr' when this is 'True'
+  -> Initializer s
+    -- ^ The Initializer value
+  -> SnapExtend s ()
+    -- ^ An action in your application's monad
+  -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])
+     -- ^ Returns a 'Snap' handler, a cleanup action, and a reload action. The
+     -- list returned by the reload action is for error reporting. There is one
+     -- tuple in the list for each Snap extension; the first element of the
+     -- tuple is the name of the Snap extension, and the second is a Maybe
+     -- which contains Nothing if there was no error reloading that extension
+     -- and a Just with the ByteString containing the error message if there
+     -- was.
+runInitializer v (Initializer r) (SnapExtend m) =
+    r v >>= \e -> case e of
+        Left s            -> return (runReaderT m s, return (), return [])
+        Right (SCR s a b) -> return (runReaderT m s, a, b)
 
 
--- FIXME: doesn't have anything to do with hint anymore
 ------------------------------------------------------------------------------
 -- | Serves the same purpose as 'runInitializer', but can be used with Hint.
 -- This is explained in the README.
-runInitializerHint :: Bool
-                   -- ^ Verbosity; info is printed to 'stderr' when this is
-                   -- 'True'
-                   -> Initializer s
-                   -- ^ The Initializer value
-                   -> SnapExtend s ()
-                   -- ^ An action in your application's monad.
-                   -> (IO [(ByteString, Maybe ByteString)] -> SnapExtend s ())
-                   -- ^ See README and 'defaultReloadHandler'
-                   -> IO (IO s, s -> IO (), s -> Snap ())
-                   -- ^ A tuple of values which can be passed to @loadSnapTH@.
-runInitializerHint v (Initializer r) se@(SnapExtend m) f = r v >>= \e -> case e of
-    Left s            -> return (return s, const $ return (), runReaderT m)
-    Right (SCR s a b) -> let (SnapExtend m') = f b <|> se
-                         in return (return s, const a, runReaderT m')
+runInitializerWithReloadAction
+  :: Bool
+    -- ^ Verbosity; info is printed to 'stderr' when this is 'True'
+  -> Initializer s
+    -- ^ The Initializer value
+  -> SnapExtend s ()
+    -- ^ An action in your application's monad.
+  -> (IO [(ByteString, Maybe ByteString)] -> SnapExtend s ())
+    -- ^ Your desired \"reload\" handler; it gets passed the reload
+    -- action. This handler is always run, so you have to guard the path
+    -- yourself (with.
+  -> IO (Snap (), IO ())
+    -- ^ Your 'Snap' handler and a cleanup action.
+runInitializerWithReloadAction v (Initializer r) se f = do
+    (state, cleanup, reload) <- runInit
+
+    let (SnapExtend m') = f reload <|> se
+    return (runReaderT m' state, cleanup)
+
+  where
+    runInit = r v >>= \e ->
+              case e of
+                Left s            -> return (s, return (), return [])
+                Right (SCR s a b) -> return (s, a, b)
 
 ------------------------------------------------------------------------------
 -- | Runs an initializer, obtains state, runs the handler, and tears everything
 -- down all in one request. Used with the hint backend which reloads everything
 -- every time.
-runInitializerHint2 :: Initializer s
-                    -- ^ The Initializer value
-                    -> SnapExtend s ()
-                    -- ^ An action in your application's monad.
-                    -> Snap ()
-runInitializerHint2 (Initializer r) se@(SnapExtend m) = do
+runInitializerHint :: Initializer s
+                   -- ^ The Initializer value
+                   -> SnapExtend s ()
+                   -- ^ An action in your application's monad.
+                   -> Snap ()
+runInitializerHint (Initializer r) (SnapExtend m) = do
     liftIO (r True) >>= either
                           -- Left s: no cleanup action
                           (\s -> runReaderT m s)
@@ -460,7 +467,7 @@ join' (Initializer r) = Initializer $ \v -> r v >>= \e -> case e of
 defaultReloadHandler :: MonadSnap m
                      => IO [(ByteString, Maybe ByteString)]
                      -> m ()
-defaultReloadHandler ioms = do
+defaultReloadHandler ioms = failIfNotLocal $ do
     ms <- liftIO $ ioms
     let showE e       = mappend "Error: "  $ toUTF8 $ show e
         format (n, m) = mconcat [n, ": ", maybe "Sucess" showE m, "\n"]
@@ -468,7 +475,14 @@ defaultReloadHandler ioms = do
     finishWith $ setContentType "text/plain; charset=utf-8"
         $ setContentLength (fromIntegral $ B.length msg)
         $ modifyResponseBody (>==> enumBS msg) emptyResponse
-
+  where
+    failIfNotLocal m = do
+        rip <- liftM rqRemoteAddr getRequest
+        if not $ elem rip [ "127.0.0.1"
+                          , "localhost"
+                          , "::1" ]
+          then pass
+          else m
 
 ------------------------------------------------------------------------------
 -- | Use this reload handler to disable the ability to have a web handler

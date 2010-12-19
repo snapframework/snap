@@ -8,9 +8,8 @@
 -- obvious, straight-forward manner.  It is present *only* as a
 -- source-level replacement for the Hint loader, to enable quickly
 -- switching the Hint loader off with only a changed import.
-module Snap.Loader.Static where
+module Snap.Extension.Loader.Static where
 
-import           Control.Arrow
 import           Language.Haskell.TH
 
 import Snap.Extension
@@ -31,4 +30,4 @@ loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initializer action = do
     let [initE, actE] = map varE [initializer, action]
     -- FIXME: rename runInitializerHint2
-    [| return (runInitializerHint2 $initE $actE) |]
+    [| return (runInitializerHint $initE $actE) |]

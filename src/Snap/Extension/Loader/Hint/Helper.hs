@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-module Snap.Loader.Hint.Helper (protectHandlers) where
+module Snap.Extension.Loader.Hint.Helper (protectHandlers) where
 
 import Control.Exception (bracket)
 

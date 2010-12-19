@@ -21,7 +21,6 @@ module Snap.Extension.Server
   , module Snap.Http.Server.Config
   ) where
 
-import           Control.Arrow
 import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO
@@ -108,10 +107,12 @@ httpServe :: ConfigExtend s
           -> SnapExtend s ()
           -- ^ The application to be served
           -> IO ()
-httpServe config i handler = do
-    (state, makeCleanup, mkSnap) <-
-        runInitializerHint verbose i (catch500 handler) reloader
-    (cleanup, snap) <- fmap (makeCleanup &&& mkSnap) state
+httpServe config initializer handler = do
+    (snap, cleanup) <- runInitializerWithReloadAction
+                         verbose
+                         initializer
+                         (catch500 handler)
+                         reloader
     let site = compress $ snap
     mapM_ printListen $ C.getListen config
     _   <- try $ serve $ site :: IO (Either SomeException ())

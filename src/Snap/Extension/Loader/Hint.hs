@@ -5,7 +5,9 @@
 -- to gather the necessary compile-time information about code
 -- location, compiler arguments, etc, and bind that information into
 -- the calls to the dynamic loader.
-module Snap.Loader.Hint where
+module Snap.Extension.Loader.Hint
+  ( loadSnapTH
+  ) where
 
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
@@ -29,8 +31,8 @@ import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-import qualified Snap.Loader.Static as Static
-import           Snap.Loader.Hint.Helper
+import qualified Snap.Extension.Loader.Static as Static
+import           Snap.Extension.Loader.Hint.Helper
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the
@@ -39,22 +41,18 @@ import           Snap.Loader.Hint.Helper
 --
 -- This could be considered a TH wrapper around a function
 --
--- > loadSnap :: IO a -> (a -> IO ()) -> (a -> Snap ()) -> IO (IO (), Snap ())
+-- > loadSnap :: Initializer s -> SnapExtend s () -> IO (Snap ())
 --
 -- with a magical implementation.
 --
--- The returned IO action does nothing.  The returned Snap action does
--- initialization, runs the action, and does the cleanup.  This means
--- that the whole application state will be loaded and unloaded for
--- each request.  To make this worthwhile, those steps should be made
--- quite fast.
+-- The returned Snap action runs the 'Initializer', runs the 'Snap' handler,
+-- and does the cleanup.  This means that the whole application state will be
+-- loaded and unloaded for each request.  To make this worthwhile, those steps
+-- should be made quite fast.
 --
 -- The upshot is that you shouldn't need to recompile your server
 -- during development unless your .cabal file changes, or the code
 -- that uses this splice changes.
---
--- FIXME: redo docs to match new reality of two arguments, the initializer and
--- the action. Return type is also different now, should be just "Snap ()"
 loadSnapTH :: Name -> Name -> Q Exp
 loadSnapTH initializer action = do
     args <- runIO getArgs
@@ -128,7 +126,7 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
          -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
 hintSnap opts modules initialization handler = do
-    let action = intercalate " " [ "runInitializerHint2"
+    let action = intercalate " " [ "runInitializerHint"
                                  , initialization
                                  , handler
                                  ]
