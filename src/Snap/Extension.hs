@@ -363,7 +363,7 @@ runInitializer
   -> Initializer s
     -- ^ The Initializer value
   -> SnapExtend s ()
-    -- ^ An action in your application's monad
+    -- ^ A web handler in your application's monad
   -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])
      -- ^ Returns a 'Snap' handler, a cleanup action, and a reload action. The
      -- list returned by the reload action is for error reporting. There is one
@@ -379,15 +379,16 @@ runInitializer v (Initializer r) (SnapExtend m) =
 
 
 ------------------------------------------------------------------------------
--- | Serves the same purpose as 'runInitializer', but can be used with Hint.
--- This is explained in the README.
+-- | Serves the same purpose as 'runInitializer', but combines the
+--   application's web handler with a user-supplied action to be run to reload
+--   the application's state.
 runInitializerWithReloadAction
   :: Bool
     -- ^ Verbosity; info is printed to 'stderr' when this is 'True'
   -> Initializer s
     -- ^ The Initializer value
   -> SnapExtend s ()
-    -- ^ An action in your application's monad.
+    -- ^ A web handler in your application's monad.
   -> (IO [(ByteString, Maybe ByteString)] -> SnapExtend s ())
     -- ^ Your desired \"reload\" handler; it gets passed the reload
     -- action. This handler is always run, so you have to guard the path

@@ -53,7 +53,6 @@ import           Snap.Http.Server (quickHttpServe)
 import           Application
 import           Site
 
--- FIXME: re-prettify this
 main :: IO ()
 #ifdef PRODUCTION
 main = quickHttpServe applicationInitializer site

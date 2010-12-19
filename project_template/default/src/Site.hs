@@ -44,7 +44,7 @@ echo = do
     message <- decodedParam "stuff"
     heistLocal (bindString "message" message) $ render "echo"
   where
-    decodedParam p = fromMaybe <*> urlDecode <$> fromMaybe "" <$> getParam p
+    decodedParam p = fromMaybe "" <$> getParam p
 
 
 ------------------------------------------------------------------------------
