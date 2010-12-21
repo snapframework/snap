@@ -5,19 +5,19 @@
 module Snap.Extension
   ( -- * Introduction
     -- $introduction
-    
+
     -- ** Using Snap Extensions
     -- $using
-    
+
     -- *** Define Application State and Monad
     -- $definingtypes
-  
+
     -- *** Provide Instances For \"HasState\" Classes
     -- $hasstateclasses
 
     -- *** Define The Initializer
     -- $initializer
-    
+
     -- *** Simplified Snap Extension Server
     -- $httpserve
 
@@ -67,14 +67,14 @@ import           System.IO
 -}
 
 {- $using
- 
+
   Every extension has an interface and at least one implementation of that
-  interface. 
-  
+  interface.
+
   For some extensions, like Heist, there is only ever going to be one
   implementation of the interface. In these cases, both the interface and the
   implementation are exported from the same module, Snap.Extension.Heist.Impl.
-  
+
   Hypothetically, for something like session management though, there could be
   multiple implementations, one using a HDBC backend, one using a MongoDB
   backend and one just using an encrypted cookie as backend. In these cases,
@@ -89,7 +89,7 @@ import           System.IO
 -}
 
 {- $definingtypes
-    
+
   First, we define a record type AppState for holding our application's state,
   including the state needed by the extensions we're using.
 
@@ -120,7 +120,7 @@ data AppState = AppState
 
   This state is what the extension's implementation needs to be able to do its
   job.
-  
+
 -}
 
 {- $hasstateclasses
@@ -137,7 +137,7 @@ data AppState = AppState
 
   @render :: MonadHeist m => ByteString -> m ()@ that renders a template by its
   name.
-  
+
   Is App a 'MonadHeist'? Well, not quite yet. Any 'MonadReader' which is also
   a 'MonadSnap' whose environment contains a 'HeistState' is a 'MonadHeist'.
   That sounds a lot like our App, doesn't it? We just have to tell the Heist
@@ -153,11 +153,11 @@ instance HasHeistState AppState where
   and let the HasHeistState typeclass know how to get/set this state, we are
   /automagically/ given the ability to render heist templates in our handlers.
 
-  With these instances, our application's monad App is now a MonadHeist 
+  With these instances, our application's monad App is now a MonadHeist
   giving it access to operations like:
-  
-  @render :: MonadHeist m => ByteString -> m ()@ 
-  
+
+  @render :: MonadHeist m => ByteString -> m ()@
+
   and
 
   @heistLocal :: (TemplateState n -> TemplateState n) -> m a -> m a@
@@ -165,11 +165,11 @@ instance HasHeistState AppState where
 -}
 
 {- $initializer
- 
+
   So, our monad is now a 'MonadHeist', but how do we actually construct our
   AppState and turn an App () into a 'Snap' ()? We need to do this upfront,
   once and right before our web server starts listening for connections.
-  
+
   Snap extensions have a thing called an 'Initializer' that does these things.
   Each implementation of a Snap extension interface provides an 'Initializer'
   for its -State type. We must construct an initializer type for our -State
@@ -186,8 +186,8 @@ appInitializer = do
 
   In addition to constructing the AppState, the Initializer monad also
   constructs the init, destroy and reload functions for our application from
-  the init, reload and destroy functions for the extensions. 
-  
+  the init, reload and destroy functions for the extensions.
+
   Although it won't cause a compile-time error, it is important to get the
   order of the initializers correct as much as possible, otherwise they may be
   reloaded and destroyed in the wrong order. The "right" order is an order
@@ -210,7 +210,7 @@ appInitializer = do
 main :: IO ()
 main = do
     (snap,cleanup,reload) <- runInitializer appInitializer appSite
-    let site = snap 
+    let site = snap
                <|> path "admin/reload" $ defaultReloadHandler reload cleanup
     quickHttpServe site `finally` cleanup
   @
@@ -226,7 +226,7 @@ main = do
 -}
 
 {- $httpserve
- 
+
  This is, of course, a lot of avoidable boilerplate. Snap extensions framework
  comes with another module "Snap.Extension.Server", which provides an interface
  mimicking that of "Snap.Http.Server". Their function names clash, so if you
@@ -246,8 +246,8 @@ main = quickHttpServe appRunner site
 
   One quick note: 'quickHttpServe' doesn't take a config, instead it uses the
   defaults augmented with any options specified on the command-line.  The
-  default reload handler path in this case is "admin/reload". 
-  	
+  default reload handler path in this case is "admin/reload".
+
   If you wanted to change this to nullReloadHandler, this is what you would do:
 
   @
