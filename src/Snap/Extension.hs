@@ -1,7 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-
 module Snap.Extension
   ( -- * Introduction
     -- $introduction
@@ -26,7 +25,7 @@ module Snap.Extension
   , InitializerState(..)
   , runInitializer
   , runInitializerWithReloadAction
-  , runInitializerHint
+  , getHintInternals
   , mkInitializer
   , defaultReloadHandler
   , nullReloadHandler
@@ -43,7 +42,8 @@ import qualified Data.ByteString.Char8 as B
 import           Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import           Prelude hiding (catch)
+import           Prelude hiding (catch, init)
+import           Snap.Extension.Loader.Devel.Evaluator
 import           Snap.Iteratee (enumBS, (>==>))
 import           Snap.Types
 import           System.IO
@@ -408,21 +408,16 @@ runInitializerWithReloadAction v (Initializer r) se f = do
                 Right (SCR s a b) -> return (s, a, b)
 
 ------------------------------------------------------------------------------
--- | Runs an initializer, obtains state, runs the handler, and tears everything
--- down all in one request. Used with the hint backend which reloads everything
--- every time.
-runInitializerHint :: Initializer s
-                   -- ^ The Initializer value
-                   -> SnapExtend s ()
-                   -- ^ An action in your application's monad.
-                   -> Snap ()
-runInitializerHint (Initializer r) (SnapExtend m) = do
-    liftIO (r True) >>= either
-                          -- Left s: no cleanup action
-                          (\s -> runReaderT m s)
-                          f
-  where
-    f (SCR s a _) = runReaderT m s `finally` liftIO a
+-- | Translates an Initializer and SnapExtend into a HintInternals
+-- object, used by the hint loading code.
+getHintInternals :: Initializer s
+                 -- ^ The Initializer value
+                 -> SnapExtend s ()
+                 -- ^ An action in your application's monad.
+                 -> IO HintInternals
+getHintInternals i se = do
+    (action, cleanup, _) <- runInitializer True i se
+    return $ makeHintInternals (return ()) (const cleanup) (const action)
 
 
 ------------------------------------------------------------------------------

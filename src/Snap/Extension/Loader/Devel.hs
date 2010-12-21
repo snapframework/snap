@@ -9,30 +9,25 @@ module Snap.Extension.Loader.Devel
   ( loadSnapTH
   ) where
 
+import           Control.Monad (join)
+
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 
-import           Control.Concurrent (forkIO, myThreadId)
-import           Control.Concurrent.MVar
-import           Control.Exception
-import           Control.Monad (when)
-import           Control.Monad.Trans (liftIO)
-
 import           Data.Maybe (catMaybes)
-import           Data.Time.Clock
 
 import           Language.Haskell.Interpreter hiding (lift, liftIO)
 import           Language.Haskell.Interpreter.Unsafe
 
 import           Language.Haskell.TH
 
-import           Prelude hiding (catch)
 
 import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-import           Snap.Extension (runInitializerHint)
-import           Snap.Extension.Loader.Devel.Helper
+import           Snap.Extension (getHintInternals)
+import           Snap.Extension.Loader.Devel.Signal
+import           Snap.Extension.Loader.Devel.Evaluator
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the
@@ -65,20 +60,10 @@ loadSnapTH initializer action = do
         modules = catMaybes [initMod, actMod]
         opts = getHintOpts args
 
-    let static = typecheck initializer action
-
-    -- The let in this block causes the static expression to be
-    -- pattern-matched, providing an extra check that the types were
-    -- correct at compile-time, at least.
-    [| let _ = $static :: IO (Snap ())
+    -- The let in this block causes an extra static type check that the
+    -- types of the names passed in were correct at compile time.
+    [| let _ = getHintInternals $(varE initializer) $(varE action)
        in hintSnap opts modules initBase actBase |]
-
-
--- Used to typecheck the initializer & action splices.
-typecheck :: Name -> Name -> Q Exp
-typecheck initializer action = do
-    let [initE, actE] = map varE [initializer, action]
-    [| return (runInitializerHint $initE $actE) |]
 
 
 ------------------------------------------------------------------------------
@@ -133,28 +118,27 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
          -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
 hintSnap opts modules initialization handler = do
-    let action = intercalate " " [ "runInitializerHint"
+    let action = intercalate " " [ "getHintInternals"
                                  , initialization
                                  , handler
                                  ]
         interpreter = do
             loadModules . nub $ modules
-            let imports = ["Prelude", "Snap.Types", "Snap.Extension"] ++ modules
+            let imports = "Prelude" : "Snap.Extension" :
+                          "Snap.Extension.Loader.Devel.Evaluator" :
+                          modules
             setImports . nub $ imports
 
-            interpret action (as :: Snap ())
+            interpret action (as :: IO HintInternals)
 
         loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
 
-    -- Protect the interpreter from concurrent and high-speed serial
-    -- access.
-    loadAction <- protectedActionEvaluator 3 $ protectHandlers loadInterpreter
+        formatError (Left err) = error $ format err
+        formatError (Right a) = a
 
-    return $ do
-        interpreterResult <- liftIO loadAction
-        case interpreterResult of
-            Left err -> error $ format err
-            Right handlerAction -> handlerAction
+        loader = join $ formatError `fmap` protectHandlers loadInterpreter
+
+    protectedHintEvaluator 3 loader
 
 
 ------------------------------------------------------------------------------
@@ -166,85 +150,3 @@ format (GhcException e)   = "GHC error:\r\n\r\n" ++ e
 format (WontCompile errs) = "Compile errors:\r\n\r\n" ++
     (intercalate "\r\n" $ nub $ map errMsg errs)
 
-
-------------------------------------------------------------------------------
--- | Create a wrapper for an action that protects the action from
--- concurrent or rapid evaluation.
---
--- There will be at least the passed-in 'NominalDiffTime' delay
--- between the finish of one execution of the action the start of the
--- next.  Concurrent calls to the wrapper, and calls within the delay
--- period, end up with the same calculated value returned.
---
--- If an exception is raised during the processing of the action, it
--- will be thrown to all waiting threads, and for all requests made
--- before the delay time has expired after the exception was raised.
-protectedActionEvaluator :: NominalDiffTime -> IO a -> IO (IO a)
-protectedActionEvaluator minReEval action = do
-    -- The list of requesters waiting for a result.  Contains the
-    -- ThreadId in case of exceptions, and an empty MVar awaiting a
-    -- successful result.
-    --
-    -- type: MVar [(ThreadId, MVar a)]
-    readerContainer <- newMVar []
-
-    -- Contains the previous result, and the time it was stored, if a
-    -- previous result has been computed.  The result stored is either
-    -- the actual result, or the exception thrown by the calculation.
-    --
-    -- type: MVar (Maybe (Either SomeException a, UTCTime))
-    resultContainer <- newMVar Nothing
-
-    -- The model used for the above MVars in the returned action is
-    -- "keep them full, unless updating them."  In every case, when
-    -- one of those MVars is emptied, the next action is to fill that
-    -- same MVar.  This makes deadlocking on MVar wait impossible.
-    return $ do
-        existingResult <- readMVar resultContainer
-        now <- getCurrentTime
-
-        case existingResult of
-            Just (res, ts) | diffUTCTime now ts < minReEval ->
-                -- There's an existing result, and it's still valid
-                case res of
-                    Right val -> return val
-                    Left  e   -> throwIO e
-            _ -> do
-                -- Need to calculate a new result
-                tid <- myThreadId
-                reader <- newEmptyMVar
-
-                readers <- takeMVar readerContainer
-
-                -- Some strictness is employed to ensure the MVar
-                -- isn't holding on to a chain of unevaluated thunks.
-                let pair = (tid, reader)
-                    newReaders = readers `seq` pair `seq` (pair : readers)
-                putMVar readerContainer $! newReaders
-
-                -- If this is the first reader, kick off evaluation of
-                -- the action in a new thread. This is slightly
-                -- careful to block asynchronous exceptions to that
-                -- thread except when actually running the action.
-                when (null readers) $ do
-                    let runAndFill = block $ do
-                            a <- unblock action
-                            clearAndNotify (Right a) (flip putMVar a . snd)
-
-                        killWaiting :: SomeException -> IO ()
-                        killWaiting e = block $ do
-                            clearAndNotify (Left e) (flip throwTo e . fst)
-                            throwIO e
-
-                        clearAndNotify r f = do
-                            t <- getCurrentTime
-                            _ <- swapMVar resultContainer $ Just (r, t)
-                            allReaders <- swapMVar readerContainer []
-                            mapM_ f allReaders
-
-                    _ <- forkIO $ runAndFill `catch` killWaiting
-                    return ()
-
-                -- Wait for the evaluation of the action to complete,
-                -- and return its result.
-                takeMVar reader
