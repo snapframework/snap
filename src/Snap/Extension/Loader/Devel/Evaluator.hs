@@ -68,7 +68,7 @@ protectedHintEvaluator :: IO a
                        -> (a -> IO Bool)
                        -> IO HintInternals
                        -> IO (Snap ())
-protectedHintEvaluator action test getInternals = do
+protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
     -- successful result.
@@ -125,7 +125,7 @@ protectedHintEvaluator action test getInternals = do
                             throwIO e
 
                         clearAndNotify r f = do
-                            a <- unblock action
+                            a <- unblock start
                             _ <- swapMVar resultContainer $ Just (r, a)
                             allReaders <- swapMVar readerContainer []
                             mapM_ f allReaders
