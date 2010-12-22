@@ -14,7 +14,6 @@ import Control.Monad.Trans (liftIO)
 import Control.Concurrent (forkIO, myThreadId)
 import Control.Concurrent.MVar
 
-import Data.Time.Clock (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Typeable (Typeable)
 
 import GHC.Prim (Any)
@@ -55,18 +54,21 @@ makeHintInternals init clean exec = HintInternals init' clean' exec'
 -- state until the next execution of the input action.  At this time,
 -- the cleanup action will be executed.
 --
--- There will be at least the passed-in 'NominalDiffTime' delay
--- between the finish of one execution of the action the start of the
--- next.  Concurrent calls to the wrapper, and calls within the delay
--- period, end up with the same calculated value returned.
+-- The first two arguments control when recompiles are done.  The
+-- first argument is an action that is executed when compilation
+-- starts.  The second is a function from the result of the first
+-- action to an action that determines whether the value from the
+-- previous compilation is still good.  This abstracts out the
+-- strategy for determining when a cached result is no longer valid.
 --
 -- If an exception is raised during the processing of the action, it
 -- will be thrown to all waiting threads, and for all requests made
 -- before the delay time has expired after the exception was raised.
-protectedHintEvaluator :: NominalDiffTime
+protectedHintEvaluator :: IO a
+                       -> (a -> IO Bool)
                        -> IO HintInternals
                        -> IO (Snap ())
-protectedHintEvaluator minReEval action = do
+protectedHintEvaluator action test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
     -- successful result.
@@ -80,7 +82,7 @@ protectedHintEvaluator minReEval action = do
     -- initialization result, or the exception thrown by the
     -- calculation.
     --
-    -- type: MVar (Maybe (Either SomeException (HintInternals, Any), UTCTime))
+    -- type: MVar (Maybe (Either SomeException (HintInternals, Any), a))
     resultContainer <- newMVar Nothing
 
     -- The model used for the above MVars in the returned action is
@@ -88,16 +90,7 @@ protectedHintEvaluator minReEval action = do
     -- one of those MVars is emptied, the next action is to fill that
     -- same MVar.  This makes deadlocking on MVar wait impossible.
     return $ do
-        existingResult <- liftIO $ readMVar resultContainer
-        now <- liftIO getCurrentTime
-
-        (hi, any) <- liftIO $ case existingResult of
-            Just (res, ts) | diffUTCTime now ts < minReEval ->
-                -- There's an existing result, and it's still valid
-                case res of
-                    Right x -> return x
-                    Left  e -> throwIO e
-            _ -> do
+        let waitForNewResult = do
                 -- Need to calculate a new result
                 tid <- myThreadId
                 reader <- newEmptyMVar
@@ -119,8 +112,8 @@ protectedHintEvaluator minReEval action = do
                             previous <- readMVar resultContainer
                             unblock $ cleanup previous
 
-                            -- compile the new action and initialize its state
-                            hi <- unblock action
+                            -- compile the new internals and initialize
+                            hi <- unblock getInternals
                             any <- unblock $ hiInit hi
 
                             let a = (hi, any)
@@ -132,8 +125,8 @@ protectedHintEvaluator minReEval action = do
                             throwIO e
 
                         clearAndNotify r f = do
-                            t <- getCurrentTime
-                            _ <- swapMVar resultContainer $ Just (r, t)
+                            a <- unblock action
+                            _ <- swapMVar resultContainer $ Just (r, a)
                             allReaders <- swapMVar readerContainer []
                             mapM_ f allReaders
 
@@ -143,6 +136,20 @@ protectedHintEvaluator minReEval action = do
                 -- Wait for the evaluation of the action to complete,
                 -- and return its result.
                 takeMVar reader
+
+        existingResult <- liftIO $ readMVar resultContainer
+
+        (hi, any) <- liftIO $ case existingResult of
+            Just (res, a) -> do
+                -- There's an existing result.  Check for validity
+                valid <- test a
+                case (valid, res) of
+                    (True, Right x) -> return x
+                    (True, Left  e) -> throwIO e
+                    (False, _)      -> do
+                        _ <- swapMVar resultContainer Nothing
+                        waitForNewResult
+            Nothing -> waitForNewResult
         hiExec hi any
   where
     cleanup (Just (Right (hi, any), _)) = hiClean hi any

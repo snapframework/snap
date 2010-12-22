@@ -12,14 +12,13 @@ module Snap.Extension.Loader.Devel
 import           Control.Monad (join)
 
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
-
 import           Data.Maybe (catMaybes)
+import           Data.Time.Clock (diffUTCTime, getCurrentTime)
 
 import           Language.Haskell.Interpreter hiding (lift, liftIO)
 import           Language.Haskell.Interpreter.Unsafe
 
 import           Language.Haskell.TH
-
 
 import           System.Environment (getArgs)
 
@@ -138,7 +137,11 @@ hintSnap opts modules initialization handler = do
 
         loader = join $ formatError `fmap` protectHandlers loadInterpreter
 
-    protectedHintEvaluator 3 loader
+        test prevTime = do
+            now <- getCurrentTime
+            return $ diffUTCTime now prevTime < 4
+
+    protectedHintEvaluator getCurrentTime test loader
 
 
 ------------------------------------------------------------------------------
