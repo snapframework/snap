@@ -24,7 +24,7 @@ type HintLoadable = IO (Snap (), IO ())
 
 
 ------------------------------------------------------------------------------
--- | Convert an action to generate HintInternals into an action to
+-- | Convert an action to generate 'HintLoadable's into an action to
 -- generate Snap actions.  The resulting action will share initialized
 -- state until the next execution of the input action.  At this time,
 -- the cleanup action will be executed.
