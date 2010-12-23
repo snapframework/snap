@@ -63,14 +63,6 @@ protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
     -- successful result.
-
-    let newReaderContainer :: IO (MVar [(ThreadId, MVar (Snap ()))])
-        newReaderContainer = newMVar []
-
-        newResultContainer :: IO (MVar (Maybe (Either SomeException
-                                                      (IO (), Snap ()), a)))
-        newResultContainer = newMVar Nothing
-
     readerContainer <- newReaderContainer
 
     -- Contains the previous result and initialization value, and the
@@ -149,5 +141,12 @@ protectedHintEvaluator start test getInternals = do
             Nothing -> waitForNewResult
         getResult
   where
+    newReaderContainer :: IO (MVar [(ThreadId, MVar (Snap ()))])
+    newReaderContainer = newMVar []
+
+    newResultContainer :: IO (MVar (Maybe (Either SomeException
+                                                  (IO (), Snap ()), a)))
+    newResultContainer = newMVar Nothing
+
     cleanup (Just (Right (clean, _), _)) = clean
     cleanup _                            = return ()
