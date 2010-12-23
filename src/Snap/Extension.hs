@@ -25,7 +25,7 @@ module Snap.Extension
   , InitializerState(..)
   , runInitializer
   , runInitializerWithReloadAction
-  , getHintInternals
+  , runInitializerWithoutReloadAction
   , mkInitializer
   , defaultReloadHandler
   , nullReloadHandler
@@ -43,7 +43,6 @@ import           Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Prelude hiding (catch, init)
-import           Snap.Extension.Loader.Devel.Evaluator
 import           Snap.Iteratee (enumBS, (>==>))
 import           Snap.Types
 import           System.IO
@@ -408,18 +407,16 @@ runInitializerWithReloadAction v (Initializer r) se f = do
                 Right (SCR s a b) -> return (s, a, b)
 
 ------------------------------------------------------------------------------
--- | Translates an Initializer and SnapExtend into a HintInternals
--- object, used by the hint loading code.
-getHintInternals :: Initializer s
-                 -- ^ The Initializer value
-                 -> SnapExtend s ()
-                 -- ^ An action in your application's monad.
-                 -> HintInternals
-getHintInternals i se = HintInternals runInit getCleanup getAction
-  where
-    runInit = runInitializer True i se
-    getAction (action, _, _) = action
-    getCleanup (_, cleanup, _) = cleanup
+-- | A cut-down version of 'runInitializer', for use by the hint
+-- loading code
+runInitializerWithoutReloadAction :: Initializer s
+                                  -- ^ The Initializer value
+                                  -> SnapExtend s ()
+                                  -- ^ An action in your application's monad.
+                                  -> IO (Snap (), IO ())
+runInitializerWithoutReloadAction i se = do
+    (action, cleanup, _) <- runInitializer True i se
+    return (action, cleanup)
 
 
 ------------------------------------------------------------------------------

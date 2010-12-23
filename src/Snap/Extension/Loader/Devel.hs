@@ -22,7 +22,7 @@ import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-import           Snap.Extension (getHintInternals)
+import           Snap.Extension (runInitializerWithoutReloadAction)
 import           Snap.Extension.Loader.Devel.Signal
 import           Snap.Extension.Loader.Devel.Evaluator
 
@@ -59,7 +59,8 @@ loadSnapTH initializer action = do
 
     -- The let in this block causes an extra static type check that the
     -- types of the names passed in were correct at compile time.
-    [| let _ = getHintInternals $(varE initializer) $(varE action)
+    [| let _ = runInitializerWithoutReloadAction $(varE initializer)
+                                                 $(varE action)
        in hintSnap opts modules initBase actBase |]
 
 
@@ -115,18 +116,19 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
          -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
 hintSnap opts modules initialization handler = do
-    let action = intercalate " " [ "getHintInternals"
+    let action = intercalate " " [ "runInitializerWithoutReloadAction"
                                  , initialization
                                  , handler
                                  ]
         interpreter = do
             loadModules . nub $ modules
-            let imports = "Snap.Extension" :
-                          "Snap.Extension.Loader.Devel.Evaluator" :
+            let imports = "Prelude" :
+                          "Snap.Extension" :
+                          "Snap.Types" :
                           modules
             setImports . nub $ imports
 
-            interpret action (as :: HintInternals)
+            interpret action (as :: HintLoadable)
 
         loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
 

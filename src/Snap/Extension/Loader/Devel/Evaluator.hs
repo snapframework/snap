@@ -1,9 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Snap.Extension.Loader.Devel.Evaluator
-  ( HintInternals(..)
+  ( HintLoadable
   , protectedHintEvaluator
   ) where
 
@@ -15,27 +13,14 @@ import Control.Monad.Trans (liftIO)
 import Control.Concurrent (ThreadId, forkIO, myThreadId)
 import Control.Concurrent.MVar
 
-import Data.Typeable (Typeable)
-
 import Prelude hiding (catch, init, any)
 
 import Snap.Types (Snap)
 
 
 ------------------------------------------------------------------------------
--- | A monomorphic type to hide polymorphism.  This allows Hint to
--- load the action, since it requires loading a monomorphic type.
-data HintInternals = forall a. HintInternals (IO a) (a -> IO ()) (a -> Snap ())
-                     deriving Typeable
-
-
-------------------------------------------------------------------------------
--- | Run the initialization contained within a HintInternals, and return the
--- Snap handler and cleanup action that result.
-initInternals :: HintInternals -> IO (IO (), Snap ())
-initInternals (HintInternals init clean exec) = do
-    state <- init
-    return (clean state, exec state)
+-- | A type synonym to simply talking about the type loaded by hint.
+type HintLoadable = IO (Snap (), IO ())
 
 
 ------------------------------------------------------------------------------
@@ -57,7 +42,7 @@ initInternals (HintInternals init clean exec) = do
 protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)
-                       -> IO HintInternals
+                       -> IO HintLoadable
                        -> IO (Snap ())
 protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
@@ -101,10 +86,10 @@ protectedHintEvaluator start test getInternals = do
                             unblock $ cleanup previous
 
                             -- compile the new internals and initialize
-                            hi <- unblock getInternals
-                            res <- unblock $ initInternals hi
+                            stateInitializer <- unblock getInternals
+                            res <- unblock stateInitializer
 
-                            let a = snd res
+                            let a = fst res
 
                             clearAndNotify (Right res) (flip putMVar a . snd)
 
@@ -133,7 +118,7 @@ protectedHintEvaluator start test getInternals = do
                 -- There's an existing result.  Check for validity
                 valid <- test a
                 case (valid, res) of
-                    (True, Right (_, x)) -> return x
+                    (True, Right (x, _)) -> return x
                     (True, Left e)       -> throwIO e
                     (False, _)           -> do
                         _ <- swapMVar resultContainer Nothing
@@ -145,8 +130,8 @@ protectedHintEvaluator start test getInternals = do
     newReaderContainer = newMVar []
 
     newResultContainer :: IO (MVar (Maybe (Either SomeException
-                                                  (IO (), Snap ()), a)))
+                                                  (Snap (), IO ()), a)))
     newResultContainer = newMVar Nothing
 
-    cleanup (Just (Right (clean, _), _)) = clean
+    cleanup (Just (Right (_, clean), _)) = clean
     cleanup _                            = return ()
