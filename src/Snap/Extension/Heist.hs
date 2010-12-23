@@ -63,8 +63,9 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
 -- | Helper function for common use case: 
 -- Render a template with a given set of splices.
 renderWithSplices 
-  :: (MonadHeist n m) => [(ByteString, Splice n)]   -- ^ Splice mapping
-  -> ByteString   -- ^ Template to render
+  :: (MonadHeist n m) 
+  => ByteString                 -- ^ Template to render
+  -> [(ByteString, Splice n)]   -- ^ Splice mapping
   -> m ()
-renderWithSplices sps t = heistLocal bsps $ render t
+renderWithSplices t sps = heistLocal bsps $ render t
   where bsps = bindSplices sps
