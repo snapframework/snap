@@ -37,12 +37,12 @@ Library
     Snap.Extension.Heist,
     Snap.Extension.Heist.Impl,
     Snap.Extension.Loader.Devel,
-    Snap.Extension.Loader.Devel.Evaluator,
     Snap.Extension.Server,
     Snap.Extension,
     Snap.Heist
 
   other-modules:
+    Snap.Extension.Loader.Devel.Evaluator,
     Snap.Extension.Loader.Devel.Signal
 
   build-depends:
