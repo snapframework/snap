@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Snap.Extension.Loader.Devel.Evaluator
-  ( HintInternals
-  , makeHintInternals
+  ( HintInternals(..)
   , protectedHintEvaluator
   ) where
 
@@ -11,41 +12,30 @@ import Control.Exception
 import Control.Monad (when)
 import Control.Monad.Trans (liftIO)
 
-import Control.Concurrent (forkIO, myThreadId)
+import Control.Concurrent (ThreadId, forkIO, myThreadId)
 import Control.Concurrent.MVar
 
 import Data.Typeable (Typeable)
-
-import GHC.Prim (Any)
 
 import Prelude hiding (catch, init, any)
 
 import Snap.Types (Snap)
 
-import Unsafe.Coerce (unsafeCoerce)
-
 
 ------------------------------------------------------------------------------
 -- | A monomorphic type to hide polymorphism.  This allows Hint to
--- load the action, since it requires loading a monomorphic type.  The
--- constructor for this is not exposed because its internals are
--- incredibly far from type safe.
-data HintInternals = HintInternals
-    { hiInit :: IO Any
-    , hiClean :: Any -> IO ()
-    , hiExec :: Any -> Snap ()
-    } deriving Typeable
+-- load the action, since it requires loading a monomorphic type.
+data HintInternals = forall a. HintInternals (IO a) (a -> IO ()) (a -> Snap ())
+                     deriving Typeable
 
 
 ------------------------------------------------------------------------------
--- | A smart constructor to hide the incredibly type unsafe internals
--- of HintInternals behind a type safe smart constructor.
-makeHintInternals :: IO a -> (a -> IO ()) -> (a -> Snap ()) -> HintInternals
-makeHintInternals init clean exec = HintInternals init' clean' exec'
-  where
-    init' = fmap unsafeCoerce init
-    clean' = clean . unsafeCoerce
-    exec' = exec . unsafeCoerce
+-- | Run the initialization contained within a HintInternals, and return the
+-- Snap handler and cleanup action that result.
+initInternals :: HintInternals -> IO (IO (), Snap ())
+initInternals (HintInternals init clean exec) = do
+    state <- init
+    return (clean state, exec state)
 
 
 ------------------------------------------------------------------------------
@@ -64,7 +54,8 @@ makeHintInternals init clean exec = HintInternals init' clean' exec'
 -- If an exception is raised during the processing of the action, it
 -- will be thrown to all waiting threads, and for all requests made
 -- before the delay time has expired after the exception was raised.
-protectedHintEvaluator :: IO a
+protectedHintEvaluator :: forall a.
+                          IO a
                        -> (a -> IO Bool)
                        -> IO HintInternals
                        -> IO (Snap ())
@@ -72,25 +63,30 @@ protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
     -- successful result.
-    --
-    -- type: MVar [(ThreadId, MVar (Snap ()))]
-    readerContainer <- newMVar []
+
+    let newReaderContainer :: IO (MVar [(ThreadId, MVar (Snap ()))])
+        newReaderContainer = newMVar []
+
+        newResultContainer :: IO (MVar (Maybe (Either SomeException
+                                                      (IO (), Snap ()), a)))
+        newResultContainer = newMVar Nothing
+
+    readerContainer <- newReaderContainer
 
     -- Contains the previous result and initialization value, and the
     -- time it was stored, if a previous result has been computed.
     -- The result stored is either the actual result and
     -- initialization result, or the exception thrown by the
     -- calculation.
-    --
-    -- type: MVar (Maybe (Either SomeException (HintInternals, Any), a))
-    resultContainer <- newMVar Nothing
+    resultContainer <- newResultContainer
 
     -- The model used for the above MVars in the returned action is
     -- "keep them full, unless updating them."  In every case, when
     -- one of those MVars is emptied, the next action is to fill that
     -- same MVar.  This makes deadlocking on MVar wait impossible.
     return $ do
-        let waitForNewResult = do
+        let waitForNewResult :: IO (Snap ())
+            waitForNewResult = do
                 -- Need to calculate a new result
                 tid <- myThreadId
                 reader <- newEmptyMVar
@@ -114,10 +110,11 @@ protectedHintEvaluator start test getInternals = do
 
                             -- compile the new internals and initialize
                             hi <- unblock getInternals
-                            any <- unblock $ hiInit hi
+                            res <- unblock $ initInternals hi
 
-                            let a = (hi, any)
-                            clearAndNotify (Right a) (flip putMVar a . snd)
+                            let a = snd res
+
+                            clearAndNotify (Right res) (flip putMVar a . snd)
 
                         killWaiting :: SomeException -> IO ()
                         killWaiting e = block $ do
@@ -139,18 +136,18 @@ protectedHintEvaluator start test getInternals = do
 
         existingResult <- liftIO $ readMVar resultContainer
 
-        (hi, any) <- liftIO $ case existingResult of
+        getResult <- liftIO $ case existingResult of
             Just (res, a) -> do
                 -- There's an existing result.  Check for validity
                 valid <- test a
                 case (valid, res) of
-                    (True, Right x) -> return x
-                    (True, Left  e) -> throwIO e
-                    (False, _)      -> do
+                    (True, Right (_, x)) -> return x
+                    (True, Left e)       -> throwIO e
+                    (False, _)           -> do
                         _ <- swapMVar resultContainer Nothing
                         waitForNewResult
             Nothing -> waitForNewResult
-        hiExec hi any
+        getResult
   where
-    cleanup (Just (Right (hi, any), _)) = hiClean hi any
-    cleanup _                           = return ()
+    cleanup (Just (Right (clean, _), _)) = clean
+    cleanup _                            = return ()

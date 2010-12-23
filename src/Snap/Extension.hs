@@ -415,7 +415,7 @@ getHintInternals :: Initializer s
                  -> SnapExtend s ()
                  -- ^ An action in your application's monad.
                  -> HintInternals
-getHintInternals i se = makeHintInternals runInit getCleanup getAction
+getHintInternals i se = HintInternals runInit getCleanup getAction
   where
     runInit = runInitializer True i se
     getAction (action, _, _) = action
