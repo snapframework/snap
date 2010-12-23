@@ -9,8 +9,6 @@ module Snap.Extension.Loader.Devel
   ( loadSnapTH
   ) where
 
-import           Control.Monad (join)
-
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 import           Data.Maybe (catMaybes)
 import           Data.Time.Clock (diffUTCTime, getCurrentTime)
@@ -123,19 +121,19 @@ hintSnap opts modules initialization handler = do
                                  ]
         interpreter = do
             loadModules . nub $ modules
-            let imports = "Prelude" : "Snap.Extension" :
+            let imports = "Snap.Extension" :
                           "Snap.Extension.Loader.Devel.Evaluator" :
                           modules
             setImports . nub $ imports
 
-            interpret action (as :: IO HintInternals)
+            interpret action (as :: HintInternals)
 
         loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
 
-        formatError (Left err) = error $ format err
-        formatError (Right a) = a
+        formatOnError (Left err) = error $ format err
+        formatOnError (Right a) = a
 
-        loader = join $ formatError `fmap` protectHandlers loadInterpreter
+        loader = formatOnError `fmap` protectHandlers loadInterpreter
 
         test prevTime = do
             now <- getCurrentTime

@@ -414,10 +414,12 @@ getHintInternals :: Initializer s
                  -- ^ The Initializer value
                  -> SnapExtend s ()
                  -- ^ An action in your application's monad.
-                 -> IO HintInternals
-getHintInternals i se = do
-    (action, cleanup, _) <- runInitializer True i se
-    return $ makeHintInternals (return ()) (const cleanup) (const action)
+                 -> HintInternals
+getHintInternals i se = makeHintInternals runInit getCleanup getAction
+  where
+    runInit = runInitializer True i se
+    getAction (action, _, _) = action
+    getCleanup (_, cleanup, _) = cleanup
 
 
 ------------------------------------------------------------------------------
