@@ -9,6 +9,8 @@ module Snap.Extension.Loader.Devel
   ( loadSnapTH
   ) where
 
+import           Control.Monad (liftM2)
+
 import           Data.List (groupBy, intercalate, isPrefixOf, nub)
 import           Data.Maybe (catMaybes)
 import           Data.Time.Clock (diffUTCTime, getCurrentTime)
@@ -25,6 +27,7 @@ import           Snap.Types
 import           Snap.Extension (runInitializerWithoutReloadAction)
 import           Snap.Extension.Loader.Devel.Signal
 import           Snap.Extension.Loader.Devel.Evaluator
+import           Snap.Extension.Loader.Devel.TreeWatcher
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the
@@ -33,20 +36,15 @@ import           Snap.Extension.Loader.Devel.Evaluator
 --
 -- This could be considered a TH wrapper around a function
 --
--- > loadSnap :: Initializer s -> SnapExtend s () -> IO (Snap ())
+-- > loadSnap :: Initializer s -> SnapExtend s () -> [String] -> IO (Snap ())
 --
 -- with a magical implementation.
---
--- The returned Snap action runs the 'Initializer', runs the 'Snap' handler,
--- and does the cleanup.  This means that the whole application state will be
--- loaded and unloaded for each request.  To make this worthwhile, those steps
--- should be made quite fast.
 --
 -- The upshot is that you shouldn't need to recompile your server
 -- during development unless your .cabal file changes, or the code
 -- that uses this splice changes.
-loadSnapTH :: Name -> Name -> Q Exp
-loadSnapTH initializer action = do
+loadSnapTH :: Name -> Name -> [String] -> Q Exp
+loadSnapTH initializer action additionalWatchDirs = do
     args <- runIO getArgs
 
     let initMod = nameModule initializer
@@ -54,14 +52,15 @@ loadSnapTH initializer action = do
         actMod = nameModule action
         actBase = nameBase action
 
-        modules = catMaybes [initMod, actMod]
         opts = getHintOpts args
+        modules = catMaybes [initMod, actMod]
+        srcPaths = additionalWatchDirs ++ getSrcPaths args
 
     -- The let in this block causes an extra static type check that the
     -- types of the names passed in were correct at compile time.
     [| let _ = runInitializerWithoutReloadAction $(varE initializer)
                                                  $(varE action)
-       in hintSnap opts modules initBase actBase |]
+       in hintSnap opts modules srcPaths initBase actBase |]
 
 
 ------------------------------------------------------------------------------
@@ -90,18 +89,20 @@ getHintOpts args = removeBad opts
 
 
 ------------------------------------------------------------------------------
+-- | This function extracts the source paths from the compilation args
+getSrcPaths :: [String] -> [String]
+getSrcPaths = filter (not . null) . map (drop 2) . filter srcArg
+  where
+    srcArg x = "-i" `isPrefixOf` x && not ("-idist" `isPrefixOf` x)
+
+
+------------------------------------------------------------------------------
 -- | This function creates the Snap handler that actually is
 -- responsible for doing the dynamic loading of actions via hint,
 -- given all of the configuration information that the interpreter
 -- needs.  It also ensures safe concurrent access to the interpreter,
 -- and caches the interpreter results for a short time before allowing
 -- it to run again.
---
--- This constructs an expression of type Snap (), that is essentially
---
--- > bracketSnap initialization cleanup handler
---
--- for the values of initialization, cleanup, and handler passed in.
 --
 -- Generally, this won't be called manually.  Instead, loadSnapTH will
 -- generate a call to it at compile-time, calculating all the
@@ -112,36 +113,41 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
                      -- modules which contain the initialization,
                      -- cleanup, and handler actions.  Everything else
                      -- they require will be loaded transitively.
+         -> [String] -- ^ A list of paths to watch for updates
          -> String   -- ^ The name of the initializer action
          -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
-hintSnap opts modules initialization handler = do
-    let action = intercalate " " [ "runInitializerWithoutReloadAction"
-                                 , initialization
-                                 , handler
-                                 ]
-        interpreter = do
-            loadModules . nub $ modules
-            let imports = "Prelude" :
-                          "Snap.Extension" :
-                          "Snap.Types" :
-                          modules
-            setImports . nub $ imports
+hintSnap opts modules srcPaths initialization handler =
+    protectedHintEvaluator initialize test loader
+  where
+    action = intercalate " " [ "runInitializerWithoutReloadAction"
+                             , initialization
+                             , handler
+                             ]
+    interpreter = do
+        loadModules . nub $ modules
+        let imports = "Prelude" :
+                      "Snap.Extension" :
+                      "Snap.Types" :
+                      modules
+        setImports . nub $ imports
 
-            interpret action (as :: HintLoadable)
+        interpret action (as :: HintLoadable)
 
-        loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
+    loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
 
-        formatOnError (Left err) = error $ format err
-        formatOnError (Right a) = a
+    formatOnError (Left err) = error $ format err
+    formatOnError (Right a) = a
 
-        loader = formatOnError `fmap` protectHandlers loadInterpreter
+    loader = formatOnError `fmap` protectHandlers loadInterpreter
 
-        test prevTime = do
-            now <- getCurrentTime
-            return $ diffUTCTime now prevTime < 4
+    initialize = liftM2 (,) getCurrentTime $ getTreeStatus srcPaths
 
-    protectedHintEvaluator getCurrentTime test loader
+    test (prevTime, ts) = do
+        now <- getCurrentTime
+        if diffUTCTime now prevTime < 3
+            then return True
+            else checkTreeStatus ts
 
 
 ------------------------------------------------------------------------------

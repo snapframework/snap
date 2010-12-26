@@ -38,7 +38,7 @@ type HintLoadable = IO (Snap (), IO ())
 --
 -- If an exception is raised during the processing of the action, it
 -- will be thrown to all waiting threads, and for all requests made
--- before the delay time has expired after the exception was raised.
+-- before the recompile condition is reached.
 protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)

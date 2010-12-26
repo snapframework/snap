@@ -31,7 +31,7 @@ import           Application
 index :: Application ()
 index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
   where
-    indexSplices = 
+    indexSplices =
         [ ("start-time",   startTimeSplice)
         , ("current-time", currentTimeSplice)
         ]

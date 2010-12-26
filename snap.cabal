@@ -43,7 +43,8 @@ Library
 
   other-modules:
     Snap.Extension.Loader.Devel.Evaluator,
-    Snap.Extension.Loader.Devel.Signal
+    Snap.Extension.Loader.Devel.Signal,
+    Snap.Extension.Loader.Devel.TreeWatcher
 
   build-depends:
     base >= 4 && < 5,

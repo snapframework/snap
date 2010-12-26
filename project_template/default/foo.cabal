@@ -18,9 +18,8 @@ Executable projname
   hs-source-dirs: src
   main-is: Main.hs
 
-  if !flag(development)
-    cpp-options: -DPRODUCTION
-  else
+  if flag(development)
+    cpp-options: -DDEVELOPMENT
     build-depends: hint >= 0.3.2 && < 0.4
 
   Build-depends:
