@@ -31,6 +31,7 @@ module Snap.Extension
   , nullReloadHandler
   ) where
 
+import           Blaze.ByteString.Builder
 import           Control.Applicative
 import           Control.Exception (SomeException)
 import           Control.Monad
@@ -43,7 +44,7 @@ import           Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Prelude hiding (catch, init)
-import           Snap.Iteratee (enumBS, (>==>))
+import           Snap.Iteratee (enumBuilder, (>==>))
 import           Snap.Types
 import           System.IO
 
@@ -465,11 +466,12 @@ defaultReloadHandler :: MonadSnap m
 defaultReloadHandler ioms = failIfNotLocal $ do
     ms <- liftIO $ ioms
     let showE e       = mappend "Error: "  $ toUTF8 $ show e
-        format (n, m) = mconcat [n, ": ", maybe "Sucess" showE m, "\n"]
+        format (n, m) = mconcat [n, ": ", maybe "Success" showE m, "\n"]
         msg           = mconcat $ map format ms
     finishWith $ setContentType "text/plain; charset=utf-8"
         $ setContentLength (fromIntegral $ B.length msg)
-        $ modifyResponseBody (>==> enumBS msg) emptyResponse
+        $ modifyResponseBody (>==> enumBuilder (fromByteString msg))
+                             emptyResponse
   where
     failIfNotLocal m = do
         rip <- liftM rqRemoteAddr getRequest
