@@ -1,0 +1,24 @@
+name:           snap-testsuite
+version:        0.0.1
+build-type:     Simple
+cabal-version:  >= 1.6
+
+Executable testsuite
+  hs-source-dirs:  suite
+  main-is:         TestSuite.hs
+
+  build-depends:
+    QuickCheck >= 2.3.0.2,
+    base >= 4 && < 5,
+    bytestring == 0.9.*,
+    directory,
+    filepath,
+    HUnit >= 1.2 && < 2,
+    http-enumerator >= 0.2.1.5 && <0.3,
+    process == 1.*,
+    test-framework >= 0.3.1 && <0.4,
+    test-framework-hunit >= 0.2.5 && < 0.3,
+    test-framework-quickcheck2 >= 0.2.6 && < 0.3
+    
+  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -threaded
+               -fno-warn-unused-do-bind
