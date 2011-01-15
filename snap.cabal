@@ -54,11 +54,7 @@ Library
     enumerator == 0.4.*,
     filepath >= 1.1 && <1.3,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
-<<<<<<< HEAD
     snap-core == 0.4.*,
-=======
-    snap-core >= 0.3.1 && <0.4,
->>>>>>> 2190658855219af53a6089bb9ec7f7749f5414e0
     heist >= 0.4 && < 0.5,
     hint >= 0.3.3.1 && < 0.4,
     template-haskell >= 2.3 && < 2.6,
