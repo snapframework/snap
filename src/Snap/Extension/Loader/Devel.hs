@@ -134,7 +134,11 @@ hintSnap opts modules srcPaths initialization handler =
 
         interpret action (as :: HintLoadable)
 
-    loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
+    -- We ignore all warnings with '-w', otherwise a warning would result in an
+    -- UnknownError and thus prevent reloading.
+    opts' = opts ++ ["-w"]
+
+    loadInterpreter = unsafeRunInterpreterWithArgs opts' interpreter
 
     formatOnError (Left err) = error $ format err
     formatOnError (Right a) = a
