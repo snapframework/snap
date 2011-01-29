@@ -133,6 +133,11 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
          -> String   -- ^ The name of the SnapExtend action
          -> IO (Snap ())
 hintSnap opts modules initialization handler = do
+
+    -- We ignore all warnings with '-w', otherwise a warning would result in an
+    -- UnknownError and thus prevent reloading.
+    let opts' = opts ++ ["-w"]
+
     let action = intercalate " " [ "runInitializerHint"
                                  , initialization
                                  , handler
@@ -144,7 +149,7 @@ hintSnap opts modules initialization handler = do
 
             interpret action (as :: Snap ())
 
-        loadInterpreter = unsafeRunInterpreterWithArgs opts interpreter
+        loadInterpreter = unsafeRunInterpreterWithArgs opts' interpreter
 
     -- Protect the interpreter from concurrent and high-speed serial
     -- access.
