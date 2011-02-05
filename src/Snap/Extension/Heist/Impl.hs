@@ -63,7 +63,9 @@ module Snap.Extension.Heist.Impl
 
 import           Control.Concurrent.MVar
 import           Control.Monad.Reader
-import qualified Data.ByteString as B
+import           Data.ByteString (ByteString)
+import           Data.Maybe
+import           Data.Text (Text)
 import           Snap.Extension
 import           Snap.Extension.Heist
 import           Snap.Types
@@ -141,15 +143,13 @@ instance MonadSnap m => InitializerState (HeistState m) where
 
 ------------------------------------------------------------------------------
 instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend s) where
-    render = renderAs "text/html; charset=utf-8"
+    render t = do
+        hs <- asks getHeistState
+        renderHelper hs Nothing t
 
     renderAs c t = do
-        (HeistState _ _ tsMVar _ modifier) <- asks getHeistState
-        ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\ctnt -> do
-            modifyResponse $ setContentType c
-            modifyResponse $ setContentLength (fromIntegral $ B.length ctnt)
-            writeBS ctnt)
+        hs <- asks getHeistState
+        renderHelper hs (Just c) t
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
@@ -157,18 +157,26 @@ instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend
 
 ------------------------------------------------------------------------------
 instance HasHeistState m s => MonadHeist m (ReaderT s m) where
-    render = renderAs "text/html; charset=utf-8"
+    render t = ReaderT $ \s -> renderHelper (getHeistState s) Nothing t
 
-    renderAs c t = ReaderT $ \s -> do
-        let (HeistState _ _ tsMVar _ modifier) = getHeistState s
-        ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\ctnt -> do
-            modifyResponse $ setContentType c
-            modifyResponse $ setContentLength (fromIntegral $ B.length ctnt)
-            writeBS ctnt)
+    renderAs c t = ReaderT $ \s -> renderHelper (getHeistState s) (Just c) t
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
+
+
+------------------------------------------------------------------------------
+renderHelper :: (MonadSnap m)
+             => HeistState m
+             -> Maybe MIMEType
+             -> ByteString
+             -> m ()
+renderHelper hs c t = do
+    let (HeistState _ _ tsMVar _ modifier) = hs
+    ts <- liftIO $ fmap modifier $ readMVar tsMVar
+    renderTemplate ts t >>= maybe pass (\(b,mime) -> do
+        modifyResponse $ setContentType $ fromMaybe mime c
+        writeBuilder b)
 
 
 ------------------------------------------------------------------------------
@@ -193,7 +201,7 @@ registerSplices
   :: (MonadSnap m, MonadIO n) 
   => HeistState m   
   -- ^ Heist state that you are going to embed in your application's state.
-  -> [(B.ByteString, Splice m)]   
+  -> [(Text, Splice m)]   
   -- ^ Your splices.
   -> n ()
 registerSplices s sps = liftIO $ do

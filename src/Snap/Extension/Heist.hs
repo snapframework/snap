@@ -30,6 +30,7 @@ module Snap.Extension.Heist
 import           Control.Applicative
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
+import           Data.Text (Text)
 import           Snap.Types
 import           Snap.Util.FileServe
 import           Text.Templating.Heist
@@ -72,7 +73,7 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
 renderWithSplices 
   :: (MonadHeist n m) 
   => ByteString                 -- ^ Template to render
-  -> [(ByteString, Splice n)]   -- ^ Splice mapping
+  -> [(Text, Splice n)]   -- ^ Splice mapping
   -> m ()
 renderWithSplices t sps = heistLocal bsps $ render t
   where bsps = bindSplices sps
