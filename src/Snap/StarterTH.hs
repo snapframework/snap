@@ -19,7 +19,8 @@ type DirData = FilePath
 ------------------------------------------------------------------------------
 -- Gets all the directorys in a DirTree
 getDirs :: [FilePath] -> DirTree a -> [FilePath]
-getDirs prefix (Dir n c) = (intercalate "/" (reverse (n:prefix))) : concatMap (getDirs (n:prefix)) c
+getDirs prefix (Dir n c) = (intercalate "/" (reverse (n:prefix))) :
+                           concatMap (getDirs (n:prefix)) c
 getDirs _ (File _ _) = []
 getDirs _ (Failed _ _) = []
 

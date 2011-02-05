@@ -82,9 +82,9 @@ import           System.IO
   implementations live in Snap.Extension.Session.HDBC,
   Snap.Extension.Session.MongoDB and Snap.Extension.Session.CookieStore.
 
-  Keeping this in mind, there are a number of things you need to do to use Snap
-  extensions in your application. Let's walk through how to set up a simple
-  application with the Heist extension turned on.
+  Keeping this in mind, there are a number of things you need to do to use
+  Snap extensions in your application. Let's walk through how to set up a
+  simple application with the Heist extension turned on.
 
 -}
 
@@ -112,11 +112,11 @@ data AppState = AppState
     { heistState  :: HeistState App }
   @
 
-  An important thing to note is that the -State types that we use in the fields
-  of AppState are specific to each implementation of a extension's interface.
-  That is, Snap.Extension.Session.HDBC will export a different SessionState to
-  Snap.Extension.Session.CookieStore, whose internal representation might be
-  completely different.
+  An important thing to note is that the -State types that we use in the
+  fields of AppState are specific to each implementation of a extension's
+  interface.  That is, Snap.Extension.Session.HDBC will export a different
+  SessionState to Snap.Extension.Session.CookieStore, whose internal
+  representation might be completely different.
 
   This state is what the extension's implementation needs to be able to do its
   job.
@@ -130,13 +130,13 @@ data AppState = AppState
   actually get to use this interface and all the functionality that these
   extensions export?  What is actually being extended?
 
-  We use the interface provided by an extension inside our application's monad,
-  App. Snap extensions extend our App with new functionality by allowing us to
-  user their exported functions inside of our handlers. For example, the Heist
-  extension provides the function:
+  We use the interface provided by an extension inside our application's
+  monad, App. Snap extensions extend our App with new functionality by
+  allowing us to user their exported functions inside of our handlers. For
+  example, the Heist extension provides the function:
 
-  @render :: MonadHeist m => ByteString -> m ()@ that renders a template by its
-  name.
+  @render :: MonadHeist m => ByteString -> m ()@ that renders a template by
+  its name.
 
   Is App a 'MonadHeist'? Well, not quite yet. Any 'MonadReader' which is also
   a 'MonadSnap' whose environment contains a 'HeistState' is a 'MonadHeist'.
@@ -215,23 +215,24 @@ main = do
     quickHttpServe site `finally` cleanup
   @
 
-  You'll notice we're using 'defaultReloadHandler'. This is a function exported
-  by "Snap.Extension" with the type signature
+  You'll notice we're using 'defaultReloadHandler'. This is a function
+  exported by "Snap.Extension" with the type signature
 
   @MonadSnap m => IO [(ByteString, Maybe ByteString)] -> m ()@ It takes the
   reload action returned by 'runInitializer' and returns a 'Snap' action which
-  renders a simple page showing how the reload went. To avoid denial-of-service
-  attacks, the reload handler only works for requests made from the local host.
+  renders a simple page showing how the reload went. To avoid denial of
+  service attacks, the reload handler only works for requests made from the
+  local host.
 
 -}
 
 {- $httpserve
 
  This is, of course, a lot of avoidable boilerplate. Snap extensions framework
- comes with another module "Snap.Extension.Server", which provides an interface
- mimicking that of "Snap.Http.Server". Their function names clash, so if you
- need to use both of them in the same module, use a qualified import. Using
- this module, the example above becomes:
+ comes with another module "Snap.Extension.Server", which provides an
+ interface mimicking that of "Snap.Http.Server". Their function names clash,
+ so if you need to use both of them in the same module, use a qualified
+ import. Using this module, the example above becomes:
 
   @
 import Snap.Extension.Server
@@ -248,7 +249,7 @@ main = quickHttpServe appRunner site
   defaults augmented with any options specified on the command-line.  The
   default reload handler path in this case is "admin/reload".
 
-  If you wanted to change this to nullReloadHandler, this is what you would do:
+  If you wanted to change this to nullReloadHandler, you would do this:
 
   @
 import Snap.Extension.Server
@@ -366,9 +367,9 @@ runInitializer
     -- ^ A web handler in your application's monad
   -> IO (Snap (), IO (), IO [(ByteString, Maybe ByteString)])
      -- ^ Returns a 'Snap' handler, a cleanup action, and a reload action. The
-     -- list returned by the reload action is for error reporting. There is one
-     -- tuple in the list for each Snap extension; the first element of the
-     -- tuple is the name of the Snap extension, and the second is a Maybe
+     -- list returned by the reload action is for error reporting. There is
+     -- one tuple in the list for each Snap extension; the first element of
+     -- the tuple is the name of the Snap extension, and the second is a Maybe
      -- which contains Nothing if there was no error reloading that extension
      -- and a Just with the ByteString containing the error message if there
      -- was.
@@ -422,9 +423,10 @@ runInitializerWithoutReloadAction i se = do
 
 ------------------------------------------------------------------------------
 instance Functor Initializer where
-    fmap f (Initializer r) = Initializer $ \v -> r v >>= \e -> return $ case e of
-        Left s            -> Left $ f s
-        Right (SCR s a b) -> Right $ SCR (f s) a b
+    fmap f (Initializer r) = Initializer $ \v -> r v >>= \e -> return $
+        case e of
+            Left s            -> Left $ f s
+            Right (SCR s a b) -> Right $ SCR (f s) a b
 
 
 ------------------------------------------------------------------------------
@@ -450,9 +452,10 @@ instance MonadIO Initializer where
 join' :: Initializer (Initializer s) -> Initializer s
 join' (Initializer r) = Initializer $ \v -> r v >>= \e -> case e of
     Left  (Initializer r')           -> r' v
-    Right (SCR (Initializer r') a b) -> r' v >>= \e' -> return $ Right $ case e' of
-        Left  s             -> SCR s a b
-        Right (SCR s a' b') -> SCR s (a' >> a) (liftM2 (++) b b')
+    Right (SCR (Initializer r') a b) -> r' v >>= \e' -> return $ Right $
+        case e' of
+            Left  s             -> SCR s a b
+            Right (SCR s a' b') -> SCR s (a' >> a) (liftM2 (++) b b')
 
 
 ------------------------------------------------------------------------------

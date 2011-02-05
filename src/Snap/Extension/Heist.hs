@@ -14,16 +14,16 @@ and 'render' into a single function call.
 and can be used to turn your application's monad into a 'MonadHeist'.
 
 'MonadHeist' is unusual among Snap extensions in that it's a multi-parameter
-typeclass. The last parameter is your application's monad, and the first is the
-monad you want the 'TemplateState' to use. This is usually, but not always,
-also your application's monad.
+typeclass. The last parameter is your application's monad, and the first is
+the monad you want the 'TemplateState' to use. This is usually, but not
+always, also your application's monad.
 
 This module should not be used directly. Instead, import
 "Snap.Extension.Heist.Impl" in your application.
 
 -}
 
-module Snap.Extension.Heist 
+module Snap.Extension.Heist
   ( MonadHeist(..)
   , renderWithSplices ) where
 
@@ -68,10 +68,10 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
 
 
 ------------------------------------------------------------------------------
--- | Helper function for common use case: 
+-- | Helper function for common use case:
 -- Render a template with a given set of splices.
-renderWithSplices 
-  :: (MonadHeist n m) 
+renderWithSplices
+  :: (MonadHeist n m)
   => ByteString                 -- ^ Template to render
   -> [(Text, Splice n)]   -- ^ Splice mapping
   -> m ()

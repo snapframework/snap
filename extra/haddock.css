@@ -1,47 +1,4 @@
 /* -------- Global things --------- */
-
-@font-face {
-	font-family: 'DroidSerif';
-	src: url('fonts/DroidSerif-Regular.eot');
-	src: local('Droid Serif'),
-             url('fonts/DroidSerif-Regular.woff') format('woff'),
-             url('fonts/DroidSerif-Regular.ttf') format('truetype'),
-             url('fonts/DroidSerif-Regular.svg#DroidSerif') format('svg');
-}
-
-@font-face {
-	font-family: 'DroidSerif';
-        font-style: italic;
-	src: url('fonts/DroidSerif-Italic.eot');
-	src: local('Droid Serif'),
-             url('fonts/DroidSerif-Italic.woff') format('woff'),
-             url('fonts/DroidSerif-Italic.ttf') format('truetype'),
-             url('fonts/DroidSerif-Italic.svg#DroidSerif-Italic') format('svg');
-}
-
-@font-face {
-	font-family: 'DroidSerif';
-        font-weight: bold;
-	src: url('fonts/DroidSerif-Bold.eot');
-	src: local('Droid Serif'),
-             url('fonts/DroidSerif-Bold.woff') format('woff'),
-             url('fonts/DroidSerif-Bold.ttf') format('truetype'),
-             url('fonts/DroidSerif-Bold.svg#DroidSerif-Bold') format('svg');
-}
-
-@font-face {
-	font-family: 'DroidSerif';
-	src: url('fonts/DroidSerif-BoldItalic.eot');
-        font-weight: bold;
-        font-style: italic;
-	src: local('Droid Serif'),
-             url('fonts/DroidSerif-BoldItalic.woff') format('woff'),
-             url('fonts/DroidSerif-BoldItalic.ttf') format('truetype'),
-             url('fonts/DroidSerif-BoldItalic.svg#DroidSerif-BoldItalic') format('svg');
-}
-
-
-
 HTML {
   background-color: #f0f3ff;
   width: 100%;
@@ -56,7 +13,7 @@ BODY {
   background-color: #ffffff;
   color: #000000;
   font-size: 110%;
-  font-family: DroidSerif, Georgia, serif;
+  font-family: Georgia, serif;
   }
 
 A:link    { color: #5200A3; text-decoration: none }
