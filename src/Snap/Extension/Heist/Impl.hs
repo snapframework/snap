@@ -141,13 +141,15 @@ instance MonadSnap m => InitializerState (HeistState m) where
 
 ------------------------------------------------------------------------------
 instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend s) where
-    render t     = do
+    render = renderAs "text/html; charset=utf-8"
+
+    renderAs c t = do
         (HeistState _ _ tsMVar _ modifier) <- asks getHeistState
         ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\html -> do
-            modifyResponse $ setContentType "text/html; charset=utf-8"
-            modifyResponse $ setContentLength (fromIntegral $ B.length html)
-            writeBS html)
+        renderTemplate ts t >>= maybe pass (\ctnt -> do
+            modifyResponse $ setContentType c
+            modifyResponse $ setContentLength (fromIntegral $ B.length ctnt)
+            writeBS ctnt)
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
@@ -155,13 +157,15 @@ instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend
 
 ------------------------------------------------------------------------------
 instance HasHeistState m s => MonadHeist m (ReaderT s m) where
-    render t     = ReaderT $ \s -> do
+    render = renderAs "text/html; charset=utf-8"
+
+    renderAs c t = ReaderT $ \s -> do
         let (HeistState _ _ tsMVar _ modifier) = getHeistState s
         ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\html -> do
-            modifyResponse $ setContentType "text/html; charset=utf-8"
-            modifyResponse $ setContentLength (fromIntegral $ B.length html)
-            writeBS html)
+        renderTemplate ts t >>= maybe pass (\ctnt -> do
+            modifyResponse $ setContentType c
+            modifyResponse $ setContentLength (fromIntegral $ B.length ctnt)
+            writeBS ctnt)
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }

@@ -1,5 +1,6 @@
+{-# LANGUAGE OverloadedStrings      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
 
 {-|
 
@@ -28,7 +29,9 @@ module Snap.Extension.Heist
 
 import           Control.Applicative
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as B
 import           Snap.Types
+import           Snap.Util.FileServe
 import           Text.Templating.Heist
 
 
@@ -40,6 +43,10 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
     -- this returns 'empty'.
     render     :: ByteString -> m ()
 
+    -- | Renders a template as the given content type.  If the given template
+    -- is not found, this returns 'empty'.
+    renderAs   :: ByteString -> ByteString -> m ()
+
     -- | Runs an action with a modified 'TemplateState'. You might want to use
     -- this if you had a set of splices which were customised for a specific
     -- action. To do that you would do:
@@ -50,7 +57,7 @@ class (Monad n, MonadSnap m) => MonadHeist n m | m -> n where
     -- | Analogous to 'fileServe'. If the template specified in the request
     -- path is not found, it returns 'empty'.
     heistServe :: m ()
-    heistServe = fmap rqPathInfo getRequest >>= render
+    heistServe = ifTop (render "index") <|> (render . B.pack =<< getSafePath)
 
     -- | Analogous to 'fileServeSingle'. If the given template is not found,
     -- this throws an error.

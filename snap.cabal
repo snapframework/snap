@@ -38,8 +38,7 @@ Library
     Snap.Extension.Heist.Impl,
     Snap.Extension.Loader.Devel,
     Snap.Extension.Server,
-    Snap.Extension,
-    Snap.Heist
+    Snap.Extension
 
   other-modules:
     Snap.Extension.Loader.Devel.Evaluator,
