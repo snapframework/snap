@@ -38,8 +38,7 @@ Library
     Snap.Extension.Heist.Impl,
     Snap.Extension.Loader.Devel,
     Snap.Extension.Server,
-    Snap.Extension,
-    Snap.Heist
+    Snap.Extension
 
   other-modules:
     Snap.Extension.Loader.Devel.Evaluator,
@@ -55,7 +54,7 @@ Library
     filepath >= 1.1 && <1.3,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     snap-core == 0.4.*,
-    heist >= 0.4 && < 0.5,
+    heist >= 0.5 && < 0.6,
     hint >= 0.3.3.1 && < 0.4,
     template-haskell >= 2.3 && < 2.6,
     time >= 1.0 && < 1.3

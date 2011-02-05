@@ -47,8 +47,8 @@ interfaces from any other Snap Extension.
 -}
 
 module Snap.Extension.Heist.Impl
-  ( 
-  
+  (
+
     -- * Heist State Definitions
     HeistState
   , HasHeistState(..)
@@ -63,7 +63,9 @@ module Snap.Extension.Heist.Impl
 
 import           Control.Concurrent.MVar
 import           Control.Monad.Reader
-import qualified Data.ByteString as B
+import           Data.ByteString (ByteString)
+import           Data.Maybe
+import           Data.Text (Text)
 import           Snap.Extension
 import           Snap.Extension.Heist
 import           Snap.Types
@@ -73,7 +75,7 @@ import           Text.Templating.Heist.Splices.Static
 
 ------------------------------------------------------------------------------
 -- | Your application's state must include a 'HeistState' in order for your
--- application to be a 'MonadHeist'.  
+-- application to be a 'MonadHeist'.
 --
 -- Unlike other @-State@ types, this is of kind @(* -> *) -> *@. Unless you're
 -- developing your own Snap Extension which has its own internal 'HeistState',
@@ -140,14 +142,15 @@ instance MonadSnap m => InitializerState (HeistState m) where
 
 
 ------------------------------------------------------------------------------
-instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend s) where
-    render t     = do
-        (HeistState _ _ tsMVar _ modifier) <- asks getHeistState
-        ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\html -> do
-            modifyResponse $ setContentType "text/html; charset=utf-8"
-            modifyResponse $ setContentLength (fromIntegral $ B.length html)
-            writeBS html)
+instance HasHeistState (SnapExtend s) s
+      => MonadHeist (SnapExtend s) (SnapExtend s) where
+    render t = do
+        hs <- asks getHeistState
+        renderHelper hs Nothing t
+
+    renderAs c t = do
+        hs <- asks getHeistState
+        renderHelper hs (Just c) t
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
@@ -155,16 +158,26 @@ instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend
 
 ------------------------------------------------------------------------------
 instance HasHeistState m s => MonadHeist m (ReaderT s m) where
-    render t     = ReaderT $ \s -> do
-        let (HeistState _ _ tsMVar _ modifier) = getHeistState s
-        ts <- liftIO $ fmap modifier $ readMVar tsMVar
-        renderTemplate ts t >>= maybe pass (\html -> do
-            modifyResponse $ setContentType "text/html; charset=utf-8"
-            modifyResponse $ setContentLength (fromIntegral $ B.length html)
-            writeBS html)
+    render t = ReaderT $ \s -> renderHelper (getHeistState s) Nothing t
+
+    renderAs c t = ReaderT $ \s -> renderHelper (getHeistState s) (Just c) t
 
     heistLocal f = local $ modifyHeistState $ \s ->
         s { _modifier = f . _modifier s }
+
+
+------------------------------------------------------------------------------
+renderHelper :: (MonadSnap m)
+             => HeistState m
+             -> Maybe MIMEType
+             -> ByteString
+             -> m ()
+renderHelper hs c t = do
+    let (HeistState _ _ tsMVar _ modifier) = hs
+    ts <- liftIO $ fmap modifier $ readMVar tsMVar
+    renderTemplate ts t >>= maybe pass (\(b,mime) -> do
+        modifyResponse $ setContentType $ fromMaybe mime c
+        writeBuilder b)
 
 
 ------------------------------------------------------------------------------
@@ -173,7 +186,7 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 -- inside your application's 'Initializer'.
 --
 -- Typical use cases are dynamically generated components that are present in
--- many of your views. 
+-- many of your views.
 --
 -- Example Usage:
 --
@@ -181,17 +194,17 @@ instance HasHeistState m s => MonadHeist m (ReaderT s m) where
 -- appInit :: Initializer AppState
 -- appInit = do
 --  hs <- heistInitializer \"templates\"
---  registerSplices hs $ 
+--  registerSplices hs $
 --   [ (\"tabs\", tabsSplice)
---   , (\"loginLogout\", loginLogoutSplice) ] 
+--   , (\"loginLogout\", loginLogoutSplice) ]
 -- @
 registerSplices
-  :: (MonadSnap m, MonadIO n) 
-  => HeistState m   
+  :: (MonadSnap m, MonadIO n)
+  => HeistState m
   -- ^ Heist state that you are going to embed in your application's state.
-  -> [(B.ByteString, Splice m)]   
+  -> [(Text, Splice m)]
   -- ^ Your splices.
   -> n ()
 registerSplices s sps = liftIO $ do
   let mv = _tsMVar s
-  modifyMVar_ mv $ (return . bindSplices sps) 
+  modifyMVar_ mv $ (return . bindSplices sps)
