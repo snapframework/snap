@@ -13,6 +13,7 @@ module Site
 
 import           Control.Applicative
 import           Data.Maybe
+import qualified Data.Text.Encoding as T
 import           Snap.Extension.Heist
 import           Snap.Extension.Timer
 import           Snap.Util.FileServe
@@ -42,7 +43,7 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
 echo :: Application ()
 echo = do
     message <- decodedParam "stuff"
-    heistLocal (bindString "message" message) $ render "echo"
+    heistLocal (bindString "message" (T.decodeUtf8 message)) $ render "echo"
   where
     decodedParam p = fromMaybe "" <$> getParam p
 
@@ -53,4 +54,4 @@ site :: Application ()
 site = route [ ("/",            index)
              , ("/echo/:stuff", echo)
              ]
-       <|> fileServe "resources/static"
+       <|> serveDirectory "resources/static"

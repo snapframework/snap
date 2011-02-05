@@ -12,7 +12,7 @@ main = quickHttpServe $
     route [ ("foo", writeBS "bar")
           , ("echo/:echoparam", echoHandler)
           ] <|>
-    dir "static" (fileServe ".")
+    dir "static" (serveDirectory ".")
 
 echoHandler :: Snap ()
 echoHandler = do
