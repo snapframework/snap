@@ -47,8 +47,8 @@ interfaces from any other Snap Extension.
 -}
 
 module Snap.Extension.Heist.Impl
-  ( 
-  
+  (
+
     -- * Heist State Definitions
     HeistState
   , HasHeistState(..)
@@ -75,7 +75,7 @@ import           Text.Templating.Heist.Splices.Static
 
 ------------------------------------------------------------------------------
 -- | Your application's state must include a 'HeistState' in order for your
--- application to be a 'MonadHeist'.  
+-- application to be a 'MonadHeist'.
 --
 -- Unlike other @-State@ types, this is of kind @(* -> *) -> *@. Unless you're
 -- developing your own Snap Extension which has its own internal 'HeistState',
@@ -142,7 +142,8 @@ instance MonadSnap m => InitializerState (HeistState m) where
 
 
 ------------------------------------------------------------------------------
-instance HasHeistState (SnapExtend s) s => MonadHeist (SnapExtend s) (SnapExtend s) where
+instance HasHeistState (SnapExtend s) s
+      => MonadHeist (SnapExtend s) (SnapExtend s) where
     render t = do
         hs <- asks getHeistState
         renderHelper hs Nothing t
@@ -185,7 +186,7 @@ renderHelper hs c t = do
 -- inside your application's 'Initializer'.
 --
 -- Typical use cases are dynamically generated components that are present in
--- many of your views. 
+-- many of your views.
 --
 -- Example Usage:
 --
@@ -193,17 +194,17 @@ renderHelper hs c t = do
 -- appInit :: Initializer AppState
 -- appInit = do
 --  hs <- heistInitializer \"templates\"
---  registerSplices hs $ 
+--  registerSplices hs $
 --   [ (\"tabs\", tabsSplice)
---   , (\"loginLogout\", loginLogoutSplice) ] 
+--   , (\"loginLogout\", loginLogoutSplice) ]
 -- @
 registerSplices
-  :: (MonadSnap m, MonadIO n) 
-  => HeistState m   
+  :: (MonadSnap m, MonadIO n)
+  => HeistState m
   -- ^ Heist state that you are going to embed in your application's state.
-  -> [(Text, Splice m)]   
+  -> [(Text, Splice m)]
   -- ^ Your splices.
   -> n ()
 registerSplices s sps = liftIO $ do
   let mv = _tsMVar s
-  modifyMVar_ mv $ (return . bindSplices sps) 
+  modifyMVar_ mv $ (return . bindSplices sps)
