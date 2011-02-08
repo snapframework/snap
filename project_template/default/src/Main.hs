@@ -42,6 +42,8 @@ change.
 module Main where
 
 #ifdef DEVELOPMENT
+import           Control.Exception (SomeException, try)
+
 import           Snap.Extension.Loader.Devel
 import           Snap.Http.Server (quickHttpServe)
 #else
@@ -57,9 +59,10 @@ main = do
     -- All source directories will be watched for updates
     -- automatically.  If any extra directories should be watched for
     -- updates, include them here.
-    snap <- $(let extraWatcheDirs = ["resources/templates"]
-              in loadSnapTH 'applicationInitializer 'site extraWatcheDirs)
-    quickHttpServe snap
+    (snap, cleanup) <- $(let watchDirs = ["resources/templates"]
+                         in loadSnapTH 'applicationInitializer 'site watchDirs)
+    try $ quickHttpServe snap :: IO (Either SomeException ())
+    cleanup
 #else
 main = quickHttpServe applicationInitializer site
 #endif
