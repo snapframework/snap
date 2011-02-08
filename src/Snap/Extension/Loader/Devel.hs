@@ -7,6 +7,7 @@
 -- the calls to the dynamic loader.
 module Snap.Extension.Loader.Devel
   ( loadSnapTH
+  , loadSnapTH'
   ) where
 
 import           Control.Monad (liftM2)
@@ -24,7 +25,6 @@ import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
 import           Snap.Types
-import           Snap.Extension (runInitializerWithoutReloadAction)
 import           Snap.Extension.Loader.Devel.Signal
 import           Snap.Extension.Loader.Devel.Evaluator
 import           Snap.Extension.Loader.Devel.TreeWatcher
@@ -44,23 +44,43 @@ import           Snap.Extension.Loader.Devel.TreeWatcher
 -- during development unless your .cabal file changes, or the code
 -- that uses this splice changes.
 loadSnapTH :: Name -> Name -> [String] -> Q Exp
-loadSnapTH initializer action additionalWatchDirs = do
+loadSnapTH initializer action additionalWatchDirs =
+    loadSnapTH' modules imports additionalWatchDirs loadStr
+  where
+    initMod = nameModule initializer
+    initBase = nameBase initializer
+    actMod = nameModule action
+    actBase = nameBase action
+
+    modules = catMaybes [initMod, actMod]
+    imports = ["Snap.Extension"]
+
+    loadStr = intercalate " " [ "runInitializerWithoutReloadAction"
+                              , initBase
+                              , actBase
+                              ]
+
+
+------------------------------------------------------------------------------
+-- | This is the backing implementation for 'loadSnapTH'.  This
+-- interface can be used when the types involved don't include a
+-- SnapExtend and an Initializer.
+loadSnapTH' :: [String] -- ^ the list of modules to interpret
+            -> [String] -- ^ the list of modules to import in addition
+                        -- to those being interpreted
+            -> [String] -- ^ additional directories to watch for
+                        -- changes to trigger to recompile/reload
+            -> String   -- ^ the expression to interpret in the
+                        -- context of the loaded modules and imports.
+                        -- It should have the type 'HintLoadable'
+            -> Q Exp
+loadSnapTH' modules imports additionalWatchDirs loadStr = do
     args <- runIO getArgs
 
-    let initMod = nameModule initializer
-        initBase = nameBase initializer
-        actMod = nameModule action
-        actBase = nameBase action
-
-        opts = getHintOpts args
-        modules = catMaybes [initMod, actMod]
+    let opts = getHintOpts args
         srcPaths = additionalWatchDirs ++ getSrcPaths args
 
-    -- The let in this block causes an extra static type check that the
-    -- types of the names passed in were correct at compile time.
-    [| let _ = runInitializerWithoutReloadAction $(varE initializer)
-                                                 $(varE action)
-       in hintSnap opts modules srcPaths initBase actBase |]
+    [| hintSnap opts modules imports srcPaths loadStr |]
 
 
 ------------------------------------------------------------------------------
@@ -113,24 +133,21 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
                      -- modules which contain the initialization,
                      -- cleanup, and handler actions.  Everything else
                      -- they require will be loaded transitively.
+         -> [String] -- ^ A list of modules that need to be be
+                     -- imported, in addition to the ones that need to
+                     -- be interpreted.  This only needs to contain
+                     -- modules that aren't being interpreted, such as
+                     -- those from other libraries, that are used in
+                     -- the expression passed in.
          -> [String] -- ^ A list of paths to watch for updates
-         -> String   -- ^ The name of the initializer action
-         -> String   -- ^ The name of the SnapExtend action
+         -> String   -- ^ The string to execute
          -> IO (Snap ())
-hintSnap opts modules srcPaths initialization handler =
+hintSnap opts modules imports srcPaths action =
     protectedHintEvaluator initialize test loader
   where
-    action = intercalate " " [ "runInitializerWithoutReloadAction"
-                             , initialization
-                             , handler
-                             ]
     interpreter = do
         loadModules . nub $ modules
-        let imports = "Prelude" :
-                      "Snap.Extension" :
-                      "Snap.Types" :
-                      modules
-        setImports . nub $ imports
+        setImports . nub $ "Prelude" : "Snap.Types" : imports ++ modules
 
         interpret action (as :: HintLoadable)
 
