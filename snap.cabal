@@ -1,5 +1,5 @@
 name:           snap
-version:        0.4
+version:        0.5
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -16,7 +16,6 @@ extra-source-files:
   LICENSE,
   README.md,
   README.SNAP.md,
-  TODO,
   project_template/barebones/foo.cabal,
   project_template/barebones/src/Main.hs,
   project_template/default/foo.cabal,
