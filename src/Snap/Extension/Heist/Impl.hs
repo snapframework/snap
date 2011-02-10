@@ -92,7 +92,7 @@ data MonadSnap m => HeistState m = HeistState
 
 
 ------------------------------------------------------------------------------
--- | For you appliaction's monad to be a 'MonadHeist', your application's
+-- | For your application's monad to be a 'MonadHeist', your application's
 -- state needs to be an instance of 'HasHeistState'. Minimal complete
 -- definition: 'getHeistState', 'setHeistState'.
 --
