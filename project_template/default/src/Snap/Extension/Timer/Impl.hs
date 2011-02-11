@@ -36,7 +36,7 @@ newtype TimerState = TimerState
 
 
 ------------------------------------------------------------------------------
--- | For you appliaction's monad to be a 'MonadTimer', your application's
+-- | For your application's monad to be a 'MonadTimer', your application's
 -- state needs to be an instance of 'HasTimerState'. Minimal complete
 -- definition: 'getTimerState', 'setTimerState'.
 class HasTimerState s where
