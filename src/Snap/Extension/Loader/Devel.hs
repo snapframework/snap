@@ -141,7 +141,7 @@ hintSnap :: [String] -- ^ A list of command-line options for the interpreter
                      -- the expression passed in.
          -> [String] -- ^ A list of paths to watch for updates
          -> String   -- ^ The string to execute
-         -> IO (Snap (), IO ())
+         -> IO (Snap ())
 hintSnap opts modules imports srcPaths action =
     protectedHintEvaluator initialize test loader
   where

@@ -43,7 +43,7 @@ protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)
                        -> IO HintLoadable
-                       -> IO (Snap (), IO ())
+                       -> IO (Snap ())
 protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
@@ -61,78 +61,70 @@ protectedHintEvaluator start test getInternals = do
     -- "keep them full, unless updating them."  In every case, when
     -- one of those MVars is emptied, the next action is to fill that
     -- same MVar.  This makes deadlocking on MVar wait impossible.
-    let snap = do
-            let waitForNewResult :: IO (Snap ())
-                waitForNewResult = do
-                    -- Need to calculate a new result
-                    tid <- myThreadId
-                    reader <- newEmptyMVar
+    return $ do
+        let waitForNewResult :: IO (Snap ())
+            waitForNewResult = do
+                -- Need to calculate a new result
+                tid <- myThreadId
+                reader <- newEmptyMVar
 
-                    readers <- takeMVar readerContainer
+                readers <- takeMVar readerContainer
 
-                    -- Some strictness is employed to ensure the MVar
-                    -- isn't holding on to a chain of unevaluated thunks.
-                    let pair = (tid, reader)
-                        newReaders = readers `seq` pair `seq` (pair : readers)
-                    putMVar readerContainer $! newReaders
+                -- Some strictness is employed to ensure the MVar
+                -- isn't holding on to a chain of unevaluated thunks.
+                let pair = (tid, reader)
+                    newReaders = readers `seq` pair `seq` (pair : readers)
+                putMVar readerContainer $! newReaders
 
-                    -- If this is the first reader to queue, clean up the
-                    -- previous state, if there was any, and then begin
-                    -- evaluation of the new code and state.
-                    when (null readers) $ do
-                        let runAndFill = block $ do
-                                -- run the cleanup action
-                                previous <- readMVar resultContainer
-                                unblock $ cleanup previous
+                -- If this is the first reader to queue, clean up the
+                -- previous state, if there was any, and then begin
+                -- evaluation of the new code and state.
+                when (null readers) $ do
+                    let runAndFill = block $ do
+                            -- run the cleanup action
+                            previous <- readMVar resultContainer
+                            unblock $ cleanup previous
 
-                                -- compile the new internals and initialize
-                                stateInitializer <- unblock getInternals
-                                res <- unblock stateInitializer
+                            -- compile the new internals and initialize
+                            stateInitializer <- unblock getInternals
+                            res <- unblock stateInitializer
 
-                                let a = fst res
+                            let a = fst res
 
-                                clearAndNotify (Right res) (flip putMVar a . snd)
+                            clearAndNotify (Right res) (flip putMVar a . snd)
 
-                            killWaiting :: SomeException -> IO ()
-                            killWaiting e = block $ do
-                                clearAndNotify (Left e) (flip throwTo e . fst)
-                                throwIO e
+                        killWaiting :: SomeException -> IO ()
+                        killWaiting e = block $ do
+                            clearAndNotify (Left e) (flip throwTo e . fst)
+                            throwIO e
 
-                            clearAndNotify r f = do
-                                a <- unblock start
-                                _ <- swapMVar resultContainer $ Just (r, a)
-                                allReaders <- swapMVar readerContainer []
-                                mapM_ f allReaders
+                        clearAndNotify r f = do
+                            a <- unblock start
+                            _ <- swapMVar resultContainer $ Just (r, a)
+                            allReaders <- swapMVar readerContainer []
+                            mapM_ f allReaders
 
-                        _ <- forkIO $ runAndFill `catch` killWaiting
-                        return ()
+                    _ <- forkIO $ runAndFill `catch` killWaiting
+                    return ()
 
-                    -- Wait for the evaluation of the action to complete,
-                    -- and return its result.
-                    takeMVar reader
+                -- Wait for the evaluation of the action to complete,
+                -- and return its result.
+                takeMVar reader
 
-            existingResult <- liftIO $ readMVar resultContainer
+        existingResult <- liftIO $ readMVar resultContainer
 
-            getResult <- liftIO $ case existingResult of
-                Just (res, a) -> do
-                    -- There's an existing result.  Check for validity
-                    valid <- test a
-                    case (valid, res) of
-                        (True, Right (x, _)) -> return x
-                        (True, Left e)       -> throwIO e
-                        (False, _)           -> do
-                            _ <- swapMVar resultContainer Nothing
-                            waitForNewResult
-                Nothing -> waitForNewResult
-            getResult
-
-        clean = do
-             let msg = "invalid dynamic loader state.  " ++
-                       "The cleanup action has been executed"
-             contents <- swapMVar resultContainer $ error msg
-             cleanup contents
-
-    return (snap, clean)
+        getResult <- liftIO $ case existingResult of
+            Just (res, a) -> do
+                -- There's an existing result.  Check for validity
+                valid <- test a
+                case (valid, res) of
+                    (True, Right (x, _)) -> return x
+                    (True, Left e)       -> throwIO e
+                    (False, _)           -> do
+                        _ <- swapMVar resultContainer Nothing
+                        waitForNewResult
+            Nothing -> waitForNewResult
+        getResult
   where
     newReaderContainer :: IO (MVar [(ThreadId, MVar (Snap ()))])
     newReaderContainer = newMVar []
