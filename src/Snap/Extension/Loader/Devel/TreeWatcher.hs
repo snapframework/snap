@@ -30,12 +30,7 @@ getTreeStatus = liftA2 (<$>) TS readModificationTimes
 checkTreeStatus :: TreeStatus -> IO Bool
 checkTreeStatus (TS paths entries) = check <$> readModificationTimes paths
   where
-    check = and . zipWith adtEq entries
-    adtEq (n1 :/ dt1) (n2 :/ dt2) = n1 == n2 && dtEq dt1 dt2
-
-    dtEq (Dir n1 d1) (Dir n2 d2) = n1 == n2 && and (zipWith dtEq d1 d2)
-    dtEq (File n1 t1) (File n2 t2) = n1 == n2 && t1 == t2
-    dtEq _ _ = False
+    check = and . zipWith (==) entries
 
 
 ------------------------------------------------------------------------------
