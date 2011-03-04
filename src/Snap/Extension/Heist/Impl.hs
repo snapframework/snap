@@ -119,12 +119,17 @@ class MonadSnap m => HasHeistState m s | s -> m where
 
 
 ------------------------------------------------------------------------------
--- | The 'Initializer' for 'HeistState'. It takes one argument, a path to a
--- template directory containing @.tpl@ files.
-heistInitializer :: MonadSnap m => FilePath -> Initializer (HeistState m)
-heistInitializer p = do
+-- | The 'Initializer' for 'HeistState'.
+heistInitializer :: MonadSnap m
+                 => FilePath
+                 -- ^ Path to a template directory containing @.tpl@ files
+                 -> [(Text, Splice m)]
+                 -- ^ List of splices to make available to the templates
+                 -> Initializer (HeistState m)
+heistInitializer p splices = do
     heistState <- liftIO $ do
-        (origTs,sts) <- bindStaticTag $ emptyTemplateState p
+        (origTs,sts) <- bindStaticTag $ bindSplices splices
+                                      $ emptyTemplateState p
         loadTemplates p origTs >>= either error (\ts -> do
             tsMVar <- newMVar ts
             return $ HeistState p origTs tsMVar sts id)
@@ -183,7 +188,12 @@ renderHelper hs c t = do
 ------------------------------------------------------------------------------
 -- | Take your application's state and register these splices in it so
 -- that you don't have to re-list them in every handler. Should be called from
--- inside your application's 'Initializer'.
+-- inside your application's 'Initializer'.  The splices registered by this
+-- function do not persist through template reloads.  Those splices must be
+-- passed as a parameter to heistInitializer.
+--
+-- (NOTE: In the future we may decide to deprecate registerSplices in favor of
+-- the heistInitializer argument.)
 --
 -- Typical use cases are dynamically generated components that are present in
 -- many of your views.
