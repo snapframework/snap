@@ -123,13 +123,12 @@ class MonadSnap m => HasHeistState m s | s -> m where
 heistInitializer :: MonadSnap m
                  => FilePath
                  -- ^ Path to a template directory containing @.tpl@ files
-                 -> [(Text, Splice m)]
-                 -- ^ List of splices to make available to the templates
+                 -> (TemplateState m -> TemplateState m)
+                 -- ^ Function to modify the initial template state
                  -> Initializer (HeistState m)
-heistInitializer p splices = do
+heistInitializer p modTS = do
     heistState <- liftIO $ do
-        (origTs,sts) <- bindStaticTag $ bindSplices splices
-                                      $ emptyTemplateState p
+        (origTs,sts) <- bindStaticTag $ modTS $ emptyTemplateState p
         loadTemplates p origTs >>= either error (\ts -> do
             tsMVar <- newMVar ts
             return $ HeistState p origTs tsMVar sts id)
