@@ -11,3 +11,4 @@ dist/
 .DS_Store
 **/.DS_Store
 docs/templates/out
+cabal-dev/
