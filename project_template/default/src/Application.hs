@@ -53,6 +53,6 @@ instance HasTimerState ApplicationState where
 -- to worry about.
 applicationInitializer :: Initializer ApplicationState
 applicationInitializer = do
-    heist <- heistInitializer "resources/templates" []
+    heist <- heistInitializer "resources/templates" id
     timer <- timerInitializer
     return $ ApplicationState heist timer
