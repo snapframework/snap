@@ -49,7 +49,7 @@ import           Snap.Extension.Server
 #endif
 
 import           Application
-import           Site
+import           Router
 
 main :: IO ()
 #ifdef DEVELOPMENT
@@ -58,8 +58,8 @@ main = do
     -- automatically.  If any extra directories should be watched for
     -- updates, include them here.
     snap <- $(let extraWatcheDirs = ["resources/templates"]
-              in loadSnapTH 'applicationInitializer 'site extraWatcheDirs)
+              in loadSnapTH 'applicationInitializer 'router extraWatcheDirs)
     quickHttpServe snap
 #else
-main = quickHttpServe applicationInitializer site
+main = quickHttpServe applicationInitializer router
 #endif

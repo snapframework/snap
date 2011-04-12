@@ -2,13 +2,13 @@
 
 {-|
 
-This is where all the routes and handlers are defined for your site. The
-'site' function combines everything together and is exported by this module.
+This is where all the handlers are defined for your site.
 
 -}
 
-module Site
-  ( site
+module Handlers
+  ( index
+  , echo
   ) where
 
 import           Control.Applicative
@@ -16,7 +16,6 @@ import           Data.Maybe
 import qualified Data.Text.Encoding as T
 import           Snap.Extension.Heist
 import           Snap.Extension.Timer
-import           Snap.Util.FileServe
 import           Snap.Types
 import           Text.Templating.Heist
 
@@ -47,11 +46,3 @@ echo = do
   where
     decodedParam p = fromMaybe "" <$> getParam p
 
-
-------------------------------------------------------------------------------
--- | The main entry point handler.
-site :: Application ()
-site = route [ ("/",            index)
-             , ("/echo/:stuff", echo)
-             ]
-       <|> serveDirectory "resources/static"
