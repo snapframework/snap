@@ -9,7 +9,7 @@ the Snap project website at http://snapframework.com/.
 Snap Status and Features
 ------------------------
 
-This developer prerelease contains only the Snap core system, namely:
+The Snap core system consists of:
 
   * a high-speed HTTP server, with an optional high-concurrency backend using
     the [libev](http://software.schmorp.de/pkg/libev.html) library
