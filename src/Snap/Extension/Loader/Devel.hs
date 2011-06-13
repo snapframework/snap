@@ -11,7 +11,7 @@ module Snap.Extension.Loader.Devel
 
 import           Control.Monad (liftM2)
 
-import           Data.List (groupBy, intercalate, isPrefixOf, nub)
+import           Data.List
 import           Data.Maybe (catMaybes)
 import           Data.Time.Clock (diffUTCTime, getCurrentTime)
 
@@ -79,13 +79,11 @@ getHintOpts args = removeBad opts
     srcOpts = filter (\x -> "-i" `isPrefixOf` x
                             && not ("-idist" `isPrefixOf` x)) args
 
-    toCopy = init' $ dropWhile (not . ("-package" `isPrefixOf`)) args
+    toCopy = filter (not . isSuffixOf ".hs") $
+             dropWhile (not . ("-package" `isPrefixOf`)) args
     copy = map (intercalate " ") . groupBy (\_ s -> not $ "-" `isPrefixOf` s)
 
     opts = hideAll ++ srcOpts ++ copy toCopy
-
-    init' [] = []
-    init' xs = init xs
 
 
 ------------------------------------------------------------------------------
