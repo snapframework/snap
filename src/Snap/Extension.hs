@@ -37,7 +37,6 @@ import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
-import           Control.Monad.Trans
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Monoid
