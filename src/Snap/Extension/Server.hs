@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE BangPatterns      #-}
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 {-|
 
@@ -31,7 +32,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Prelude hiding (catch)
 import           Snap.Extension
-import           Snap.Http.Server (simpleHttpServe)
+import qualified Snap.Http.Server as SS
 import qualified Snap.Http.Server.Config as C
 import           Snap.Http.Server.Config hiding ( defaultConfig
                                                 , completeConfig
@@ -89,11 +90,8 @@ defaultConfig = setReloadHandler handler C.defaultConfig
 ------------------------------------------------------------------------------
 -- | Completes a partial 'Config' by filling in the unspecified values with
 -- the default values from 'defaultConfig'.
-completeConfig :: ConfigExtend s -> ConfigExtend s
-completeConfig c = case getListen c' of
-                    [] -> addListen (ListenHttp "0.0.0.0" 8000) c'
-                    _ -> c'
-  where c' = mappend defaultConfig c
+completeConfig :: ConfigExtend s -> IO (ConfigExtend s)
+completeConfig = C.completeConfig . (mappend defaultConfig)
 
 
 ------------------------------------------------------------------------------
@@ -108,33 +106,20 @@ httpServe :: ConfigExtend s
           -- ^ The application to be served
           -> IO ()
 httpServe config initializer handler = do
-    (snap, cleanup) <- runInitializerWithReloadAction
+    conf <- completeConfig config
+    let !verbose  = fromJust $ getVerbose conf
+    let !reloader = fromJust $ getReloadHandler conf
+    let !compress = if fromJust $ getCompression conf then withCompression else id
+    let !catch500 = flip catch $ fromJust $ getErrorHandler conf
+    let !serve    = SS.simpleHttpServe config
+    (site, cleanup) <- runInitializerWithReloadAction
                          verbose
                          initializer
-                         (catch500 handler)
+                         (catch500 $ compress handler)
                          reloader
-    let site = compress $ snap
-    mapM_ printListen $ C.getListen config
     _   <- try $ serve $ site :: IO (Either SomeException ())
     putStr "\n"
     cleanup
-    output "Shutting down..."
-
-  where
-    conf     = completeConfig config
-    verbose  = fromJust $ getVerbose conf
-    output   = when verbose . hPutStrLn stderr
-    reloader = fromJust $ getReloadHandler conf
-    compress = if fromJust $ getCompression conf then withCompression else id
-    catch500 = flip catch $ fromJust $ getErrorHandler conf
-    serve    = simpleHttpServe config
-
-    listenToString (C.ListenHttp host port) =
-        concat ["http://", fromUTF8 host, ":", show port, "/"]
-    listenToString (C.ListenHttps host port _ _) =
-        concat ["https://", fromUTF8 host, ":", show port, "/"]
-
-    printListen l = output $ "Listening on " ++ listenToString l
 
 
 ------------------------------------------------------------------------------

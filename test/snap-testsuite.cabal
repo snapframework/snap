@@ -14,7 +14,7 @@ Executable testsuite
     directory,
     filepath,
     HUnit >= 1.2 && < 2,
-    http-enumerator >= 0.3 && <0.4,
+    http-enumerator >= 0.6.5.3 && <0.7,
     process == 1.*,
     test-framework >= 0.3.1 && <0.4,
     test-framework-hunit >= 0.2.5 && < 0.3,
