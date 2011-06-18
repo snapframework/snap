@@ -12,3 +12,4 @@ dist/
 **/.DS_Store
 docs/templates/out
 cabal-dev/
+test/cabal-dev

@@ -26,7 +26,13 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
             makeWorkDirectory projectPath
             setCurrentDirectory projectPath
             systemOrDie $ "snap init " ++ snapInitArgs
-            systemOrDie $ "cabal install " ++ cabalInstallArgs
+            systemOrDie $ "cabal-dev " ++ cabalDevArgs
+                            ++ " add-source ../../../snap-core"
+            systemOrDie $ "cabal-dev " ++ cabalDevArgs
+                            ++ " add-source ../../../snap-server"
+            systemOrDie $ "cabal-dev " ++ cabalDevArgs
+                            ++ " add-source ../.."
+            systemOrDie $ "cabal-dev install " ++ args
             let cmd = ("." </> "dist" </> "build" </> projName </> projName)
                       ++ " -p " ++ show httpPort
             putStrLn $ "Running \"" ++ cmd ++ "\""
@@ -41,6 +47,10 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         removeDirectoryRecursive projectPath
 
     waitABit = threadDelay $ 2*10^(6::Int)
+
+    cabalDevArgs = "-s ../cabal-dev" </> projName
+
+    args = cabalDevArgs ++ " " ++ cabalInstallArgs 
 
 systemOrDie :: String -> IO ()
 systemOrDie s = do
