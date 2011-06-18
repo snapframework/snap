@@ -13,6 +13,7 @@ Executable testsuite
     bytestring == 0.9.*,
     directory,
     filepath,
+    Glob == 0.5.*,
     HUnit >= 1.2 && < 2,
     http-enumerator >= 0.6.5.3 && <0.7,
     process == 1.*,
