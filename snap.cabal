@@ -120,4 +120,4 @@ Executable snap
 
 source-repository head
   type:     git
-  location: http://git.snapframework.com/snap.git
+  location: https://github.com/snapframework/snap.git
