@@ -60,3 +60,11 @@ From here you can invoke the testsuite by running:
 
 
 The testsuite generates an `hpc` test coverage report in `test/dist/hpc`.
+
+
+## Roadmap to Understanding Snaplets
+
+1. Read tutorial.md.
+2. Generate and read the haddock docs.
+3. Look at the code in the example directory, and the example applications in the test directory.  The test code has the nice property that it actually functions as a pretty good example app and covers a lot of the use cases.
+4. If you're interested in the implementation, read design.md.
