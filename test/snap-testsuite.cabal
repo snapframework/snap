@@ -4,22 +4,89 @@ build-type:     Simple
 cabal-version:  >= 1.6
 
 Executable testsuite
-  hs-source-dirs:  suite
+  hs-source-dirs:  ../src suite
   main-is:         TestSuite.hs
 
   build-depends:
-    QuickCheck >= 2.3.0.2,
-    base >= 4 && < 5,
-    bytestring == 0.9.*,
+    Glob                       == 0.5.*,
+    HUnit                      >= 1.2 && < 2,
+    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    QuickCheck                 >= 2.3.0.2,
+    attoparsec                 (>= 0.8   && < 0.10),
+    base                       >= 4 && < 5,
+    bytestring                 >= 0.9 && < 0.10,
+    configurator               >= 0.0.1.1 && < 0.1,
+    containers                 >= 0.3,
     directory,
+    directory-tree             >= 0.10 && < 0.11,
+    fclabels                   >= 0.11 && < 0.12,
     filepath,
-    Glob == 0.5.*,
-    HUnit >= 1.2 && < 2,
-    http-enumerator >= 0.6.5.3 && <0.7,
-    process == 1.*,
-    test-framework >= 0.3.1 && <0.4,
-    test-framework-hunit >= 0.2.5 && < 0.3,
-    test-framework-quickcheck2 >= 0.2.6 && < 0.3
+    heist                      >= 0.6 && < 0.7,
+    http-enumerator            >= 0.6.5.3 && <0.7,
+    mtl                        >= 2,
+    process                    == 1.*,
+    snap-core                  >= 0.5 && < 0.6,
+    snap-server                >= 0.5 && < 0.6,
+    test-framework             >= 0.3.1 && <0.4,
+    test-framework-hunit       >= 0.2.5 && < 0.3,
+    test-framework-quickcheck2 >= 0.2.6 && < 0.3,
+    text                       >= 0.11 && < 0.12,
+    transformers               >= 0.2,
+    utf8-string                >= 0.3   && < 0.4
     
-  ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -threaded
+  ghc-options: -O2 -Wall -fhpc -fwarn-tabs -funbox-strict-fields -threaded
                -fno-warn-unused-do-bind
+
+
+Executable app
+  hs-source-dirs:  ../src suite
+  main-is:         AppMain.hs
+
+  build-depends:
+    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    attoparsec                 (>= 0.8   && < 0.10),
+    base                       >= 4 && < 5,
+    bytestring                 >= 0.9 && < 0.10,
+    containers                 >= 0.3,
+    directory,
+    directory-tree             >= 0.10 && < 0.11,
+    fclabels                   >= 0.11 && < 0.12,
+    filepath,
+    heist                      >= 0.6 && < 0.7,
+    mtl                        >= 2,
+    process                    == 1.*,
+    snap-core                  >= 0.5 && < 0.6,
+    snap-server                >= 0.5 && < 0.6,
+    text                       >= 0.11 && < 0.12,
+    transformers               >= 0.2,
+    utf8-string                >= 0.3   && < 0.4
+    
+  ghc-options: -O2 -Wall -fwarn-tabs -funbox-strict-fields -threaded
+               -fno-warn-unused-do-bind
+
+Executable nesttest
+  hs-source-dirs:  ../src suite
+  main-is:         NestTest.hs
+
+  build-depends:
+    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    attoparsec                 (>= 0.8   && < 0.10),
+    base                       >= 4 && < 5,
+    bytestring                 >= 0.9 && < 0.10,
+    containers                 >= 0.3,
+    directory,
+    directory-tree             >= 0.10 && < 0.11,
+    fclabels                   >= 0.11 && < 0.12,
+    filepath,
+    heist                      >= 0.6 && < 0.7,
+    mtl                        >= 2,
+    process                    == 1.*,
+    snap-core                  >= 0.5 && < 0.6,
+    snap-server                >= 0.5 && < 0.6,
+    text                       >= 0.11 && < 0.12,
+    transformers               >= 0.2,
+    utf8-string                >= 0.3   && < 0.4
+    
+  ghc-options: -O2 -Wall -fwarn-tabs -funbox-strict-fields -threaded
+               -fno-warn-unused-do-bind
+

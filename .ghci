@@ -1,0 +1,3 @@
+:set -isrc
+:set -hide-package MonadCatchIO-mtl
+:set -XOverloadedStrings
