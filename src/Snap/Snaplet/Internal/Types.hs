@@ -123,7 +123,8 @@ class MonadSnaplet m where
     -- | Gets the lens for the current snaplet.
     getLens :: m b e (Snaplet b :-> Snaplet e)
 
-    -- | Gets the snaplet's path on the filesystem.
+    -- | Gets a list of the names of snaplets that are direct ancestors of the
+    -- current snaplet.
     getSnapletAncestry :: m b e [Text]
 
     -- | Gets the snaplet's path on the filesystem.
