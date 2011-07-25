@@ -74,15 +74,16 @@ module Snap.Snaplet
   , addRoutes
   , wrapHandlers
 
+  -- * Writing Snaplets
+  -- $writingSnaplets
+  , makeSnaplet
   , onUnload
   , addPostInitHook
   , addPostInitHookBase
   , printInfo
-  , serveSnaplet
 
-  -- * Writing Snaplets
-  -- $writingSnaplets
-  , makeSnaplet
+  -- * Serving Applications
+  , serveSnaplet
 
   , Base
   , Env
@@ -297,8 +298,8 @@ Snaplet filesystem directory structure:
 >   |-- log/
 >   |-- src/
 > ------------------------
->   |-- config/
->       |-- config.json
+>   |-- db.cfg
+>   |-- snaplet.cfg
 >   |-- public/
 >       |-- stylesheets/
 >       |-- images/
