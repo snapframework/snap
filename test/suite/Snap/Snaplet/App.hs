@@ -36,7 +36,7 @@ instance HasHeist App App where heistLens = subSnaplet heist
 
 routeWithSplice :: Handler App App ()
 routeWithSplice = do
-    str <- withChild foo getFooField
+    str <- with foo getFooField
     writeText $ T.pack $ "routeWithSplice: "++str
 
 routeWithConfig :: Handler App App ()

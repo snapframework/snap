@@ -62,7 +62,7 @@ The next thing we need to do is define an initializer.
         bs <- nestSnaplet "" $ nameSnaplet "baz" $ barInit heist
         addRoutes [ ("/hello", writeText "hello world")
                   ]
-        wrapHandlers (<|> withChild heist heistServe)
+        wrapHandlers (<|> with heist heistServe)
         return $ App hs fs bs "fooCorp"
 
 For now don't worry about the three type parameters to Initializer. We'll
@@ -127,10 +127,10 @@ define heistServe as the default handler to be tried if no other handler
 matched. This example is easy to understand, but defining routes in this way
 gives O(n) time complexity, whereas routes defined with addRoutes have O(log n)
 time complexity. In a real-world application you would probably want to have
-("", withChild heist heistServe) in the list passed to addRoutes.
+("", with heist heistServe) in the list passed to addRoutes.
 
-The last unfamiliar function in the example is withChild. To understand it, we
-need to look at heistServe's type signature:
+The last unfamiliar function in the example is with. To understand it, we need
+to look at heistServe's type signature:
 
     heistServe :: Handler b (Heist b) ()
 
@@ -141,11 +141,10 @@ The type parameter e defines the snaplet currently in context. Handler's
 MonadState instance gives it access to the current context (the 'e'), which is
 why the Heist snaplet provides heistServe with the above (approximate) type
 signature. The addRoutes and wrapHandlers functions require handlers where the
-current context is the top-level application. The withChild function
-transforms a snaplet handler from a lower context to a higher context. But in
-order to do this, you have to know how to get from the higher context to the
-lower context, so you have to pass "heist" as the first parameter to
-withChild.
+current context is the top-level application. The with function transforms a
+snaplet handler from a lower context to a higher context. But in order to do
+this, you have to know how to get from the higher context to the lower
+context, so you have to pass "heist" as the first parameter to with.
 
 This might seem a bit onerous at first glance, but in the general case it's
 absolutely necessary. For example, what if you had multiple heist snaplet

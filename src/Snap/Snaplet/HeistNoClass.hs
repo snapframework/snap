@@ -136,11 +136,11 @@ liftHandler = liftHeist . lift
 
 
 ------------------------------------------------------------------------------
--- | Common idiom for the combination of liftHandler and withSibling.
+-- | Common idiom for the combination of liftHandler and withTop.
 liftWith :: (Snaplet b :-> Snaplet e')
          -> Handler b e' a
          -> SnapletHeist b e a
-liftWith l = liftHandler . withSibling' l
+liftWith l = liftHandler . withTop' l
 
 
 instance MonadState e (SnapletHeist b e) where
@@ -156,8 +156,8 @@ instance MonadState e (SnapletHeist b e) where
 
 instance MonadSnaplet SnapletHeist where
     getLens = ask
-    withBase = withSS (const id)
-    withChild' l = withSS (l .)
+    with' l = withSS (l .)
+    withTop' l = withSS (const id) . with' l
     getSnapletAncestry = liftHandler getSnapletAncestry
     getSnapletFilePath = liftHandler getSnapletFilePath
     getSnapletName = liftHandler getSnapletName
@@ -216,7 +216,7 @@ addSplices' :: (Snaplet e :-> Snaplet (Heist b))
            -> Initializer b e ()
 addSplices' heist splices = do
     _lens <- getLens
-    withChild' heist $ addPostInitHook $
+    with' heist $ addPostInitHook $
         return . changeTS (bindSnapletSplices _lens splices)
 
 
@@ -238,7 +238,7 @@ renderHelper :: Maybe MIMEType
              -> Handler b (Heist b) ()
 renderHelper c t = do
     (Heist ts _) <- get
-    withBase $ renderTemplate ts t >>= maybe pass serve
+    withTop' id $ renderTemplate ts t >>= maybe pass serve
   where
     serve (b, mime) = do
         modifyResponse $ setContentType $ fromMaybe mime c
@@ -275,10 +275,10 @@ heistLocal' :: (Snaplet e :-> Snaplet (Heist b))
             -> Handler b e a
             -> Handler b e a
 heistLocal' heist f m = do
-    hs  <- withChild' heist $ get
-    withChild' heist $ modify $ changeTS f
+    hs  <- with' heist $ get
+    with' heist $ modify $ changeTS f
     res <- m
-    withChild' heist $ put hs
+    with' heist $ put hs
     return res
 
 
@@ -310,7 +310,7 @@ renderWithSplices' :: (Snaplet e :-> Snaplet (Heist b))
                    -> [(Text, SnapletSplice b e)]
                    -> Handler b e ()
 renderWithSplices' heist t splices =
-    withSplices' heist splices $ withChild' heist $ render t
+    withSplices' heist splices $ with' heist $ render t
 
 
 renderWithSplices :: (e :-> Snaplet (Heist b))

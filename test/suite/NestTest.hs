@@ -66,7 +66,7 @@ mkLabels [''App]
 
 app :: Initializer App App (Snaplet App)
 app = makeSnaplet "app" "nested snaplet application" Nothing $ do
-    fs <- withChild foo $ nestSnaplet "foo" $ fooInit
+    fs <- with foo $ nestSnaplet "foo" $ fooInit
     addRoutes [ ("/hello", writeText "hello world")
               , ("/public", serveDirectory "public")
               , ("/admin/reload", reloadSite)

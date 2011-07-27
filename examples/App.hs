@@ -34,14 +34,14 @@ helloHandler = writeText "Hello world"
 
 sessionTest :: AppHandler ()
 sessionTest = withSession session $ do
-  withChild session $ do
+  with session $ do
     curVal <- getFromSession "foo"
     case curVal of
       Nothing -> do
         setInSession "foo" "bar"
       Just _ -> return ()
-  list <- withChild session $ (T.pack . show) `fmap` sessionToList
-  csrf <- withChild session $ (T.pack . show) `fmap` csrfToken
+  list <- with session $ (T.pack . show) `fmap` sessionToList
+  csrf <- with session $ (T.pack . show) `fmap` csrfToken
   renderWithSplices "session"
     [ ("session", liftHeist $ textSplice list)
     , ("csrf", liftHeist $ textSplice csrf) ]
@@ -51,14 +51,14 @@ sessionTest = withSession session $ do
 app :: Initializer App App (Snaplet App)
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" $ heistInit "resources/templates"
-    withChild heist $ addSplices
+    with heist $ addSplices
         [("mysplice", liftHeist $ textSplice "YAY, it worked")]
     s <- nestSnaplet "session" $ 
       initCookieSessionManager "config/site_key.txt" "_session" Nothing
     addRoutes [ ("/hello", helloHandler)
-              , ("/aoeu", withChild heist $ heistServeSingle "foo")
-              , ("", withChild heist heistServe)
-              , ("", withChild heist $ serveDirectory "resources/doc")
+              , ("/aoeu", with heist $ heistServeSingle "foo")
+              , ("", with heist heistServe)
+              , ("", with heist $ serveDirectory "resources/doc")
               , ("/sessionTest", sessionTest)
               ]
     return $ App h s

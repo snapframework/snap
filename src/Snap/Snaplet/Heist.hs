@@ -88,7 +88,7 @@ class HasHeist b e where
 
 ------------------------------------------------------------------------------
 -- | This default instance allows you to avoid writing a HasHeist instance and
--- instead access the heist snaplet via the 'withChild' or 'withSibling'
+-- instead access the heist snaplet via the 'with' or 'withTop'
 -- functions.  This might be preferrable in situations where Heist usage is
 -- very simple.
 instance HasHeist b (Heist b) where heistLens = id
@@ -104,14 +104,14 @@ instance HasHeist b (Heist b) where heistLens = id
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: HasHeist b e => ByteString -> Initializer b e ()
-addTemplates pfx = withChild' heistLens (Unclassed.addTemplates pfx)
+addTemplates pfx = with' heistLens (Unclassed.addTemplates pfx)
 
 
 ------------------------------------------------------------------------------
 -- | Adds templates to the Heist TemplateState, and lets you specify where
 -- they are fonud in the filesystem.
 addTemplatesAt :: HasHeist b e => ByteString -> FilePath -> Initializer b e ()
-addTemplatesAt pfx p = withChild' heistLens (Unclassed.addTemplatesAt pfx p)
+addTemplatesAt pfx p = with' heistLens (Unclassed.addTemplatesAt pfx p)
 
 
 ------------------------------------------------------------------------------
@@ -130,28 +130,28 @@ addSplices = Unclassed.addSplices' heistLens
 -- | Renders a template as text\/html. If the given template is not found,
 -- this returns 'empty'.
 render :: HasHeist b e => ByteString -> Handler b e ()
-render t = withChild' heistLens (Unclassed.render t)
+render t = with' heistLens (Unclassed.render t)
 
 
 ------------------------------------------------------------------------------
 -- | Renders a template as the given content type.  If the given template
 -- is not found, this returns 'empty'.
 renderAs :: HasHeist b e => ByteString -> ByteString -> Handler b e ()
-renderAs ct t = withChild' heistLens (Unclassed.renderAs ct t)
+renderAs ct t = with' heistLens (Unclassed.renderAs ct t)
 
 
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServe'. If the template specified in the request path
 -- is not found, it returns 'empty'.
 heistServe :: HasHeist b e => Handler b e ()
-heistServe = withChild' heistLens Unclassed.heistServe
+heistServe = with' heistLens Unclassed.heistServe
 
 
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServeSingle'. If the given template is not found,
 -- this throws an error.
 heistServeSingle :: HasHeist b e => ByteString -> Handler b e ()
-heistServeSingle t = withChild' heistLens (Unclassed.heistServeSingle t)
+heistServeSingle t = with' heistLens (Unclassed.heistServeSingle t)
 
 
 ------------------------------------------------------------------------------

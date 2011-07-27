@@ -39,7 +39,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 withSession :: (b :-> Snaplet SessionManager) -> Handler b e a -> Handler b e a
 withSession l h = do
   a <- h 
-  withSibling l commitSession
+  withTop l commitSession
   return a
 
 

@@ -55,8 +55,8 @@ module Snap.Snaplet
   -- * MonadSnaplet
   -- $monadSnaplet
   , MonadSnaplet(..)
-  , wrapChild
-  , wrapSibling
+  , wrap
+  , wrapTop
 
   -- * Handler
   -- $handler
@@ -282,7 +282,7 @@ The next thing we need to do is define an initializer.
 >     bs <- nestSnaplet "" $ nameSnaplet "baz" $ barInit heist
 >     addRoutes [ ("/hello", writeText "hello world")
 >               ]
->     wrapHandlers (<|> withChild heist heistServe)
+>     wrapHandlers (<|> with heist heistServe)
 >     return $ App hs fs bs "fooCorp"
 
 Then we define a simple main to run the application.

@@ -264,7 +264,7 @@ addRoutes :: [(ByteString, Handler b e ())]
 addRoutes rs = do
     l <- getLens
     ctx <- iGets (_scRouteContext . _curConfig)
-    let rs' = map (\(r,h) -> (buildPath (r:ctx), withSibling' l h)) rs
+    let rs' = map (\(r,h) -> (buildPath (r:ctx), withTop' l h)) rs
     iModify (\e -> modL handlers (++rs') e)
 
 

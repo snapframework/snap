@@ -89,19 +89,19 @@ communicate all initializer status and errors.
 The Heist snaplet is a fairly complex snaplet that illustrates a number of
 concepts that you may encounter while writing your own snaplets.  The biggest
 issue arises because Heist's TemplateState is parameterized by the handler
-monad.  This means that if you want to do something like a withChild
-transformation with a lens (b :-> e) you will naturally want to apply the same
-transformation to the Handler parameter of the TemplateState.  Unfortunately,
-due to Heist's design, this is computationally intensive, must be performed at
-runtime, and requires that you have a bijection (b :<->: e).  To avoid this
-issue, we only use the base application state, (TemplateState (Handler b b)).
+monad.  This means that if you want to do something like a wih transformation
+with a lens (b :-> e) you will naturally want to apply the same transformation
+to the Handler parameter of the TemplateState.  Unfortunately, due to Heist's
+design, this is computationally intensive, must be performed at runtime, and
+requires that you have a bijection (b :<->: e).  To avoid this issue, we only
+use the base application state, (TemplateState (Handler b b)).
 
 The basic functions for manipulating templates are not affected by this
 decision.  But the splice functions are more problematic since they are the
 ones that actually use TemplateState's monad parameter.
 
 You will also notice that the Heist snaplet includes a HasHeist type class.
-Normally to use snaplets, you must "call" them using withChild or withSibling,
+Normally to use snaplets, you must "call" them using with or withTop,
 passing the lens to the desired snaplet.  This is useful because it allows you
 to have multiple instances of the same snaplet.  However, there may be times
 when you know you will only ever need a single instance of a particular
@@ -112,7 +112,7 @@ This is where type classes are useful.  The HasHeist type class essentially
 defines some global compile-time state associating a particular lens to be
 used for calls to Heist within a particular type.  To use Heist, just define a
 HasHeist instance for your application or snaplet type and all the Heist API
-functions will work without needing withChild.  Your HasHeist instance will
+functions will work without needing with.  Your HasHeist instance will
 look something like this:
 
     instance HasHeist App App where
@@ -127,7 +127,7 @@ a default instance using the id function from Control.Category.
 
 This allows you the option of using the Heist snaplet without defining the
 HasHeist type class.  You will just have to manually change context using
-withChild or withSibling.
+with or withTop.
 
 
 
