@@ -174,10 +174,10 @@ makeSnaplet :: Text
        -- value to Nothing doesn't preclude the snaplet from having files in
        -- in the filesystem, it just means that they won't be copied there
        -- automatically.
-       -> Initializer b e a
+       -> Initializer b e e
        -- ^ Snaplet initializer.
-       -> Initializer b e (Snaplet a)
-makeSnaplet snapletId desc origFilesystemDir m = do
+       -> SnapletInit b e
+makeSnaplet snapletId desc origFilesystemDir m = SnapletInit $ do
     modifyCfg $ \c -> if isNothing $ _scId c
         then setL scId (Just snapletId) c else c
     sid <- iGets (T.unpack . fromJust . _scId . _curConfig)
@@ -228,10 +228,12 @@ bracketInit m = do
 nestSnaplet :: ByteString
             -- ^ The root url for all the snaplet's routes.  An empty string
             -- gives the routes the same root as the parent snaplet's routes.
-            -> Initializer b e (Snaplet a)
+            -> (e :-> Snaplet s)
+            -- ^ Lens identifying the snaplet
+            -> SnapletInit b s
             -- ^ The initializer function for the subsnaplet.
-            -> Initializer b e (Snaplet a)
-nestSnaplet rte snaplet = bracketInit $ do
+            -> Initializer b e (Snaplet s)
+nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
     curId <- iGets (_scId . _curConfig)
     modifyCfg (modL scAncestry (fromJust curId:))
     modifyCfg (modL scId (const Nothing))
@@ -249,10 +251,11 @@ nestSnaplet rte snaplet = bracketInit $ do
 -- @fooState <- nestSnaplet \"fooA\" $ nameSnaplet \"myFoo\" $ fooInit@
 nameSnaplet :: Text
             -- ^ The snaplet name
-            -> Initializer b e (Snaplet a)
+            -> SnapletInit b e
             -- ^ The snaplet initializer function
-            -> Initializer b e (Snaplet a)
-nameSnaplet nm m = modifyCfg (setL scId (Just nm)) >> m
+            -> SnapletInit b e
+nameSnaplet nm (SnapletInit m) = SnapletInit $
+    modifyCfg (setL scId (Just nm)) >> m
 
 
 ------------------------------------------------------------------------------

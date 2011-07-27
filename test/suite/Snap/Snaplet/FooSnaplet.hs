@@ -16,7 +16,7 @@ import Text.Templating.Heist
 
 data FooSnaplet = FooSnaplet { fooField :: String }
 
-fooInit :: HasHeist b e => Initializer b e (Snaplet FooSnaplet)
+fooInit :: HasHeist b FooSnaplet => SnapletInit b FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo." Nothing $ do
     config <- getSnapletConfig
     addTemplates "foo"

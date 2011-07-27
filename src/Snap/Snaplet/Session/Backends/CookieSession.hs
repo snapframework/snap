@@ -5,10 +5,7 @@ module Snap.Snaplet.Session.Backends.CookieSession
 
 ( initCookieSessionManager ) where
 
-import           Control.Arrow
-import           Control.Exception
 import           Control.Monad.Reader
-import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import           Data.Generics
 import           Data.HashMap.Strict (HashMap)
@@ -17,7 +14,6 @@ import           Data.Hashable (Hashable)
 import           Data.Serialize (Serialize)
 import qualified Data.Serialize as S
 import           Data.Text (Text)
-import qualified Data.Text.Encoding as T
 import           Web.ClientSession
 
 import           Snap.Types (Snap)
@@ -32,9 +28,9 @@ type Session = HashMap Text Text
 
 
 -- | This is what the 'Payload' will be for the CookieSession backend
-data CookieSession = CookieSession {
-    csCSRFToken :: Text
-	, csSession :: Session
+data CookieSession = CookieSession
+  { csCSRFToken :: Text
+  , csSession :: Session
 } deriving (Eq, Show)
 
 
@@ -91,7 +87,7 @@ initCookieSessionManager
   :: FilePath             -- ^ Path to site-wide encryption key
   -> ByteString           -- ^ Session cookie name
   -> Maybe Int            -- ^ Session time-out (replay attack protection)
-  -> Initializer b e (Snaplet SessionManager)
+  -> SnapletInit b SessionManager
 initCookieSessionManager fp cn to = 
   makeSnaplet "CookieSession" "A snaplet providing sessions via HTTP cookies."
          Nothing $ liftIO $ do

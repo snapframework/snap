@@ -287,6 +287,12 @@ instance MonadSnaplet Initializer where
 
 
 ------------------------------------------------------------------------------
+-- | Opaque newtype which gives us compile-time guarantees that the user is
+-- using makeSnaplet and nestSnaplet correctly.
+newtype SnapletInit b e = SnapletInit (Initializer b e (Snaplet e))
+
+
+------------------------------------------------------------------------------
 -- | Information needed to reload a site.  Instead of having snaplets define
 -- their own reload actions, we store the original site initializer and use it
 -- instead.

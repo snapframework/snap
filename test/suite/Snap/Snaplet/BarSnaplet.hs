@@ -17,8 +17,8 @@ import Text.Templating.Heist
 
 data BarSnaplet = BarSnaplet { barField :: String }
 
-barInit :: HasHeist b e
-        => Initializer b e (Snaplet BarSnaplet)
+barInit :: HasHeist b b
+        => SnapletInit b BarSnaplet
 barInit = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
     config <- getSnapletConfig
     addTemplates ""

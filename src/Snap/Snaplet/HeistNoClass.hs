@@ -184,7 +184,7 @@ bindSnapletSplices l splices =
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for 'Heist'.
 heistInit :: FilePath
-          -> Initializer b e (Snaplet (Heist b))
+          -> SnapletInit b (Heist b)
 heistInit templateDir =
     makeSnaplet "heist" "" Nothing $ liftIO $ do
         (cacheFunc, cts) <- mkCacheTag

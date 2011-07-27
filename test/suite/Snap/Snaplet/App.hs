@@ -45,11 +45,11 @@ routeWithConfig = do
     val <- liftIO $ lookup cfg "topConfigField"
     writeText $ "routeWithConfig: " `T.append` fromJust val
 
-app :: Initializer App App (Snaplet App)
+app :: SnapletInit App App
 app = makeSnaplet "app" "Test application" Nothing $ do
-    hs <- nestSnaplet "heist" $ heistInit "templates"
-    fs <- nestSnaplet "foo" $ fooInit
-    bs <- nestSnaplet "" $ nameSnaplet "baz" $ barInit
+    hs <- nestSnaplet "heist" heist $ heistInit "templates"
+    fs <- nestSnaplet "foo" foo fooInit
+    bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit
     addSplices
         [("appsplice", liftHeist $ textSplice "contents of the app splice")]
     addRoutes [ ("/hello", writeText "hello world")

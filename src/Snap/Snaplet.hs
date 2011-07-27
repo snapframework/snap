@@ -66,6 +66,7 @@ module Snap.Snaplet
   -- * Initializer
   -- $initializer
   , Initializer
+  , SnapletInit
   , nestSnaplet
   , nameSnaplet
 
