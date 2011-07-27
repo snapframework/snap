@@ -34,16 +34,17 @@ mkLabels [''FooSnaplet]
 instance HasHeist b (FooSnaplet b) where
     heistLens = subSnaplet fooHeist
 
-fooInit :: Initializer b (FooSnaplet b) (Snaplet (FooSnaplet b))
+fooInit :: SnapletInit b (FooSnaplet b)
 fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
-    hs <- nestSnaplet "heist" $ heistInit "templates"
-    addTemplates "foo"
+    hs <- nestSnaplet "heist" fooHeist $ heistInit "templates"
+--    addTemplates "foo"
     rootUrl <- getSnapletRootURL
     fooLens <- getLens
     addRoutes [("fooRootUrl", writeBS rootUrl)
-              ,("aoeuhtns", renderWithSplices "foo/foopage"
-                    [("asplice", fooSplice fooLens)])
-              ,("", heistServe)
+-- TODO Need embedSnaplet to make this work
+--              ,("aoeuhtns", renderWithSplices "foo/foopage"
+--                    [("asplice", fooSplice fooLens)])
+--              ,("", heistServe)
               ]
     return $ FooSnaplet hs 42
 
@@ -64,9 +65,9 @@ data App = App
 
 mkLabels [''App]
 
-app :: Initializer App App (Snaplet App)
+app :: SnapletInit App App
 app = makeSnaplet "app" "nested snaplet application" Nothing $ do
-    fs <- with foo $ nestSnaplet "foo" $ fooInit
+    fs <- nestSnaplet "foo" foo $ fooInit
     addRoutes [ ("/hello", writeText "hello world")
               , ("/public", serveDirectory "public")
               , ("/admin/reload", reloadSite)

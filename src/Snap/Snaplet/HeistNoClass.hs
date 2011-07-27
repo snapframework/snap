@@ -211,16 +211,16 @@ addTemplatesAt urlPrefix templateDir = do
         (`mappend` addTemplatePathPrefix urlPrefix ts)
 
 
-addSplices' :: (Snaplet e :-> Snaplet (Heist b))
-           -> [(Text, SnapletSplice b e)]
-           -> Initializer b e ()
+addSplices' :: (Snaplet b :-> Snaplet (Heist b))
+            -> [(Text, SnapletSplice b e)]
+            -> Initializer b e ()
 addSplices' heist splices = do
     _lens <- getLens
-    with' heist $ addPostInitHook $
+    withTop' heist $ addPostInitHook $
         return . changeTS (bindSnapletSplices _lens splices)
 
 
-addSplices :: (e :-> Snaplet (Heist b))
+addSplices :: (b :-> Snaplet (Heist b))
            -> [(Text, SnapletSplice b e)]
            -> Initializer b e ()
 addSplices heist splices = addSplices' (subSnaplet heist) splices
@@ -270,26 +270,26 @@ heistServeSingle t =
     render t <|> error ("Template " ++ show t ++ " not found.")
 
 
-heistLocal' :: (Snaplet e :-> Snaplet (Heist b))
+heistLocal' :: (Snaplet b :-> Snaplet (Heist b))
             -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
             -> Handler b e a
             -> Handler b e a
 heistLocal' heist f m = do
-    hs  <- with' heist $ get
-    with' heist $ modify $ changeTS f
+    hs  <- withTop' heist $ get
+    withTop' heist $ modify $ changeTS f
     res <- m
-    with' heist $ put hs
+    withTop' heist $ put hs
     return res
 
 
-heistLocal :: (e :-> Snaplet (Heist b))
+heistLocal :: (b :-> Snaplet (Heist b))
            -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
            -> Handler b e a
            -> Handler b e a
 heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 
-withSplices' :: (Snaplet e :-> Snaplet (Heist b))
+withSplices' :: (Snaplet b :-> Snaplet (Heist b))
              -> [(Text, SnapletSplice b e)]
              -> Handler b e a
              -> Handler b e a
@@ -298,22 +298,22 @@ withSplices' heist splices m = do
     heistLocal' heist (bindSnapletSplices _lens splices) m
 
 
-withSplices :: (e :-> Snaplet (Heist b))
+withSplices :: (b :-> Snaplet (Heist b))
             -> [(Text, SnapletSplice b e)]
             -> Handler b e a
             -> Handler b e a
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 
 
-renderWithSplices' :: (Snaplet e :-> Snaplet (Heist b))
+renderWithSplices' :: (Snaplet b :-> Snaplet (Heist b))
                    -> ByteString
                    -> [(Text, SnapletSplice b e)]
                    -> Handler b e ()
 renderWithSplices' heist t splices =
-    withSplices' heist splices $ with' heist $ render t
+    withSplices' heist splices $ withTop' heist $ render t
 
 
-renderWithSplices :: (e :-> Snaplet (Heist b))
+renderWithSplices :: (b :-> Snaplet (Heist b))
                   -> ByteString
                   -> [(Text, SnapletSplice b e)]
                   -> Handler b e ()

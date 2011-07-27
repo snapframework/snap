@@ -362,8 +362,8 @@ runEverything mvar b@(Initializer i) = do
 
 ------------------------------------------------------------------------------
 -- | Serves a top-level snaplet as a web application.
-serveSnaplet :: Config Snap a -> Initializer b b (Snaplet b) -> IO ()
-serveSnaplet cfg b = do
+serveSnaplet :: Config Snap a -> SnapletInit b b -> IO ()
+serveSnaplet cfg (SnapletInit b) = do
     snapletMVar <- newEmptyMVar
     (siteSnaplet, is) <- runEverything snapletMVar b
     putMVar snapletMVar siteSnaplet
