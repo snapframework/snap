@@ -77,7 +77,7 @@ setSecureCookie name key to val = do
     t <- liftIO getCurrentTime
     let expire = to >>= Just . flip addUTCTime t . fromIntegral
     let val' = encrypt key . encode $ (t, val)
-    let nc = Cookie name val' expire Nothing (Just "/")
+    let nc = Cookie name val' expire Nothing (Just "/") False True
     modifyResponse $ addResponseCookie nc
 
 
