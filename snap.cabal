@@ -147,6 +147,33 @@ Executable snap
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
                  -fno-warn-orphans
 
+Executable app
+  hs-source-dirs: src, examples
+  main-is: App.hs
+
+  build-depends:
+    base                >= 4        && < 5,
+    bytestring,
+    haskell98,
+    mtl                 >= 2,
+    old-locale,
+    old-time,
+    snap-core           >= 0.5      && <0.6,
+    snap-server         >= 0.5      && <0.6,
+    template-haskell    >= 2.3      && < 2.6,
+    text                >= 0.11     && <0.12,
+    time,
+    unix-compat
+
+  ghc-prof-options: -prof -auto-all
+
+  if impl(ghc >= 6.12.0)
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-orphans -fno-warn-unused-do-bind
+  else
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+                 -fno-warn-orphans
+
 source-repository head
   type:     git
   location: http://git.snapframework.com/snap.git
