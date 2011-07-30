@@ -128,7 +128,7 @@ modifyCfg f = iModify $ modL curConfig $ \c -> f c
 ------------------------------------------------------------------------------
 -- | If a snaplet has a filesystem presence, this function creates and copies
 -- the files if they dont' already exist.
-setupFilesystem :: Maybe FilePath
+setupFilesystem :: Maybe (IO FilePath)
                 -- ^ The directory where the snaplet's reference files are
                 -- stored.  Nothing if the snaplet doesn't come with any files
                 -- that need to be installed.
@@ -136,11 +136,12 @@ setupFilesystem :: Maybe FilePath
                 -- ^ Directory where the files should be copied.
                 -> Initializer b e ()
 setupFilesystem Nothing _ = return ()
-setupFilesystem (Just srcDir) targetDir = do
+setupFilesystem (Just getSnapletDataDir) targetDir = do
     exists <- liftIO $ doesDirectoryExist targetDir
     unless exists $ do
         printInfo "...setting up filesystem"
         liftIO $ createDirectoryIfMissing True targetDir
+        srcDir <- liftIO getSnapletDataDir
         (_ :/ dTree) <- liftIO $ readDirectoryWith B.readFile srcDir
         let (topDir,snapletId) = splitFileName targetDir
         _ <- liftIO $ writeDirectoryWith B.writeFile
@@ -166,7 +167,7 @@ makeSnaplet :: Text
        -- nameSnaplet function.
        -> Text
        -- ^ A human readable description of this snaplet.
-       -> Maybe FilePath
+       -> Maybe (IO FilePath)
        -- ^ The path to the directory holding the snaplet's reference
        -- filesystem content.  This will almost always be the directory
        -- returned by Cabal's getDataDir command, but it has to be passed in
@@ -177,7 +178,7 @@ makeSnaplet :: Text
        -> Initializer b e e
        -- ^ Snaplet initializer.
        -> SnapletInit b e
-makeSnaplet snapletId desc origFilesystemDir m = SnapletInit $ do
+makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
     modifyCfg $ \c -> if isNothing $ _scId c
         then setL scId (Just snapletId) c else c
     sid <- iGets (T.unpack . fromJust . _scId . _curConfig)
@@ -195,7 +196,10 @@ makeSnaplet snapletId desc origFilesystemDir m = SnapletInit $ do
       ,B.unpack $ buildPath $ _scRouteContext cfg
       ]
 
-    setupFilesystem origFilesystemDir (_scFilePath cfg)
+    -- This has to happen here because it needs to be after scFilePath is set
+    -- up but before snaplet.cfg is read.
+    setupFilesystem getSnapletDataDir (_scFilePath cfg)
+
     liftIO $ addToConfig [Optional (_scFilePath cfg </> "snaplet.cfg")]
                          (_scUserConfig cfg)
     mkSnaplet m

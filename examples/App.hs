@@ -48,12 +48,12 @@ sessionTest = withSession session $ do
 
 ------------------------------------------------------------------------------
 -- | 
-app :: Initializer App App (Snaplet App)
+app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
-    h <- nestSnaplet "heist" $ heistInit "resources/templates"
+    h <- nestSnaplet "heist" heist $ heistInit "resources/templates"
     with heist $ addSplices
         [("mysplice", liftHeist $ textSplice "YAY, it worked")]
-    s <- nestSnaplet "session" $ 
+    s <- nestSnaplet "session" session $ 
       initCookieSessionManager "config/site_key.txt" "_session" Nothing
     addRoutes [ ("/hello", helloHandler)
               , ("/aoeu", with heist $ heistServeSingle "foo")
