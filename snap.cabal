@@ -83,7 +83,6 @@ Library
     heist                     >= 0.6   && < 0.7,
     hint                      >= 0.3.3.1 && < 0.4,
     mtl                       >  2.0   && < 2.1,
-    mongoDB                   >= 0.9.1,
     mwc-random                >= 0.8,
     regular                   >= 0.3,
     safe                      >= 0.3,
