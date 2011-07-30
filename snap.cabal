@@ -87,8 +87,8 @@ Library
     mwc-random                >= 0.8,
     regular                   >= 0.3,
     safe                      >= 0.3,
-    snap-core                 >= 0.5   && < 0.6,
-    snap-server               >= 0.5   && < 0.6,
+    snap-core                 >= 0.6   && < 0.7,
+    snap-server               >= 0.6   && < 0.7,
     syb                       >= 0.1,
     text                      >= 0.11,
     time                      >= 1.1,
@@ -115,7 +115,7 @@ Executable snap
   other-modules: Snap.StarterTH
 
   build-depends:
-    attoparsec          >= 0.8.0.2  && < 0.9,
+    attoparsec          (>= 0.8.0.2  && < 0.9) || (>= 0.9.1.1 && < 0.10),
     base                >= 4        && < 5,
     bytestring,
     bytestring-nums,
@@ -130,10 +130,10 @@ Executable snap
     mtl                 >= 2,
     old-locale,
     old-time,
-    snap-core           >= 0.5      && <0.6,
-    snap-server         >= 0.5      && <0.6,
+    snap-core           >= 0.6      && < 0.7,
+    snap-server         >= 0.6      && < 0.7,
     template-haskell    >= 2.3      && < 2.6,
-    text                >= 0.11     && <0.12,
+    text                >= 0.11     && < 0.12,
     time,
     unix-compat,
     zlib
