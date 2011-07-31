@@ -1,67 +1,143 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-|
+{-# LANGUAGE ExistentialQuantification #-}
 
-  This module provides simple and secure high-level authentication
-  functionality for Snap applications.
+module Snap.Snaplet.Auth where
 
--}
-module Snap.Snaplet.Auth
-  (
+import           Control.Monad.State
+import           Crypto.PasswordStore
+import qualified Data.ByteString.Char8 as B
+import           Data.ByteString (ByteString)
+import           Data.Time
 
-  -- * Higher Level Functions
-  -- $higherlevel
-    mkAuthCredentials
-  , performLogin
-  , performLogout
-  , currentAuthUser
-  , isLoggedIn
-  , authenticatedUserId
-
-  -- * MonadAuth Class
-  , MonadAuth(..)
-  , MonadAuthUser(..)
-  , AuthEnv(..)
-  , defaultAuthEnv
-
-  -- * Types
-  , AuthUser(..)
-  , emptyAuthUser
-  , UserId(..)
-  , Password(..)
-  , AuthFailure(..)
-
-  -- * Crypto Stuff You May Need
-  , HashFunc
-
-  , authInit
-
-  ) where
-
-import           Snap.Snaplet
-import           Snap.Snaplet.Auth.Handlers
-import           Snap.Snaplet.Auth.Password
 import           Snap.Snaplet.Auth.Types
-import           Snap.Snaplet.Session.Types
+import           Snap.Snaplet
+import           Snap.Snaplet.Session
+
+
+
+-- $higherlevel
+-- These are the key functions you will use in your handlers. 
+
+
+loginFromRememberToken :: Handler b (AuthManager b) Bool
+loginFromRememberToken = undefined
 
 ------------------------------------------------------------------------------
--- | Initializes the auth snaplet.
-authInit :: (MonadAuthUser (Handler b b))
-         => FilePath
-         -> AuthEnv
-         -> Maybe (AuthHandlerConfig b)
-         -> Initializer b (Snaplet AuthEnv)
-authInit dir env ahc = makeSnaplet "auth" $ do
-    case ahc of
-        Nothing -> return env
-        (Just (AuthHandlerConfig a b c d e)) -> do
-            -- We don't call "with authLens" here so we can avoid needing the
-            -- lens passed into this function.  Might as well let the end user
-            -- do it in a context where the lens is already available.
-            addRoutes [ ("login", loginHandler a b c d)
-                      , ("logout", logoutHandler e)
-                      ]
-            return env
+-- | Remember user from remember token if possible.
+rememberUser :: Handler b (AuthManager b) (Maybe UserId)
+rememberUser = do
+  to <- gets authRememberPeriod
+  uid <- undefined
+  case uid of
+    Nothing -> return Nothing
+    Just uid' -> setSessionUserId uid' >> return uid'
+
+
+logout :: Handler b (AuthManager b) ()
+logout = undefined
+
+
+currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
+currentUser = undefined
+
+
+isLoggedIn :: Handler b (AuthManager b) Bool
+isLoggedIn = undefined
+
+
+------------------------------------------------------------------------------
+-- | Mutate an 'AuthUser', marking failed authentication now.
+markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
+markAuthFail u = do
+  (AuthManager r _ _ _ _ _) <- get
+  proc u >>= liftIO . save r
+  where
+    proc = incFailCtr >=> checkLockout
+    incFailCtr = undefined
+    checkLockout = undefined
+
+
+------------------------------------------------------------------------------
+-- | Mutate an 'AuthUser', marking successful authentication now.
+markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
+markAuthSuccess u = do
+  (AuthManager r _ _ _ _ _) <- get
+  proc u >>= liftIO . save r
+  where
+    proc = incLoginCtr >=> updateIp >=> updateLoginTS >=> 
+           setRememberToken >=> resetFailCtr
+    incLoginCtr = undefined
+    updateIp = undefined
+    updateLoginTS = undefined
+    setRememberToken = undefined
+    resetFailCtr = undefined
+
+
+------------------------------------------------------------------------------
+-- | Authenticate and log the user into the current session if successful.
+--
+-- This is a mid-level function exposed to allow roll-your-own ways of looking
+-- up a user from the database.
+--
+-- This function will:
+--
+-- 1. Check the password
+--
+-- 2. Login the user into the current session
+--
+-- 3. Mark success/failure of the authentication trial on the user record
+loginByPassword
+  :: AuthUser
+  -> ByteString
+  -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+loginByPassword u pw = 
+  case authenticatePassword u pw of
+    Just e -> do
+      markAuthFail u
+      return $ Left e
+    Nothing -> do
+      forceLoginUser u 
+      u' <- markAuthSuccess u
+      return $ Right u'
+
+
+------------------------------------------------------------------------------
+-- | Login and persist the given 'AuthUser' in the active session
+--
+-- Meant to be used if you have other means of being sure that the person is
+-- who she says she is.
+forceLoginUser :: AuthUser -> Handler b (AuthManager b) Bool
+forceLoginUser u = do
+  AuthManager _ s _ _ _ _ <- get
+  case userId u of
+    Just x -> withTop s (setSessionUserId x) >> return True
+    Nothing -> return False
+
+
+------------------------------------------------------------------------------
+-- | Set the current user's 'UserId' in the active session
+setSessionUserId :: UserId -> Handler b SessionManager ()
+setSessionUserId (UserId t) = setInSession "__user_id" t
+
+
+------------------------------------------------------------------------------
+-- | Get the current user's 'UserId' from the active session
+getSessionUserId :: Handler b SessionManager (Maybe UserId)
+getSessionUserId = do
+  uid <- getFromSession "__user_id" 
+  return $ uid >>= return . UserId
+
+
+------------------------------------------------------------------------------
+-- | Check password for a given user.
+authenticatePassword 
+  :: AuthUser        -- ^ Looked up from the back-end
+  -> ByteString      -- ^ Check against this password
+  -> Maybe AuthFailure
+authenticatePassword u pw = auth
+  where
+    auth = case userPassword u of
+      Nothing -> Just PasswordMissing
+      Just (ClearText x) -> check $ pw == x
+      Just (Encrypted x) -> check $ verifyPassword pw x
+    check b = if b then Nothing else Just IncorrectPassword
 
