@@ -37,6 +37,11 @@ encryptPassword (ClearText p) = do
   return $ Encrypted hashed
 
 
+checkPassword :: Password -> Password -> Bool 
+checkPassword (ClearText pw) (Encrypted pw') = verifyPassword pw pw'
+checkPassword _ _ = 
+  error "checkPassword failed. Make sure you pass ClearText passwords"
+
 ------------------------------------------------------------------------------
 -- | Authentication failures indicate what went wrong during authentication.
 -- They may provide useful information to the developer, although it is
@@ -88,23 +93,45 @@ data AuthUser = AuthUser
   } deriving (Show,Eq)
 
 
+data AuthSettings = AuthSettings {
+	  asMinPasswdLen :: Int
+	, asRememberCookieName :: ByteString
+	, asRememberPeriod :: Maybe Int
+	, asLockout :: Maybe (Int, Int)
+	, asSiteKey :: FilePath
+}
+
+defAuthSettings = AuthSettings {
+	  asMinPasswdLen = 8
+	, asRememberCookieName = "remember"
+	, asRememberPeriod = Just $ 14 * 24 * 60
+	, asLockout = Nothing
+	, asSiteKey = "site_key.txt"
+}
 
 data AuthManager b = forall r. IAuthBackend r => AuthManager { 
 	  backend :: r
 	-- ^ Storage back-end 
 
 	, session :: (b :-> Snaplet SessionManager)
+	-- ^ A lens pointer to a SessionManager
+	
+  , activeUser :: Maybe AuthUser
+  -- ^ A per-request logged-in user cache
 
-  , minPasswdLen      :: Int
+  , minPasswdLen :: Int
   -- ^ Password length range
 
-  , rememberCookieName     :: ByteString
+  , rememberCookieName :: ByteString
   -- ^ Cookie name for the remember token
 
-  , rememberPeriod         :: Int
+  , rememberPeriod :: Maybe Int
   -- ^ Remember period in seconds. Defaults to 2 weeks.
 
-  , lockout        :: Maybe (Int, Int)
+  , siteKey :: ByteString
+  -- ^ A unique encryption key used to encrypt remember cookie
+
+  , lockout :: Maybe (Int, Int)
   -- ^ Lockout after x tries, re-allow entry after y seconds
   }
 

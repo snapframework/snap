@@ -1,9 +1,11 @@
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Snap.Snaplet.Auth.Backends.JsonFile where
 
 
 import           Control.Applicative
+import           Control.Monad.State
 import           Control.Concurrent.MVar
 import           Data.Aeson
 import qualified Data.ByteString.Lazy as LB
@@ -12,8 +14,37 @@ import           Data.Map (Map)
 import           Data.Maybe (isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Record.Label
+import           Web.ClientSession
 
 import           Snap.Snaplet.Auth.Types
+import           Snap.Snaplet
+import           Snap.Snaplet.Session
+
+
+
+
+initJsonFileAuthManager 
+  :: AuthSettings
+  -> (b :-> Snaplet SessionManager)
+  -> FilePath
+  -> SnapletInit b (AuthManager b)
+initJsonFileAuthManager s l db = 
+  makeSnaplet "JsonFileAuthManager" 
+              "A snaplet providing user authentication using a JSON-file backend"
+              Nothing $ liftIO $ do
+    key <- getKey (asSiteKey s)
+    jsonMgr <- (undefined :: IO JsonFileAuthManager)
+    return $ AuthManager {
+    	  backend = jsonMgr
+    	, session = l
+    	, activeUser = Nothing
+    	, minPasswdLen = asMinPasswdLen s
+    	, rememberCookieName = asRememberCookieName s
+    	, rememberPeriod = asRememberPeriod s
+    	, siteKey = key
+    	, lockout = asLockout s 
+    }
 
 
 type UserIdCache = Map UserId AuthUser
@@ -56,6 +87,7 @@ instance FromJSON UserCache where
 data JsonFileAuthManager = JsonFileAuthManager {
 	  memcache :: MVar UserCache
 	, dbfile :: FilePath
+	, reqcache :: Maybe AuthUser
 }
 
 
