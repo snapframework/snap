@@ -37,7 +37,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 
 
 -- | Wrap around a handler, committing any changes in the session at the end
-withSession :: (b :-> Snaplet SessionManager) -> Handler b e a -> Handler b e a
+withSession :: (b :-> Snaplet SessionManager) -> Handler b v a -> Handler b v a
 withSession l h = do
   a <- h 
   withTop l commitSession

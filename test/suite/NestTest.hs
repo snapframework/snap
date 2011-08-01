@@ -54,7 +54,7 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
 --fooSplice :: (Snaplet b :-> Snaplet (FooSnaplet b))
 --          -> SnapletSplice (Handler b b)
 fooSplice :: (Snaplet b :-> Snaplet FooSnaplet)
-          -> SnapletHeist b e Template
+          -> SnapletHeist b v Template
 fooSplice fooLens = do
     val <- liftWith fooLens $ gets _fooVal
     liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)

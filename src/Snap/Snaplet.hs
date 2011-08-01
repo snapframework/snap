@@ -187,10 +187,10 @@ import           Snap.Snaplet.Internal.Types
 -- 
 -- Several monads use this infrastructure. These monads need at least three type
 -- parameters. Two for the lens type, and the standard 'a' denoting the monad
--- return value. You will usually see this written in type signatures as "m b e a"
+-- return value. You will usually see this written in type signatures as "m b v a"
 -- or some variation. The 'm' is the type variable of the MonadSnaplet type class.
--- 'b' is the base state, and 'e' is the state of the current snaplet (or simply,
--- current state).
+-- 'b' is the base state, and 'v' is the state of the current "view" snaplet (or
+-- simply, current state).
 -- 
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
@@ -213,7 +213,7 @@ import           Snap.Snaplet.Internal.Types
 --
 -- In order for a snaplet to initialize its state, it needs to initialize all
 -- of its subsnaplets.  Every snaplet will have an initializer with a return
--- type of @Initializer b e (Snaplet a)@ where 'a' is the snaplet's state.
+-- type of @Initializer b v (Snaplet a)@ where 'a' is the snaplet's state.
 -- You must call these initializer functions wrapped in a call to
 -- 'nestSnaplet'.
 
@@ -227,7 +227,7 @@ import           Snap.Snaplet.Internal.Types
 -- $writingSnaplets
 -- When writing a snaplet, you must define an initializer function.  The
 -- initializer function for the Foo snaplet (where Foo is the snaplet's
--- state type) must have a return type of @Initializer b e (Snaplet Foo)@.
+-- state type) must have a return type of @Initializer b v (Snaplet Foo)@.
 -- To create an initializer like this, you have to use the 'makeSnaplet'
 -- function.  It takes care of the necessary internal bookkeeping needed when
 -- initializing a new snaplet.  Haskell's strong type system allows us to

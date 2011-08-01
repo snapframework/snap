@@ -56,19 +56,19 @@ import           Snap.Snaplet.Internal.Types
 
 ------------------------------------------------------------------------------
 -- | 'get' for InitializerState.
-iGet :: Initializer b e (InitializerState b)
+iGet :: Initializer b v (InitializerState b)
 iGet = Initializer $ getBase
 
 
 ------------------------------------------------------------------------------
 -- | 'get' for InitializerState.
-iPut :: InitializerState b -> Initializer b e ()
+iPut :: InitializerState b -> Initializer b v ()
 iPut s = Initializer $ putBase s
 
 
 ------------------------------------------------------------------------------
 -- | 'modify' for InitializerState.
-iModify :: (InitializerState b -> InitializerState b) -> Initializer b e ()
+iModify :: (InitializerState b -> InitializerState b) -> Initializer b v ()
 iModify f = Initializer $ do
     b <- getBase
     putBase $ f b
@@ -76,7 +76,7 @@ iModify f = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | 'gets' for InitializerState.
-iGets :: (InitializerState b -> a) -> Initializer b e a
+iGets :: (InitializerState b -> a) -> Initializer b v a
 iGets f = Initializer $ do
     b <- getBase
     return $ f b
@@ -84,7 +84,7 @@ iGets f = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Converts a plain hook into a Snaplet hook.
-toSnapletHook :: (e -> IO e) -> (Snaplet e -> IO (Snaplet e))
+toSnapletHook :: (v -> IO v) -> (Snaplet v -> IO (Snaplet v))
 toSnapletHook f (Snaplet cfg val) = do
     val' <- f val
     return $! Snaplet cfg val'
@@ -98,7 +98,7 @@ toSnapletHook f (Snaplet cfg val) = do
 -- define its views.  The Heist snaplet provides the 'addTemplates' function
 -- which allows other snaplets to set up their own templates.  'addTemplates'
 -- is implemented using this function.
-addPostInitHook :: (e -> IO e) -> Initializer b e ()
+addPostInitHook :: (v -> IO v) -> Initializer b v ()
 addPostInitHook h = do
     h' <- upHook $ toSnapletHook h
     addPostInitHookBase' h'
@@ -107,29 +107,29 @@ addPostInitHook h = do
 ------------------------------------------------------------------------------
 -- | Adds an IO action that modifies the application state to be run at the
 -- end of initialization.
-addPostInitHookBase :: (b -> IO b) -> Initializer b e ()
+addPostInitHookBase :: (b -> IO b) -> Initializer b v ()
 addPostInitHookBase = Initializer . lift . tell . Hook . toSnapletHook
 
 
 ------------------------------------------------------------------------------
 addPostInitHookBase' :: (Snaplet b -> IO (Snaplet b))
-                     -> Initializer b e ()
+                     -> Initializer b v ()
 addPostInitHookBase' = Initializer . lift . tell . Hook
 
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook :: (Snaplet e -> IO (Snaplet e))
-       -> Initializer b e (Snaplet b -> IO (Snaplet b))
+upHook :: (Snaplet v -> IO (Snaplet v))
+       -> Initializer b v (Snaplet b -> IO (Snaplet b))
 upHook h = Initializer $ do
     l <- ask
-    return $ (\b -> do e <- h (getL l b)
-                       return $ setL l e b)
+    return $ (\b -> do v <- h (getL l b)
+                       return $ setL l v b)
 
 
 ------------------------------------------------------------------------------
 -- | Modifies the Initializer's SnapletConfig.
-modifyCfg :: (SnapletConfig -> SnapletConfig) -> Initializer b e ()
+modifyCfg :: (SnapletConfig -> SnapletConfig) -> Initializer b v ()
 modifyCfg f = iModify $ modL curConfig $ \c -> f c
 
 
@@ -142,7 +142,7 @@ setupFilesystem :: Maybe (IO FilePath)
                 -- that need to be installed.
                 -> FilePath
                 -- ^ Directory where the files should be copied.
-                -> Initializer b e ()
+                -> Initializer b v ()
 setupFilesystem Nothing _ = return ()
 setupFilesystem (Just getSnapletDataDir) targetDir = do
     exists <- liftIO $ doesDirectoryExist targetDir
@@ -164,7 +164,7 @@ setupFilesystem (Just getSnapletDataDir) targetDir = do
 -- this:
 --
 -- @
--- fooInit :: Initializer b e (Snaplet Foo)
+-- fooInit :: Initializer b v (Snaplet Foo)
 -- fooInit = makeSnaplet \"foo\" Nothing $ do
 --     -- Your initializer code here
 --     return $ Foo 42
@@ -183,9 +183,9 @@ makeSnaplet :: Text
        -- value to Nothing doesn't preclude the snaplet from having files in
        -- in the filesystem, it just means that they won't be copied there
        -- automatically.
-       -> Initializer b e e
+       -> Initializer b v v
        -- ^ Snaplet initializer.
-       -> SnapletInit b e
+       -> SnapletInit b v
 makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
     modifyCfg $ \c -> if isNothing $ _scId c
         then setL scId (Just snapletId) c else c
@@ -216,7 +216,7 @@ makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
 ------------------------------------------------------------------------------
 -- | Internal function that gets the SnapletConfig out of the initializer
 -- state and uses it to create a (Snaplet a).
-mkSnaplet :: Initializer b e a -> Initializer b e (Snaplet a)
+mkSnaplet :: Initializer b v a -> Initializer b v (Snaplet a)
 mkSnaplet m = do
     res <- m
     cfg <- iGets _curConfig
@@ -226,7 +226,7 @@ mkSnaplet m = do
 ------------------------------------------------------------------------------
 -- | Brackets an initializer computation, restoring curConfig after the
 -- computation returns.
-bracketInit :: Initializer b e a -> Initializer b e a
+bracketInit :: Initializer b v a -> Initializer b v a
 bracketInit m = do
     s <- iGet
     res <- m
@@ -250,11 +250,11 @@ setupSnapletCall rte = do
 nestSnaplet :: ByteString
             -- ^ The root url for all the snaplet's routes.  An empty string
             -- gives the routes the same root as the parent snaplet's routes.
-            -> (e :-> Snaplet e1)
+            -> (v :-> Snaplet v1)
             -- ^ Lens identifying the snaplet
-            -> SnapletInit b e1
+            -> SnapletInit b v1
             -- ^ The initializer function for the subsnaplet.
-            -> Initializer b e (Snaplet e1)
+            -> Initializer b v (Snaplet v1)
 nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
     setupSnapletCall rte
     snaplet
@@ -266,11 +266,11 @@ nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
 embedSnaplet :: ByteString
              -- ^ The root url for all the snaplet's routes.  An empty string
              -- gives the routes the same root as the parent snaplet's routes.
-             -> (e :-> Snaplet e1)
+             -> (v :-> Snaplet v1)
              -- ^ Lens identifying the snaplet
-             -> SnapletInit e1 e1
+             -> SnapletInit v1 v1
              -- ^ The initializer function for the subsnaplet.
-             -> Initializer b e (Snaplet e1)
+             -> Initializer b v (Snaplet v1)
 embedSnaplet rte l (SnapletInit snaplet) = do
     curLens <- getLens
     setupSnapletCall rte
@@ -283,9 +283,9 @@ embedSnaplet rte l (SnapletInit snaplet) = do
 -- NOTE: You shouldn't use bracketInit with this function as in nestSnaplet
 -- because that is handled by the implementation.
 chroot :: ByteString
-       -> (Snaplet b :-> Snaplet e1)
-       -> Initializer e1 e1 a
-       -> Initializer b e a
+       -> (Snaplet b :-> Snaplet v1)
+       -> Initializer v1 v1 a
+       -> Initializer b v a
 chroot rte l (Initializer m) = do
     curState <- iGet
     ((a,s), (Hook hook)) <- liftIO $ runWriterT $ runLensT m id $
@@ -301,8 +301,8 @@ chroot rte l (Initializer m) = do
 
 ------------------------------------------------------------------------------
 -- | Changes the base state of a handler.
-chrootHandler :: (Snaplet e :-> Snaplet t)
-              -> Handler t t a -> Handler b e a
+chrootHandler :: (Snaplet v :-> Snaplet b')
+              -> Handler b' b' a -> Handler b v a
 chrootHandler l (Handler h) = Handler $ do
     s <- get
     (a, s') <- liftSnap $ runLensT h id (getL l s)
@@ -320,9 +320,9 @@ chrootHandler l (Handler h) = Handler $ do
 -- @fooState <- nestSnaplet \"fooA\" $ nameSnaplet \"myFoo\" $ fooInit@
 nameSnaplet :: Text
             -- ^ The snaplet name
-            -> SnapletInit b e
+            -> SnapletInit b v
             -- ^ The snaplet initializer function
-            -> SnapletInit b e
+            -> SnapletInit b v
 nameSnaplet nm (SnapletInit m) = SnapletInit $
     modifyCfg (setL scId (Just nm)) >> m
 
@@ -331,28 +331,28 @@ nameSnaplet nm (SnapletInit m) = SnapletInit $
 -- | Adds routing to the current 'Handler'.  The new routes are merged with the
 -- main routing section and take precedence over existing routing that was
 -- previously defined.
-addRoutes :: [(ByteString, Handler b e ())]
-           -> Initializer b e ()
+addRoutes :: [(ByteString, Handler b v ())]
+           -> Initializer b v ()
 addRoutes rs = do
     l <- getLens
     ctx <- iGets (_scRouteContext . _curConfig)
     let rs' = map (\(r,h) -> (buildPath (r:ctx), withTop' l h)) rs
-    iModify (\e -> modL handlers (++rs') e)
+    iModify (\v -> modL handlers (++rs') v)
 
 
 ------------------------------------------------------------------------------
 -- | Wraps the snaplet's routing.  This can be used to provide a snaplet that
 -- does per-request setup and cleanup, but then dispatches to the rest of the
 -- application.
-wrapHandlers :: (Handler b e () -> Handler b e ()) -> Initializer b e ()
+wrapHandlers :: (Handler b v () -> Handler b v ()) -> Initializer b v ()
 wrapHandlers f0 = do
     f <- mungeFilter f0
-    iModify (\e -> modL hFilter (f.) e)
+    iModify (\v -> modL hFilter (f.) v)
 
 
 ------------------------------------------------------------------------------
-mungeFilter :: (Handler b e () -> Handler b e ())
-            -> Initializer b e (Handler b b () -> Handler b b ())
+mungeFilter :: (Handler b v () -> Handler b v ())
+            -> Initializer b v (Handler b b () -> Handler b b ())
 mungeFilter f = do
     myLens <- Initializer ask
     return $ \m -> b myLens $ f' m
@@ -365,8 +365,8 @@ mungeFilter f = do
 ------------------------------------------------------------------------------
 -- | Attaches an unload handler to the snaplet.  The unload handler will be
 -- called when the server shuts down, or is reloaded.
-onUnload :: IO () -> Initializer b e ()
-onUnload m = iModify (\e -> modL cleanup (m>>) e)
+onUnload :: IO () -> Initializer b v ()
+onUnload m = iModify (\v -> modL cleanup (m>>) v)
 
 
 ------------------------------------------------------------------------------
@@ -380,7 +380,7 @@ logInitMsg ref msg = atomicModifyIORef ref (\cur -> (cur `T.append` msg, ()))
 -- messages to be displayed to the user.  On application startup they will be
 -- sent to the console.  When executed from the reloader, they will be sent
 -- back to the user in the HTTP response.
-printInfo :: Text -> Initializer b e ()
+printInfo :: Text -> Initializer b v ()
 printInfo msg = do
     logRef <- iGets _initMessages
     liftIO $ logInitMsg logRef (msg `T.append` "\n")

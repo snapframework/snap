@@ -20,7 +20,7 @@ import           Snap.Types
 import           Snap.Snaplet.Internal.RST
 
 
-newtype LensT b e s m a = LensT (RST (b :-> e) s m a)
+newtype LensT b v s m a = LensT (RST (b :-> v) s m a)
   deriving ( Monad
            , MonadTrans
            , Functor
@@ -29,30 +29,30 @@ newtype LensT b e s m a = LensT (RST (b :-> e) s m a)
            , MonadPlus
            , MonadCatchIO
            , Alternative
-           , MonadReader (b :-> e)
+           , MonadReader (b :-> v)
            , MonadSnap )
 
 
 ------------------------------------------------------------------------------
-instance (Monad m) => MonadState e (LensT b e b m) where
+instance (Monad m) => MonadState v (LensT b v b m) where
     get = lGet
     put = lPut
 
 
 ------------------------------------------------------------------------------
-getBase :: (Monad m) => LensT b e s m s
+getBase :: (Monad m) => LensT b v s m s
 getBase = LensT get
 {-# INLINE getBase #-}
 
 
 ------------------------------------------------------------------------------
-putBase :: (Monad m) => s -> LensT b e s m ()
+putBase :: (Monad m) => s -> LensT b v s m ()
 putBase = LensT . put
 {-# INLINE putBase #-}
 
 
 ------------------------------------------------------------------------------
-lGet :: (Monad m) => LensT b e b m e
+lGet :: (Monad m) => LensT b v b m v
 lGet = LensT $ do
            !l <- ask
            !b <- get
@@ -61,18 +61,18 @@ lGet = LensT $ do
 
 
 ------------------------------------------------------------------------------
-lPut :: (Monad m) => e -> LensT b e b m ()
-lPut e = LensT $ do
+lPut :: (Monad m) => v -> LensT b v b m ()
+lPut v = LensT $ do
              !l <- ask
              !b <- get
-             put $! setL l e b
+             put $! setL l v b
 {-# INLINE lPut #-}
 
 
 ------------------------------------------------------------------------------
 runLensT :: (Monad m) =>
-            LensT b e s m a
-         -> b :-> e
+            LensT b v s m a
+         -> b :-> v
          -> s
          -> m (a, s)
 runLensT (LensT m) = runRST m
@@ -81,24 +81,24 @@ runLensT (LensT m) = runRST m
 
 ------------------------------------------------------------------------------
 withLens :: Monad m =>
-            (e :-> e')
-         -> LensT b e' s m a
-         -> LensT b e  s m a
+            (v :-> v')
+         -> LensT b v' s m a
+         -> LensT b v  s m a
 withLens !subLens = withLensT (subLens .)
 {-# INLINE withLens #-}
 
 
 ------------------------------------------------------------------------------
 withLensT :: Monad m =>
-             ((b' :-> e') -> (b :-> e))
-          -> LensT b e s m a
-          -> LensT b' e' s m a
+             ((b' :-> v') -> (b :-> v))
+          -> LensT b v s m a
+          -> LensT b' v' s m a
 withLensT f (LensT m) = LensT $ withRST f m
 {-# INLINE withLensT #-}
 
 
 ------------------------------------------------------------------------------
-modLens :: (b :-> e) -> LensT b e s m a -> LensT b' e' s m a
+modLens :: (b :-> v) -> LensT b v s m a -> LensT b' v' s m a
 modLens l (LensT m) = LensT $ modR l m
 {-# INLINE modLens #-}
 
@@ -106,6 +106,6 @@ modLens l (LensT m) = LensT $ modR l m
 ------------------------------------------------------------------------------
 downcast :: (Monad m) =>
             LensT b b s m a
-         -> LensT b e s m a
+         -> LensT b v s m a
 downcast (LensT m) = LensT $ RST $ \_ -> runRST m id
 

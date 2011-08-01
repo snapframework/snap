@@ -91,12 +91,12 @@ subSnaplet = (. value)
 class MonadSnaplet m where
     -- | Runs a child snaplet action in a parent snaplet's monad.  The
     -- supplied lens defines the state type to use.
-    with :: (e :-> Snaplet e') -> m b e' a -> m b e a
+    with :: (v :-> Snaplet v') -> m b v' a -> m b v a
     with = with' . subSnaplet
 
     -- | Like 'with' but doesn't impose the requirement that the action
     -- being run be a descendant of the current snaplet.
-    withTop :: (b :-> Snaplet e') -> m b e' a -> m b e a
+    withTop :: (b :-> Snaplet v') -> m b v' a -> m b v a
     withTop l = withTop' (subSnaplet l)
 
     -- | A variant of with accepting another kind of lens formulation
@@ -104,7 +104,7 @@ class MonadSnaplet m where
     -- work with this function, however the lens returned by 'getLens' will.
     --
     -- @with = with' . subSnaplet@
-    with' :: (Snaplet e :-> Snaplet e') -> m b e' a -> m b e a
+    with' :: (Snaplet v :-> Snaplet v') -> m b v' a -> m b v a
 
     -- Not providing a definition for this function in terms of withTop'
     -- allows us to avoid extra Monad type class constraints, making the type
@@ -112,36 +112,36 @@ class MonadSnaplet m where
     -- with' l m = flip withTop m . (l .) =<< getLens
 
     -- | The sibling version of 'with''
-    withTop' :: (Snaplet b :-> Snaplet e') -> m b e' a -> m b e a
+    withTop' :: (Snaplet b :-> Snaplet v') -> m b v' a -> m b v a
 
     -- | Gets the lens for the current snaplet.
-    getLens :: m b e (Snaplet b :-> Snaplet e)
+    getLens :: m b v (Snaplet b :-> Snaplet v)
 
     -- | Gets a list of the names of snaplets that are direct ancestors of the
     -- current snaplet.
-    getSnapletAncestry :: m b e [Text]
+    getSnapletAncestry :: m b v [Text]
 
     -- | Gets the snaplet's path on the filesystem.
-    getSnapletFilePath :: m b e FilePath
+    getSnapletFilePath :: m b v FilePath
 
     -- | Gets the current snaple's name.
-    getSnapletName :: m b e (Maybe Text)
+    getSnapletName :: m b v (Maybe Text)
 
     -- | Gets the current snaple's name.
-    getSnapletDescription :: m b e Text
+    getSnapletDescription :: m b v Text
 
     -- | Gets the config data structure for the current snaplet.
-    getSnapletConfig :: m b e Config
+    getSnapletConfig :: m b v Config
 
     -- | Gets the base URL for the current snaplet.  Directories get added to
     -- the current snaplet path by calls to `nestSnaplet`.
-    getSnapletRootURL :: m b e ByteString
+    getSnapletRootURL :: m b v ByteString
 
 
-wrap' :: (MonadSnaplet m, Monad (m b b), Monad (m b e'))
-      => (m b e  a -> m b e' a)
-      -> (m b e  a -> m b e  a)
-      -> (m b e' a -> m b e' a)
+wrap' :: (MonadSnaplet m, Monad (m b b), Monad (m b v'))
+      => (m b v  a -> m b v' a)
+      -> (m b v  a -> m b v  a)
+      -> (m b v' a -> m b v' a)
 wrap' proj _filter m = do
     currentLens <- getLens
     proj (_filter (withTop' currentLens m))
@@ -149,26 +149,26 @@ wrap' proj _filter m = do
 ------------------------------------------------------------------------------
 -- | Applies a "filter" style function on snaplet monads with a descendent
 -- snaplet.
-wrap :: (MonadSnaplet m, Monad (m b b), Monad (m b e'))
-     => (Snaplet e' :-> Snaplet e)
-     -> (m b e  a -> m b e  a)
-     -> (m b e' a -> m b e' a)
+wrap :: (MonadSnaplet m, Monad (m b b), Monad (m b v'))
+     => (Snaplet v' :-> Snaplet v)
+     -> (m b v  a -> m b v  a)
+     -> (m b v' a -> m b v' a)
 wrap l = wrap' (with' l)
 
 
 ------------------------------------------------------------------------------
 -- | Applies a "filter" style function on snaplet monads with a sibling
 -- snaplet.
-wrapTop :: (MonadSnaplet m, Monad (m b b), Monad (m b e'))
-        => (Snaplet b :-> Snaplet e)
-        -> (m b e  a -> m b e  a)
-        -> (m b e' a -> m b e' a)
+wrapTop :: (MonadSnaplet m, Monad (m b b), Monad (m b v'))
+        => (Snaplet b :-> Snaplet v)
+        -> (m b v  a -> m b v  a)
+        -> (m b v' a -> m b v' a)
 wrapTop l = wrap' (withTop' l)
 
 
 ------------------------------------------------------------------------------
-newtype Handler b e a =
-    Handler (LensT (Snaplet b) (Snaplet e) (Snaplet b) Snap a)
+newtype Handler b v a =
+    Handler (LensT (Snaplet b) (Snaplet v) (Snaplet b) Snap a)
   deriving ( Monad
            , Functor
            , Applicative
@@ -185,7 +185,7 @@ type family Base (m :: * -> *) :: *
 type family Env (m :: * -> *) :: *
 
 
-hConfig :: Handler b e SnapletConfig
+hConfig :: Handler b v SnapletConfig
 hConfig = Handler $ liftM _snapletConfig get
 
 
@@ -205,7 +205,7 @@ instance MonadSnaplet Handler where
 
 ------------------------------------------------------------------------------
 -- | Handler that reloads the site.
-reloadSite :: Handler b e ()
+reloadSite :: Handler b v ()
 reloadSite = failIfNotLocal $ do
     cfg <- hConfig
     !res <- liftIO $ _reloader cfg
@@ -256,9 +256,9 @@ instance Monoid (Hook a) where
 
 ------------------------------------------------------------------------------
 -- | Monad used for initializing snaplets.
-newtype Initializer b e a = 
+newtype Initializer b v a = 
     Initializer (LensT (Snaplet b)
-                       (Snaplet e)
+                       (Snaplet v)
                        (InitializerState b)
                        (WriterT (Hook b) IO)
                        a)
@@ -267,7 +267,7 @@ newtype Initializer b e a =
 mkLabels [''InitializerState]
 
 
-iConfig :: Initializer b e SnapletConfig
+iConfig :: Initializer b v SnapletConfig
 iConfig = Initializer $ liftM _curConfig getBase
 
 
@@ -289,7 +289,7 @@ instance MonadSnaplet Initializer where
 ------------------------------------------------------------------------------
 -- | Opaque newtype which gives us compile-time guarantees that the user is
 -- using makeSnaplet and nestSnaplet correctly.
-newtype SnapletInit b e = SnapletInit (Initializer b e (Snaplet e))
+newtype SnapletInit b v = SnapletInit (Initializer b v (Snaplet v))
 
 
 ------------------------------------------------------------------------------
@@ -303,17 +303,17 @@ data ReloadInfo b = ReloadInfo
 
 
 ------------------------------------------------------------------------------
-instance MonadState e (Handler b e) where
+instance MonadState v (Handler b v) where
     get = liftM _value lhGet
     put v = do
         s <- lhGet
         lhPut $ s { _value = v }
 
-lhGet :: Handler b e (Snaplet e)
+lhGet :: Handler b v (Snaplet v)
 lhGet = Handler get
 {-# INLINE lhGet #-}
 
-lhPut :: Snaplet e -> Handler b e ()
+lhPut :: Snaplet v -> Handler b v ()
 lhPut = Handler . put
 {-# INLINE lhPut #-}
 
