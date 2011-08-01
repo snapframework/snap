@@ -42,8 +42,6 @@ done
 
 mv non-cabal-appdir/testsuite.tix .
 
-cd non-cabal-appdir
-
 hpc markup $EXCL --destdir=$DIR testsuite >/dev/null 2>&1
 
 cat <<EOF
