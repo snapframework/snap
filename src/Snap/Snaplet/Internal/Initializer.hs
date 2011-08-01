@@ -14,6 +14,7 @@ module Snap.Snaplet.Internal.Initializer
   , bracketInit
   , modifyCfg
   , nestSnaplet
+  , embedSnaplet
   , makeSnaplet
   , nameSnaplet
   , onUnload
@@ -31,6 +32,7 @@ import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
+import           Control.Monad.State
 import           Control.Monad.Trans.Writer hiding (pass)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
@@ -56,6 +58,12 @@ import           Snap.Snaplet.Internal.Types
 -- | 'get' for InitializerState.
 iGet :: Initializer b e (InitializerState b)
 iGet = Initializer $ getBase
+
+
+------------------------------------------------------------------------------
+-- | 'get' for InitializerState.
+iPut :: InitializerState b -> Initializer b e ()
+iPut s = Initializer $ putBase s
 
 
 ------------------------------------------------------------------------------
@@ -227,22 +235,79 @@ bracketInit m = do
 
 
 ------------------------------------------------------------------------------
--- | This function handles modifications to the initializer state that must
--- happen before each subsnaplet initializer runs.  
-nestSnaplet :: ByteString
-            -- ^ The root url for all the snaplet's routes.  An empty string
-            -- gives the routes the same root as the parent snaplet's routes.
-            -> (e :-> Snaplet s)
-            -- ^ Lens identifying the snaplet
-            -> SnapletInit b s
-            -- ^ The initializer function for the subsnaplet.
-            -> Initializer b e (Snaplet s)
-nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
+-- | Handles modifications to InitializerState that need to happen before a
+-- snaplet is called with either nestSnaplet or embedSnaplet.
+setupSnapletCall rte = do
     curId <- iGets (_scId . _curConfig)
     modifyCfg (modL scAncestry (fromJust curId:))
     modifyCfg (modL scId (const Nothing))
     unless (B.null rte) $ modifyCfg (modL scRouteContext (rte:))
+
+
+------------------------------------------------------------------------------
+-- | This function handles modifications to the initializer state that must
+-- happen before each subsnaplet initializer runs.
+nestSnaplet :: ByteString
+            -- ^ The root url for all the snaplet's routes.  An empty string
+            -- gives the routes the same root as the parent snaplet's routes.
+            -> (e :-> Snaplet e1)
+            -- ^ Lens identifying the snaplet
+            -> SnapletInit b e1
+            -- ^ The initializer function for the subsnaplet.
+            -> Initializer b e (Snaplet e1)
+nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
+    setupSnapletCall rte
     snaplet
+
+
+------------------------------------------------------------------------------
+-- | This function handles modifications to the initializer state that must
+-- happen before each subsnaplet initializer runs.  
+embedSnaplet :: ByteString
+             -- ^ The root url for all the snaplet's routes.  An empty string
+             -- gives the routes the same root as the parent snaplet's routes.
+             -> (e :-> Snaplet e1)
+             -- ^ Lens identifying the snaplet
+             -> SnapletInit e1 e1
+             -- ^ The initializer function for the subsnaplet.
+             -> Initializer b e (Snaplet e1)
+embedSnaplet rte l (SnapletInit snaplet) = do
+    curLens <- getLens
+    setupSnapletCall rte
+    chroot rte (subSnaplet l . curLens) snaplet
+
+
+------------------------------------------------------------------------------
+-- | Changes the base state of an initializer.
+--
+-- NOTE: You shouldn't use bracketInit with this function as in nestSnaplet
+-- because that is handled by the implementation.
+chroot :: ByteString
+       -> (Snaplet b :-> Snaplet e1)
+       -> Initializer e1 e1 a
+       -> Initializer b e a
+chroot rte l (Initializer m) = do
+    curState <- iGet
+    ((a,s), (Hook hook)) <- liftIO $ runWriterT $ runLensT m id $
+        curState {
+          _handlers = [],
+          _hFilter = id
+        }
+    let handler = chrootHandler l $ _hFilter s $ route $ _handlers s
+    iModify $ modL handlers (++[(rte,handler)])
+            . setL cleanup (_cleanup s)
+    return a
+
+
+------------------------------------------------------------------------------
+-- | Changes the base state of a handler.
+chrootHandler :: (Snaplet e :-> Snaplet t)
+              -> Handler t t a -> Handler b e a
+chrootHandler l (Handler h) = Handler $ do
+    s <- get
+    (a, s') <- liftSnap $ runLensT h id (getL l s)
+    modify $ setL l s'
+    return a
 
 
 ------------------------------------------------------------------------------

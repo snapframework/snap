@@ -68,6 +68,7 @@ module Snap.Snaplet
   , Initializer
   , SnapletInit
   , nestSnaplet
+  , embedSnaplet
   , nameSnaplet
 
   -- * Routes

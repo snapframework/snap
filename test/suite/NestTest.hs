@@ -24,34 +24,36 @@ import Text.Templating.Heist
 
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
-data FooSnaplet b = FooSnaplet
-    { _fooHeist :: Snaplet (Heist b)
+data FooSnaplet = FooSnaplet
+    { _fooHeist :: Snaplet (Heist FooSnaplet)
     , _fooVal :: Int
     }
 
 mkLabels [''FooSnaplet]
 
-instance HasHeist b (FooSnaplet b) where
+--instance HasHeist b (FooSnaplet) where
+--    heistLens = subSnaplet fooHeist
+
+instance HasHeist FooSnaplet FooSnaplet where
     heistLens = subSnaplet fooHeist
 
-fooInit :: SnapletInit b (FooSnaplet b)
+fooInit :: SnapletInit FooSnaplet FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
     hs <- nestSnaplet "heist" fooHeist $ heistInit "templates"
---    addTemplates "foo"
+    addTemplates "foo"
     rootUrl <- getSnapletRootURL
     fooLens <- getLens
     addRoutes [("fooRootUrl", writeBS rootUrl)
--- TODO Need embedSnaplet to make this work
---              ,("aoeuhtns", renderWithSplices "foo/foopage"
---                    [("asplice", fooSplice fooLens)])
---              ,("", heistServe)
+              ,("aoeuhtns", renderWithSplices "foo/foopage"
+                    [("asplice", fooSplice fooLens)])
+              ,("", heistServe)
               ]
     return $ FooSnaplet hs 42
 
 
 --fooSplice :: (Snaplet b :-> Snaplet (FooSnaplet b))
 --          -> SnapletSplice (Handler b b)
-fooSplice :: (Snaplet b :-> Snaplet (FooSnaplet b))
+fooSplice :: (Snaplet b :-> Snaplet FooSnaplet)
           -> SnapletHeist b e Template
 fooSplice fooLens = do
     val <- liftWith fooLens $ gets _fooVal
@@ -60,14 +62,14 @@ fooSplice fooLens = do
 ------------------------------------------------------------------------------
 
 data App = App
-    { _foo :: Snaplet (FooSnaplet App)
+    { _foo :: Snaplet (FooSnaplet)
     }
 
 mkLabels [''App]
 
 app :: SnapletInit App App
 app = makeSnaplet "app" "nested snaplet application" Nothing $ do
-    fs <- nestSnaplet "foo" foo $ fooInit
+    fs <- embedSnaplet "foo" foo fooInit
     addRoutes [ ("/hello", writeText "hello world")
               , ("/public", serveDirectory "public")
               , ("/admin/reload", reloadSite)
