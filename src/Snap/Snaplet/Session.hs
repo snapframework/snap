@@ -10,6 +10,7 @@ module Snap.Snaplet.Session
   , commitSession
   , setInSession
   , getFromSession
+  , deleteFromSession
   , csrfToken
   , sessionToList
   , resetSession
@@ -46,14 +47,14 @@ withSession l h = do
 -- | Commit changes to session within the current request cycle 
 commitSession :: Handler b SessionManager ()
 commitSession = do
-  mgr@(SessionManager b) <- loadSession
+  SessionManager b <- loadSession
   liftSnap $ commit b
 
 
 -- | Set a key-value pair in the current session
 setInSession :: Text -> Text -> Handler b SessionManager ()
 setInSession k v = do
-  mgr@(SessionManager r) <- loadSession
+  SessionManager r <- loadSession
   let r' = SM.insert k v r
   put $ SessionManager r'
 
@@ -61,8 +62,16 @@ setInSession k v = do
 -- | Get a key from the current session
 getFromSession :: Text -> Handler b SessionManager (Maybe Text)
 getFromSession k = do
-  mgr@(SessionManager r) <- loadSession
+  SessionManager r <- loadSession
   return $ SM.lookup k r
+
+
+-- | Remove a key from the current session
+deleteFromSession :: Text -> Handler b SessionManager ()
+deleteFromSession k = do
+  SessionManager r <- loadSession
+  let r' = SM.delete k r
+  put $ SessionManager r'
 
 
 -- | Returns a CSRF Token unique to the current session
@@ -76,14 +85,14 @@ csrfToken = do
 -- | Return session contents as an association list
 sessionToList :: Handler b SessionManager [(Text, Text)]
 sessionToList = do
-  mgr@(SessionManager r) <- loadSession
+  SessionManager r <- loadSession
   return $ SM.toList r
 
 
 -- | Deletes the session cookie, effectively resetting the session
 resetSession :: Handler b SessionManager ()
 resetSession = do
-  mgr@(SessionManager r) <- loadSession
+  SessionManager r <- loadSession
   r' <- liftSnap $ SM.reset r
   put $ SessionManager r'
 
@@ -91,7 +100,7 @@ resetSession = do
 -- | Touch the session so the timeout gets refreshed
 touchSession :: Handler b SessionManager ()
 touchSession = do
-  mgr@(SessionManager r) <- loadSession
+  SessionManager r <- loadSession
   let r' = SM.touch r
   put $ SessionManager r'
 
@@ -99,7 +108,7 @@ touchSession = do
 -- | Load the session into the manager
 loadSession :: Handler b SessionManager SessionManager
 loadSession = do
-  mgr@(SessionManager r) <- get
+  SessionManager r <- get
   r' <- liftSnap $ load r 
   return $ SessionManager r'
 
