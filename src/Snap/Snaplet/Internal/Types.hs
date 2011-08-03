@@ -84,19 +84,34 @@ subSnaplet = (. value)
 
 
 ------------------------------------------------------------------------------
--- | Minimal complete definition:
+-- | The m type parameter used in the MonadSnaplet type signatures will
+-- almost always be either Initializer or Handler.
+--
+-- Minimal complete definition:
 --
 -- * 'withTop'', 'with'', and all of the getXYZ functions.
 --
 class MonadSnaplet m where
-    -- | Runs a child snaplet action in a parent snaplet's monad.  The
-    -- supplied lens defines the state type to use.
-    with :: (v :-> Snaplet v') -> m b v' a -> m b v a
+    -- | Runs a child snaplet action in the current snaplet's context.  If you
+    -- think about snaplet lenses using a filesystem path metaphor, the lens
+    -- supplied to this snaplet must be a relative path.  In other words, the
+    -- lens's base state must be the same as the current snaplet.
+    with :: (v :-> Snaplet v')
+         -- ^ A relative lens identifying a snaplet
+         -> m b v' a
+         -- ^ Action from the lense's snaplet
+         -> m b v a
     with = with' . subSnaplet
 
     -- | Like 'with' but doesn't impose the requirement that the action
-    -- being run be a descendant of the current snaplet.
-    withTop :: (b :-> Snaplet v') -> m b v' a -> m b v a
+    -- being run be a descendant of the current snaplet.  Using our filesystem
+    -- metaphor again, the lens for this function must be an absolute
+    -- path--it's base must be the same as the current base.
+    withTop :: (b :-> Snaplet v')
+            -- ^ An "absolute" lens identifying a snaplet
+            -> m b v' a
+            -- ^ Action from the lense's snaplet
+            -> m b v a
     withTop l = withTop' (subSnaplet l)
 
     -- | A variant of with accepting another kind of lens formulation
@@ -111,7 +126,7 @@ class MonadSnaplet m where
     -- signature easier to read.
     -- with' l m = flip withTop m . (l .) =<< getLens
 
-    -- | The sibling version of 'with''
+    -- | The absolute version of 'with''
     withTop' :: (Snaplet b :-> Snaplet v') -> m b v' a -> m b v a
 
     -- | Gets the lens for the current snaplet.

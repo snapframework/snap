@@ -128,8 +128,6 @@ upHook :: (Snaplet v -> IO (Snaplet v))
 upHook h = Initializer $ do
     l <- ask
     return $ upHook' l h
---    return $ (\b -> do v <- h (getL l b)
---                       return $ setL l v b)
 
 
 ------------------------------------------------------------------------------
