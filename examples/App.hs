@@ -26,7 +26,7 @@ type AppHandler = Handler App App
 
 mkLabels [''App]
 
-instance HasHeist App App where
+instance HasHeist App where
     heistLens = subSnaplet heist
 
 helloHandler :: AppHandler ()

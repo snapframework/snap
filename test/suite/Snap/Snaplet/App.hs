@@ -36,7 +36,7 @@ data App = App
 
 mkLabels [''App]
 
-instance HasHeist App App where heistLens = subSnaplet heist
+instance HasHeist App where heistLens = subSnaplet heist
 
 routeWithSplice :: Handler App App ()
 routeWithSplice = do

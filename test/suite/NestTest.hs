@@ -31,10 +31,7 @@ data FooSnaplet = FooSnaplet
 
 mkLabels [''FooSnaplet]
 
---instance HasHeist b (FooSnaplet) where
---    heistLens = subSnaplet fooHeist
-
-instance HasHeist FooSnaplet FooSnaplet where
+instance HasHeist FooSnaplet where
     heistLens = subSnaplet fooHeist
 
 fooInit :: SnapletInit FooSnaplet FooSnaplet
