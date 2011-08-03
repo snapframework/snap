@@ -99,8 +99,12 @@ toSnapletHook f (Snaplet cfg val) = do
 -- which allows other snaplets to set up their own templates.  'addTemplates'
 -- is implemented using this function.
 addPostInitHook :: (v -> IO v) -> Initializer b v ()
-addPostInitHook h = do
-    h' <- upHook $ toSnapletHook h
+addPostInitHook = addPostInitHook' . toSnapletHook
+
+
+addPostInitHook' :: (Snaplet v -> IO (Snaplet v)) -> Initializer b v ()
+addPostInitHook' h = do
+    h' <- upHook h
     addPostInitHookBase' h'
 
 
@@ -123,8 +127,17 @@ upHook :: (Snaplet v -> IO (Snaplet v))
        -> Initializer b v (Snaplet b -> IO (Snaplet b))
 upHook h = Initializer $ do
     l <- ask
-    return $ (\b -> do v <- h (getL l b)
-                       return $ setL l v b)
+    return $ upHook' l h
+--    return $ (\b -> do v <- h (getL l b)
+--                       return $ setL l v b)
+
+
+------------------------------------------------------------------------------
+-- | Helper function for transforming hooks.
+upHook' :: (b :-> a) -> (a -> IO a) -> b -> IO b
+upHook' l h b = do
+    v <- h (getL l b)
+    return $ setL l v b
 
 
 ------------------------------------------------------------------------------
@@ -296,6 +309,7 @@ chroot rte l (Initializer m) = do
     let handler = chrootHandler l $ _hFilter s $ route $ _handlers s
     iModify $ modL handlers (++[(rte,handler)])
             . setL cleanup (_cleanup s)
+    addPostInitHookBase' $ upHook' l hook
     return a
 
 
