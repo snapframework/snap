@@ -39,7 +39,7 @@ import qualified Data.ByteString.Char8 as B
 import           Data.Configurator
 import           Data.IORef
 import           Data.Maybe
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Snap.Http.Server
@@ -132,7 +132,7 @@ upHook h = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook' :: (b :-> a) -> (a -> IO a) -> b -> IO b
+upHook' :: (Lens b a) -> (a -> IO a) -> b -> IO b
 upHook' l h b = do
     v <- h (getL l b)
     return $ setL l v b
@@ -261,7 +261,7 @@ setupSnapletCall rte = do
 nestSnaplet :: ByteString
             -- ^ The root url for all the snaplet's routes.  An empty string
             -- gives the routes the same root as the parent snaplet's routes.
-            -> (v :-> Snaplet v1)
+            -> (Lens v (Snaplet v1))
             -- ^ Lens identifying the snaplet
             -> SnapletInit b v1
             -- ^ The initializer function for the subsnaplet.
@@ -277,7 +277,7 @@ nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
 embedSnaplet :: ByteString
              -- ^ The root url for all the snaplet's routes.  An empty string
              -- gives the routes the same root as the parent snaplet's routes.
-             -> (v :-> Snaplet v1)
+             -> (Lens v (Snaplet v1))
              -- ^ Lens identifying the snaplet
              -> SnapletInit v1 v1
              -- ^ The initializer function for the subsnaplet.
@@ -294,7 +294,7 @@ embedSnaplet rte l (SnapletInit snaplet) = do
 -- NOTE: You shouldn't use bracketInit with this function as in nestSnaplet
 -- because that is handled by the implementation.
 chroot :: ByteString
-       -> (Snaplet b :-> Snaplet v1)
+       -> (Lens (Snaplet b) (Snaplet v1))
        -> Initializer v1 v1 a
        -> Initializer b v a
 chroot rte l (Initializer m) = do
@@ -313,7 +313,7 @@ chroot rte l (Initializer m) = do
 
 ------------------------------------------------------------------------------
 -- | Changes the base state of a handler.
-chrootHandler :: (Snaplet v :-> Snaplet b')
+chrootHandler :: (Lens (Snaplet v) (Snaplet b'))
               -> Handler b' b' a -> Handler b v a
 chrootHandler l (Handler h) = Handler $ do
     s <- get

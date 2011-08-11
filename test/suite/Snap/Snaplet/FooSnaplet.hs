@@ -7,7 +7,6 @@ import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Configurator
 import Data.Maybe
-import Data.Record.Label
 import qualified Data.Text as T
 import Snap.Snaplet
 import Snap.Snaplet.Heist

@@ -13,14 +13,14 @@ import           Control.Category
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Prelude hiding ((.), id, catch)
 import           Snap.Types
 
 import           Snap.Snaplet.Internal.RST
 
 
-newtype LensT b v s m a = LensT (RST (b :-> v) s m a)
+newtype LensT b v s m a = LensT (RST (Lens b v) s m a)
   deriving ( Monad
            , MonadTrans
            , Functor
@@ -29,7 +29,7 @@ newtype LensT b v s m a = LensT (RST (b :-> v) s m a)
            , MonadPlus
            , MonadCatchIO
            , Alternative
-           , MonadReader (b :-> v)
+           , MonadReader (Lens b v)
            , MonadSnap )
 
 
@@ -72,7 +72,7 @@ lPut v = LensT $ do
 ------------------------------------------------------------------------------
 runLensT :: (Monad m) =>
             LensT b v s m a
-         -> b :-> v
+         -> Lens b v
          -> s
          -> m (a, s)
 runLensT (LensT m) = runRST m
@@ -81,7 +81,7 @@ runLensT (LensT m) = runRST m
 
 ------------------------------------------------------------------------------
 withLens :: Monad m =>
-            (v :-> v')
+            (Lens v v')
          -> LensT b v' s m a
          -> LensT b v  s m a
 withLens !subLens = withLensT (subLens .)
@@ -90,7 +90,7 @@ withLens !subLens = withLensT (subLens .)
 
 ------------------------------------------------------------------------------
 withLensT :: Monad m =>
-             ((b' :-> v') -> (b :-> v))
+             ((Lens b' v') -> (Lens b v))
           -> LensT b v s m a
           -> LensT b' v' s m a
 withLensT f (LensT m) = LensT $ withRST f m
@@ -98,7 +98,7 @@ withLensT f (LensT m) = LensT $ withRST f m
 
 
 ------------------------------------------------------------------------------
-modLens :: (b :-> v) -> LensT b v s m a -> LensT b' v' s m a
+modLens :: (Lens b v) -> LensT b v s m a -> LensT b' v' s m a
 modLens l (LensT m) = LensT $ modR l m
 {-# INLINE modLens #-}
 

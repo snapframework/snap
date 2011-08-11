@@ -47,7 +47,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.UTF8 as U
 import           Data.Maybe
 import           Data.Monoid
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           System.FilePath.Posix
@@ -95,14 +95,14 @@ clearHeistCache = clearCacheTagState . _heistCTS
 ------------------------------------------------------------------------------
 -- | 
 newtype SnapletHeist b v a = SnapletHeist
-    (ReaderT (Snaplet b :-> Snaplet v) (HeistT (Handler b b)) a)
+    (ReaderT (Lens (Snaplet b) (Snaplet v)) (HeistT (Handler b b)) a)
   deriving ( Monad
            , Functor
            , Applicative
            , Alternative
            , MonadIO
            , MonadPlus
-           , MonadReader (Snaplet b :-> Snaplet v)
+           , MonadReader (Lens (Snaplet b) (Snaplet v))
            )
 
 
@@ -111,13 +111,13 @@ type SnapletSplice b v = SnapletHeist b v Template
 
 ------------------------------------------------------------------------------
 -- | Runs the SnapletSplice.
-runSnapletSplice :: (Snaplet b :-> Snaplet v)
+runSnapletSplice :: (Lens (Snaplet b) (Snaplet v))
                  -> SnapletHeist b v a
                  -> HeistT (Handler b b) a
 runSnapletSplice l (SnapletHeist m) = runReaderT m l
 
 
-withSS :: ((Snaplet b :-> Snaplet v) -> (Snaplet b :-> Snaplet v'))
+withSS :: (Lens (Snaplet b) (Snaplet v) -> Lens (Snaplet b) (Snaplet v'))
        -> SnapletHeist b v' a
        -> SnapletHeist b v a
 withSS f (SnapletHeist m) = SnapletHeist $ withReaderT f m
@@ -137,7 +137,7 @@ liftHandler = liftHeist . lift
 
 ------------------------------------------------------------------------------
 -- | Common idiom for the combination of liftHandler and withTop.
-liftWith :: (Snaplet b :-> Snaplet v')
+liftWith :: (Lens (Snaplet b) (Snaplet v'))
          -> Handler b v' a
          -> SnapletHeist b v a
 liftWith l = liftHandler . withTop' l
@@ -168,7 +168,7 @@ instance MonadSnaplet SnapletHeist where
 
 ------------------------------------------------------------------------------
 -- | SnapletSplices version of bindSplices.
-bindSnapletSplices :: (Snaplet b :-> Snaplet v)
+bindSnapletSplices :: (Lens (Snaplet b) (Snaplet v))
                    -> [(Text, SnapletSplice b v)]
                    -> TemplateState (Handler b b)
                    -> TemplateState (Handler b b)
@@ -211,7 +211,7 @@ addTemplatesAt urlPrefix templateDir = do
         (`mappend` addTemplatePathPrefix urlPrefix ts)
 
 
-addSplices' :: (Snaplet b :-> Snaplet (Heist b))
+addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> [(Text, SnapletSplice b v)]
             -> Initializer b v ()
 addSplices' heist splices = do
@@ -220,7 +220,7 @@ addSplices' heist splices = do
         return . changeTS (bindSnapletSplices _lens splices)
 
 
-addSplices :: (b :-> Snaplet (Heist b))
+addSplices :: (Lens b (Snaplet (Heist b)))
            -> [(Text, SnapletSplice b v)]
            -> Initializer b v ()
 addSplices heist splices = addSplices' (subSnaplet heist) splices
@@ -270,7 +270,7 @@ heistServeSingle t =
     render t <|> error ("Template " ++ show t ++ " not found.")
 
 
-heistLocal' :: (Snaplet b :-> Snaplet (Heist b))
+heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
             -> Handler b v a
             -> Handler b v a
@@ -282,14 +282,14 @@ heistLocal' heist f m = do
     return res
 
 
-heistLocal :: (b :-> Snaplet (Heist b))
+heistLocal :: (Lens b (Snaplet (Heist b)))
            -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
            -> Handler b v a
            -> Handler b v a
 heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 
-withSplices' :: (Snaplet b :-> Snaplet (Heist b))
+withSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
              -> [(Text, SnapletSplice b v)]
              -> Handler b v a
              -> Handler b v a
@@ -298,14 +298,14 @@ withSplices' heist splices m = do
     heistLocal' heist (bindSnapletSplices _lens splices) m
 
 
-withSplices :: (b :-> Snaplet (Heist b))
+withSplices :: (Lens b (Snaplet (Heist b)))
             -> [(Text, SnapletSplice b v)]
             -> Handler b v a
             -> Handler b v a
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 
 
-renderWithSplices' :: (Snaplet b :-> Snaplet (Heist b))
+renderWithSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
                    -> ByteString
                    -> [(Text, SnapletSplice b v)]
                    -> Handler b v ()
@@ -313,7 +313,7 @@ renderWithSplices' heist t splices =
     withSplices' heist splices $ withTop' heist $ render t
 
 
-renderWithSplices :: (b :-> Snaplet (Heist b))
+renderWithSplices :: (Lens b (Snaplet (Heist b)))
                   -> ByteString
                   -> [(Text, SnapletSplice b v)]
                   -> Handler b v ()

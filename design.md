@@ -34,9 +34,9 @@ not conceptually mutable in the same way as the actual state, it is stored in
 the reader environment.  The state monad part is used for the top level state
 b, giving is the following newtype.
 
-newtype LensT b v s m a = LensT (RST (b :-> v) s m a)
+newtype LensT b v s m a = LensT (RST (Lens b v) s m a)
 
-LensT comes with a (MonadReader (b :-> v)) instance for retrieving the lens
+LensT comes with a (MonadReader (Lens b v)) instance for retrieving the lens
 and a (MonadState v) instance that uses the lens transparently to achieve
 stateful behavior with the type v.  From here the definition of Handler is
 fairly natural:
@@ -48,10 +48,10 @@ We use "LensT (Snaplet b) (Snaplet v)" instead of "LensT b (Snaplet v)"
 because it is desirable to be able to use the identity lens to construct a
 "Handler b b".  The only issue with this formulation is that the lens
 manipulation functions provided by LensT are not what the end user needs.  The
-end user has a lens of type (b :-> Snaplet v) created by the mkLabels
-function.  But LensT's downcast and withLens functions need (Snaplet b :->
-Snaplet v) lenses.  These can be derived easily by composing the user-supplied
-lens with the internal lens (Snaplet a :-> a) derived from the definition of
+end user has a lens of type (Lens b (Snaplet v)) created by the mkLabels
+function.  But LensT's downcast and withLens functions need (Lens (Snaplet b)
+(Snaplet v)) lenses.  These can be derived easily by composing the user-supplied
+lens with the internal lens (Lens (Snaplet a) a) derived from the definition of
 the Snaplet data structure.
 
 ## Initializer
@@ -90,7 +90,7 @@ The Heist snaplet is a fairly complex snaplet that illustrates a number of
 concepts that you may encounter while writing your own snaplets.  The biggest
 issue arises because Heist's TemplateState is parameterized by the handler
 monad.  This means that if you want to do something like a wih transformation
-with a lens (b :-> v) you will naturally want to apply the same transformation
+with a lens (Lens b v) you will naturally want to apply the same transformation
 to the Handler parameter of the TemplateState.  Unfortunately, due to Heist's
 design, this is computationally intensive, must be performed at runtime, and
 requires that you have a bijection (b :<->: v).  To avoid this issue, we only
@@ -118,10 +118,10 @@ look something like this:
     instance HasHeist App App where
         heistLens = subSnaplet heist
 
-The call to subSnaplet is required because HasHeist needs a lens (Snaplet v
-:-> Snaplet (Heist b)) instead of the lens (v :-> Snaplet (Heist b)) that
-you willll get from mkLabels.  We did it this way because it allows us to make
-a default instance using the id function from Control.Category.
+The call to subSnaplet is required because HasHeist needs a lens (Lens
+(Snaplet v) (Snaplet (Heist b))) instead of the lens (Lens v (Snaplet (Heist
+b))) that you willll get from mkLabels.  We did it this way because it allows
+us to make a default instance using the id function from Control.Category.
 
     instance HasHeist b (Heist b) where heistLens = id
 

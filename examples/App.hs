@@ -5,7 +5,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Main where
 
-import Data.Record.Label
+import Data.Lens.Lazy
+import Data.Lens.Template
 import qualified Data.Text as T
 import Snap.Http.Server.Config
 import Snap.Types
@@ -24,7 +25,7 @@ data App = App
 
 type AppHandler = Handler App App
 
-mkLabels [''App]
+makeLens ''App
 
 instance HasHeist App where
     heistLens = subSnaplet heist

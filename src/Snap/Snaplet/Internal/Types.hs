@@ -23,7 +23,8 @@ import qualified Data.ByteString.Char8 as B
 import           Data.Configurator.Types
 import           Data.IORef
 import           Data.Monoid
-import           Data.Record.Label
+import           Data.Lens.Lazy
+import           Data.Lens.Template
 import           Data.Text (Text)
 import qualified Data.Text as T
 
@@ -67,19 +68,19 @@ instance Functor Snaplet where
     fmap f (Snaplet c v) = (Snaplet c (f v))
 
 
-mkLabels [''SnapletConfig, ''Snaplet]
+makeLenses [''SnapletConfig, ''Snaplet]
 
 
 ------------------------------------------------------------------------------
 -- | A lens to get the user defined state out of a Snaplet.
-snapletValue :: Snaplet a :-> a
+snapletValue :: Lens (Snaplet a) a
 snapletValue = value
 
 
 ------------------------------------------------------------------------------
--- | Transforms a lens of the type you get from mkLabels to an similar lens
+-- | Transforms a lens of the type you get from makeLenses to an similar lens
 -- that is more suitable for internal use.
-subSnaplet :: (a :-> Snaplet b) -> (Snaplet a :-> Snaplet b)
+subSnaplet :: (Lens a (Snaplet b)) -> (Lens (Snaplet a) (Snaplet b))
 subSnaplet = (. value)
 
 
@@ -96,7 +97,7 @@ class MonadSnaplet m where
     -- think about snaplet lenses using a filesystem path metaphor, the lens
     -- supplied to this snaplet must be a relative path.  In other words, the
     -- lens's base state must be the same as the current snaplet.
-    with :: (v :-> Snaplet v')
+    with :: (Lens v (Snaplet v'))
          -- ^ A relative lens identifying a snaplet
          -> m b v' a
          -- ^ Action from the lense's snaplet
@@ -107,7 +108,7 @@ class MonadSnaplet m where
     -- being run be a descendant of the current snaplet.  Using our filesystem
     -- metaphor again, the lens for this function must be an absolute
     -- path--it's base must be the same as the current base.
-    withTop :: (b :-> Snaplet v')
+    withTop :: (Lens b (Snaplet v'))
             -- ^ An "absolute" lens identifying a snaplet
             -> m b v' a
             -- ^ Action from the lense's snaplet
@@ -119,7 +120,7 @@ class MonadSnaplet m where
     -- work with this function, however the lens returned by 'getLens' will.
     --
     -- @with = with' . subSnaplet@
-    with' :: (Snaplet v :-> Snaplet v') -> m b v' a -> m b v a
+    with' :: (Lens (Snaplet v) (Snaplet v')) -> m b v' a -> m b v a
 
     -- Not providing a definition for this function in terms of withTop'
     -- allows us to avoid extra Monad type class constraints, making the type
@@ -127,10 +128,10 @@ class MonadSnaplet m where
     -- with' l m = flip withTop m . (l .) =<< getLens
 
     -- | The absolute version of 'with''
-    withTop' :: (Snaplet b :-> Snaplet v') -> m b v' a -> m b v a
+    withTop' :: (Lens (Snaplet b) (Snaplet v')) -> m b v' a -> m b v a
 
     -- | Gets the lens for the current snaplet.
-    getLens :: m b v (Snaplet b :-> Snaplet v)
+    getLens :: m b v (Lens (Snaplet b) (Snaplet v))
 
     -- | Gets a list of the names of snaplets that are direct ancestors of the
     -- current snaplet.
@@ -165,7 +166,7 @@ wrap' proj _filter m = do
 -- | Applies a "filter" style function on snaplet monads with a descendent
 -- snaplet.
 wrap :: (MonadSnaplet m, Monad (m b b), Monad (m b v'))
-     => (Snaplet v' :-> Snaplet v)
+     => (Lens (Snaplet v') (Snaplet v))
      -> (m b v  a -> m b v  a)
      -> (m b v' a -> m b v' a)
 wrap l = wrap' (with' l)
@@ -175,7 +176,7 @@ wrap l = wrap' (with' l)
 -- | Applies a "filter" style function on snaplet monads with a sibling
 -- snaplet.
 wrapTop :: (MonadSnaplet m, Monad (m b b), Monad (m b v'))
-        => (Snaplet b :-> Snaplet v)
+        => (Lens (Snaplet b) (Snaplet v))
         -> (m b v  a -> m b v  a)
         -> (m b v' a -> m b v' a)
 wrapTop l = wrap' (withTop' l)
@@ -279,7 +280,7 @@ newtype Initializer b v a =
                        a)
   deriving (Applicative, Functor, Monad, MonadIO)
 
-mkLabels [''InitializerState]
+makeLenses [''InitializerState]
 
 
 iConfig :: Initializer b v SnapletConfig
