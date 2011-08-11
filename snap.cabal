@@ -96,7 +96,6 @@ Executable snap
     dlist            >= 0.5 && < 0.6,
     enumerator       >= 0.4.13.1 && <0.5,
     filepath         >= 1.1 && <1.3,
-    haskell98,
     mtl              >= 2,
     old-locale,
     old-time,
