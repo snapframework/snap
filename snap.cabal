@@ -37,6 +37,9 @@ extra-source-files:
   test/suite/Snap/TestCommon.hs,
   test/suite/TestSuite.hs
 
+Flag hint
+  Description: Support dynamic project reloading via hint
+  Default: True
 
 Library
   hs-source-dirs: src
@@ -44,14 +47,17 @@ Library
   exposed-modules:
     Snap.Extension.Heist,
     Snap.Extension.Heist.Impl,
-    Snap.Extension.Loader.Devel,
     Snap.Extension.Server,
     Snap.Extension
 
-  other-modules:
-    Snap.Extension.Loader.Devel.Evaluator,
-    Snap.Extension.Loader.Devel.Signal,
-    Snap.Extension.Loader.Devel.TreeWatcher
+  if flag(hint)
+    exposed-modules:
+      Snap.Extension.Loader.Devel
+
+    other-modules:
+      Snap.Extension.Loader.Devel.Evaluator,
+      Snap.Extension.Loader.Devel.Signal,
+      Snap.Extension.Loader.Devel.TreeWatcher
 
   build-depends:
     base                      >= 4 && < 5,
@@ -64,9 +70,12 @@ Library
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     snap-core                 >= 0.5.3 && <0.6,
     heist                     >= 0.5 && < 0.6,
-    hint                      >= 0.3.3.1 && < 0.4,
     template-haskell          >= 2.3 && < 2.7,
     time                      >= 1.0 && < 1.3
+
+  if flag(hint)
+    build-depends:
+      hint                    >= 0.3.3.1 && < 0.4
 
   if !os(windows)
     build-depends:    unix >= 2.2.0.0 && < 2.6
