@@ -443,13 +443,13 @@ runEverything mvar b@(Initializer i) = do
 
 ------------------------------------------------------------------------------
 -- | Serves a top-level snaplet as a web application.
-serveSnaplet :: Config Snap a -> SnapletInit b b -> IO ()
-serveSnaplet cfg (SnapletInit b) = do
+serveSnaplet :: IO (Config Snap a) -> SnapletInit b b -> IO ()
+serveSnaplet getConfig (SnapletInit b) = do
     snapletMVar <- newEmptyMVar
     (siteSnaplet, is) <- runEverything snapletMVar b
     putMVar snapletMVar siteSnaplet
 
-    config <- commandLineConfig cfg
+    config <- getConfig
     conf <- completeConfig config
     let site     = compress $ _hFilter is $ route $ _handlers is
         compress = if fromJust $ getCompression conf then withCompression else id

@@ -6,4 +6,4 @@ import           Snap.Snaplet
 import           Snap.Snaplet.App
 
 main :: IO ()
-main = serveSnaplet defaultConfig app
+main = serveSnaplet (commandLineConfig defaultConfig) app

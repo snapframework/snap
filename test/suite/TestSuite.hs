@@ -23,7 +23,7 @@ main = do
 startServer :: IO ThreadId
 startServer = do
     setCurrentDirectory "non-cabal-appdir"
-    tid <- forkIO $ serveSnaplet (setPort 9753 defaultConfig) app
+    tid <- forkIO $ serveSnaplet (return $ setPort 9753 defaultConfig) app
     threadDelay $ 2*10^(6::Int)
     return tid
 

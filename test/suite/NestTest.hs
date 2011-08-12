@@ -75,5 +75,5 @@ app = makeSnaplet "app" "nested snaplet application" Nothing $ do
     return $ App fs
 
 main :: IO ()
-main = serveSnaplet defaultConfig app
+main = serveSnaplet (commandLineConfig defaultConfig) app
 
