@@ -71,7 +71,7 @@ Library
     snap-core                 >= 0.5.3 && <0.6,
     heist                     >= 0.5 && < 0.6,
     template-haskell          >= 2.3 && < 2.7,
-    time                      >= 1.0 && < 1.3
+    time
 
   if flag(hint)
     build-depends:
