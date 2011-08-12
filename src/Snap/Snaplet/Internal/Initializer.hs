@@ -53,6 +53,9 @@ import           System.IO
 import           Snap.Snaplet.Internal.Lens
 import           Snap.Snaplet.Internal.Types
 
+-- FIXME
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 
 ------------------------------------------------------------------------------
 -- | 'get' for InitializerState.

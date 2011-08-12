@@ -6,11 +6,12 @@ module Snap.Snaplet.Internal.Lensed where
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
-import Data.Lens.Lazy
+import Data.Lens.Strict
 import Data.Functor
-import Control.Monad.Trans.State
-import Control.Monad.State.Class
+import Control.Monad.CatchIO
 import Control.Monad.Reader.Class
+import Control.Monad.State.Class
+import Control.Monad.State.Strict
 import Control.Category
 import Prelude hiding (id, (.))
 import Snap.Types
@@ -20,7 +21,7 @@ newtype Lensed b v m a = Lensed
 
 instance Functor m => Functor (Lensed b v m) where
   fmap f (Lensed g) = Lensed $ \l v s ->
-    (\(a,v,s) -> (f a, v, s)) <$> g l v s
+    (\(a,v',s') -> (f a, v', s')) <$> g l v s
 
 instance (Functor m, Monad m) => Applicative (Lensed b v m) where
   pure a = Lensed $ \_ v s -> return (a, v, s)
@@ -45,7 +46,7 @@ instance Monad m => MonadReader (Lens b v) (Lensed b v m) where
     withGlobal l' g
 
 instance MonadTrans (Lensed b v) where
-  lift m = Lensed $ \l v b -> do
+  lift m = Lensed $ \_ v b -> do
       res <- m
       return (res, v, b)
 

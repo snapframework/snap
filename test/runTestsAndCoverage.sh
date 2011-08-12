@@ -28,11 +28,12 @@ rm -Rf $DIR
 mkdir -p $DIR
 
 EXCLUDES='Main
-Snap.Snaplet.Internal.RST
 Snap.Snaplet.App
-Snap.Snaplet.FooSnaplet
 Snap.Snaplet.BarSnaplet
-Snap.Snaplet.Tests'
+Snap.Snaplet.FooSnaplet
+Snap.Snaplet.Internal.Lensed.Tests
+Snap.Snaplet.Tests
+'
 
 EXCL=""
 

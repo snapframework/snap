@@ -10,16 +10,21 @@ import           System.Directory
 import           Test.Framework (defaultMain)
 
 import           Snap.Snaplet.App
-import           Snap.Snaplet.Tests
+import qualified Snap.Snaplet.Tests
+import qualified Snap.Snaplet.Internal.Lensed.Tests
 
+
+------------------------------------------------------------------------------
 main :: IO ()
 main = do
-    tid <- startServer
+    -- tid <- startServer
     defaultMain tests
-    throwTo tid UserInterrupt
-  where tests = [ nonCabalTest
+    -- throwTo tid UserInterrupt
+  where tests = [ -- Snap.Snaplet.Tests.tests
+                  Snap.Snaplet.Internal.Lensed.Tests.tests
                 ]
 
+-- FIXME: we cannot use 'serveSnaplet' here! Pass in config in code instead
 startServer :: IO ThreadId
 startServer = do
     setCurrentDirectory "non-cabal-appdir"

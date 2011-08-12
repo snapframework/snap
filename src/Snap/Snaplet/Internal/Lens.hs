@@ -56,7 +56,7 @@ lGet :: (Monad m) => LensT b v b m v
 lGet = LensT $ do
            !l <- ask
            !b <- get
-           return $! getL l b
+           return $! l ^$ b
 {-# INLINE lGet #-}
 
 
@@ -65,7 +65,7 @@ lPut :: (Monad m) => v -> LensT b v b m ()
 lPut v = LensT $ do
              !l <- ask
              !b <- get
-             put $! setL l v b
+             put $! (l ^!= v) b
 {-# INLINE lPut #-}
 
 

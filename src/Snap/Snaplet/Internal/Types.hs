@@ -1,13 +1,14 @@
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
-{-# LANGUAGE RankNTypes                 #-}
 
 module Snap.Snaplet.Internal.Types where
 
@@ -30,6 +31,9 @@ import qualified Data.Text as T
 
 import           Snap.Snaplet.Internal.Lens
 import           Snap.Types
+
+-- FIXME REMOVE
+import Snap.Snaplet.Internal.TemporaryLensCruft
 
 
 data SnapletConfig = SnapletConfig

@@ -23,6 +23,9 @@ import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Text.Templating.Heist
 
+-- FIXME
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
 data FooSnaplet = FooSnaplet

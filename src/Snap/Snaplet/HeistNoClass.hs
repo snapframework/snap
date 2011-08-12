@@ -60,6 +60,9 @@ import           Snap.Snaplet.Internal.Types
 import           Snap.Types
 import           Snap.Util.FileServe
 
+-- FIXME
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 
 ------------------------------------------------------------------------------
 -- | The state for the Heist snaplet.  To use the Heist snaplet in your app
