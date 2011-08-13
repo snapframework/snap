@@ -52,7 +52,8 @@ Library
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Session,
-    Snap.Snaplet.Session.Backends.CookieSession
+    Snap.Snaplet.Session.Backends.CookieSession,
+    Snap.Snaplet.Internal.TemporaryLensCruft
 
   other-modules:
     Snap.Loader.Devel.Evaluator,
@@ -63,7 +64,6 @@ Library
     Snap.Snaplet.Internal.Lens,
     Snap.Snaplet.Internal.Lensed,
     Snap.Snaplet.Internal.RST,
-    Snap.Snaplet.Internal.TemporaryLensCruft,
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session.Common,
     Snap.Snaplet.Session.SecureCookie,
@@ -134,8 +134,8 @@ Executable snap
     directory           >= 1.0      && < 1.2,
     directory-tree,
     dlist               >= 0.5      && < 0.6,
-    enumerator          >= 0.4.13.1 && <0.5
-    filepath            >= 1.1      && <1.3,
+    enumerator          >= 0.4.13.1 && < 0.5,
+    filepath            >= 1.1      && < 1.3,
     mtl                 >= 2,
     old-locale,
     old-time,
