@@ -2,13 +2,14 @@
 module Main where
 
 ------------------------------------------------------------------------------
-import           Char
+import           Data.Char
 import           Data.List
 import qualified Data.ByteString.Char8 as S
 import qualified Data.Text as T
 import           Snap.Http.Server (snapServerVersion)
-import           System
 import           System.Directory
+import           System.Environment
+import           System.Exit
 import           System.Console.GetOpt
 import           System.FilePath
 ------------------------------------------------------------------------------
