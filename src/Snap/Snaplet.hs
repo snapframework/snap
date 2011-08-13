@@ -68,6 +68,7 @@ module Snap.Snaplet
   , Initializer
   , SnapletInit
   , nestSnaplet
+  , embedSnaplet
   , nameSnaplet
 
   -- * Routes
@@ -125,19 +126,19 @@ import           Snap.Snaplet.Internal.Types
 -- of the base state. Given that Haskell datatypes are pure, how do you
 -- allow for this?
 -- 
--- Our solution is to use /lenses/, as defined in the @fclabels@ library
--- (<http://hackage.haskell.org/package/fclabels>). A lens, notated as follows:
+-- Our solution is to use /lenses/, as defined in the @data-lens@ library
+-- (<http://hackage.haskell.org/package/data-lens>). A lens, notated as follows:
 -- 
--- > a :-> b
+-- > Lens a b
 -- 
--- is a \"getter\" and a \"setter\" rolled up into one. The @fclabels@ library
+-- is a \"getter\" and a \"setter\" rolled up into one. The @data-lens@ library
 -- provides the following functions:
 -- 
--- > getL :: (a :-> b) -> a -> b
--- > setL :: (a :-> b) -> b -> a -> a
+-- > getL :: (Lens a b) -> a -> b
+-- > setL :: (Lens a b) -> b -> a -> a
 -- 
 -- which allow you to get and set a value of type @b@ within the context of type
--- @a@. The @fclabels@ package comes with a Template Haskell function called
+-- @a@. The @data-lens@ package comes with a Template Haskell function called
 -- 'mkLabels', which auto-magically defines a lens for every record field having a
 -- name beginning with an underscore. In the @App@ example above, adding the
 -- declaration:
@@ -146,14 +147,14 @@ import           Snap.Snaplet.Internal.Types
 -- 
 -- would define lenses:
 -- 
--- > foo                :: App :-> Snaplet Foo
--- > bar                :: App :-> Snaplet Bar
--- > someNonSnapletData :: App :-> String
+-- > foo                :: Lens App (Snaplet Foo)
+-- > bar                :: Lens App (Snaplet Bar)
+-- > someNonSnapletData :: Lens App String
 -- 
--- The coolest thing about @fclabels@ lenses is that they /compose/, using the
+-- The coolest thing about @data-lens@ lenses is that they /compose/, using the
 -- "Control.Category"'s generalization of the @(.)@ operator. If the @Foo@ type
--- had a field of type @Quux@ within it with a lens @quux :: Foo :-> Quux@, then
--- you could create a lens of type @App :-> Quux@ by composition:
+-- had a field of type @Quux@ within it with a lens @quux :: Lens Foo Quux@, then
+-- you could create a lens of type @Lens App Quux@ by composition:
 -- 
 -- > import Control.Category
 -- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude to
@@ -163,9 +164,9 @@ import           Snap.Snaplet.Internal.Types
 -- > mkLabels [''Foo]
 -- >
 -- > -- snapletValue is defined in the framework:
--- > snapletValue :: Snaplet a :-> a
+-- > snapletValue :: Lens (Snaplet a) a
 -- > 
--- > appQuuxLens :: App :-> Snaplet Quux
+-- > appQuuxLens :: Lens App (Snaplet Quux)
 -- > appQuuxLens = quux . snapletValue . foo
 -- 
 -- Lens composition is very similar to function composition, but it gives you a
@@ -178,18 +179,18 @@ import           Snap.Snaplet.Internal.Types
 -- lens from the base state to the current snaplet's state.  This allows quux
 -- snaplet functions to access and modify the Quux data structure without knowing
 -- anything about the App or Foo data structures. It also lets other snaplets
--- call functions from the quux snaplet if they have the quux snaplet's lens (App
--- :-> Snaplet Quux). We can view our application as a tree of snaplets and other
--- pieces of data. The lenses are like pointers to nodes of the tree. If you have
--- a pointer to a node, you can access the node and all of its children without
--- knowing anything about the rest of the tree.
+-- call functions from the quux snaplet if they have the quux snaplet's lens
+-- (Lens App (Snaplet Quux)). We can view our application as a tree of snaplets
+-- and other pieces of data. The lenses are like pointers to nodes of the tree.
+-- If you have a pointer to a node, you can access the node and all of its
+-- children without knowing anything about the rest of the tree.
 -- 
 -- Several monads use this infrastructure. These monads need at least three type
 -- parameters. Two for the lens type, and the standard 'a' denoting the monad
--- return value. You will usually see this written in type signatures as "m b e a"
+-- return value. You will usually see this written in type signatures as "m b v a"
 -- or some variation. The 'm' is the type variable of the MonadSnaplet type class.
--- 'b' is the base state, and 'e' is the state of the current snaplet (or simply,
--- current state).
+-- 'b' is the base state, and 'v' is the state of the current "view" snaplet (or
+-- simply, current state).
 -- 
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
@@ -212,7 +213,7 @@ import           Snap.Snaplet.Internal.Types
 --
 -- In order for a snaplet to initialize its state, it needs to initialize all
 -- of its subsnaplets.  Every snaplet will have an initializer with a return
--- type of @Initializer b e (Snaplet a)@ where 'a' is the snaplet's state.
+-- type of @Initializer b v (Snaplet a)@ where 'a' is the snaplet's state.
 -- You must call these initializer functions wrapped in a call to
 -- 'nestSnaplet'.
 
@@ -226,7 +227,7 @@ import           Snap.Snaplet.Internal.Types
 -- $writingSnaplets
 -- When writing a snaplet, you must define an initializer function.  The
 -- initializer function for the Foo snaplet (where Foo is the snaplet's
--- state type) must have a return type of @Initializer b e (Snaplet Foo)@.
+-- state type) must have a return type of @Initializer b v (Snaplet Foo)@.
 -- To create an initializer like this, you have to use the 'makeSnaplet'
 -- function.  It takes care of the necessary internal bookkeeping needed when
 -- initializing a new snaplet.  Haskell's strong type system allows us to

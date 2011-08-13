@@ -1,3 +1,8 @@
+NOTE: 0.6 requires Chris Smith's fork of the configurator package.  It is
+available here:
+
+https://github.com/cdsmith/configurator
+
 Snap Framework
 ==============
 

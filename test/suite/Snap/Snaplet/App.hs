@@ -11,7 +11,8 @@ import Prelude hiding (lookup)
 import Control.Applicative
 import Control.Monad.Trans
 import Data.Maybe
-import Data.Record.Label
+import Data.Lens.Lazy
+import Data.Lens.Template
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Configurator
@@ -27,6 +28,9 @@ import Snap.Snaplet.BarSnaplet
 import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 
+-- FIXME
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 data App = App
     { _heist :: Snaplet (Heist App)
     , _foo :: Snaplet FooSnaplet
@@ -34,9 +38,9 @@ data App = App
     , _session :: Snaplet SessionManager
     }
 
-mkLabels [''App]
+makeLenses [''App]
 
-instance HasHeist App App where heistLens = subSnaplet heist
+instance HasHeist App where heistLens = subSnaplet heist
 
 routeWithSplice :: Handler App App ()
 routeWithSplice = do

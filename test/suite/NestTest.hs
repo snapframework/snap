@@ -12,7 +12,8 @@ module Main where
 
 import Prelude hiding ((.))
 import Control.Monad.State
-import Data.Record.Label
+import Data.Lens.Lazy
+import Data.Lens.Template
 import qualified Data.Text as T
 import           Snap.Http.Server.Config
 import Snap.Types
@@ -22,37 +23,39 @@ import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Text.Templating.Heist
 
+-- FIXME
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
-data FooSnaplet b = FooSnaplet
-    { _fooHeist :: Snaplet (Heist b)
+data FooSnaplet = FooSnaplet
+    { _fooHeist :: Snaplet (Heist FooSnaplet)
     , _fooVal :: Int
     }
 
-mkLabels [''FooSnaplet]
+makeLenses [''FooSnaplet]
 
-instance HasHeist b (FooSnaplet b) where
+instance HasHeist FooSnaplet where
     heistLens = subSnaplet fooHeist
 
-fooInit :: SnapletInit b (FooSnaplet b)
+fooInit :: SnapletInit FooSnaplet FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
     hs <- nestSnaplet "heist" fooHeist $ heistInit "templates"
---    addTemplates "foo"
+    addTemplates "foo"
     rootUrl <- getSnapletRootURL
     fooLens <- getLens
     addRoutes [("fooRootUrl", writeBS rootUrl)
--- TODO Need embedSnaplet to make this work
---              ,("aoeuhtns", renderWithSplices "foo/foopage"
---                    [("asplice", fooSplice fooLens)])
---              ,("", heistServe)
+              ,("aoeuhtns", renderWithSplices "foo/foopage"
+                    [("asplice", fooSplice fooLens)])
+              ,("", heistServe)
               ]
     return $ FooSnaplet hs 42
 
 
---fooSplice :: (Snaplet b :-> Snaplet (FooSnaplet b))
+--fooSplice :: (Lens (Snaplet b) (Snaplet (FooSnaplet b)))
 --          -> SnapletSplice (Handler b b)
-fooSplice :: (Snaplet b :-> Snaplet (FooSnaplet b))
-          -> SnapletHeist b e Template
+fooSplice :: (Lens (Snaplet b) (Snaplet FooSnaplet))
+          -> SnapletHeist b v Template
 fooSplice fooLens = do
     val <- liftWith fooLens $ gets _fooVal
     liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
@@ -60,14 +63,14 @@ fooSplice fooLens = do
 ------------------------------------------------------------------------------
 
 data App = App
-    { _foo :: Snaplet (FooSnaplet App)
+    { _foo :: Snaplet (FooSnaplet)
     }
 
-mkLabels [''App]
+makeLenses [''App]
 
 app :: SnapletInit App App
 app = makeSnaplet "app" "nested snaplet application" Nothing $ do
-    fs <- nestSnaplet "foo" foo $ fooInit
+    fs <- embedSnaplet "foo" foo fooInit
     addRoutes [ ("/hello", writeText "hello world")
               , ("/public", serveDirectory "public")
               , ("/admin/reload", reloadSite)
@@ -75,5 +78,5 @@ app = makeSnaplet "app" "nested snaplet application" Nothing $ do
     return $ App fs
 
 main :: IO ()
-main = serveSnaplet defaultConfig app
+main = serveSnaplet (commandLineConfig defaultConfig) app
 

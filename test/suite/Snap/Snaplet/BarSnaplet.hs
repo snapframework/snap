@@ -7,7 +7,6 @@ import Prelude hiding (lookup)
 
 import Control.Monad.State
 import qualified Data.ByteString as B
-import Data.Record.Label
 import Data.Maybe
 import Data.Configurator
 import Snap.Snaplet
@@ -17,7 +16,7 @@ import Text.Templating.Heist
 
 data BarSnaplet = BarSnaplet { barField :: String }
 
-barInit :: HasHeist b b
+barInit :: HasHeist b
         => SnapletInit b BarSnaplet
 barInit = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
     config <- getSnapletConfig

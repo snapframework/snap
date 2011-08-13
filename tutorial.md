@@ -72,7 +72,7 @@ function wrapping all the routes, and return the resulting state data
 structure. This example demonstrates the use of a few of the most common
 snaplet functions.
 
-    nestSnaplet :: ByteString -> Initializer b e a -> Initializer b e a
+    nestSnaplet :: ByteString -> Initializer b v a -> Initializer b v a
 
 All calls to child snaplet initializer functions must be wrapped in a call to
 nestSnaplet. The first parameter is a URL path segment that is used to prefix
@@ -92,7 +92,7 @@ mkLabels function and will be discussed in more detail later. For now it's
 sufficient to think of them as a getter and a setter combined (to use an OO
 metaphor).
 
-    nameSnaplet :: Text -> Initializer b e (Snaplet a) -> Initializer b e (Snaplet a)
+    nameSnaplet :: Text -> Initializer b v (Snaplet a) -> Initializer b v (Snaplet a)
 
 Snaplets usually define a default name used to identify the snaplet. This name
 is used for the snaplet's directory in the filesystem. If you don't want to use
@@ -100,7 +100,7 @@ the default name, you can override it with the nameSnaplet function. Also, if
 you want to have two instances of the same snaplet, then you will need to use
 nameSnaplet to give at least one of them a unique name.
 
-    addRoutes :: [(ByteString, Handler b b ())] -> Initializer b e ()
+    addRoutes :: [(ByteString, Handler b b ())] -> Initializer b v ()
 
 The addRoutes function is how an application (or snaplet) defines its routes.
 Under the hood the snaplet infrastructure merges all the routes from all
@@ -116,7 +116,7 @@ monad. It has a MonadState instance that lets you access and modify the current
 snaplet's state, and a MonadSnap instance providing the request-processing
 functions defined in Snap.Types.
 
-    wrapHandlers :: (Handler b b () -> Handler b b ()) -> Initializer b e ()
+    wrapHandlers :: (Handler b b () -> Handler b b ()) -> Initializer b v ()
 
 wrapHandlers allows you to apply an arbitrary Handler transformation to the
 top-level handler. This is useful if you want to do some generic processing at
@@ -135,10 +135,10 @@ to look at heistServe's type signature:
     heistServe :: Handler b (Heist b) ()
 
 This type signature isn't quite what the type checker will tell you, but it
-communicates the basic concept. "Handler b e" is the runtime monad for
+communicates the basic concept. "Handler b v" is the runtime monad for
 snaplets. The type parameter 'b' is the base state type for the application.
-The type parameter e defines the snaplet currently in context. Handler's
-MonadState instance gives it access to the current context (the 'e'), which is
+The type parameter v defines the snaplet currently in view. Handler's
+MonadState instance gives it access to the current context (the 'v'), which is
 why the Heist snaplet provides heistServe with the above (approximate) type
 signature. The addRoutes and wrapHandlers functions require handlers where the
 current context is the top-level application. The with function transforms a

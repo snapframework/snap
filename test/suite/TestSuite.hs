@@ -10,20 +10,25 @@ import           System.Directory
 import           Test.Framework (defaultMain)
 
 import           Snap.Snaplet.App
-import           Snap.Snaplet.Tests
+import qualified Snap.Snaplet.Tests
+import qualified Snap.Snaplet.Internal.Lensed.Tests
 
+
+------------------------------------------------------------------------------
 main :: IO ()
 main = do
     tid <- startServer
     defaultMain tests
     throwTo tid UserInterrupt
-  where tests = [ nonCabalTest
+  where tests = [ Snap.Snaplet.Tests.tests,
+                  Snap.Snaplet.Internal.Lensed.Tests.tests
                 ]
 
+-- FIXME: we cannot use 'serveSnaplet' here! Pass in config in code instead
 startServer :: IO ThreadId
 startServer = do
     setCurrentDirectory "non-cabal-appdir"
-    tid <- forkIO $ serveSnaplet (setPort 9753 defaultConfig) app
+    tid <- forkIO $ serveSnaplet (return $ setPort 9753 defaultConfig) app
     threadDelay $ 2*10^(6::Int)
     return tid
 

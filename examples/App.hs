@@ -5,7 +5,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Main where
 
-import Data.Record.Label
+import Data.Lens.Lazy
+import Data.Lens.Template
 import qualified Data.Text as T
 import Snap.Http.Server.Config
 import Snap.Types
@@ -17,6 +18,8 @@ import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 import Text.Templating.Heist
 
+import Snap.Snaplet.Internal.TemporaryLensCruft
+
 data App = App
     { _heist :: Snaplet (Heist App)
     , _session :: Snaplet SessionManager
@@ -24,9 +27,9 @@ data App = App
 
 type AppHandler = Handler App App
 
-mkLabels [''App]
+makeLens ''App
 
-instance HasHeist App App where
+instance HasHeist App where
     heistLens = subSnaplet heist
 
 helloHandler :: AppHandler ()
@@ -64,5 +67,5 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     return $ App h s
 
 main :: IO ()
-main = serveSnaplet emptyConfig app
+main = serveSnaplet (commandLineConfig emptyConfig) app
 
