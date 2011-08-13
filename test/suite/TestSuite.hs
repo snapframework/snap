@@ -17,10 +17,10 @@ import qualified Snap.Snaplet.Internal.Lensed.Tests
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
-    -- tid <- startServer
+    tid <- startServer
     defaultMain tests
-    -- throwTo tid UserInterrupt
-  where tests = [ -- Snap.Snaplet.Tests.tests
+    throwTo tid UserInterrupt
+  where tests = [ Snap.Snaplet.Tests.tests,
                   Snap.Snaplet.Internal.Lensed.Tests.tests
                 ]
 
