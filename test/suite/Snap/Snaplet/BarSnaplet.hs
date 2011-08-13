@@ -11,7 +11,7 @@ import Data.Maybe
 import Data.Configurator
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Snap.Types
+import Snap.Core
 import Text.Templating.Heist
 
 data BarSnaplet = BarSnaplet { barField :: String }

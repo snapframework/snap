@@ -2,7 +2,7 @@
 module Main where
 
 import           Control.Applicative
-import           Snap.Types
+import           Snap.Core
 import           Snap.Util.FileServe
 import           Snap.Http.Server
 

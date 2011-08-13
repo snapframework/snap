@@ -57,7 +57,7 @@ import           Text.Templating.Heist.Splices.Cache
 import           Snap.Snaplet
 -- TODO: It shouldn't be necessary to import this internal module.
 import           Snap.Snaplet.Internal.Types
-import           Snap.Types
+import           Snap.Core
 import           Snap.Util.FileServe
 
 -- FIXME

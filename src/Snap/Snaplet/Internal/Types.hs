@@ -30,7 +30,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 
 import           Snap.Snaplet.Internal.Lens
-import           Snap.Types
+import           Snap.Core
 
 -- FIXME REMOVE
 import Snap.Snaplet.Internal.TemporaryLensCruft

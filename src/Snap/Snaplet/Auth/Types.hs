@@ -15,7 +15,7 @@ import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString as B
 import           Data.Time
 
-import           Snap.Types
+import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Password
 import           Snap.Snaplet.Session

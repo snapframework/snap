@@ -45,7 +45,7 @@ import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Snap.Http.Server
-import           Snap.Types
+import           Snap.Core
 import           Snap.Util.GZip
 import           System.Directory
 import           System.Directory.Tree

@@ -17,7 +17,7 @@ import qualified Data.Text.Encoding as T
 import           Snap.Extension.Heist
 import           Snap.Extension.Timer
 import           Snap.Util.FileServe
-import           Snap.Types
+import           Snap.Core
 import           Text.Templating.Heist
 
 import           Application

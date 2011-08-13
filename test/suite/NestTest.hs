@@ -16,7 +16,7 @@ import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
 import           Snap.Http.Server.Config
-import Snap.Types
+import Snap.Core
 import Snap.Util.FileServe
 
 import Snap.Snaplet

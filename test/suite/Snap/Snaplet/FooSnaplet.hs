@@ -10,7 +10,7 @@ import Data.Maybe
 import qualified Data.Text as T
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Snap.Types
+import Snap.Core
 import Text.Templating.Heist
 
 data FooSnaplet = FooSnaplet { fooField :: String }

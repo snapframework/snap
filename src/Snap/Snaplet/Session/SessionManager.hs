@@ -9,7 +9,7 @@ import           Data.Serialize (Serialize)
 import           Data.Text (Text)
 import           Prelude hiding (lookup)
 
-import           Snap.Types (Snap)
+import           Snap.Core (Snap)
 import           Snap.Snaplet
 
 

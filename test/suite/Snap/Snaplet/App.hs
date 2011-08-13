@@ -16,7 +16,7 @@ import Data.Lens.Template
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Configurator
-import Snap.Types
+import Snap.Core
 import Snap.Util.FileServe
 
 import Snap.Snaplet

@@ -19,7 +19,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.Text.Encoding as T
 
 
-import Snap.Types
+import Snap.Core
 import Snap.Snaplet.Session (MonadSession(..), sessionCSRFToken)
 
 import qualified Text.XmlHtml as X

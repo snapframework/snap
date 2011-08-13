@@ -15,7 +15,7 @@ import           Control.Monad.Reader
 import           Control.Monad.Reader.Class
 import           Control.Monad.State.Class
 import           Prelude hiding ((.), id, catch)
-import           Snap.Types
+import           Snap.Core
 
 
 ------------------------------------------------------------------------------

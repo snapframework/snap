@@ -28,7 +28,7 @@ import           Data.Text (Text)
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Session.SecureCookie
-import           Snap.Types
+import           Snap.Core
 
 import           Snap.Snaplet.Session.SessionManager 
                    ( SessionManager(..), ISessionManager(..) )
