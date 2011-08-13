@@ -20,7 +20,9 @@ module Snap.Snaplet.Internal.Initializer
   , onUnload
   , addRoutes
   , wrapHandlers
-  , runEverything
+  , runInitializer
+  , runSnaplet
+  , combineConfig
   , serveSnaplet
   , printInfo
   ) where
@@ -251,6 +253,7 @@ bracketInit m = do
 ------------------------------------------------------------------------------
 -- | Handles modifications to InitializerState that need to happen before a
 -- snaplet is called with either nestSnaplet or embedSnaplet.
+setupSnapletCall :: ByteString -> Initializer b v ()
 setupSnapletCall rte = do
     curId <- iGets (_scId . _curConfig)
     modifyCfg (modL scAncestry (fromJust curId:))
@@ -276,7 +279,7 @@ nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
 
 ------------------------------------------------------------------------------
 -- | This function handles modifications to the initializer state that must
--- happen before each subsnaplet initializer runs.  
+-- happen before each subsnaplet initializer runs.
 embedSnaplet :: ByteString
              -- ^ The root url for all the snaplet's routes.  An empty string
              -- gives the routes the same root as the parent snaplet's routes.
@@ -385,7 +388,7 @@ onUnload m = iModify (\v -> modL cleanup (m>>) v)
 
 
 ------------------------------------------------------------------------------
--- | 
+-- |
 logInitMsg :: IORef Text -> Text -> IO ()
 logInitMsg ref msg = atomicModifyIORef ref (\cur -> (cur `T.append` msg, ()))
 
@@ -407,7 +410,7 @@ mkReloader :: MVar (Snaplet b)
            -> Initializer b b (Snaplet b)
            -> IO (Either String String)
 mkReloader mvar i = do
-    !res <- try $ runEverything mvar i
+    !res <- try $ runInitializer mvar i
     either bad good res
   where
     bad e = do
@@ -430,39 +433,64 @@ runBase (Handler m) mvar = do
 
 
 ------------------------------------------------------------------------------
--- | 
-runEverything :: MVar (Snaplet b)
-              -> Initializer b b (Snaplet b)
-              -> IO (Snaplet b, InitializerState b)
-runEverything mvar b@(Initializer i) = do
+-- |
+runInitializer :: MVar (Snaplet b)
+               -> Initializer b b (Snaplet b)
+               -> IO (Snaplet b, InitializerState b)
+runInitializer mvar b@(Initializer i) = do
     userConfig <- load [Optional "snaplet.cfg"]
     let cfg = SnapletConfig [] "" Nothing "" userConfig [] (mkReloader mvar b)
     logRef <- newIORef ""
     ((res, s), (Hook hook)) <- runWriterT $ runLensT i id $
         InitializerState True (return ()) [] id cfg logRef
     res' <- hook res
-    return (res', s) 
+    return (res', s)
 
 
 ------------------------------------------------------------------------------
--- | Serves a top-level snaplet as a web application.
-serveSnaplet :: IO (Config Snap a) -> SnapletInit b b -> IO ()
-serveSnaplet getConfig (SnapletInit b) = do
+-- | Given a Snaplet initializer, produce the set of messages generated during
+-- initialization, a snap handler, and a cleanup action.
+runSnaplet :: SnapletInit b b -> IO (Text, Snap (), IO ())
+runSnaplet (SnapletInit b) = do
     snapletMVar <- newEmptyMVar
-    (siteSnaplet, is) <- runEverything snapletMVar b
+    (siteSnaplet, is) <- runInitializer snapletMVar b
     putMVar snapletMVar siteSnaplet
 
-    config <- getConfig
-    conf <- completeConfig config
-    let site     = compress $ _hFilter is $ route $ _handlers is
-        compress = if fromJust $ getCompression conf then withCompression else id
-        catch500 = (flip catch $ fromJust $ getErrorHandler conf) :: Snap () -> Snap ()
-        serve    = simpleHttpServe config
-
     msgs <- liftIO $ readIORef $ _initMessages is
+    let handler = runBase (_hFilter is $ route $ _handlers is) snapletMVar
+
+    return (msgs, handler, _cleanup is)
+
+
+------------------------------------------------------------------------------
+-- | Given a configuration and a snap handler, complete it and produce the
+-- completed configuration as well as a new toplevel handler with things like
+-- compression and a 500 handler set up.
+combineConfig :: Config Snap a -> Snap () -> IO (Config Snap a, Snap ())
+combineConfig config handler = do
+    conf <- completeConfig config
+
+    let catch500 = (flip catch $ fromJust $ getErrorHandler conf)
+    let compress = if fromJust $ getCompression conf then withCompression else id
+    let site     = compress $ catch500 handler
+
+    return (conf, site)
+
+
+------------------------------------------------------------------------------
+-- | Serves a top-level snaplet as a web application. Reads command-line
+-- arguments. FIXME: document this.
+serveSnaplet :: Config Snap a -> SnapletInit b b -> IO ()
+serveSnaplet startConfig initializer = do
+    (msgs, handler, doCleanup) <- runSnaplet initializer
+
+    config       <- commandLineConfig startConfig
+    (conf, site) <- combineConfig config handler
+    let serve = simpleHttpServe conf
+
     liftIO $ hPutStrLn stderr $ T.unpack msgs
-    _ <- try $ serve $ catch500 $ runBase site snapletMVar
+    _ <- try $ serve $ site
          :: IO (Either SomeException ())
-    _cleanup is
+    doCleanup
 
 

@@ -67,5 +67,5 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     return $ App h s
 
 main :: IO ()
-main = serveSnaplet (commandLineConfig emptyConfig) app
+main = serveSnaplet defaultConfig app
 

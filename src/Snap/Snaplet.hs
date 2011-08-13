@@ -85,6 +85,8 @@ module Snap.Snaplet
   , printInfo
 
   -- * Serving Applications
+  , runSnaplet
+  , combineConfig
   , serveSnaplet
 
   , Base
