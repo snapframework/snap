@@ -32,9 +32,6 @@ import qualified Data.Text as T
 import           Snap.Snaplet.Internal.Lens
 import           Snap.Core
 
--- FIXME REMOVE
-import Snap.Snaplet.Internal.TemporaryLensCruft
-
 
 data SnapletConfig = SnapletConfig
     { _scAncestry        :: [Text]

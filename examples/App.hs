@@ -18,8 +18,6 @@ import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 import Text.Templating.Heist
 
-import Snap.Snaplet.Internal.TemporaryLensCruft
-
 data App = App
     { _heist :: Snaplet (Heist App)
     , _session :: Snaplet SessionManager
@@ -60,9 +58,9 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
       initCookieSessionManager "config/site_key.txt" "_session" Nothing
     addRoutes [ ("/hello", helloHandler)
               , ("/aoeu", with heist $ heistServeSingle "foo")
+              , ("/sessionTest", sessionTest)
               , ("", with heist heistServe)
               , ("", with heist $ serveDirectory "resources/doc")
-              , ("/sessionTest", sessionTest)
               ]
     return $ App h s
 
