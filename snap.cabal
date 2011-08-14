@@ -1,5 +1,5 @@
 name:           snap
-version:        0.5.3
+version:        0.5.3.1
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -60,7 +60,7 @@ Library
       Snap.Extension.Loader.Devel.TreeWatcher
 
   build-depends:
-    base                      >= 4 && < 5,
+    base                      >= 4.3 && < 5,
     blaze-builder             >= 0.2.1.4 && <0.4,
     bytestring                >= 0.9.1 && < 0.10,
     directory                 >= 1.0 && < 1.2,
@@ -95,7 +95,7 @@ Executable snap
 
   build-depends:
     attoparsec       >= 0.8.0.2 && < 0.10,
-    base             >= 4 && < 5,
+    base             >= 4.3 && < 5,
     bytestring,
     bytestring-nums,
     cereal           >= 0.3 && < 0.4,

@@ -19,7 +19,7 @@ Executable projname
   main-is: Main.hs
 
   Build-depends:
-    base >= 4 && < 5,
+    base >= 4.3 && < 5,
     bytestring >= 0.9.1 && < 0.10,
     heist >= 0.5 && < 0.6,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
