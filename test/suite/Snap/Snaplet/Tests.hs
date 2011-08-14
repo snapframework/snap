@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Snap.Snaplet.Tests where
+module Snap.Snaplet.Tests (tests) where
 
 import           Control.Monad.Trans
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -9,6 +9,7 @@ import           Test.Framework (Test, testGroup)
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
 
+------------------------------------------------------------------------------
 requestTest :: String -> L.ByteString -> Test
 requestTest url desired = testCase ("/"++url) $ do
     actual <- HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
@@ -20,8 +21,8 @@ requestNoError url desired = testCase ("/"++url) $ do
     HTTP.Response _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbsRedirect url'
     assertEqual url desired b
 
-nonCabalTest :: Test
-nonCabalTest = testGroup "non-cabal-tests"
+tests :: Test
+tests = testGroup "non-cabal-tests"
     [ requestTest "hello" "hello world"
     , requestTest "index" "index page\n"
     , requestTest "" "index page\n"

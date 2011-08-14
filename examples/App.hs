@@ -5,10 +5,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Main where
 
-import Data.Record.Label
+import Data.Lens.Lazy
+import Data.Lens.Template
 import qualified Data.Text as T
+import Snap.Core
 import Snap.Http.Server.Config
-import Snap.Types
 import Snap.Util.FileServe
 
 import Snap.Snaplet
@@ -24,9 +25,9 @@ data App = App
 
 type AppHandler = Handler App App
 
-mkLabels [''App]
+makeLens ''App
 
-instance HasHeist App App where
+instance HasHeist App where
     heistLens = subSnaplet heist
 
 helloHandler :: AppHandler ()
@@ -57,12 +58,12 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
       initCookieSessionManager "config/site_key.txt" "_session" Nothing
     addRoutes [ ("/hello", helloHandler)
               , ("/aoeu", with heist $ heistServeSingle "foo")
+              , ("/sessionTest", sessionTest)
               , ("", with heist heistServe)
               , ("", with heist $ serveDirectory "resources/doc")
-              , ("/sessionTest", sessionTest)
               ]
     return $ App h s
 
 main :: IO ()
-main = serveSnaplet emptyConfig app
+main = serveSnaplet defaultConfig app
 

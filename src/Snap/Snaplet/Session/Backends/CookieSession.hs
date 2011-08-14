@@ -16,7 +16,7 @@ import qualified Data.Serialize as S
 import           Data.Text (Text)
 import           Web.ClientSession
 
-import           Snap.Types (Snap)
+import           Snap.Core (Snap)
 import           Snap.Snaplet
 import           Snap.Snaplet.Session.Common (mkCSRFToken)
 import           Snap.Snaplet.Session.SessionManager

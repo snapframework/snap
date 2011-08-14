@@ -52,9 +52,8 @@ module Snap.Snaplet.Heist
   ) where
 
 import           Prelude hiding (id, (.))
-import           Control.Category
 import           Data.ByteString (ByteString)
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Data.Text (Text)
 import           Text.Templating.Heist
 
@@ -73,25 +72,16 @@ import           Snap.Snaplet.HeistNoClass (Heist, heistInit, clearHeistCache)
 -- > data App = App { _heist :: Snaplet (Heist App) }
 -- > mkLabels [''App]
 -- >
--- > instance HasHeist App App where heistLens = subSnaplet heist
+-- > instance HasHeist App where heistLens = subSnaplet heist
 -- >
 -- > appInit = makeSnaplet "app" "" Nothing $ do
 -- >     h <- nestSnaplet "heist" $ heistInit "templates"
 -- >     addSplices myAppSplices
 -- >     return $ App h
-class HasHeist b e where
-    -- | A lens from e to the Heist snaplet.  The b parameter to Heist will
-    -- typically be the base state of your application.  Most of the time
-    -- 'b' and 'e' will be the same.
-    heistLens :: Snaplet e :-> Snaplet (Heist b)
-
-
-------------------------------------------------------------------------------
--- | This default instance allows you to avoid writing a HasHeist instance and
--- instead access the heist snaplet via the 'with'' or 'withTop''
--- functions.  This might be preferrable in situations where Heist usage is
--- very simple.
-instance HasHeist b (Heist b) where heistLens = id
+class HasHeist b where
+    -- | A lens to the Heist snaplet.  The b parameter to Heist will
+    -- typically be the base state of your application.
+    heistLens :: Lens (Snaplet b) (Snaplet (Heist b))
 
 
 -- $initializerSection
@@ -103,21 +93,21 @@ instance HasHeist b (Heist b) where heistLens = id
 -- | Adds templates to the Heist TemplateState.  Other snaplets should use
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
-addTemplates :: HasHeist b b => ByteString -> Initializer b e ()
+addTemplates :: HasHeist b => ByteString -> Initializer b v ()
 addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 
 
 ------------------------------------------------------------------------------
 -- | Adds templates to the Heist TemplateState, and lets you specify where
 -- they are fonud in the filesystem.
-addTemplatesAt :: HasHeist b b => ByteString -> FilePath -> Initializer b e ()
+addTemplatesAt :: HasHeist b => ByteString -> FilePath -> Initializer b v ()
 addTemplatesAt pfx p = withTop' heistLens (Unclassed.addTemplatesAt pfx p)
 
 
 ------------------------------------------------------------------------------
 -- | Allows snaplets to add splices.
-addSplices :: (HasHeist b b)
-           => [(Text, Unclassed.SnapletSplice b e)] -> Initializer b e ()
+addSplices :: (HasHeist b)
+           => [(Text, Unclassed.SnapletSplice b v)] -> Initializer b v ()
 addSplices = Unclassed.addSplices' heistLens
 
 
@@ -129,48 +119,48 @@ addSplices = Unclassed.addSplices' heistLens
 ------------------------------------------------------------------------------
 -- | Renders a template as text\/html. If the given template is not found,
 -- this returns 'empty'.
-render :: HasHeist b b => ByteString -> Handler b e ()
+render :: HasHeist b => ByteString -> Handler b v ()
 render t = withTop' heistLens (Unclassed.render t)
 
 
 ------------------------------------------------------------------------------
 -- | Renders a template as the given content type.  If the given template
 -- is not found, this returns 'empty'.
-renderAs :: HasHeist b b => ByteString -> ByteString -> Handler b e ()
+renderAs :: HasHeist b => ByteString -> ByteString -> Handler b v ()
 renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
 
 
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServe'. If the template specified in the request path
 -- is not found, it returns 'empty'.
-heistServe :: HasHeist b b => Handler b e ()
+heistServe :: HasHeist b => Handler b v ()
 heistServe = withTop' heistLens Unclassed.heistServe
 
 
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServeSingle'. If the given template is not found,
 -- this throws an error.
-heistServeSingle :: HasHeist b b => ByteString -> Handler b e ()
+heistServeSingle :: HasHeist b => ByteString -> Handler b v ()
 heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 
 
 ------------------------------------------------------------------------------
 -- | Renders a template with a given set of splices.  This is syntax sugar for
 -- a common combination of heistLocal, bindSplices, and render.
-renderWithSplices :: HasHeist b b
+renderWithSplices :: HasHeist b
                   => ByteString
-                  -> [(Text, Unclassed.SnapletSplice b e)]
-                  -> Handler b e ()
+                  -> [(Text, Unclassed.SnapletSplice b v)]
+                  -> Handler b v ()
 renderWithSplices = Unclassed.renderWithSplices' heistLens
 
 
 ------------------------------------------------------------------------------
 -- | Runs an action with additional splices bound into the Heist
 -- 'TemplateState'.
-withSplices :: HasHeist b b
-            => [(Text, Unclassed.SnapletSplice b e)]
-            -> Handler b e a
-            -> Handler b e a
+withSplices :: HasHeist b
+            => [(Text, Unclassed.SnapletSplice b v)]
+            -> Handler b v a
+            -> Handler b v a
 withSplices = Unclassed.withSplices' heistLens
 
 
@@ -180,10 +170,10 @@ withSplices = Unclassed.withSplices' heistLens
 -- action.  To do that you would do:
 --
 -- > heistLocal (bindSplices mySplices) handlerThatNeedsSplices
-heistLocal :: HasHeist b b
+heistLocal :: HasHeist b
            => (TemplateState (Handler b b) -> TemplateState (Handler b b))
-           -> Handler b e a
-           -> Handler b e a
+           -> Handler b v a
+           -> Handler b v a
 heistLocal = Unclassed.heistLocal' heistLens
 
 
@@ -193,7 +183,7 @@ heistLocal = Unclassed.heistLocal' heistLens
 -- The reasons for this are beyond the scope of this discussion, but the
 -- result is that 'lift' inside a splice only works with @Handler b b@
 -- actions.  When you're writing your own snaplets you obviously would rather
--- work with @Handler b e@ so your local snaplet's state is available.  We
+-- work with @Handler b v@ so your local snaplet's state is available.  We
 -- provide the SnapletHeist monad to make this possible.  The general rule is
 -- that when you're using Snaplets and Heist, use SnapletHeist instead of
 -- HeistT (previously called TemplateMonad) and use SnapletSplice instead of

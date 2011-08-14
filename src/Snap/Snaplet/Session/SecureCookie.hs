@@ -27,7 +27,7 @@ import Data.Time.Clock.POSIX
 import Data.Serialize
 import Web.ClientSession
 
-import Snap.Types
+import Snap.Core
 
 
 

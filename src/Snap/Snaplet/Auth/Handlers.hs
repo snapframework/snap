@@ -21,7 +21,7 @@ module Snap.Snaplet.Auth.Handlers
 
 import Data.ByteString (ByteString)
 
-import Snap.Types
+import Snap.Core
 import Snap.Snaplet.Auth.Types
 import Snap.Snaplet
 

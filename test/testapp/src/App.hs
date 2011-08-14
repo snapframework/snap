@@ -7,7 +7,7 @@ module Main where
 
 import Data.Record.Label
 import qualified Data.Text as T
-import Snap.Types
+import Snap.Core
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist

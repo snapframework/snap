@@ -24,7 +24,7 @@ import           Language.Haskell.TH
 import           System.Environment (getArgs)
 
 ------------------------------------------------------------------------------
-import           Snap.Types
+import           Snap.Core
 import           Snap.Loader.Devel.Signal
 import           Snap.Loader.Devel.Evaluator
 import           Snap.Loader.Devel.TreeWatcher
@@ -145,7 +145,7 @@ hintSnap opts modules imports srcPaths action =
   where
     interpreter = do
         loadModules . nub $ modules
-        setImports . nub $ "Prelude" : "Snap.Types" : imports ++ modules
+        setImports . nub $ "Prelude" : "Snap.Core" : imports ++ modules
 
         interpret action (as :: HintLoadable)
 

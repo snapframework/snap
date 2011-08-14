@@ -7,16 +7,15 @@ import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Configurator
 import Data.Maybe
-import Data.Record.Label
 import qualified Data.Text as T
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Snap.Types
+import Snap.Core
 import Text.Templating.Heist
 
 data FooSnaplet = FooSnaplet { fooField :: String }
 
-fooInit :: HasHeist b b => SnapletInit b FooSnaplet
+fooInit :: HasHeist b => SnapletInit b FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo." Nothing $ do
     config <- getSnapletConfig
     addTemplates "foo"

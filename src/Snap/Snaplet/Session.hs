@@ -22,13 +22,13 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Data.Serialize (Serialize)
 import           Data.Text (Text)
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Session.SecureCookie
-import           Snap.Types
+import           Snap.Core
 
 import           Snap.Snaplet.Session.SessionManager 
                    ( SessionManager(..), ISessionManager(..) )
@@ -37,7 +37,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 
 
 -- | Wrap around a handler, committing any changes in the session at the end
-withSession :: (b :-> Snaplet SessionManager) -> Handler b e a -> Handler b e a
+withSession :: (Lens b (Snaplet SessionManager)) -> Handler b v a -> Handler b v a
 withSession l h = do
   a <- h 
   withTop l commitSession

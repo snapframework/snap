@@ -15,7 +15,7 @@ import Control.Concurrent.MVar
 
 import Prelude hiding (catch, init, any)
 
-import Snap.Types (Snap)
+import Snap.Core (Snap)
 
 
 ------------------------------------------------------------------------------
