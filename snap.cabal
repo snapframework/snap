@@ -74,7 +74,7 @@ Library
     MonadCatchIO-transformers >= 0.2,
     attoparsec                (>= 0.9.1 && < 0.10) ||
                               (>= 0.8   && < 0.9),
-    base                      >= 4     && < 5,
+    base                      >= 4.3 && < 5,
     bson                      >= 0.1,
     bytestring                >= 0.9.1 && < 0.10,
     cereal                    >= 0.3,
@@ -126,6 +126,7 @@ Executable snap
 
   build-depends:
     attoparsec          (>= 0.8.0.2  && < 0.9) || (>= 0.9.1.1 && < 0.10),
+    base                >= 4.3 && < 5,
     base                >= 4        && < 5,
     bytestring,
     bytestring-nums,
