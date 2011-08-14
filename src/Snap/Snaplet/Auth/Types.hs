@@ -10,7 +10,7 @@ import           Data.ByteString (ByteString)
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HM
 import           Data.Hashable (Hashable)
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Data.Time
 import           Data.Text (Text)
 import           Crypto.PasswordStore
@@ -113,7 +113,7 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
 	  backend :: r
 	-- ^ Storage back-end 
 
-	, session :: (b :-> Snaplet SessionManager)
+	, session :: Lens b (Snaplet SessionManager)
 	-- ^ A lens pointer to a SessionManager
 	
   , activeUser :: Maybe AuthUser

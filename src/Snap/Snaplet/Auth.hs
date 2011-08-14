@@ -1,6 +1,16 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Snap.Snaplet.Auth where
+module Snap.Snaplet.Auth 
+  ( loginByUsername
+  , checkPasswordAndLogin
+  , forceLogin
+  , logout
+  , isLoggedIn
+  , AuthSettings(..)
+  , defAuthSettings
+  , AuthManager
+  )
+  where
 
 import           Control.Monad.State
 import           Crypto.PasswordStore
@@ -8,9 +18,10 @@ import qualified Data.ByteString.Char8 as B
 import           Data.ByteString (ByteString)
 import           Data.Maybe (isJust)
 import           Data.Time
+import           Data.Text.Encoding (decodeUtf8)
 
-import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet
+import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
 
 
@@ -25,8 +36,14 @@ loginByUsername
   :: ByteString       -- ^ Username/login for user
   -> Password         -- ^ Should be ClearText
   -> Bool             -- ^ Set remember token?
-  -> Handler b (AuthManager b) (Maybe AuthUser)
-loginByUsername = undefined
+  -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
+loginByUsername unm pwd rm  = do
+  (AuthManager r _ _ _ _ _ _ _) <- get
+  au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
+  case au of
+    Nothing  -> return $ Left FindFailure
+    Just au' -> checkPasswordAndLogin au' pwd rm
 
 
 ------------------------------------------------------------------------------
@@ -35,8 +52,9 @@ rememberUser :: Handler b (AuthManager b) (Maybe AuthUser)
 rememberUser = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r _ _ _ rc to _) <- get
+      mgr@(AuthManager r _ _ _ _ rc to _) <- get
       uid <- undefined
+      fail "rememberUser is not implemented yet"
       case uid of
         Nothing -> return Nothing
         Just uid' -> liftIO $ lookupByUserId r uid'
@@ -57,7 +75,7 @@ currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r s _ _ _ _ _) <- get
+      mgr@(AuthManager r s _ _ _ _ _ _) <- get
       uid <- withTop s getSessionUserId 
       case uid of
         Nothing -> return Nothing
@@ -69,7 +87,7 @@ currentUser = cacheOrLookup f
 isLoggedIn :: Handler b (AuthManager b) Bool
 isLoggedIn = do
   au <- currentUser
-  return $ if isJust au then True else False 
+  return $ isJust au 
 
 
 -- $midlevel
@@ -79,11 +97,12 @@ isLoggedIn = do
 -- | Mutate an 'AuthUser', marking failed authentication now.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthFail u = do
-  (AuthManager r _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- get
   proc u >>= liftIO . save r
   where
     proc = incFailCtr >=> checkLockout
-    incFailCtr = undefined
+    incFailCtr u' = return $ u' 
+                      { userFailedLoginCount = userFailedLoginCount u' + 1}
     checkLockout = undefined
 
 
@@ -91,16 +110,18 @@ markAuthFail u = do
 -- | Mutate an 'AuthUser', marking successful authentication now.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
-  (AuthManager r _ _ _ _ _ _) <- get
-  proc u >>= liftIO . save r
+  (AuthManager r _ _ _ _ _ _ _) <- get
+  now <- liftIO getCurrentTime
+  incLoginCtr u >>= updateIp >>=  updateLoginTS now >>= 
+    setRememberToken >>= resetFailCtr >>= liftIO . save r
   where
-    proc = incLoginCtr >=> updateIp >=> updateLoginTS >=> 
-           setRememberToken >=> resetFailCtr
-    incLoginCtr = undefined
-    updateIp = undefined
-    updateLoginTS = undefined
-    setRememberToken = undefined
-    resetFailCtr = undefined
+    incLoginCtr u' = return $ u' { userLoginCount = userLoginCount u' + 1 }
+    updateIp u' = undefined
+    updateLoginTS now u' = return $
+      u' { userCurrentLoginAt = Just now
+         , userLastLoginAt = userCurrentLoginAt u' }
+    setRememberToken u' = undefined
+    resetFailCtr u' = return $ u' { userFailedLoginCount = 0 }
 
 
 ------------------------------------------------------------------------------
@@ -127,7 +148,7 @@ checkPasswordAndLogin u pw remember =
       markAuthFail u
       return $ Left e
     Nothing -> do
-      forceLoginUser u remember
+      forceLogin u remember
       modify (\mgr -> mgr { activeUser = Just u })
       u' <- markAuthSuccess u
       return $ Right u'
@@ -138,12 +159,12 @@ checkPasswordAndLogin u pw remember =
 --
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
-forceLoginUser 
+forceLogin 
   :: AuthUser 
   -> Bool                               -- ^ Set remember cookie?
   -> Handler b (AuthManager b) Bool
-forceLoginUser u rc = do
-  AuthManager _ s _ _ _ _ _ <- get
+forceLogin u rc = do
+  AuthManager _ s _ _ _ _ _ _ <- get
   case userId u of
     Just x -> withTop s (setSessionUserId x) >> return True
     Nothing -> return False
@@ -194,11 +215,12 @@ cacheOrLookup
   -> Handler b (AuthManager b) (Maybe AuthUser)
 cacheOrLookup f = do
   au <- gets activeUser
-  if isJust au then return au
-  else do
-    au' <- f
-    modify (\mgr -> mgr { activeUser = au' })
-    return au'
+  if isJust au 
+    then return au
+    else do
+      au' <- f
+      modify (\mgr -> mgr { activeUser = au' })
+      return au'
 
 
 

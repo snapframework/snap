@@ -25,6 +25,7 @@ import Snap.Core
 import Snap.Snaplet.Auth.Types
 import Snap.Snaplet
 
+
 data AuthHandlerConfig b = AuthHandlerConfig
     { passwordParamField :: ByteString
     , rememberField :: Maybe ByteString
@@ -33,37 +34,36 @@ data AuthHandlerConfig b = AuthHandlerConfig
     , afterLogout :: Handler b b ()
     }
 
+
 ------------------------------------------------------------------------------
--- | A 'MonadSnap' handler that processes a login form. 
+-- | A 'MonadSnap' handler that processes a login form.
 --
 -- The request paremeters are passed to 'performLogin'
-loginHandler :: MonadAuthUser (Handler b b)
-             => ByteString 
+loginHandler :: ByteString
              -- ^ The password param field
              -> Maybe ByteString
-             -- ^ Remember field; Nothing if you want to remember function.
-             -> (AuthFailure -> Handler b b ())
+             -- ^ Remember field; Nothing if you want no remember function.
+             -> (AuthFailure -> Handler b (AuthManager b) ())
              -- ^ Upon failure
-             -> Handler b b ()
+             -> Handler b (AuthManager b) ()
              -- ^ Upon success
-             -> Handler b b ()
+             -> Handler b (AuthManager b) ()
 loginHandler pwdf remf loginFail loginSucc = do
     password <- getParam pwdf
     remember <- maybe (return Nothing) getParam remf
     let r = maybe False (=="1") remember
     mMatch <- case password of
-      Nothing -> return $ Left PasswordFailure
-      Just p  -> performLogin p r
+      Nothing -> return $ Left IncorrectPassword
+      Just p  -> checkPasswordAndLogin undefined (ClearText p) r
     either loginFail (const loginSucc) mMatch
 
 
 ------------------------------------------------------------------------------
 -- | Simple handler to log the user out. Deletes user from session.
-logoutHandler :: MonadAuthUser (Handler b b)
-              => Handler b b ()
+logoutHandler :: Handler b (AuthManager b) ()
               -- ^ What to do after logging out
-              -> Handler b b ()
-logoutHandler target = performLogout >> target
+              -> Handler b (AuthManager b) ()
+logoutHandler target = logout >> target
 
 
 ------------------------------------------------------------------------------
@@ -71,9 +71,13 @@ logoutHandler target = performLogout >> target
 --
 -- This function has no DB cost - only checks to see if a user_id is present in
 -- the current session.
-requireUser :: MonadAuthUser m => m a   
+requireUser :: Handler b (AuthManager b) a
             -- ^ Do this if no authenticated user is present.
-            -> m a    
+            -> Handler b (AuthManager b) a
             -- ^ Do this if an authenticated user is present.
-            -> m a
-requireUser bad good = authenticatedUserId >>= maybe bad (const good)
+            -> Handler b (AuthManager b) a
+requireUser bad good = do
+  loggedIn <- isLoggedIn
+  if loggedIn
+    then good
+    else bad

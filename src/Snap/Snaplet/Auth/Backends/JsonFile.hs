@@ -8,14 +8,17 @@ import           Control.Applicative
 import           Control.Monad.State
 import           Control.Concurrent.MVar
 import           Data.Aeson
+import qualified Data.Attoparsec as Atto
 import qualified Data.ByteString.Lazy as LB
+import qualified Data.ByteString as B
 import qualified Data.Map as HM
 import           Data.Map (Map)
 import           Data.Maybe (isNothing)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Record.Label
+import           Data.Lens.Lazy
 import           Web.ClientSession
+import           System.Directory
 
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet
@@ -23,18 +26,22 @@ import           Snap.Snaplet.Session
 
 
 
-
+------------------------------------------------------------------------------
+-- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager 
   :: AuthSettings
-  -> (b :-> Snaplet SessionManager)
+  -- ^ Authentication settings for your app
+  -> Lens b (Snaplet SessionManager)
+  -- ^ Lens into a 'SessionManager' auth snaplet will use
   -> FilePath
+  -- ^ Where to store user data as JSON
   -> SnapletInit b (AuthManager b)
 initJsonFileAuthManager s l db = 
   makeSnaplet "JsonFileAuthManager" 
               "A snaplet providing user authentication using a JSON-file backend"
               Nothing $ liftIO $ do
     key <- getKey (asSiteKey s)
-    jsonMgr <- (undefined :: IO JsonFileAuthManager)
+    jsonMgr <- mkJsonAuthMgr db
     return $ AuthManager {
     	  backend = jsonMgr
     	, session = l
@@ -47,13 +54,30 @@ initJsonFileAuthManager s l db =
     }
 
 
+-- Load an existing datafile into memory cache
+mkJsonAuthMgr :: FilePath -> IO JsonFileAuthManager
+mkJsonAuthMgr fp = do
+  db <- loadUserCache fp
+  let db' = case db of
+              Left e -> error e
+              Right x -> x
+  cache <- newMVar db'
+  return $ JsonFileAuthManager {
+      memcache = cache
+    , dbfile = fp
+  }
+
+
 type UserIdCache = Map UserId AuthUser
+
 
 instance ToJSON UserIdCache where
   toJSON m = toJSON $ HM.toList m
 
+
 instance FromJSON UserIdCache where
   parseJSON = fmap HM.fromList . parseJSON
+
 
 type LoginUserCache = Map Text UserId
 
@@ -61,33 +85,43 @@ type LoginUserCache = Map Text UserId
 type RemTokenUserCache = Map Text UserId
 
 
+-- JSON user back-end stores the user data and indexes for login and token
+-- based logins.
 data UserCache = UserCache {
-	  uidCache :: UserIdCache
-	, loginCache :: LoginUserCache
-	, tokenCache :: RemTokenUserCache
-	, uidCounter :: Int
+	  uidCache    :: UserIdCache          -- the actual datastore
+	, loginCache  :: LoginUserCache       -- fast lookup for login field
+	, tokenCache  :: RemTokenUserCache    -- fast lookup for remember tokens
+	, uidCounter  :: Int                  -- user id counter
 }
 
-instance ToJSON UserCache where
-  toJSON uc = object 
-    [ "uidCache" .= uidCache uc
-    , "loginCache" .= loginCache uc
-    , "tokenCache" .= tokenCache uc 
-    , "uidCounter" .= uidCounter uc]
 
-instance FromJSON UserCache where
-  parseJSON (Object v) = 
-    UserCache
-      <$> v .: "uidCache"
-      <*> v .: "loginCache"
-      <*> v .: "tokenCache"
-      <*> v .: "uidCounter"
+defUserCache = UserCache {
+	  uidCache = HM.empty
+	, loginCache = HM.empty
+	, tokenCache = HM.empty
+	, uidCounter = 0
+}
+
+
+loadUserCache :: FilePath -> IO (Either String UserCache)
+loadUserCache fp = do
+  chk <- doesFileExist fp
+  case chk of
+    True -> do
+      d <- B.readFile fp
+      case Atto.parseOnly json d of
+        Left e -> return . Left $ "Can't open JSON auth backend. Error: " ++ e
+        Right v -> case fromJSON v of
+          Error e -> return . Left $ "Malformed JSON auth data store. Error: " ++ e
+          Success db -> return $ Right db
+    False -> do
+      putStrLn "User JSON datafile not found. Creating a new one."
+      return $ Right defUserCache
 
 
 data JsonFileAuthManager = JsonFileAuthManager {
 	  memcache :: MVar UserCache
 	, dbfile :: FilePath
-	, reqcache :: Maybe AuthUser
 }
 
 
@@ -133,7 +167,7 @@ instance IAuthBackend JsonFileAuthManager where
         where uid = UserId . showT $ uidCounter cache
               e = error "getLastUser failed. This should not happen."
 
-  destroy = undefined
+  destroy = error "JsonFile: destroy is not yet implemented"
 
   lookupByUserId mgr uid = withCache mgr f
     where f cache = return $ getUser cache uid
@@ -150,8 +184,31 @@ instance IAuthBackend JsonFileAuthManager where
 
 
 withCache mgr f = withMVar (memcache mgr) f
+
 getUser cache uid = HM.lookup uid (uidCache cache)
 
+
+------------------------------------------------------------------------------
+-- JSON Instances
+--
+------------------------------------------------------------------------------
+
+
+instance ToJSON UserCache where
+  toJSON uc = object 
+    [ "uidCache" .= uidCache uc
+    , "loginCache" .= loginCache uc
+    , "tokenCache" .= tokenCache uc 
+    , "uidCounter" .= uidCounter uc]
+
+
+instance FromJSON UserCache where
+  parseJSON (Object v) = 
+    UserCache
+      <$> v .: "uidCache"
+      <*> v .: "loginCache"
+      <*> v .: "tokenCache"
+      <*> v .: "uidCounter"
 
 
 instance ToJSON AuthUser where
@@ -198,6 +255,7 @@ instance FromJSON AuthUser where
 instance ToJSON Password where
   toJSON (ClearText _) = error "ClearText passwords can't be serialized into JSON"
   toJSON (Encrypted x) = toJSON x
+
 
 instance FromJSON Password where
   parseJSON = fmap Encrypted . parseJSON

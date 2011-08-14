@@ -16,11 +16,14 @@ import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
+import Snap.Snaplet.Auth
+import Snap.Snaplet.Auth.Backends.JsonFile
 import Text.Templating.Heist
 
 data App = App
     { _heist :: Snaplet (Heist App)
     , _session :: Snaplet SessionManager
+    , _auth :: Snaplet (AuthManager App)
     }
 
 type AppHandler = Handler App App
@@ -62,7 +65,9 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
               , ("", with heist heistServe)
               , ("", with heist $ serveDirectory "resources/doc")
               ]
-    return $ App h s
+    a <- nestSnaplet "auth" auth $ 
+      initJsonFileAuthManager defAuthSettings session "config/user.json"
+    return $ App h s a
 
 main :: IO ()
 main = serveSnaplet defaultConfig app
