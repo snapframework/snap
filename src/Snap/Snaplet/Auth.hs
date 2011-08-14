@@ -65,7 +65,7 @@ rememberUser = cacheOrLookup f
 logout :: Handler b (AuthManager b) ()
 logout = do 
   s <- gets session
-  withTop s removeSessionUserId 
+  withTop s $ withSession s removeSessionUserId 
   modify (\mgr -> mgr { activeUser = Nothing } )
 
 
@@ -165,9 +165,10 @@ forceLogin
   -> Handler b (AuthManager b) Bool
 forceLogin u rc = do
   AuthManager _ s _ _ _ _ _ _ <- get
-  case userId u of
-    Just x -> withTop s (setSessionUserId x) >> return True
-    Nothing -> return False
+  withSession s $ do
+    case userId u of
+      Just x -> withTop s (setSessionUserId x) >> return True
+      Nothing -> return False
 
 
 -- $lowlevel
