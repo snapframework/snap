@@ -1,7 +1,10 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Snap.Snaplet.Auth 
-  ( loginByUsername
+  ( 
+    createUser
+  , loginByUsername
   , checkPasswordAndLogin
   , forceLogin
   , logout
@@ -19,7 +22,9 @@ import           Data.ByteString (ByteString)
 import           Data.Maybe (isJust)
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
+import           Data.Text (Text)
 
+import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
@@ -28,6 +33,23 @@ import           Snap.Snaplet.Session
 
 -- $higherlevel
 -- These are the key functions you will use in your handlers. 
+
+
+createUser
+  :: Text -- Username
+  -> ByteString -- Password
+  -> Handler b (AuthManager b) AuthUser
+createUser unm pass = do
+  mgr@(AuthManager r _ _ _ _ _ _ _) <- get
+  now <- liftIO getCurrentTime
+  pw <- Encrypted `fmap` liftIO (makePassword pass 12)
+  let au = defAuthUser {
+              userLogin = unm
+            , userPassword = Just pw
+            , userCreatedAt = Just now
+            , userUpdatedAt = Just now
+            }
+  liftIO $ save r au
 
 
 ------------------------------------------------------------------------------
@@ -42,7 +64,7 @@ loginByUsername unm pwd rm  = do
   (AuthManager r _ _ _ _ _ _ _) <- get
   au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
   case au of
-    Nothing  -> return $ Left FindFailure
+    Nothing  -> return $ Left UserNotFound
     Just au' -> checkPasswordAndLogin au' pwd rm
 
 

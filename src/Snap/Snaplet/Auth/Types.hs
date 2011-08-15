@@ -1,9 +1,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Snap.Snaplet.Auth.Types where
 
+import           Control.Monad.CatchIO
 import           Data.Aeson
 import qualified Data.ByteString.Char8 as B
 import           Data.ByteString (ByteString)
@@ -12,6 +14,7 @@ import qualified Data.HashMap.Strict as HM
 import           Data.Hashable (Hashable)
 import           Data.Lens.Lazy
 import           Data.Time
+import           Data.Typeable
 import           Data.Text (Text)
 import           Crypto.PasswordStore
 
@@ -48,11 +51,14 @@ checkPassword _ _ =
 -- generally not advisable to show the user the exact details about why login
 -- failed.
 data AuthFailure = 
-    FindFailure
+    UserNotFound
   | IncorrectPassword
   | PasswordMissing
   | LockedOut Int               -- ^ Locked out with given seconds to go
-  deriving (Read, Show, Ord, Eq)
+  deriving (Read, Show, Ord, Eq, Typeable)
+
+
+instance Exception AuthFailure
 
 
 ------------------------------------------------------------------------------
@@ -93,29 +99,50 @@ data AuthUser = AuthUser
   } deriving (Show,Eq)
 
 
+defAuthUser = AuthUser {
+    userId = Nothing
+  , userLogin = ""
+  , userPassword = Nothing
+  , userActivatedAt = Nothing
+  , userSuspendedAt = Nothing
+  , userRememberToken = Nothing
+  , userLoginCount = 0
+  , userFailedLoginCount = 0
+  , userLockedOutAt = Nothing
+  , userCurrentLoginAt = Nothing
+  , userLastLoginAt = Nothing
+  , userCurrentLoginIp = Nothing
+  , userLastLoginIp = Nothing
+  , userCreatedAt = Nothing
+  , userUpdatedAt = Nothing
+  , userRoles = []
+  , userMeta = HM.empty
+}
+
+
 data AuthSettings = AuthSettings {
-	  asMinPasswdLen :: Int
-	, asRememberCookieName :: ByteString
-	, asRememberPeriod :: Maybe Int
-	, asLockout :: Maybe (Int, Int)
-	, asSiteKey :: FilePath
+    asMinPasswdLen :: Int
+  , asRememberCookieName :: ByteString
+  , asRememberPeriod :: Maybe Int
+  , asLockout :: Maybe (Int, Int)
+  , asSiteKey :: FilePath
 }
 
 defAuthSettings = AuthSettings {
-	  asMinPasswdLen = 8
-	, asRememberCookieName = "remember"
-	, asRememberPeriod = Just $ 14 * 24 * 60
-	, asLockout = Nothing
-	, asSiteKey = "site_key.txt"
+    asMinPasswdLen = 8
+  , asRememberCookieName = "remember"
+  , asRememberPeriod = Just $ 14 * 24 * 60
+  , asLockout = Nothing
+  , asSiteKey = "site_key.txt"
 }
 
 data AuthManager b = forall r. IAuthBackend r => AuthManager { 
-	  backend :: r
-	-- ^ Storage back-end 
+    backend :: r
+  -- ^ Storage back-end 
 
-	, session :: Lens b (Snaplet SessionManager)
-	-- ^ A lens pointer to a SessionManager
-	
+  , session :: Lens b (Snaplet SessionManager)
+  -- ^ A lens pointer to a SessionManager
+  
   , activeUser :: Maybe AuthUser
   -- ^ A per-request logged-in user cache
 
@@ -136,8 +163,18 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
   }
 
 
+
+data BackendError = DuplicateLogin | BackendError String
+  deriving (Eq,Show,Read,Typeable)
+
+
+instance Exception BackendError
+
+
+-- | Backend operations may throw 'BackendError's
 class IAuthBackend r where
   
+  -- | Needs to create or update the given 'AuthUser' record
   save :: r -> AuthUser -> IO AuthUser
 
   lookupByUserId :: r -> UserId -> IO (Maybe AuthUser)

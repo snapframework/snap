@@ -1,22 +1,25 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Snap.Snaplet.Auth.Backends.JsonFile where
 
 
 import           Control.Applicative
+import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
-import           Control.Concurrent.MVar
+import           Control.Concurrent.STM
 import           Data.Aeson
 import qualified Data.Attoparsec as Atto
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
 import qualified Data.Map as HM
 import           Data.Map (Map)
-import           Data.Maybe (isNothing)
+import           Data.Maybe (isNothing, fromJust, isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Lens.Lazy
+import           Data.Time
 import           Web.ClientSession
 import           System.Directory
 
@@ -61,7 +64,7 @@ mkJsonAuthMgr fp = do
   let db' = case db of
               Left e -> error e
               Right x -> x
-  cache <- newMVar db'
+  cache <- newTVarIO db'
   return $ JsonFileAuthManager {
       memcache = cache
     , dbfile = fp
@@ -120,70 +123,120 @@ loadUserCache fp = do
 
 
 data JsonFileAuthManager = JsonFileAuthManager {
-	  memcache :: MVar UserCache
+	  memcache :: TVar UserCache
 	, dbfile :: FilePath
 }
 
 
 instance IAuthBackend JsonFileAuthManager where
 
-  -- this is currently wrong. Some fields in AuthUser should change as a result
-  -- of saving - like a unique ID being assigned.
-  save mgr u = modifyMVar (memcache mgr) f 
-
+  save mgr u = do
+    now <- getCurrentTime
+    oldByLogin <- lookupByLogin mgr (userLogin u)
+    oldById <- case userId u of
+      Nothing -> return Nothing
+      Just x -> lookupByUserId mgr x
+    res <- atomically $ do
+      cache <- readTVar (memcache mgr)
+      res <- case userId u of
+        Nothing -> create cache now oldByLogin
+        Just _ -> update cache now oldById
+      case res of
+        Left e -> return $ Left e
+        Right (cache', u') -> do
+          writeTVar (memcache mgr) cache'
+          return $ Right (cache', u')
+    case res of
+      Left e -> throw e
+      Right (cache', u') -> do
+        dumpToDisk cache'
+        return u'
     where
+      create 
+        :: UserCache 
+        -> UTCTime 
+        -> (Maybe AuthUser) 
+        -> STM (Either BackendError (UserCache, AuthUser))
+      create cache now old = do
+        case old of
+          Just _ -> return $ Left DuplicateLogin
+          Nothing -> do
+            new <- do
+              let uid' = UserId . showT $ uidCounter cache + 1
+              let u' = u { userUpdatedAt = Just now, userId = Just uid' }
+              return $ cache {
+              	uidCache = HM.insert uid' u' $ uidCache cache
+              , loginCache = HM.insert (userLogin u') uid' $ loginCache cache
+              , tokenCache = case userRememberToken u' of
+                                Nothing -> tokenCache cache
+                                Just x -> HM.insert x uid' $ tokenCache cache
+              , uidCounter = uidCounter cache + 1
+              }
+            return $ Right (new, getLastUser new)
 
-      -- Atomically update the cache and dump to disk
-      f cache = dumpToDisk new >> return (new, getLastUser new)
-        where new = updateCache cache 
 
+      -- lookup old record, see what's changed and update indexes accordingly
+      update 
+        :: UserCache 
+        -> UTCTime 
+        -> (Maybe AuthUser) 
+        -> STM (Either BackendError (UserCache, AuthUser))
+      update cache now old = 
+        case old of
+          Nothing -> return $ Left (BackendError "User not found; should never happen")
+          Just x -> do
+            let oldLogin = userLogin x
+            let oldToken = userRememberToken x
+            let uid = fromJust $ userId u
+            let newLogin = userLogin u
+            let newToken = userRememberToken u
+            let lc = if oldLogin /= userLogin u 
+                      then HM.insert newLogin uid . HM.delete oldLogin $ loginCache cache
+                      else loginCache cache
+            let tc = if oldToken /= userRememberToken u && isJust oldToken
+                      then HM.delete (fromJust oldToken) $ loginCache cache
+                      else tokenCache cache
+            let tc' = if isJust newToken
+                       then HM.insert (fromJust newToken) uid tc
+                       else tc
+            let u' = u { userUpdatedAt = Just now }
+            let new = cache {
+                          uidCache = HM.insert uid u' $ uidCache cache
+                        , loginCache = lc
+                        , tokenCache = tc'
+                      }
+            return $ Right (new, u')
+
+      -- Sync user database to disk
+      -- Need to implement a mutex here; simult syncs could screw things up
       dumpToDisk c = LB.writeFile (dbfile mgr) (encode c)
-
-      updateCache cache = cache { uidCache = uidc 
-                                , loginCache = lc 
-                                , tokenCache = tc 
-                                , uidCounter = ctr }
-        where
-          -- Assign a userid if it is missing in the given user.
-          uid' = maybe (UserId . showT $ uidCounter cache + 1) id $ userId u 
-
-          -- New user might have a newly assigned userid field
-          u' = u { userId = Just uid' }
-
-          -- Update caches
-          uidc = HM.insert uid' u' $ uidCache cache
-          lc = HM.insert (userLogin u') uid' $ loginCache cache
-          tc = case userRememberToken u' of
-            Nothing -> tokenCache cache 
-            Just x -> HM.insert x uid' $ tokenCache cache
-
-          -- Increment counter if a new id has been assigned 
-          ctr = if isNothing (userId u) then 
-                  uidCounter cache + 1 
-                else uidCounter cache
 
       -- Get's the last added user
       getLastUser cache = maybe e id $ getUser cache uid
         where uid = UserId . showT $ uidCounter cache
               e = error "getLastUser failed. This should not happen."
 
+
   destroy = error "JsonFile: destroy is not yet implemented"
 
   lookupByUserId mgr uid = withCache mgr f
-    where f cache = return $ getUser cache uid
+    where f cache = getUser cache uid
 
   lookupByLogin mgr login = withCache mgr f
     where 
-      f cache = return $ getUid >>= getUser cache
+      f cache = getUid >>= getUser cache
         where getUid = HM.lookup login (loginCache cache)
               
   lookupByRememberToken mgr token = withCache mgr f
     where
-      f cache = return $ getUid >>= getUser cache
+      f cache = getUid >>= getUser cache
         where getUid = HM.lookup token (tokenCache cache)
 
 
-withCache mgr f = withMVar (memcache mgr) f
+withCache mgr f = atomically $ do
+  cache <- readTVar $ memcache mgr
+  return $ f cache
+
 
 getUser cache uid = HM.lookup uid (uidCache cache)
 
