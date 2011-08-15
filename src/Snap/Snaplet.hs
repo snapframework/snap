@@ -88,9 +88,6 @@ module Snap.Snaplet
   , runSnaplet
   , combineConfig
   , serveSnaplet
-
-  , Base
-  , Env
   ) where
 
 

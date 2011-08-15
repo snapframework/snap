@@ -28,8 +28,6 @@ import Snap.Snaplet.BarSnaplet
 import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 
--- FIXME
-import Snap.Snaplet.Internal.TemporaryLensCruft
 
 data App = App
     { _heist :: Snaplet (Heist App)

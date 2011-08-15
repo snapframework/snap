@@ -14,6 +14,7 @@ import Control.Monad.State.Class
 import Control.Monad.State.Strict
 import Control.Category
 import Prelude hiding (catch, id, (.))
+import Snap.Types
 
 
 ------------------------------------------------------------------------------
@@ -88,6 +89,22 @@ instance MonadPlus m => MonadPlus (Lensed b v m) where
 
 
 ------------------------------------------------------------------------------
+instance (Monad m, Alternative m) => Alternative (Lensed b v m) where
+    empty = lift empty
+    (Lensed m) <|> (Lensed n) = Lensed $ \l v b -> m l v b <|> n l v b
+
+
+------------------------------------------------------------------------------
+instance MonadSnap m => MonadSnap (Lensed b v m) where
+    liftSnap = lift . liftSnap
+
+
+------------------------------------------------------------------------------
+getBase :: Monad m => Lensed b v m b
+getBase = Lensed $ \_ v b -> return (b, v, b)
+
+
+------------------------------------------------------------------------------
 withGlobal :: Monad m => Lens b v' -> Lensed b v' m a -> Lensed b v m a
 withGlobal l m = globally $ runLensed m l
 
@@ -121,3 +138,15 @@ runLensed :: Monad m => Lensed b v m a -> Lens b v -> StateT b m a
 runLensed (Lensed f) l = StateT $ \s -> do
     (a, v', s') <- f l (l ^$ s) s
     return (a, l ^= v' $ s')
+
+
+------------------------------------------------------------------------------
+runLensed2 :: Monad m
+           => Lensed t1 b m t
+           -> Lens t1 b
+           -> t1
+           -> m (t, t1)
+runLensed2 (Lensed f) l s = do
+    (a, v', s') <- f l (l ^$ s) s
+    return (a, l ^= v' $ s')
+

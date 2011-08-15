@@ -29,8 +29,9 @@ import           Data.Lens.Template
 import           Data.Text (Text)
 import qualified Data.Text as T
 
-import           Snap.Snaplet.Internal.Lens
 import           Snap.Core
+import           Snap.Snaplet.Internal.Lens
+import qualified Snap.Snaplet.Internal.Lensed as L
 
 
 data SnapletConfig = SnapletConfig
@@ -185,7 +186,7 @@ wrapTop l = wrap' (withTop' l)
 
 ------------------------------------------------------------------------------
 newtype Handler b v a =
-    Handler (LensT (Snaplet b) (Snaplet v) (Snaplet b) Snap a)
+    Handler (L.Lensed (Snaplet b) (Snaplet v) Snap a)
   deriving ( Monad
            , Functor
            , Applicative
@@ -196,20 +197,14 @@ newtype Handler b v a =
            , MonadSnap)
 
 
--- It's looking like we won't need these.
--- TODO If they're not being used, take them out before release.
-type family Base (m :: * -> *) :: *
-type family Env (m :: * -> *) :: *
-
-
 hConfig :: Handler b v SnapletConfig
-hConfig = Handler $ liftM _snapletConfig get
+hConfig = Handler $ liftM _snapletConfig L.getBase
 
 
 instance MonadSnaplet Handler where
     getLens = Handler ask
-    with' !l (Handler !m) = Handler $ withLens l m
-    withTop' !l (Handler m) = Handler $ downcast $ withLens l m
+    with' !l (Handler !m) = Handler $ L.with l m
+    withTop' !l (Handler m) = Handler $ L.withGlobal l m
     getSnapletAncestry = return . _scAncestry =<< hConfig
     getSnapletFilePath = return . _scFilePath =<< hConfig
     getSnapletName = return . _scId =<< hConfig

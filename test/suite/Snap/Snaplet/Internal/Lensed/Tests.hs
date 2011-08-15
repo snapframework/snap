@@ -19,23 +19,21 @@ import           Snap.Snaplet.Internal.Lensed
 
 ------------------------------------------------------------------------------
 data TestType = TestType {
-      int0_ :: Int
-    , sub_  :: TestSubType
+      _int0 :: Int
+    , _sub  :: TestSubType
 } deriving (Show)
 
 data TestSubType = TestSubType {
-      sub0_ :: Int
-    , sub1_ :: Int
-    , bot_  :: TestBotType
+      _sub0 :: Int
+    , _sub1 :: Int
+    , _bot  :: TestBotType
 } deriving (Show)
 
 data TestBotType = TestBotType {
-      bot0_ :: Int
+      _bot0 :: Int
 } deriving (Show)
 
-$( deriveAccessors ''TestType    )
-$( deriveAccessors ''TestSubType )
-$( deriveAccessors ''TestBotType )
+makeLenses [''TestType, ''TestSubType, ''TestBotType]
 
 
 ------------------------------------------------------------------------------
@@ -60,7 +58,7 @@ testfmap = testCase "lensed/fmap" $ do
     (y,s') <- runStateT (runLensed twiddle (bot . sub)) defaultState
 
     assertEqual "fmap2" 12 y
-    assertEqual "lens" 13 $ bot0_ $ bot_ $ sub_ s'
+    assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
     return ()
 
   where
@@ -81,7 +79,7 @@ testApplicative = testCase "lensed/applicative" $ do
     (y,s') <- runStateT (runLensed twiddle (bot . sub)) defaultState
 
     assertEqual "fmap2" (12::Int) y
-    assertEqual "lens" 13 $ bot0_ $ bot_ $ sub_ s'
+    assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
     return ()
 
   where
@@ -98,9 +96,9 @@ testMonadState :: Test
 testMonadState = testCase "lens/MonadState" $ do
     s <- execStateT (runLensed go (bot0 . bot . sub)) defaultState
 
-    assertEqual "bot0" 9 $ bot0_ $ bot_ $ sub_ s
-    assertEqual "sub0" 3 $ sub0_ $ sub_ s
-    assertEqual "sub1" 1000 $ sub1_ $ sub_ s
+    assertEqual "bot0" 9 $ _bot0 $ _bot $ _sub s
+    assertEqual "sub0" 3 $ _sub0 $ _sub s
+    assertEqual "sub1" 1000 $ _sub1 $ _sub s
 
   where
     go :: Lensed TestType Int IO ()
