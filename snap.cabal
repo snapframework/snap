@@ -51,6 +51,10 @@ Library
   exposed-modules:
     Snap.Snaplet,
     Snap.Snaplet.Heist,
+    Snap.Snaplet.Auth,
+    Snap.Snaplet.Auth.Types,
+    Snap.Snaplet.Auth.Handlers,
+    Snap.Snaplet.Auth.Backends.JsonFile,
     Snap.Snaplet.Session,
     Snap.Snaplet.Session.Backends.CookieSession,
     Snap.Snaplet.Internal.TemporaryLensCruft

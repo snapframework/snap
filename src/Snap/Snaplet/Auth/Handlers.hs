@@ -7,10 +7,6 @@
   Provides generic, somewhat customizable handlers that can be plugged 
   directly into Snap applications.
 
-  The core 'Snap.Auth' module is pretty much stand-alone and taking these as
-  starting point examples, you should be able to write your own custom
-  handlers.
-
 -}
 
 module Snap.Snaplet.Auth.Handlers 
@@ -35,7 +31,8 @@ import Snap.Snaplet.Auth.Types
 import Snap.Snaplet
 
 
-
+------------------------------------------------------------------------------
+-- | Register a new user by specifying login and password 'Param' fields
 registerUser
   :: ByteString -- Login field
   -> ByteString -- Password field

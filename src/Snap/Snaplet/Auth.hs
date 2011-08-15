@@ -3,15 +3,32 @@
 
 module Snap.Snaplet.Auth 
   ( 
+
+  -- * Higher Level Handler Functions
     createUser
   , loginByUsername
   , checkPasswordAndLogin
   , forceLogin
   , logout
   , isLoggedIn
+
+  -- * Lower Level Handler Functions
+  , markAuthSuccess
+  , markAuthFail
+
+  -- * Types
+  , AuthManager
+  , IAuthBackend
   , AuthSettings(..)
   , defAuthSettings
-  , AuthManager
+  , AuthUser(..)
+  , UserId(..)
+  , Password(..)
+  , AuthFailure(..)
+  , BackendError(..)
+
+  -- * Other Utilities
+  , authenticatePassword
   )
   where
 
@@ -83,7 +100,7 @@ rememberUser = cacheOrLookup f
 
 
 ------------------------------------------------------------------------------
--- Logout the active user
+-- | Logout the active user
 logout :: Handler b (AuthManager b) ()
 logout = do 
   s <- gets session
@@ -116,7 +133,9 @@ isLoggedIn = do
 -- You might need these if you are rolling your own handlers/authenticators
 
 ------------------------------------------------------------------------------
--- | Mutate an 'AuthUser', marking failed authentication now.
+-- | Mutate an 'AuthUser', marking failed authentication
+--
+-- This will save the user to the backend.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthFail u = do
   (AuthManager r _ _ _ _ _ _ _) <- get
@@ -129,7 +148,9 @@ markAuthFail u = do
 
 
 ------------------------------------------------------------------------------
--- | Mutate an 'AuthUser', marking successful authentication now.
+-- | Mutate an 'AuthUser', marking successful authentication
+--
+-- This will save the user to the backend.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
   (AuthManager r _ _ _ _ _ _ _) <- get
@@ -160,7 +181,7 @@ markAuthSuccess u = do
 --
 -- 3. Mark success/failure of the authentication trial on the user record
 checkPasswordAndLogin
-  :: AuthUser
+  :: AuthUser               -- ^ An existing user, somehow looked up from db
   -> Password               -- ^ A ClearText password
   -> Bool                   -- ^ Set remember cookie?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
@@ -182,8 +203,8 @@ checkPasswordAndLogin u pw remember =
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
 forceLogin 
-  :: AuthUser 
-  -> Bool                               -- ^ Set remember cookie?
+  :: AuthUser               -- ^ An existing user, somehow looked up from db
+  -> Bool                   -- ^ Set remember cookie?
   -> Handler b (AuthManager b) Bool
 forceLogin u rc = do
   AuthManager _ s _ _ _ _ _ _ <- get
@@ -217,7 +238,10 @@ getSessionUserId = do
 
 
 ------------------------------------------------------------------------------
--- | Check password for a given user.
+-- | Check password for a given user. 
+--
+-- Returns 'Nothing" if check is successful and an 'IncorrectPassword' error
+-- otherwise
 authenticatePassword 
   :: AuthUser        -- ^ Looked up from the back-end
   -> Password        -- ^ Check against this password

@@ -45,6 +45,7 @@ checkPassword (ClearText pw) (Encrypted pw') = verifyPassword pw pw'
 checkPassword _ _ = 
   error "checkPassword failed. Make sure you pass ClearText passwords"
 
+
 ------------------------------------------------------------------------------
 -- | Authentication failures indicate what went wrong during authentication.
 -- They may provide useful information to the developer, although it is
@@ -120,6 +121,8 @@ defAuthUser = AuthUser {
 }
 
 
+------------------------------------------------------------------------------
+-- | Authetication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen :: Int
   , asRememberCookieName :: ByteString
@@ -136,6 +139,9 @@ defAuthSettings = AuthSettings {
   , asSiteKey = "site_key.txt"
 }
 
+
+------------------------------------------------------------------------------
+-- | Abstract data type holding all necessary information for auth operation
 data AuthManager b = forall r. IAuthBackend r => AuthManager { 
     backend :: r
   -- ^ Storage back-end 
@@ -171,7 +177,10 @@ data BackendError = DuplicateLogin | BackendError String
 instance Exception BackendError
 
 
--- | Backend operations may throw 'BackendError's
+------------------------------------------------------------------------------
+-- | All storage backends need to implement this typeclass
+--
+-- Backend operations may throw 'BackendError's
 class IAuthBackend r where
   
   -- | Needs to create or update the given 'AuthUser' record

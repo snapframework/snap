@@ -2,7 +2,10 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Snap.Snaplet.Auth.Backends.JsonFile where
+module Snap.Snaplet.Auth.Backends.JsonFile 
+  ( initJsonFileAuthManager
+  , mkJsonAuthMgr
+  ) where
 
 
 import           Control.Applicative
@@ -57,7 +60,10 @@ initJsonFileAuthManager s l db =
     }
 
 
--- Load an existing datafile into memory cache
+------------------------------------------------------------------------------
+-- | Load/create a datafile into memory cache and return the manager.
+--
+-- This data type can be used by itself for batch/non-handler processing.
 mkJsonAuthMgr :: FilePath -> IO JsonFileAuthManager
 mkJsonAuthMgr fp = do
   db <- loadUserCache fp
