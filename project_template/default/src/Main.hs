@@ -41,6 +41,7 @@ change.
 
 module Main where
 
+import Snap.Http.Server.Config
 import Snap.Snaplet
 
 import Site
@@ -73,5 +74,6 @@ main = quickHttpServe applicationInitializer site
 #endif
 -}
 
+main :: IO ()
 main = serveSnaplet defaultConfig app
 
