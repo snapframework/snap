@@ -27,13 +27,11 @@ extra-source-files:
   project_template/default/src/Application.hs,
   project_template/default/src/Main.hs,
   project_template/default/src/Site.hs,
-  project_template/default/src/Snap/Extension/Timer/Impl.hs,
-  project_template/default/src/Snap/Extension/Timer.hs,
   extra/hscolour.css,
   extra/haddock.css,
   extra/logo.gif,
   test/snap-testsuite.cabal,
-  test/runTests.sh,
+  test/runTestsAndCoverage.sh,
   test/suite/Snap/TestCommon.hs,
   test/suite/TestSuite.hs
 
