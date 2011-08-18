@@ -60,7 +60,7 @@ Library
     Snap.Loader.Devel.TreeWatcher
     Snap.Snaplet.HeistNoClass,
     Snap.Snaplet.Internal.Initializer,
-    Snap.Snaplet.Internal.Lens,
+    Snap.Snaplet.Internal.LensT,
     Snap.Snaplet.Internal.Lensed,
     Snap.Snaplet.Internal.RST,
     Snap.Snaplet.Internal.Types

@@ -30,7 +30,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 
 import           Snap.Core
-import           Snap.Snaplet.Internal.Lens
+import           Snap.Snaplet.Internal.LensT
 import qualified Snap.Snaplet.Internal.Lensed as L
 
 
@@ -204,7 +204,7 @@ hConfig = Handler $ liftM _snapletConfig L.getBase
 instance MonadSnaplet Handler where
     getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
-    withTop' !l (Handler m) = Handler $ L.withGlobal l m
+    withTop' !l (Handler m) = Handler $ L.withTop l m
     getSnapletAncestry = return . _scAncestry =<< hConfig
     getSnapletFilePath = return . _scFilePath =<< hConfig
     getSnapletName = return . _scId =<< hConfig

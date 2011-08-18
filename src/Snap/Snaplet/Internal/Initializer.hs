@@ -52,7 +52,7 @@ import           System.Directory.Tree
 import           System.FilePath.Posix
 import           System.IO
 
-import           Snap.Snaplet.Internal.Lens
+import           Snap.Snaplet.Internal.LensT
 import qualified Snap.Snaplet.Internal.Lensed as L
 import           Snap.Snaplet.Internal.Types
 
@@ -321,7 +321,7 @@ chrootHandler :: (Lens (Snaplet v) (Snaplet b'))
               -> Handler b' b' a -> Handler b v a
 chrootHandler l (Handler h) = Handler $ do
     s <- get
-    (a, s') <- liftSnap $ L.runLensed2 h id (getL l s)
+    (a, s') <- liftSnap $ L.runLensed h id (getL l s)
     modify $ setL l s'
     return a
 
@@ -373,7 +373,7 @@ mungeFilter f = do
     myLens <- Initializer ask
     return $ \m -> with' myLens $ f' m
   where
-    f' (Handler m)       = f $ Handler $ L.withGlobal id m
+    f' (Handler m)       = f $ Handler $ L.withTop id m
 
 
 ------------------------------------------------------------------------------
@@ -424,7 +424,7 @@ runBase :: Handler b b a
         -> Snap a
 runBase (Handler m) mvar = do
     !b <- liftIO (readMVar mvar)
-    (!a, _) <- L.runLensed2 m id b
+    (!a, _) <- L.runLensed m id b
     return $! a
 
 

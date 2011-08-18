@@ -52,10 +52,10 @@ tests = testGroup "Snap.Snaplet.Internal.Lensed"
 ------------------------------------------------------------------------------
 testfmap :: Test
 testfmap = testCase "lensed/fmap" $ do
-    x <- evalStateT (runLensed (fmap (*2) three) (bot . sub)) defaultState
+    x <- evalStateT (lensedAsState (fmap (*2) three) (bot . sub)) defaultState
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (runLensed twiddle (bot . sub)) defaultState
+    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
 
     assertEqual "fmap2" 12 y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
@@ -73,10 +73,10 @@ testfmap = testCase "lensed/fmap" $ do
 ------------------------------------------------------------------------------
 testApplicative :: Test
 testApplicative = testCase "lensed/applicative" $ do
-    x <- evalStateT (runLensed (pure (*2) <*> three) (bot . sub)) defaultState
+    x <- evalStateT (lensedAsState (pure (*2) <*> three) (bot . sub)) defaultState
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (runLensed twiddle (bot . sub)) defaultState
+    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
 
     assertEqual "fmap2" (12::Int) y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
@@ -94,7 +94,7 @@ testApplicative = testCase "lensed/applicative" $ do
 ------------------------------------------------------------------------------
 testMonadState :: Test
 testMonadState = testCase "lens/MonadState" $ do
-    s <- execStateT (runLensed go (bot0 . bot . sub)) defaultState
+    s <- execStateT (lensedAsState go (bot0 . bot . sub)) defaultState
 
     assertEqual "bot0" 9 $ _bot0 $ _bot $ _sub s
     assertEqual "sub0" 3 $ _sub0 $ _sub s
@@ -105,7 +105,7 @@ testMonadState = testCase "lens/MonadState" $ do
     go = do
         modify (*2)
         modify (+3)
-        withGlobal sub go'
+        withTop sub go'
 
     go' :: Lensed TestType TestSubType IO ()
     go' = do

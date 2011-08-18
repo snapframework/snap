@@ -6,7 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeOperators              #-}
 
-module Snap.Snaplet.Internal.Lens where
+module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category

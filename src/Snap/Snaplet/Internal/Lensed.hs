@@ -55,7 +55,7 @@ instance Monad m => MonadReader (Lens b v) (Lensed b v m) where
     ask = Lensed $ \l v s -> return (l, v, s)
     local f g = do
         l' <- asks f
-        withGlobal l' g
+        withTop l' g
 
 
 ------------------------------------------------------------------------------
@@ -105,20 +105,20 @@ getBase = Lensed $ \_ v b -> return (b, v, b)
 
 
 ------------------------------------------------------------------------------
-withGlobal :: Monad m => Lens b v' -> Lensed b v' m a -> Lensed b v m a
-withGlobal l m = globally $ runLensed m l
+withTop :: Monad m => Lens b v' -> Lensed b v' m a -> Lensed b v m a
+withTop l m = globally $ lensedAsState m l
 
 
 ------------------------------------------------------------------------------
 with :: Monad m => Lens v v' -> Lensed b v' m a -> Lensed b v m a
 with l g = do
     l' <- asks (l .)
-    withGlobal l' g
+    withTop l' g
 
 
 ------------------------------------------------------------------------------
 embed :: Monad m => Lens v v' -> Lensed v v' m a -> Lensed b v m a
-embed l m = locally $ runLensed m l
+embed l m = locally $ lensedAsState m l
 
 
 ------------------------------------------------------------------------------
@@ -134,19 +134,19 @@ locally (StateT f) = Lensed $ \_ v s ->
 
 
 ------------------------------------------------------------------------------
-runLensed :: Monad m => Lensed b v m a -> Lens b v -> StateT b m a
-runLensed (Lensed f) l = StateT $ \s -> do
+lensedAsState :: Monad m => Lensed b v m a -> Lens b v -> StateT b m a
+lensedAsState (Lensed f) l = StateT $ \s -> do
     (a, v', s') <- f l (l ^$ s) s
     return (a, l ^= v' $ s')
 
 
 ------------------------------------------------------------------------------
-runLensed2 :: Monad m
-           => Lensed t1 b m t
-           -> Lens t1 b
-           -> t1
-           -> m (t, t1)
-runLensed2 (Lensed f) l s = do
+runLensed :: Monad m
+          => Lensed t1 b m t
+          -> Lens t1 b
+          -> t1
+          -> m (t, t1)
+runLensed (Lensed f) l s = do
     (a, v', s') <- f l (l ^$ s) s
     return (a, l ^= v' $ s')
 
