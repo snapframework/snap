@@ -55,8 +55,8 @@ module Snap.Snaplet
   -- * MonadSnaplet
   -- $monadSnaplet
   , MonadSnaplet(..)
-  , wrap
-  , wrapTop
+--  , wrap
+--  , wrapTop
 
   -- * Handler
   -- $handler
@@ -138,11 +138,11 @@ import           Snap.Snaplet.Internal.Types
 -- 
 -- which allow you to get and set a value of type @b@ within the context of type
 -- @a@. The @data-lens@ package comes with a Template Haskell function called
--- 'mkLabels', which auto-magically defines a lens for every record field having a
+-- 'makeLenses', which auto-magically defines a lens for every record field having a
 -- name beginning with an underscore. In the @App@ example above, adding the
 -- declaration:
 -- 
--- > mkLabels [''App]
+-- > makeLenses [''App]
 -- 
 -- would define lenses:
 -- 
@@ -160,7 +160,7 @@ import           Snap.Snaplet.Internal.Types
 -- >                                -- use Control.Category.(.)
 -- >
 -- > data Foo = Foo { _quux :: Quux }
--- > mkLabels [''Foo]
+-- > makeLenses [''Foo]
 -- >
 -- > -- snapletValue is defined in the framework:
 -- > snapletValue :: Lens (Snaplet a) a
@@ -185,11 +185,11 @@ import           Snap.Snaplet.Internal.Types
 -- children without knowing anything about the rest of the tree.
 -- 
 -- Several monads use this infrastructure. These monads need at least three type
--- parameters. Two for the lens type, and the standard 'a' denoting the monad
--- return value. You will usually see this written in type signatures as "m b v a"
--- or some variation. The 'm' is the type variable of the MonadSnaplet type class.
--- 'b' is the base state, and 'v' is the state of the current "view" snaplet (or
--- simply, current state).
+-- parameters. Two for the lens type, and the standard \'a\' denoting the monad
+-- return value. You will usually see this written in type signatures as
+-- \"m b v a\" or some variation. The \'m\' is the type variable of the
+-- MonadSnaplet type class. \'b\' is the base state, and \'v\' is the state of the
+-- current \"view\" snaplet (or simply, current state).
 -- 
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
@@ -272,7 +272,7 @@ Snaplet) we want to use as well as any other state we might want.}
 >     , _companyName :: String
 >     }
 >
-> mkLabels [''App]
+> makeLenses [''App]
 
 The next thing we need to do is define an initializer.
 
