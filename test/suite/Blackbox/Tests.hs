@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Snap.Snaplet.Tests (tests) where
+module Blackbox.Tests (tests) where
 
 import           Control.Monad.Trans
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -41,5 +41,20 @@ tests = testGroup "non-cabal-tests"
     , requestNoError "bazbadpage" "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
     , requestTest "foo/fooSnapletName" "foosnaplet"
     , requestTest "foo/fooFilePath" "snaplets/foosnaplet"
+
+    -- This set of tests highlights the differences in the behavior of the
+    -- get... functions from MonadSnaplet. 
+    , requestTest "foo/handlerConfig" "([\"app\"],\"snaplets/foosnaplet\",Just \"foosnaplet\",\"A demonstration snaplet called foo.\",\"foo\")"
+    , requestTest "bar/handlerConfig" "([\"app\"],\"snaplets/baz\",Just \"baz\",\"An example snaplet called bar.\",\"\")"
+
+    -- bazpage5 uses barsplice bound by renderWithSplices at request time
+    , requestTest "bazpage5" "baz template page ([\"app\"],\"snaplets/baz\",Just \"baz\",\"An example snaplet called bar.\",\"\")\n"
+
+    -- bazconfig uses two splices, appconfig and fooconfig.  appconfig is bound
+    -- with the non type class version of addSplices in the main app
+    -- initializer.  fooconfig is bound by addSplices in fooInit.
+    , requestTest "bazconfig" "baz config page ([],\"\",Just \"app\",\"Test application\",\"\") ([\"app\"],\"snaplets/foosnaplet\",Just \"foosnaplet\",\"A demonstration snaplet called foo.\",\"foo\")\n"
+
+    , requestTest "sessionDemo" "[(\"foo\",\"bar\")]\n"
     ]
 

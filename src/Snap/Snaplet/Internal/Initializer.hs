@@ -52,7 +52,7 @@ import           System.Directory.Tree
 import           System.FilePath.Posix
 import           System.IO
 
-import           Snap.Snaplet.Internal.LensT
+import qualified Snap.Snaplet.Internal.LensT as LT
 import qualified Snap.Snaplet.Internal.Lensed as L
 import           Snap.Snaplet.Internal.Types
 
@@ -60,28 +60,22 @@ import           Snap.Snaplet.Internal.Types
 ------------------------------------------------------------------------------
 -- | 'get' for InitializerState.
 iGet :: Initializer b v (InitializerState b)
-iGet = Initializer $ getBase
-
-
-------------------------------------------------------------------------------
--- | 'get' for InitializerState.
-iPut :: InitializerState b -> Initializer b v ()
-iPut s = Initializer $ putBase s
+iGet = Initializer $ LT.getBase
 
 
 ------------------------------------------------------------------------------
 -- | 'modify' for InitializerState.
 iModify :: (InitializerState b -> InitializerState b) -> Initializer b v ()
 iModify f = Initializer $ do
-    b <- getBase
-    putBase $ f b
+    b <- LT.getBase
+    LT.putBase $ f b
 
 
 ------------------------------------------------------------------------------
 -- | 'gets' for InitializerState.
 iGets :: (InitializerState b -> a) -> Initializer b v a
 iGets f = Initializer $ do
-    b <- getBase
+    b <- LT.getBase
     return $ f b
 
 
@@ -303,7 +297,7 @@ chroot :: ByteString
        -> Initializer b v a
 chroot rte l (Initializer m) = do
     curState <- iGet
-    ((a,s), (Hook hook)) <- liftIO $ runWriterT $ runLensT m id $
+    ((a,s), (Hook hook)) <- liftIO $ runWriterT $ LT.runLensT m id $
         curState {
           _handlers = [],
           _hFilter = id
@@ -437,7 +431,7 @@ runInitializer mvar b@(Initializer i) = do
     userConfig <- load [Optional "snaplet.cfg"]
     let cfg = SnapletConfig [] "" Nothing "" userConfig [] (mkReloader mvar b)
     logRef <- newIORef ""
-    ((res, s), (Hook hook)) <- runWriterT $ runLensT i id $
+    ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
         InitializerState True (return ()) [] id cfg logRef
     res' <- hook res
     return (res', s)

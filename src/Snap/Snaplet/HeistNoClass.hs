@@ -93,7 +93,7 @@ clearHeistCache = clearCacheTagState . _heistCTS
 
 
 ------------------------------------------------------------------------------
--- | 
+-- | Monad for working with Heist's API from within a snaplet.
 newtype SnapletHeist b v a = SnapletHeist
     (ReaderT (Lens (Snaplet b) (Snaplet v)) (HeistT (Handler b b)) a)
   deriving ( Monad
@@ -106,6 +106,8 @@ newtype SnapletHeist b v a = SnapletHeist
            )
 
 
+------------------------------------------------------------------------------
+-- | Type alias for convenience.
 type SnapletSplice b v = SnapletHeist b v Template
 
 
@@ -124,7 +126,8 @@ withSS f (SnapletHeist m) = SnapletHeist $ withReaderT f m
 
 
 ------------------------------------------------------------------------------
--- | Lifts a HeistT action into SnapletHeist.
+-- | Lifts a HeistT action into SnapletHeist.  Use this with all the functions
+-- from the Heist API.
 liftHeist :: HeistT (Handler b b) a -> SnapletHeist b v a
 liftHeist = SnapletHeist . lift
 
@@ -154,16 +157,25 @@ instance MonadState v (SnapletHeist b v) where
         liftHandler $ lhPut $ setL l (b { _value = s}) b
 
 
+sConfig = do
+    l <- ask
+    b <- liftHandler lhGet
+    return $ _snapletConfig $ getL l b
+
+
+------------------------------------------------------------------------------
+-- | MonadSnaplet instance gives us access to all Snap's request processing
+-- goodness.
 instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
     withTop' l = withSS (const id) . with' l
-    getSnapletAncestry = liftHandler getSnapletAncestry
-    getSnapletFilePath = liftHandler getSnapletFilePath
-    getSnapletName = liftHandler getSnapletName
-    getSnapletDescription = liftHandler getSnapletDescription
-    getSnapletConfig = liftHandler getSnapletConfig
-    getSnapletRootURL = liftHandler getSnapletRootURL
+    getSnapletAncestry = liftM _scAncestry sConfig
+    getSnapletFilePath = liftM _scFilePath sConfig
+    getSnapletName = liftM _scId sConfig
+    getSnapletDescription = liftM _scDescription sConfig
+    getSnapletConfig = liftM _scUserConfig sConfig
+    getSnapletRootURL = liftM getRootURL sConfig
 
 
 ------------------------------------------------------------------------------

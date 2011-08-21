@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Snap.Snaplet.FooSnaplet where
+module Blackbox.FooSnaplet where
 
 import Prelude hiding (lookup)
 import Control.Monad.State
@@ -12,6 +12,8 @@ import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
 import Text.Templating.Heist
+
+import Blackbox.Common
 
 data FooSnaplet = FooSnaplet { fooField :: String }
 
@@ -24,10 +26,12 @@ fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo." Nothing
     rootUrl <- getSnapletRootURL
     fp <- getSnapletFilePath
     name <- getSnapletName
+    addSplices [("fooconfig", shConfigSplice)]
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)
               ,("fooSnapletName", writeText $ fromMaybe "empty snaplet name" name)
               ,("fooFilePath", writeText $ T.pack fp)
+              ,("handlerConfig", handlerConfig)
               ]
     return $ FooSnaplet "foo snaplet data string"
 

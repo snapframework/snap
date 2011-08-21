@@ -4,15 +4,13 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Snap.Snaplet.App where
+module Blackbox.App where
 
 import Prelude hiding (lookup)
 
 import Control.Applicative
 import Control.Monad.Trans
 import Data.Maybe
-import Data.Lens.Lazy
-import Data.Lens.Template
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Configurator
@@ -21,24 +19,16 @@ import Snap.Util.FileServe
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
+import qualified Snap.Snaplet.HeistNoClass as HNC
 import Text.Templating.Heist
 
-import Snap.Snaplet.FooSnaplet
-import Snap.Snaplet.BarSnaplet
+import Blackbox.Common
+import Blackbox.BarSnaplet
+import Blackbox.FooSnaplet
+import Blackbox.Types
 import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 
-
-data App = App
-    { _heist :: Snaplet (Heist App)
-    , _foo :: Snaplet FooSnaplet
-    , _bar :: Snaplet BarSnaplet
-    , _session :: Snaplet SessionManager
-    }
-
-makeLenses [''App]
-
-instance HasHeist App where heistLens = subSnaplet heist
 
 routeWithSplice :: Handler App App ()
 routeWithSplice = do
@@ -62,7 +52,7 @@ sessionDemo = withSession session $ do
       Just _ -> return ()
   list <- with session $ (T.pack . show) `fmap` sessionToList
   csrf <- with session $ (T.pack . show) `fmap` csrfToken
-  renderWithSplices "session"
+  HNC.renderWithSplices heist "session"
     [ ("session", liftHeist $ textSplice list)
     , ("csrf", liftHeist $ textSplice csrf) ]
 
@@ -81,11 +71,13 @@ app :: SnapletInit App App
 app = makeSnaplet "app" "Test application" Nothing $ do
     hs <- nestSnaplet "heist" heist $ heistInit "templates"
     fs <- nestSnaplet "foo" foo fooInit
-    bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit
+    bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
     sm <- nestSnaplet "session" session $ 
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     addSplices
         [("appsplice", liftHeist $ textSplice "contents of the app splice")]
+    HNC.addSplices heist
+        [("appconfig", shConfigSplice)]
     addRoutes [ ("/hello", writeText "hello world")
               , ("/routeWithSplice", routeWithSplice)
               , ("/routeWithConfig", routeWithConfig)
@@ -96,5 +88,6 @@ app = makeSnaplet "app" "Test application" Nothing $ do
               ]
     wrapHandlers (<|> heistServe)
     return $ App hs fs bs sm
+
 
 

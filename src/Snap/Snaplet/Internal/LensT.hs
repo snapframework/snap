@@ -80,15 +80,6 @@ runLensT (LensT m) = runRST m
 
 
 ------------------------------------------------------------------------------
-withLens :: Monad m =>
-            (Lens v v')
-         -> LensT b v' s m a
-         -> LensT b v  s m a
-withLens !subLens = withLensT (subLens .)
-{-# INLINE withLens #-}
-
-
-------------------------------------------------------------------------------
 withLensT :: Monad m =>
              ((Lens b' v') -> (Lens b v))
           -> LensT b v s m a
@@ -98,14 +89,20 @@ withLensT f (LensT m) = LensT $ withRST f m
 
 
 ------------------------------------------------------------------------------
-modLens :: (Lens b v) -> LensT b v s m a -> LensT b' v' s m a
-modLens l (LensT m) = LensT $ modR l m
-{-# INLINE modLens #-}
+withTop :: Monad m
+        => (Lens b v')
+        -> LensT b v' s m a
+        -> LensT b v  s m a
+withTop !subLens = withLensT (const subLens)
+{-# INLINE withTop #-}
 
 
 ------------------------------------------------------------------------------
-downcast :: (Monad m) =>
-            LensT b b s m a
-         -> LensT b v s m a
-downcast (LensT m) = LensT $ RST $ \_ -> runRST m id
+with :: Monad m
+     => (Lens v v')
+     -> LensT b v' s m a
+     -> LensT b v  s m a
+with !subLens = withLensT (subLens .)
+{-# INLINE with #-}
+
 

@@ -30,7 +30,7 @@ import           Data.Text (Text)
 import qualified Data.Text as T
 
 import           Snap.Core
-import           Snap.Snaplet.Internal.LensT
+import qualified Snap.Snaplet.Internal.LensT as LT
 import qualified Snap.Snaplet.Internal.Lensed as L
 
 
@@ -49,6 +49,12 @@ data SnapletConfig = SnapletConfig
 -- | Joins a reversed list of directories into a path.
 buildPath :: [ByteString] -> ByteString
 buildPath ps = B.intercalate "/" $ reverse ps
+
+
+------------------------------------------------------------------------------
+-- | Joins a reversed list of directories into a path.
+getRootURL :: SnapletConfig -> ByteString
+getRootURL sc = buildPath $ _scRouteContext sc
 
 
 ------------------------------------------------------------------------------
@@ -199,7 +205,7 @@ newtype Handler b v a =
 
 
 hConfig :: Handler b v SnapletConfig
-hConfig = Handler $ liftM _snapletConfig L.getBase
+hConfig = Handler $ gets _snapletConfig
 
 
 instance MonadSnaplet Handler where
@@ -211,9 +217,7 @@ instance MonadSnaplet Handler where
     getSnapletName = return . _scId =<< hConfig
     getSnapletDescription = return . _scDescription =<< hConfig
     getSnapletConfig = return . _scUserConfig =<< hConfig
-    getSnapletRootURL = do
-        ctx <- liftM _scRouteContext hConfig
-        return $ buildPath ctx
+    getSnapletRootURL = liftM getRootURL hConfig
 
 
 ------------------------------------------------------------------------------
@@ -270,33 +274,31 @@ instance Monoid (Hook a) where
 ------------------------------------------------------------------------------
 -- | Monad used for initializing snaplets.
 newtype Initializer b v a = 
-    Initializer (LensT (Snaplet b)
-                       (Snaplet v)
-                       (InitializerState b)
-                       (WriterT (Hook b) IO)
-                       a)
+    Initializer (LT.LensT (Snaplet b)
+                          (Snaplet v)
+                          (InitializerState b)
+                          (WriterT (Hook b) IO)
+                          a)
   deriving (Applicative, Functor, Monad, MonadIO)
 
 makeLenses [''InitializerState]
 
 
 iConfig :: Initializer b v SnapletConfig
-iConfig = Initializer $ liftM _curConfig getBase
+iConfig = Initializer $ liftM _curConfig LT.getBase
 
 
 instance MonadSnaplet Initializer where
     getLens = Initializer ask
-    with' !l (Initializer !m) = Initializer $ withLens l m
-    withTop' !l (Initializer m) = Initializer $ downcast $ withLens l m
+    with' !l (Initializer !m) = Initializer $ LT.with l m
+    withTop' !l (Initializer m) = Initializer $ LT.withTop l m
 
     getSnapletAncestry = return . _scAncestry =<< iConfig
     getSnapletFilePath = return . _scFilePath =<< iConfig
     getSnapletName = return . _scId =<< iConfig
     getSnapletDescription = return . _scDescription =<< iConfig
     getSnapletConfig = return . _scUserConfig =<< iConfig
-    getSnapletRootURL = do
-        ctx <- liftM _scRouteContext iConfig
-        return $ buildPath ctx
+    getSnapletRootURL = liftM getRootURL iConfig
 
 
 ------------------------------------------------------------------------------
