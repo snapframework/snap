@@ -50,6 +50,11 @@ showConfig c = do
 
 assertGet name getter val = do
     v <- getter
+--  When I add these three lines I get a strange error from GHC:
+--      FATAL:Symbol _dmAh_info_dsp already defined.
+--    when (v /= val) $ do
+--        liftIO $ putStrLn $ "{--- "++(show v)++" ---}"
+--        liftIO $ putStrLn $ "{--- "++(show val)++" ---}"
     liftIO $ assertBool name $ v == val
 
 configAssertions pre (a,f,n,d,r) = do

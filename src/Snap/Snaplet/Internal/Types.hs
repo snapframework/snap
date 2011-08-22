@@ -72,10 +72,6 @@ data Snaplet s = Snaplet
     }
 
 
-instance Functor Snaplet where
-    fmap f (Snaplet c v) = (Snaplet c (f v))
-
-
 makeLenses [''SnapletConfig, ''Snaplet]
 
 

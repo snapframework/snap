@@ -21,6 +21,9 @@ import qualified Snap.Snaplet.Internal.Tests
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
+    Blackbox.Tests.remove "non-cabal-appdir/templates/bad.tpl"
+    Blackbox.Tests.remove "non-cabal-appdir/templates/good.tpl"
+
     tid <- startServer
     defaultMain tests
     throwTo tid UserInterrupt

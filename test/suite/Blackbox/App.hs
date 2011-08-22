@@ -10,6 +10,7 @@ import Prelude hiding (lookup)
 
 import Control.Applicative
 import Control.Monad.Trans
+import Data.Lens.Lazy
 import Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -67,6 +68,9 @@ sessionTest = withSession session $ do
     Nothing -> maybe "" id `fmap` with session (getFromSession "test")
   writeText val
 
+fooMod :: FooSnaplet -> FooSnaplet
+fooMod f = f { fooField = fooField f ++ "z" }
+
 app :: SnapletInit App App
 app = makeSnaplet "app" "Test application" Nothing $ do
     hs <- nestSnaplet "heist" heist $ heistInit "templates"
@@ -87,7 +91,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
               , ("/admin/reload", reloadSite)
               ]
     wrapHandlers (<|> heistServe)
-    return $ App hs fs bs sm
+    return $ App hs (modL snapletValue fooMod fs) bs sm
 
 
 
