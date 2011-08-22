@@ -3,6 +3,7 @@
 module Blackbox.Tests
   ( tests
   , remove
+  , removeDir
   ) where
 
 import           Control.Monad
@@ -76,6 +77,13 @@ remove f = do
     exists <- doesFileExist f
     when exists $ removeFile f
 
+
+removeDir :: FilePath -> IO ()
+removeDir d = do
+    exists <- doesDirectoryExist d
+    when exists $ removeDirectoryRecursive "non-cabal-appdir/snaplets/foosnaplet"
+
+
 reloadTest :: Test
 reloadTest = testCase "reload test" $ do
     goodExists <- doesFileExist "templates/good.tpl"
@@ -91,7 +99,4 @@ reloadTest = testCase "reload test" $ do
     copyFile "good.tpl" "templates/good.tpl"
     requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\nInitializing foosnaplet @ /foo\nAdding templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\nAdding templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nSite successfully reloaded.\n"
     requestTest' "good" "Good template\n"
-
-    remove "templates/bad.tpl"
-    remove "templates/good.tpl"
 

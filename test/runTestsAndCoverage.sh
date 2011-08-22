@@ -47,6 +47,9 @@ for m in $EXCLUDES; do
 done
 
 mv non-cabal-appdir/testsuite.tix .
+rm -f non-cabal-appdir/templates/bad.tpl
+rm -f non-cabal-appdir/templates/good.tpl
+rm -fr non-cabal-appdir/snaplets/foosnaplet
 
 hpc markup $EXCL --destdir=$DIR testsuite >/dev/null 2>&1
 

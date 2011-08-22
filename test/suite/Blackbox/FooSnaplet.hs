@@ -18,7 +18,8 @@ import Blackbox.Common
 data FooSnaplet = FooSnaplet { fooField :: String }
 
 fooInit :: HasHeist b => SnapletInit b FooSnaplet
-fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo." Nothing $ do
+fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
+    (Just $ return "../foosnaplet") $ do
     config <- getSnapletConfig
     addTemplates "foo"
     addSplices

@@ -11,6 +11,7 @@
 module Snap.Snaplet.Internal.Initializer
   ( addPostInitHook
   , addPostInitHookBase
+  , toSnapletHook
   , bracketInit
   , modifyCfg
   , nestSnaplet
@@ -102,20 +103,13 @@ addPostInitHook = addPostInitHook' . toSnapletHook
 addPostInitHook' :: (Snaplet v -> IO (Snaplet v)) -> Initializer b v ()
 addPostInitHook' h = do
     h' <- upHook h
-    addPostInitHookBase' h'
+    addPostInitHookBase h'
 
 
 ------------------------------------------------------------------------------
--- | Adds an IO action that modifies the application state to be run at the
--- end of initialization.
-addPostInitHookBase :: (b -> IO b) -> Initializer b v ()
-addPostInitHookBase = Initializer . lift . tell . Hook . toSnapletHook
-
-
-------------------------------------------------------------------------------
-addPostInitHookBase' :: (Snaplet b -> IO (Snaplet b))
-                     -> Initializer b v ()
-addPostInitHookBase' = Initializer . lift . tell . Hook
+addPostInitHookBase :: (Snaplet b -> IO (Snaplet b))
+                    -> Initializer b v ()
+addPostInitHookBase = Initializer . lift . tell . Hook
 
 
 ------------------------------------------------------------------------------
@@ -305,7 +299,7 @@ chroot rte l (Initializer m) = do
     let handler = chrootHandler l $ _hFilter s $ route $ _handlers s
     iModify $ modL handlers (++[(rte,handler)])
             . setL cleanup (_cleanup s)
-    addPostInitHookBase' $ upHook' l hook
+    addPostInitHookBase $ upHook' l hook
     return a
 
 
