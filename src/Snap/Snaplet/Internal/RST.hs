@@ -43,10 +43,6 @@ withRST f m = RST $ \r' s -> runRST m (f r') s
 {-# INLINE withRST #-}
 
 
-modR :: r1 -> RST r1 s m a -> RST r s m a
-modR r m = RST $ \_ s -> runRST m r s
-
-
 instance (Monad m) => MonadReader r (RST r s m) where
     ask = RST $ \r s -> return (r,s)
     local f m = RST $ \r s -> runRST m (f r) s
@@ -104,10 +100,6 @@ instance (Monad m) => Monad (RST r s m) where
 instance (MonadPlus m) => MonadPlus (RST r s m) where
     mzero       = RST $ \_ _ -> mzero
     m `mplus` n = RST $ \r s -> runRST m r s `mplus` runRST n r s
-
-
-instance (MonadFix m) => MonadFix (RST r s m) where
-    mfix f = RST $ \r s -> mfix $ \ ~(a, _) -> runRST (f a) r s
 
 
 instance MonadTrans (RST r s) where
