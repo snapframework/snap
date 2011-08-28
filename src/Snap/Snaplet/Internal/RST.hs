@@ -12,7 +12,6 @@ import           Control.Applicative
 import           Control.Category
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
-import           Control.Monad.Reader.Class
 import           Control.Monad.State.Class
 import           Prelude hiding ((.), id, catch)
 import           Snap.Core

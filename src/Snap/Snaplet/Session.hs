@@ -56,7 +56,7 @@ setInSession :: Text -> Text -> Handler b SessionManager ()
 setInSession k v = do
   SessionManager r <- loadSession
   let r' = SM.insert k v r
-  put $ SessionManager r'
+  putSnapletState $ SessionManager r'
 
 
 -- | Get a key from the current session
@@ -71,14 +71,14 @@ deleteFromSession :: Text -> Handler b SessionManager ()
 deleteFromSession k = do
   SessionManager r <- loadSession
   let r' = SM.delete k r
-  put $ SessionManager r'
+  putSnapletState $ SessionManager r'
 
 
 -- | Returns a CSRF Token unique to the current session
 csrfToken :: Handler b SessionManager Text
 csrfToken = do
   mgr@(SessionManager r) <- loadSession
-  put mgr
+  putSnapletState mgr
   return $ SM.csrf r
 
 
@@ -94,7 +94,7 @@ resetSession :: Handler b SessionManager ()
 resetSession = do
   SessionManager r <- loadSession
   r' <- liftSnap $ SM.reset r
-  put $ SessionManager r'
+  putSnapletState $ SessionManager r'
 
 
 -- | Touch the session so the timeout gets refreshed
@@ -102,13 +102,13 @@ touchSession :: Handler b SessionManager ()
 touchSession = do
   SessionManager r <- loadSession
   let r' = SM.touch r
-  put $ SessionManager r'
+  putSnapletState $ SessionManager r'
 
 
 -- | Load the session into the manager
 loadSession :: Handler b SessionManager SessionManager
 loadSession = do
-  SessionManager r <- get
+  SessionManager r <- getSnapletState
   r' <- liftSnap $ load r 
   return $ SessionManager r'
 

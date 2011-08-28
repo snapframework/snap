@@ -9,6 +9,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeOperators              #-}
+{-# LANGUAGE FlexibleContexts           #-}
 
 module Snap.Snaplet.Internal.Types where
 
@@ -68,7 +69,7 @@ getRootURL sc = buildPath $ _scRouteContext sc
 --   the snaplet's root URL, and so on.
 data Snaplet s = Snaplet
     { _snapletConfig :: SnapletConfig
-    , _value         :: s
+    , _snapletValue  :: s
     }
 
 
@@ -76,16 +77,10 @@ makeLenses [''SnapletConfig, ''Snaplet]
 
 
 ------------------------------------------------------------------------------
--- | A lens to get the user defined state out of a Snaplet.
-snapletValue :: Lens (Snaplet a) a
-snapletValue = value
-
-
-------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
 -- that is more suitable for internal use.
 subSnaplet :: (Lens a (Snaplet b)) -> (Lens (Snaplet a) (Snaplet b))
-subSnaplet = (. value)
+subSnaplet = (. snapletValue)
 
 
 ------------------------------------------------------------------------------
@@ -137,25 +132,35 @@ class MonadSnaplet m where
     -- | Gets the lens for the current snaplet.
     getLens :: m b v (Lens (Snaplet b) (Snaplet v))
 
-    -- | Gets a list of the names of snaplets that are direct ancestors of the
-    -- current snaplet.
-    getSnapletAncestry :: m b v [Text]
+    -- | Gets the current snaplet's config.
+    getConfig :: m b v SnapletConfig
 
-    -- | Gets the snaplet's path on the filesystem.
-    getSnapletFilePath :: m b v FilePath
 
-    -- | Gets the current snaple's name.
-    getSnapletName :: m b v (Maybe Text)
+-- | Gets a list of the names of snaplets that are direct ancestors of the
+-- current snaplet.
+getSnapletAncestry :: (Monad (m b v), MonadSnaplet m) => m b v [Text]
+getSnapletAncestry = return . _scAncestry =<< getConfig
 
-    -- | Gets the current snaple's name.
-    getSnapletDescription :: m b v Text
+-- | Gets the snaplet's path on the filesystem.
+getSnapletFilePath :: (Monad (m b v), MonadSnaplet m) => m b v FilePath
+getSnapletFilePath = return . _scFilePath =<< getConfig
 
-    -- | Gets the config data structure for the current snaplet.
-    getSnapletConfig :: m b v Config
+-- | Gets the current snaple's name.
+getSnapletName :: (Monad (m b v), MonadSnaplet m) => m b v (Maybe Text)
+getSnapletName = return . _scId =<< getConfig
 
-    -- | Gets the base URL for the current snaplet.  Directories get added to
-    -- the current snaplet path by calls to 'nestSnaplet'.
-    getSnapletRootURL :: m b v ByteString
+-- | Gets the current snaple's name.
+getSnapletDescription :: (Monad (m b v), MonadSnaplet m) => m b v Text
+getSnapletDescription = return . _scDescription =<< getConfig
+
+-- | Gets the config data structure for the current snaplet.
+getSnapletUserConfig :: (Monad (m b v), MonadSnaplet m) => m b v Config
+getSnapletUserConfig = return . _scUserConfig =<< getConfig
+
+-- | Gets the base URL for the current snaplet.  Directories get added to
+-- the current snaplet path by calls to 'nestSnaplet'.
+getSnapletRootURL :: (Monad (m b v), MonadSnaplet m) => m b v ByteString
+getSnapletRootURL = liftM getRootURL getConfig
 
 
 -- Do we really need this stuff?
@@ -200,27 +205,48 @@ newtype Handler b v a =
            , MonadSnap)
 
 
-hConfig :: Handler b v SnapletConfig
-hConfig = Handler $ gets _snapletConfig
+------------------------------------------------------------------------------
+instance MonadState (Snaplet v) (Handler b v) where
+    get = Handler get
+    put = Handler . put
+
+
+------------------------------------------------------------------------------
+-- | Gets the current snaplet's state.
+getSnapletState :: MonadState (Snaplet a) m => m a
+getSnapletState = liftM _snapletValue get
+
+
+------------------------------------------------------------------------------
+-- | Modifies the current snaplet's state.
+modifySnapletState :: MonadState (Snaplet a) m => (a -> a) -> m ()
+modifySnapletState f = modify (modL snapletValue f)
+
+
+------------------------------------------------------------------------------
+-- | Puts the current snaplet's state.
+putSnapletState :: MonadState (Snaplet a) m => a -> m ()
+putSnapletState s = modifySnapletState (const s)
+
+
+------------------------------------------------------------------------------
+-- | Gets the current snaplet's state.
+getsSnapletState :: MonadState (Snaplet a) m => (a -> b) -> m b
+getsSnapletState f = liftM (f . _snapletValue) get
 
 
 instance MonadSnaplet Handler where
     getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
     withTop' !l (Handler m) = Handler $ L.withTop l m
-    getSnapletAncestry = return . _scAncestry =<< hConfig
-    getSnapletFilePath = return . _scFilePath =<< hConfig
-    getSnapletName = return . _scId =<< hConfig
-    getSnapletDescription = return . _scDescription =<< hConfig
-    getSnapletConfig = return . _scUserConfig =<< hConfig
-    getSnapletRootURL = liftM getRootURL hConfig
+    getConfig = Handler $ gets _snapletConfig
 
 
 ------------------------------------------------------------------------------
 -- | Handler that reloads the site.
 reloadSite :: Handler b v ()
 reloadSite = failIfNotLocal $ do
-    cfg <- hConfig
+    cfg <- getConfig
     !res <- liftIO $ _reloader cfg
     either bad good res
   where
@@ -280,21 +306,11 @@ newtype Initializer b v a =
 makeLenses [''InitializerState]
 
 
-iConfig :: Initializer b v SnapletConfig
-iConfig = Initializer $ liftM _curConfig LT.getBase
-
-
 instance MonadSnaplet Initializer where
     getLens = Initializer ask
     with' !l (Initializer !m) = Initializer $ LT.with l m
     withTop' !l (Initializer m) = Initializer $ LT.withTop l m
-
-    getSnapletAncestry = return . _scAncestry =<< iConfig
-    getSnapletFilePath = return . _scFilePath =<< iConfig
-    getSnapletName = return . _scId =<< iConfig
-    getSnapletDescription = return . _scDescription =<< iConfig
-    getSnapletConfig = return . _scUserConfig =<< iConfig
-    getSnapletRootURL = liftM getRootURL iConfig
+    getConfig = Initializer $ liftM _curConfig LT.getBase
 
 
 ------------------------------------------------------------------------------
@@ -311,20 +327,4 @@ data ReloadInfo b = ReloadInfo
     { riRef     :: IORef (Snaplet b)
     , riAction  :: Initializer b b b
     }
-
-
-------------------------------------------------------------------------------
-instance MonadState v (Handler b v) where
-    get = liftM _value lhGet
-    put v = do
-        s <- lhGet
-        lhPut $ s { _value = v }
-
-lhGet :: Handler b v (Snaplet v)
-lhGet = Handler get
-{-# INLINE lhGet #-}
-
-lhPut :: Snaplet v -> Handler b v ()
-lhPut = Handler . put
-{-# INLINE lhPut #-}
 

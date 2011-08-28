@@ -38,7 +38,7 @@ routeWithSplice = do
 
 routeWithConfig :: Handler App App ()
 routeWithConfig = do
-    cfg <- getSnapletConfig
+    cfg <- getSnapletUserConfig
     val <- liftIO $ lookup cfg "topConfigField"
     writeText $ "routeWithConfig: " `T.append` fromJust val
 

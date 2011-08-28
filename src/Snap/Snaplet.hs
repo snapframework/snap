@@ -43,9 +43,11 @@ module Snap.Snaplet
   -- * Snaplet
   -- $snapletDoc
     Snaplet
+  , SnapletConfig
 
   -- * Snaplet Helper Functions
   -- $snapletHelpers
+  , snapletConfig
   , snapletValue
   , subSnaplet
 
@@ -55,6 +57,18 @@ module Snap.Snaplet
   -- * MonadSnaplet
   -- $monadSnaplet
   , MonadSnaplet(..)
+  , getSnapletAncestry
+  , getSnapletFilePath
+  , getSnapletName
+  , getSnapletDescription
+  , getSnapletUserConfig
+  , getSnapletRootURL
+
+  , getSnapletState
+  , putSnapletState
+  , modifySnapletState
+  , getsSnapletState
+
 --  , wrap
 --  , wrapTop
 

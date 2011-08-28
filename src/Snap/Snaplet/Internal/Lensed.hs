@@ -7,14 +7,13 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Lens.Strict
-import Data.Functor
 import Control.Monad.CatchIO
 import Control.Monad.Reader.Class
 import Control.Monad.State.Class
 import Control.Monad.State.Strict
 import Control.Category
 import Prelude hiding (catch, id, (.))
-import Snap.Types
+import Snap.Core
 
 
 ------------------------------------------------------------------------------

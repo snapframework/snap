@@ -5,7 +5,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Main where
 
-import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
 import Snap.Core

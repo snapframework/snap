@@ -55,8 +55,6 @@ import           Text.Templating.Heist
 import           Text.Templating.Heist.Splices.Cache
 
 import           Snap.Snaplet
--- TODO: It shouldn't be necessary to import this internal module.
-import           Snap.Snaplet.Internal.Types
 import           Snap.Core
 import           Snap.Util.FileServe
 
@@ -149,18 +147,12 @@ liftWith l = liftHandler . withTop' l
 instance MonadState v (SnapletHeist b v) where
     get = do
         l <- ask
-        b <- liftHandler lhGet
-        return $ _value $ getL l b
+        b <- liftHandler get
+        return $ getL (snapletValue . l) b
     put s = do
         l <- ask
-        b <- liftHandler lhGet
-        liftHandler $ lhPut $ setL l (b { _value = s}) b
-
-
-sConfig = do
-    l <- ask
-    b <- liftHandler lhGet
-    return $ _snapletConfig $ getL l b
+        b <- liftHandler get
+        liftHandler $ put $ setL (snapletValue . l) s b
 
 
 ------------------------------------------------------------------------------
@@ -170,12 +162,10 @@ instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
     withTop' l = withSS (const id) . with' l
-    getSnapletAncestry = liftM _scAncestry sConfig
-    getSnapletFilePath = liftM _scFilePath sConfig
-    getSnapletName = liftM _scId sConfig
-    getSnapletDescription = liftM _scDescription sConfig
-    getSnapletConfig = liftM _scUserConfig sConfig
-    getSnapletRootURL = liftM getRootURL sConfig
+    getConfig = do
+        l <- ask
+        b <- liftHandler get
+        return $ getL (snapletConfig . l) b
 
 
 ------------------------------------------------------------------------------
@@ -249,7 +239,7 @@ renderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 renderHelper c t = do
-    (Heist ts _) <- get
+    (Heist ts _) <- getSnapletState
     withTop' id $ renderTemplate ts t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -287,10 +277,10 @@ heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> Handler b v a
             -> Handler b v a
 heistLocal' heist f m = do
-    hs  <- withTop' heist $ get
-    withTop' heist $ modify $ changeTS f
+    hs  <- withTop' heist $ getSnapletState
+    withTop' heist $ modifySnapletState $ changeTS f
     res <- m
-    withTop' heist $ put hs
+    withTop' heist $ putSnapletState hs
     return res
 
 

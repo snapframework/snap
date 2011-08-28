@@ -20,7 +20,7 @@ data FooSnaplet = FooSnaplet { fooField :: String }
 fooInit :: HasHeist b => SnapletInit b FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     (Just $ return "../foosnaplet") $ do
-    config <- getSnapletConfig
+    config <- getSnapletUserConfig
     addTemplates "foo"
     addSplices
         [("foosplice", liftHeist $ textSplice "contents of the foo splice")]
@@ -37,5 +37,5 @@ fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     return $ FooSnaplet "foo snaplet data string"
 
 getFooField :: Handler b FooSnaplet String
-getFooField = gets fooField
+getFooField = getsSnapletState fooField
 

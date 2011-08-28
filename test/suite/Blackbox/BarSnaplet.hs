@@ -36,7 +36,7 @@ barInit :: HasHeist b
         => Lens b (Snaplet FooSnaplet)
         -> SnapletInit b (BarSnaplet b)
 barInit l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
-    config <- getSnapletConfig
+    config <- getSnapletUserConfig
     addTemplates ""
     rootUrl <- getSnapletRootURL
     addRoutes [("barconfig", liftIO (lookup config "barSnapletField") >>= writeLBS . fromJust)
