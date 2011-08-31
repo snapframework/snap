@@ -14,6 +14,7 @@ import Snap.Snaplet.Heist
 
 import Blackbox.FooSnaplet
 import Blackbox.BarSnaplet
+import Blackbox.EmbeddedSnaplet
 import Snap.Snaplet.Session
 
 
@@ -22,6 +23,7 @@ data App = App
     , _foo :: Snaplet FooSnaplet
     , _bar :: Snaplet (BarSnaplet App)
     , _session :: Snaplet SessionManager
+    , _embedded :: Snaplet EmbeddedSnaplet
     }
 
 makeLenses [''App]

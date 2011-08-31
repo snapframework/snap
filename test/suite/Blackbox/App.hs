@@ -26,6 +26,7 @@ import Text.Templating.Heist
 import Blackbox.Common
 import Blackbox.BarSnaplet
 import Blackbox.FooSnaplet
+import Blackbox.EmbeddedSnaplet
 import Blackbox.Types
 import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
@@ -78,6 +79,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
     bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
     sm <- nestSnaplet "session" session $ 
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
+    ns <- embedSnaplet "" embedded embeddedInit
     addSplices
         [("appsplice", liftHeist $ textSplice "contents of the app splice")]
     HNC.addSplices heist
@@ -91,7 +93,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
               , ("/admin/reload", reloadSite)
               ]
     wrapHandlers (<|> heistServe)
-    return $ App hs (modL snapletValue fooMod fs) bs sm
+    return $ App hs (modL snapletValue fooMod fs) bs sm ns
 
 
 
