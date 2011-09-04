@@ -144,15 +144,15 @@ liftWith :: (Lens (Snaplet b) (Snaplet v'))
 liftWith l = liftHandler . withTop' l
 
 
-instance MonadState v (SnapletHeist b v) where
+instance MonadState (Snaplet v) (SnapletHeist b v) where
     get = do
         l <- ask
         b <- liftHandler get
-        return $ getL (snapletValue . l) b
+        return $ getL l b
     put s = do
         l <- ask
         b <- liftHandler get
-        liftHandler $ put $ setL (snapletValue . l) s b
+        liftHandler $ put $ setL l s b
 
 
 ------------------------------------------------------------------------------
@@ -162,7 +162,7 @@ instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
     withTop' l = withSS (const id) . with' l
-    getConfig = do
+    getOpaqueConfig = do
         l <- ask
         b <- liftHandler get
         return $ getL (snapletConfig . l) b

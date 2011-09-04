@@ -97,6 +97,7 @@ reloadTest = testCase "reload test" $ do
     requestTest' "admin/reload" "Error reloading site!\n\ntemplates/bad.tpl \"templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n"
     remove "templates/bad.tpl"
     copyFile "good.tpl" "templates/good.tpl"
-    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\nInitializing foosnaplet @ /foo\nAdding templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\nAdding templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nSite successfully reloaded.\n"
+--    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\nInitializing foosnaplet @ /foo\nAdding templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\nAdding templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nSite successfully reloaded.\n"
+    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\nInitializing foosnaplet @ /foo\nAdding templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\nAdding templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /embed\nInitializing heist @ /embed/heist\nAdding templates from snaplets/embedded/templates with route prefix embedded/\nSite successfully reloaded.\n"
     requestTest' "good" "Good template\n"
 

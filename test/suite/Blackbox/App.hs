@@ -79,7 +79,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
     bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
     sm <- nestSnaplet "session" session $ 
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
-    ns <- embedSnaplet "" embedded embeddedInit
+    ns <- embedSnaplet "embed" embedded embeddedInit
     addSplices
         [("appsplice", liftHeist $ textSplice "contents of the app splice")]
     HNC.addSplices heist

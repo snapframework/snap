@@ -17,8 +17,8 @@ by the snaplet framework:
 
   * each snaplet has its own configuration given to it at startup.
 
-  * each snaplet is given its own directory on the filesystem, where it reads
-    its configuration from and in which it can store whatever it likes.
+  * each snaplet is given its own directory on the filesystem, from which it
+    reads its configuration and in which it can store files.
 
   * each snaplet comes with an 'Initializer' which defines how to create an
     instance of the Snaplet at startup. The initializer decides how to
@@ -34,7 +34,8 @@ by the snaplet framework:
     'Handler's when serving HTTP requests.
 
 NOTE: This documentation is written as a prose tutorial of the snaplets
-API.  Skip past the synopsis to continue reading.
+API.  Don't be scared by the fact that it's auto-generated and is filled with
+type signatures.  Just keep reading.
 
 -}
 
@@ -72,31 +73,30 @@ module Snap.Snaplet
 --  , wrap
 --  , wrapTop
 
-  -- * Handler
-  -- $handler
-  , Handler
-  , reloadSite
-
   -- * Initializer
   -- $initializer
   , Initializer
   , SnapletInit
+  , makeSnaplet
+
   , nestSnaplet
   , embedSnaplet
   , nameSnaplet
+
+  , onUnload
+  , addPostInitHook
+  , addPostInitHookBase
+  , printInfo
 
   -- * Routes
   -- $routes
   , addRoutes
   , wrapHandlers
 
-  -- * Writing Snaplets
-  -- $writingSnaplets
-  , makeSnaplet
-  , onUnload
-  , addPostInitHook
-  , addPostInitHookBase
-  , printInfo
+  -- * Handlers
+  -- $handler
+  , Handler
+  , reloadSite
 
   -- * Serving Applications
   , runSnaplet
@@ -209,26 +209,27 @@ import           Snap.Snaplet.Internal.Types
 -- with this pattern.  Its functions define fundamental methods for navigating
 -- snaplet trees.
 
--- $handler
--- Snaplet infrastructure is available during runtime request processing
--- through the Handler monad.  There aren't very many standalone functions to
--- read about here, but this is deceptive.  The key is in the type class
--- instances.  Handler is an instance of 'MonadSnap', which means it is the
--- monad you will use to write all your application routes.  It also has a
--- 'MonadSnaplet' instance, which gives you all the functionality described
--- above.
-
 -- $initializer
 -- The Initializer monad is where your application's initialization happens.
 -- Initializers are run at startup and any time a site reload is triggered.
--- The Initializer's job is to construct a snaplet's state and routes, set up
--- filesystem data, read config files, etc.  
+-- The Initializer's job is to construct a snaplet's routes and initial state,
+-- set up filesystem data, read config files, etc.  
 --
--- In order for a snaplet to initialize its state, it needs to initialize all
--- of its subsnaplets.  Every snaplet will have an initializer with a return
--- type of @Initializer b v (Snaplet a)@ where 'a' is the snaplet's state.
--- You must call these initializer functions wrapped in a call to
--- 'nestSnaplet'.
+-- In order to initialize its state, a snaplet needs to initialize all the
+-- @Snaplet a@ state for each of its subsnaplets.  The only way to construct
+-- a @Snaplet a@ type is by calling 'nestSnaplet' or 'embedSnaplet' from
+-- within an initializer. 
+
+
+-- $writingSnaplets
+-- When writing a snaplet, you must define an initializer function.  The
+-- initializer function for the Foo snaplet (where Foo is the snaplet's
+-- state type) must have a return type of @Initializer b Foo Foo@.
+-- To create an initializer like this, you have to use the 'makeSnaplet'
+-- function.  It takes care of the necessary internal bookkeeping needed when
+-- initializing a new snaplet.  Haskell's strong type system allows us to
+-- ensure that calling 'makeSnaplet' is the only way you can construct a
+-- Snaplet type.
 
 
 -- $routes
@@ -237,15 +238,14 @@ import           Snap.Snaplet.Internal.Types
 -- 'wrapHandlers'.
 
 
--- $writingSnaplets
--- When writing a snaplet, you must define an initializer function.  The
--- initializer function for the Foo snaplet (where Foo is the snaplet's
--- state type) must have a return type of @Initializer b v (Snaplet Foo)@.
--- To create an initializer like this, you have to use the 'makeSnaplet'
--- function.  It takes care of the necessary internal bookkeeping needed when
--- initializing a new snaplet.  Haskell's strong type system allows us to
--- ensure that calling 'makeSnaplet' is the only way you can construct a
--- Snaplet type.
+-- $handler
+-- Snaplet infrastructure is available during runtime request processing
+-- through the Handler monad.  There aren't very many standalone functions to
+-- read about here, but this is deceptive.  The key is in the type class
+-- instances.  Handler is an instance of 'MonadSnap', which means it is the
+-- monad you will use to write all your application routes.  It also has a
+-- 'MonadSnaplet' instance, which gives you all the functionality described
+-- above.
 
 {-
 

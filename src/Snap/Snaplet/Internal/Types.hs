@@ -35,6 +35,10 @@ import qualified Snap.Snaplet.Internal.LensT as LT
 import qualified Snap.Snaplet.Internal.Lensed as L
 
 
+------------------------------------------------------------------------------
+-- | An opaque data type holding internal snaplet configuration data.  It's
+-- exported publicly because the getOpaqueConfig function in MonadSnaplet
+-- makes implementing new instances of MonadSnaplet more convenient.
 data SnapletConfig = SnapletConfig
     { _scAncestry        :: [Text]
     , _scFilePath        :: FilePath
@@ -85,7 +89,8 @@ subSnaplet = (. snapletValue)
 
 ------------------------------------------------------------------------------
 -- | The m type parameter used in the MonadSnaplet type signatures will
--- almost always be either Initializer or Handler.
+-- usually be either Initializer or Handler, but other monads may sometimes be
+-- useful.
 --
 -- Minimal complete definition:
 --
@@ -132,35 +137,38 @@ class MonadSnaplet m where
     -- | Gets the lens for the current snaplet.
     getLens :: m b v (Lens (Snaplet b) (Snaplet v))
 
-    -- | Gets the current snaplet's config.
-    getConfig :: m b v SnapletConfig
+    -- | Gets the current snaplet's opaque config data type.  You'll only use
+    -- this function when writing MonadSnaplet instances.
+    getOpaqueConfig :: m b v SnapletConfig
+    -- NOTE: We can't just use a MonadState (Snaplet v) instance for this
+    -- because Initializer has SnapletConfig, but doesn't have a full Snaplet.
 
 
 -- | Gets a list of the names of snaplets that are direct ancestors of the
 -- current snaplet.
 getSnapletAncestry :: (Monad (m b v), MonadSnaplet m) => m b v [Text]
-getSnapletAncestry = return . _scAncestry =<< getConfig
+getSnapletAncestry = return . _scAncestry =<< getOpaqueConfig
 
 -- | Gets the snaplet's path on the filesystem.
 getSnapletFilePath :: (Monad (m b v), MonadSnaplet m) => m b v FilePath
-getSnapletFilePath = return . _scFilePath =<< getConfig
+getSnapletFilePath = return . _scFilePath =<< getOpaqueConfig
 
 -- | Gets the current snaple's name.
 getSnapletName :: (Monad (m b v), MonadSnaplet m) => m b v (Maybe Text)
-getSnapletName = return . _scId =<< getConfig
+getSnapletName = return . _scId =<< getOpaqueConfig
 
 -- | Gets the current snaple's name.
 getSnapletDescription :: (Monad (m b v), MonadSnaplet m) => m b v Text
-getSnapletDescription = return . _scDescription =<< getConfig
+getSnapletDescription = return . _scDescription =<< getOpaqueConfig
 
 -- | Gets the config data structure for the current snaplet.
 getSnapletUserConfig :: (Monad (m b v), MonadSnaplet m) => m b v Config
-getSnapletUserConfig = return . _scUserConfig =<< getConfig
+getSnapletUserConfig = return . _scUserConfig =<< getOpaqueConfig
 
 -- | Gets the base URL for the current snaplet.  Directories get added to
 -- the current snaplet path by calls to 'nestSnaplet'.
 getSnapletRootURL :: (Monad (m b v), MonadSnaplet m) => m b v ByteString
-getSnapletRootURL = liftM getRootURL getConfig
+getSnapletRootURL = liftM getRootURL getOpaqueConfig
 
 
 -- Do we really need this stuff?
@@ -239,14 +247,14 @@ instance MonadSnaplet Handler where
     getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
     withTop' !l (Handler m) = Handler $ L.withTop l m
-    getConfig = Handler $ gets _snapletConfig
+    getOpaqueConfig = Handler $ gets _snapletConfig
 
 
 ------------------------------------------------------------------------------
 -- | Handler that reloads the site.
 reloadSite :: Handler b v ()
 reloadSite = failIfNotLocal $ do
-    cfg <- getConfig
+    cfg <- getOpaqueConfig
     !res <- liftIO $ _reloader cfg
     either bad good res
   where
@@ -310,12 +318,12 @@ instance MonadSnaplet Initializer where
     getLens = Initializer ask
     with' !l (Initializer !m) = Initializer $ LT.with l m
     withTop' !l (Initializer m) = Initializer $ LT.withTop l m
-    getConfig = Initializer $ liftM _curConfig LT.getBase
+    getOpaqueConfig = Initializer $ liftM _curConfig LT.getBase
 
 
 ------------------------------------------------------------------------------
 -- | Opaque newtype which gives us compile-time guarantees that the user is
--- using makeSnaplet and nestSnaplet correctly.
+-- using makeSnaplet and either nestSnaplet or embedSnaplet correctly.
 newtype SnapletInit b v = SnapletInit (Initializer b v (Snaplet v))
 
 
