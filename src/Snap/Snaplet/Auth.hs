@@ -1,20 +1,34 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+{-|
+
+  This module contains all the central authentication functionality.
+
+  It exports a number of high-level functions to be used directly in your
+  application handlers. 
+  
+  We also export a number of mid-level functions that
+  should be helpful when you are integrating with another way of confirming the
+  authentication of login requests.
+
+-}
+
 module Snap.Snaplet.Auth 
   ( 
 
-  -- * Higher Level Handler Functions
+  -- * Higher Level Functions
     createUser
   , loginByUsername
-  , checkPasswordAndLogin
+  , loginByRememberToken
   , forceLogin
   , logout
   , isLoggedIn
 
-  -- * Lower Level Handler Functions
+  -- * Lower Level Functions
   , markAuthSuccess
   , markAuthFail
+  , checkPasswordAndLogin
 
   -- * Types
   , AuthManager
@@ -45,13 +59,21 @@ import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
+import           Snap.Snaplet.Session.Common
+import           Snap.Snaplet.Session.SecureCookie
 
 
 
--- $higherlevel
--- These are the key functions you will use in your handlers. 
+------------------------------------------------------------------------------
+-- Higher level functions 
+--
+------------------------------------------------------------------------------
 
 
+------------------------------------------------------------------------------
+-- | Create a new user from just a username and password
+--
+-- May throw a "DuplicateLogin' if given username is not unique
 createUser
   :: Text -- Username
   -> ByteString -- Password
@@ -87,16 +109,13 @@ loginByUsername unm pwd rm  = do
 
 ------------------------------------------------------------------------------
 -- | Remember user from the remember token if possible.
-rememberUser :: Handler b (AuthManager b) (Maybe AuthUser)
-rememberUser = cacheOrLookup f
+loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
+loginByRememberToken = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r _ _ _ _ rc to _) <- get
-      uid <- undefined
-      fail "rememberUser is not implemented yet"
-      case uid of
-        Nothing -> return Nothing
-        Just uid' -> liftIO $ lookupByUserId r uid'
+      mgr@(AuthManager r _ _ _ rc rp sk _) <- get
+      token <- getRememberToken sk rc rp
+      maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
 
 
 ------------------------------------------------------------------------------
@@ -129,8 +148,11 @@ isLoggedIn = do
   return $ isJust au 
 
 
--- $midlevel
--- You might need these if you are rolling your own handlers/authenticators
+------------------------------------------------------------------------------
+--  Lower level helper functions
+--
+------------------------------------------------------------------------------
+
 
 ------------------------------------------------------------------------------
 -- | Mutate an 'AuthUser', marking failed authentication
@@ -138,13 +160,20 @@ isLoggedIn = do
 -- This will save the user to the backend.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthFail u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ lo) <- get
   proc u >>= liftIO . save r
   where
     proc = incFailCtr >=> checkLockout
     incFailCtr u' = return $ u' 
                       { userFailedLoginCount = userFailedLoginCount u' + 1}
-    checkLockout = undefined
+    checkLockout u' = case lo of
+      Nothing -> return u'
+      Just (mx, wait) -> 
+        case userFailedLoginCount u' >= mx of
+          True -> do
+            now <- liftIO getCurrentTime
+            let reopen = addUTCTime wait now
+            return $ u' { userLockedOutUntil = Just dur }
 
 
 ------------------------------------------------------------------------------
@@ -155,16 +184,19 @@ markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
   (AuthManager r _ _ _ _ _ _ _) <- get
   now <- liftIO getCurrentTime
-  incLoginCtr u >>= updateIp >>=  updateLoginTS now >>= 
-    setRememberToken >>= resetFailCtr >>= liftIO . save r
+  incLoginCtr u >>= updateIp >>= updateLoginTS 
+    >>= resetFailCtr >>= liftIO . save r
   where
     incLoginCtr u' = return $ u' { userLoginCount = userLoginCount u' + 1 }
-    updateIp u' = undefined
-    updateLoginTS now u' = return $
-      u' { userCurrentLoginAt = Just now
-         , userLastLoginAt = userCurrentLoginAt u' }
-    setRememberToken u' = undefined
-    resetFailCtr u' = return $ u' { userFailedLoginCount = 0 }
+    updateIp u' = fail "updateIP not defined in markAuthSuccess"
+    updateLoginTS u' = do
+      now <- liftIO getCurrentTime
+      return $
+        u' { userCurrentLoginAt = Just now
+           , userLastLoginAt = userCurrentLoginAt u' }
+    resetFailCtr u' = return $ 
+      u' { userFailedLoginCount = 0 
+         , userLockedOutUntil = Nothing }
 
 
 ------------------------------------------------------------------------------
@@ -186,15 +218,24 @@ checkPasswordAndLogin
   -> Bool                   -- ^ Set remember cookie?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 checkPasswordAndLogin u pw remember = 
-  case authenticatePassword u pw of
-    Just e -> do
-      markAuthFail u
-      return $ Left e
-    Nothing -> do
-      forceLogin u remember
-      modify (\mgr -> mgr { activeUser = Just u })
-      u' <- markAuthSuccess u
-      return $ Right u'
+  case userLockedOutUntil u of
+    Just x -> do
+      now <- liftIO getCurrentTime
+      if now > x then
+      	auth u
+      else
+      	return $ Left LockedOut
+  where
+    auth u = 
+      case authenticatePassword u pw of
+        Just e -> do
+          markAuthFail u
+          return $ Left e
+        Nothing -> do
+          forceLogin u remember
+          modify (\mgr -> mgr { activeUser = Just u })
+          u' <- markAuthSuccess u
+          return $ Right u'
 
 
 ------------------------------------------------------------------------------
@@ -202,20 +243,38 @@ checkPasswordAndLogin u pw remember =
 --
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
+--
+-- TODO: Implement remember cookie
 forceLogin 
-  :: AuthUser               -- ^ An existing user, somehow looked up from db
-  -> Bool                   -- ^ Set remember cookie?
-  -> Handler b (AuthManager b) Bool
+  :: AuthUser
+  -- ^ An existing user, somehow looked up from db
+  -> Bool 
+  -- ^ Set remember cookie?
+  -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 forceLogin u rc = do
-  AuthManager _ s _ _ _ _ _ _ <- get
+  AuthManager _ s _ _ cn rp sk _ <- get
   withSession s $ do
     case userId u of
-      Just x -> withTop s (setSessionUserId x) >> return True
-      Nothing -> return False
+      Just x -> do
+        withTop s (setSessionUserId x) 
+        token <- liftIO $ randomToken 64
+        setRememberToken sk cn rp token
+        return $ Right u
+      Nothing -> return . Left $ 
+        AuthError "forceLogin: Can't force the login of a user without userId"
 
 
--- $lowlevel
--- You shouldn't need to use these explicitly
+
+------------------------------------------------------------------------------
+-- Internal, non-exported helpers
+--
+------------------------------------------------------------------------------
+
+
+getRememberToken sk rc rp = getSecureCookie rc sk rp
+
+setRememberToken sk rc rp token = setSecureCookie rc sk rp token
+
 
 ------------------------------------------------------------------------------
 -- | Set the current user's 'UserId' in the active session

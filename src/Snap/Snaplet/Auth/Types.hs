@@ -56,6 +56,7 @@ data AuthFailure =
   | IncorrectPassword
   | PasswordMissing
   | LockedOut Int               -- ^ Locked out with given seconds to go
+  | AuthError String
   deriving (Read, Show, Ord, Eq, Typeable)
 
 
@@ -88,7 +89,7 @@ data AuthUser = AuthUser
   , userRememberToken :: Maybe Text
   , userLoginCount :: Int
   , userFailedLoginCount :: Int
-  , userLockedOutAt :: Maybe UTCTime
+  , userLockedOutUntil :: Maybe UTCTime
   , userCurrentLoginAt :: Maybe UTCTime
   , userLastLoginAt :: Maybe UTCTime
   , userCurrentLoginIp :: Maybe ByteString
@@ -109,7 +110,7 @@ defAuthUser = AuthUser {
   , userRememberToken = Nothing
   , userLoginCount = 0
   , userFailedLoginCount = 0
-  , userLockedOutAt = Nothing
+  , userLockedOutUntil = Nothing
   , userCurrentLoginAt = Nothing
   , userLastLoginAt = Nothing
   , userCurrentLoginIp = Nothing

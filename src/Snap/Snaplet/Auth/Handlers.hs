@@ -2,10 +2,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 {-|
 
-  Provides generic, somewhat customizable handlers that can be plugged 
-  directly into Snap applications.
+  Pre-packaged Handlers that deal with form submissions and standard use-cases
+  involving authentication.
 
 -}
 
@@ -25,10 +26,10 @@ import           Data.Text.Encoding (decodeUtf8)
 import           Data.Text (Text)
 import           Data.Time
 
-import Snap.Core
-import Snap.Snaplet.Auth
-import Snap.Snaplet.Auth.Types
-import Snap.Snaplet
+import           Snap.Core
+import           Snap.Snaplet.Auth
+import           Snap.Snaplet.Auth.Types
+import           Snap.Snaplet
 
 
 ------------------------------------------------------------------------------
@@ -53,7 +54,9 @@ registerUser lf pf = do
 -- The request paremeters are passed to 'performLogin'
 loginUser 
   :: ByteString
-  -- ^ The password param field
+  -- ^ Username field
+  -> ByteString
+  -- ^ Password field
   -> Maybe ByteString
   -- ^ Remember field; Nothing if you want no remember function.
   -> (AuthFailure -> Handler b (AuthManager b) ())
@@ -61,13 +64,17 @@ loginUser
   -> Handler b (AuthManager b) ()
   -- ^ Upon success
   -> Handler b (AuthManager b) ()
-loginUser pwdf remf loginFail loginSucc = do
+loginUser unf pwdf remf loginFail loginSucc = do
+    username <- getParam unf
     password <- getParam pwdf
-    remember <- maybe (return Nothing) getParam remf
-    let r = maybe False (=="1") remember
+    remember <- maybe False (=="1") `fmap` getParam remf
     mMatch <- case password of
-      Nothing -> return $ Left IncorrectPassword
-      Just p  -> checkPasswordAndLogin undefined (ClearText p) r
+      Nothing -> return $ Left PasswordMissing
+      Just password' -> do 
+        case username of
+          Nothing -> return $ Left UsernameMissing
+          Just username' -> do
+            loginByUsername username' (ClearText password') remember
     either loginFail (const loginSucc) mMatch
 
 
