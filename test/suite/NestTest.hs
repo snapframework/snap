@@ -11,7 +11,6 @@
 module Main where
 
 import Prelude hiding ((.))
-import Control.Monad.State
 import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
@@ -22,9 +21,6 @@ import Snap.Util.FileServe
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Text.Templating.Heist
-
--- FIXME
-import Snap.Snaplet.Internal.TemporaryLensCruft
 
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
@@ -57,7 +53,7 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
 fooSplice :: (Lens (Snaplet b) (Snaplet FooSnaplet))
           -> SnapletHeist b v Template
 fooSplice fooLens = do
-    val <- liftWith fooLens $ gets _fooVal
+    val <- liftWith fooLens $ getsSnapletState _fooVal
     liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
 
 ------------------------------------------------------------------------------

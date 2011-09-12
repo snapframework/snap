@@ -9,8 +9,9 @@
 {-# LANGUAGE TemplateHaskell            #-}
 
 module Snap.Snaplet.Internal.Initializer
-  ( addPostInitHook
+( addPostInitHook
   , addPostInitHookBase
+  , toSnapletHook
   , bracketInit
   , modifyCfg
   , nestSnaplet
@@ -52,38 +53,30 @@ import           System.Directory.Tree
 import           System.FilePath.Posix
 import           System.IO
 
-import           Snap.Snaplet.Internal.Lens
+import qualified Snap.Snaplet.Internal.LensT as LT
+import qualified Snap.Snaplet.Internal.Lensed as L
 import           Snap.Snaplet.Internal.Types
-
--- FIXME
-import Snap.Snaplet.Internal.TemporaryLensCruft
 
 
 ------------------------------------------------------------------------------
 -- | 'get' for InitializerState.
 iGet :: Initializer b v (InitializerState b)
-iGet = Initializer $ getBase
-
-
-------------------------------------------------------------------------------
--- | 'get' for InitializerState.
-iPut :: InitializerState b -> Initializer b v ()
-iPut s = Initializer $ putBase s
+iGet = Initializer $ LT.getBase
 
 
 ------------------------------------------------------------------------------
 -- | 'modify' for InitializerState.
 iModify :: (InitializerState b -> InitializerState b) -> Initializer b v ()
 iModify f = Initializer $ do
-    b <- getBase
-    putBase $ f b
+    b <- LT.getBase
+    LT.putBase $ f b
 
 
 ------------------------------------------------------------------------------
 -- | 'gets' for InitializerState.
 iGets :: (InitializerState b -> a) -> Initializer b v a
 iGets f = Initializer $ do
-    b <- getBase
+    b <- LT.getBase
     return $ f b
 
 
@@ -110,20 +103,13 @@ addPostInitHook = addPostInitHook' . toSnapletHook
 addPostInitHook' :: (Snaplet v -> IO (Snaplet v)) -> Initializer b v ()
 addPostInitHook' h = do
     h' <- upHook h
-    addPostInitHookBase' h'
+    addPostInitHookBase h'
 
 
 ------------------------------------------------------------------------------
--- | Adds an IO action that modifies the application state to be run at the
--- end of initialization.
-addPostInitHookBase :: (b -> IO b) -> Initializer b v ()
-addPostInitHookBase = Initializer . lift . tell . Hook . toSnapletHook
-
-
-------------------------------------------------------------------------------
-addPostInitHookBase' :: (Snaplet b -> IO (Snaplet b))
-                     -> Initializer b v ()
-addPostInitHookBase' = Initializer . lift . tell . Hook
+addPostInitHookBase :: (Snaplet b -> IO (Snaplet b))
+                    -> Initializer b v ()
+addPostInitHookBase = Initializer . lift . tell . Hook
 
 
 ------------------------------------------------------------------------------
@@ -174,21 +160,24 @@ setupFilesystem (Just getSnapletDataDir) targetDir = do
 
 
 ------------------------------------------------------------------------------
--- | Designed to be called by snaplet initializers to handle standardized
--- housekeeping common to all snaplets.  All snaplets must use this function
--- to construct their initializers.  Common usage will look something like
+-- | All snaplet initializers must be wrapped in a call to @makeSnaplet@,
+-- which handles standardized housekeeping common to all snaplets.
+-- Common usage will look something like
 -- this:
 --
 -- @
--- fooInit :: Initializer b v (Snaplet Foo)
--- fooInit = makeSnaplet \"foo\" Nothing $ do
+-- fooInit :: SnapletInit b Foo
+-- fooInit = makeSnaplet \"foo\" \"An example snaplet\" Nothing $ do
 --     -- Your initializer code here
 --     return $ Foo 42
 -- @
+--
+-- Note that you're writing your initializer code in the Initializer monad,
+-- and makeSnaplet converts it into an opaque SnapletInit type.  This allows
+-- us to use the type system to ensure that the API is used correctly.
 makeSnaplet :: Text
-       -- ^ A default id for this snaplet set by the snaplet itself.  This id
-       -- is only used when the end-user has not already set an id using the
-       -- nameSnaplet function.
+       -- ^ A default id for this snaplet.  This is only used when the
+       -- end-user has not already set an id using the nameSnaplet function.
        -> Text
        -- ^ A human readable description of this snaplet.
        -> Maybe (IO FilePath)
@@ -262,8 +251,11 @@ setupSnapletCall rte = do
 
 
 ------------------------------------------------------------------------------
--- | This function handles modifications to the initializer state that must
--- happen before each subsnaplet initializer runs.
+-- | Runs another snaplet's initializer and returns the initialized Snaplet
+-- value.  Calling an initializer with nestSnaplet gives the nested snaplet
+-- access to the same base state that the current snaplet has.  This makes it
+-- possible for the child snaplet to make use of functionality provided by
+-- sibling snaplets.
 nestSnaplet :: ByteString
             -- ^ The root url for all the snaplet's routes.  An empty string
             -- gives the routes the same root as the parent snaplet's routes.
@@ -278,17 +270,27 @@ nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
 
 
 ------------------------------------------------------------------------------
--- | This function handles modifications to the initializer state that must
--- happen before each subsnaplet initializer runs.
+-- | Runs another snaplet's initializer and returns the initialized Snaplet
+-- value.  The difference between this and nestSnaplet is the first type
+-- parameter in the third argument.  The \"v1 v1\" makes the child snaplet
+-- think that it is top-level, which means that it will not be able to use
+-- functionality provided by snaplets included above it in the snaplet tree.
+-- This strongly isolates the child snaplet, and allows you to eliminate the b
+-- type variable.  The embedded snaplet can still get functionality from other
+-- snaplets, but only if it nests or embeds the snaplet itself.
 embedSnaplet :: ByteString
              -- ^ The root url for all the snaplet's routes.  An empty string
              -- gives the routes the same root as the parent snaplet's routes.
+             --
+             -- NOTE: Because of the stronger isolation provided by
+             -- embedSnaplet, you should be more careful about using an empty
+             -- string here.
              -> (Lens v (Snaplet v1))
              -- ^ Lens identifying the snaplet
              -> SnapletInit v1 v1
              -- ^ The initializer function for the subsnaplet.
              -> Initializer b v (Snaplet v1)
-embedSnaplet rte l (SnapletInit snaplet) = do
+embedSnaplet rte l (SnapletInit snaplet) = bracketInit $ do
     curLens <- getLens
     setupSnapletCall rte
     chroot rte (subSnaplet l . curLens) snaplet
@@ -296,16 +298,13 @@ embedSnaplet rte l (SnapletInit snaplet) = do
 
 ------------------------------------------------------------------------------
 -- | Changes the base state of an initializer.
---
--- NOTE: You shouldn't use bracketInit with this function as in nestSnaplet
--- because that is handled by the implementation.
 chroot :: ByteString
        -> (Lens (Snaplet b) (Snaplet v1))
        -> Initializer v1 v1 a
        -> Initializer b v a
 chroot rte l (Initializer m) = do
     curState <- iGet
-    ((a,s), (Hook hook)) <- liftIO $ runWriterT $ runLensT m id $
+    ((a,s), (Hook hook)) <- liftIO $ runWriterT $ LT.runLensT m id $
         curState {
           _handlers = [],
           _hFilter = id
@@ -313,7 +312,7 @@ chroot rte l (Initializer m) = do
     let handler = chrootHandler l $ _hFilter s $ route $ _handlers s
     iModify $ modL handlers (++[(rte,handler)])
             . setL cleanup (_cleanup s)
-    addPostInitHookBase' $ upHook' l hook
+    addPostInitHookBase $ upHook' l hook
     return a
 
 
@@ -323,7 +322,7 @@ chrootHandler :: (Lens (Snaplet v) (Snaplet b'))
               -> Handler b' b' a -> Handler b v a
 chrootHandler l (Handler h) = Handler $ do
     s <- get
-    (a, s') <- liftSnap $ runLensT h id (getL l s)
+    (a, s') <- liftSnap $ L.runLensed h id (getL l s)
     modify $ setL l s'
     return a
 
@@ -373,11 +372,9 @@ mungeFilter :: (Handler b v () -> Handler b v ())
             -> Initializer b v (Handler b b () -> Handler b b ())
 mungeFilter f = do
     myLens <- Initializer ask
-    return $ \m -> b myLens $ f' m
-
+    return $ \m -> with' myLens $ f' m
   where
-    f' (Handler m)       = f $ Handler $ withLensT (const id) m
-    b myLens (Handler m) = Handler $ withLensT ((myLens .)) m
+    f' (Handler m)       = f $ Handler $ L.withTop id m
 
 
 ------------------------------------------------------------------------------
@@ -428,7 +425,7 @@ runBase :: Handler b b a
         -> Snap a
 runBase (Handler m) mvar = do
     !b <- liftIO (readMVar mvar)
-    (!a, _) <- runLensT m id b
+    (!a, _) <- L.runLensed m id b
     return $! a
 
 
@@ -441,7 +438,7 @@ runInitializer mvar b@(Initializer i) = do
     userConfig <- load [Optional "snaplet.cfg"]
     let cfg = SnapletConfig [] "" Nothing "" userConfig [] (mkReloader mvar b)
     logRef <- newIORef ""
-    ((res, s), (Hook hook)) <- runWriterT $ runLensT i id $
+    ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
         InitializerState True (return ()) [] id cfg logRef
     res' <- hook res
     return (res', s)

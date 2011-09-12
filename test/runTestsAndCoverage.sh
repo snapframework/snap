@@ -28,11 +28,16 @@ rm -Rf $DIR
 mkdir -p $DIR
 
 EXCLUDES='Main
-Snap.Snaplet.App
-Snap.Snaplet.BarSnaplet
-Snap.Snaplet.FooSnaplet
+Blackbox.App
+Blackbox.BarSnaplet
+Blackbox.Common
+Blackbox.FooSnaplet
+Blackbox.Tests
+Blackbox.Types
 Snap.Snaplet.Internal.Lensed.Tests
-Snap.Snaplet.Tests
+Snap.Snaplet.Internal.LensT.Tests
+Snap.Snaplet.Internal.RST.Tests
+Snap.Snaplet.Internal.Tests
 '
 
 EXCL=""
@@ -42,6 +47,9 @@ for m in $EXCLUDES; do
 done
 
 mv non-cabal-appdir/testsuite.tix .
+rm -f non-cabal-appdir/templates/bad.tpl
+rm -f non-cabal-appdir/templates/good.tpl
+rm -fr non-cabal-appdir/snaplets/foosnaplet
 
 hpc markup $EXCL --destdir=$DIR testsuite >/dev/null 2>&1
 

@@ -41,13 +41,19 @@ change.
 
 module Main where
 
+import Snap.Http.Server.Config
+import Snap.Snaplet
+
+import Site
+
+{-
 #ifdef DEVELOPMENT
 import           Control.Exception (SomeException, try)
 
-import           Snap.Extension.Loader.Devel
+import           Snap.Loader.Devel
 import           Snap.Http.Server (quickHttpServe)
 #else
-import           Snap.Extension.Server
+import           Snap.Snaplet
 #endif
 
 import           Application
@@ -66,3 +72,8 @@ main = do
 #else
 main = quickHttpServe applicationInitializer site
 #endif
+-}
+
+main :: IO ()
+main = serveSnaplet defaultConfig app
+

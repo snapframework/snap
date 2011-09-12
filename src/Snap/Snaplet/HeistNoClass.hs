@@ -55,13 +55,8 @@ import           Text.Templating.Heist
 import           Text.Templating.Heist.Splices.Cache
 
 import           Snap.Snaplet
--- TODO: It shouldn't be necessary to import this internal module.
-import           Snap.Snaplet.Internal.Types
 import           Snap.Core
 import           Snap.Util.FileServe
-
--- FIXME
-import Snap.Snaplet.Internal.TemporaryLensCruft
 
 
 ------------------------------------------------------------------------------
@@ -96,7 +91,7 @@ clearHeistCache = clearCacheTagState . _heistCTS
 
 
 ------------------------------------------------------------------------------
--- | 
+-- | Monad for working with Heist's API from within a snaplet.
 newtype SnapletHeist b v a = SnapletHeist
     (ReaderT (Lens (Snaplet b) (Snaplet v)) (HeistT (Handler b b)) a)
   deriving ( Monad
@@ -109,6 +104,8 @@ newtype SnapletHeist b v a = SnapletHeist
            )
 
 
+------------------------------------------------------------------------------
+-- | Type alias for convenience.
 type SnapletSplice b v = SnapletHeist b v Template
 
 
@@ -127,7 +124,8 @@ withSS f (SnapletHeist m) = SnapletHeist $ withReaderT f m
 
 
 ------------------------------------------------------------------------------
--- | Lifts a HeistT action into SnapletHeist.
+-- | Lifts a HeistT action into SnapletHeist.  Use this with all the functions
+-- from the Heist API.
 liftHeist :: HeistT (Handler b b) a -> SnapletHeist b v a
 liftHeist = SnapletHeist . lift
 
@@ -146,27 +144,28 @@ liftWith :: (Lens (Snaplet b) (Snaplet v'))
 liftWith l = liftHandler . withTop' l
 
 
-instance MonadState v (SnapletHeist b v) where
+instance MonadState (Snaplet v) (SnapletHeist b v) where
     get = do
         l <- ask
-        b <- liftHandler lhGet
-        return $ _value $ getL l b
+        b <- liftHandler get
+        return $ getL l b
     put s = do
         l <- ask
-        b <- liftHandler lhGet
-        liftHandler $ lhPut $ setL l (b { _value = s}) b
+        b <- liftHandler get
+        liftHandler $ put $ setL l s b
 
 
+------------------------------------------------------------------------------
+-- | MonadSnaplet instance gives us access to all Snap's request processing
+-- goodness.
 instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
     withTop' l = withSS (const id) . with' l
-    getSnapletAncestry = liftHandler getSnapletAncestry
-    getSnapletFilePath = liftHandler getSnapletFilePath
-    getSnapletName = liftHandler getSnapletName
-    getSnapletDescription = liftHandler getSnapletDescription
-    getSnapletConfig = liftHandler getSnapletConfig
-    getSnapletRootURL = liftHandler getSnapletRootURL
+    getOpaqueConfig = do
+        l <- ask
+        b <- liftHandler get
+        return $ getL (snapletConfig . l) b
 
 
 ------------------------------------------------------------------------------
@@ -240,7 +239,7 @@ renderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 renderHelper c t = do
-    (Heist ts _) <- get
+    (Heist ts _) <- getSnapletState
     withTop' id $ renderTemplate ts t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -278,10 +277,10 @@ heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> Handler b v a
             -> Handler b v a
 heistLocal' heist f m = do
-    hs  <- withTop' heist $ get
-    withTop' heist $ modify $ changeTS f
+    hs  <- withTop' heist $ getSnapletState
+    withTop' heist $ modifySnapletState $ changeTS f
     res <- m
-    withTop' heist $ put hs
+    withTop' heist $ putSnapletState hs
     return res
 
 

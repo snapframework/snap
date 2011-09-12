@@ -17,8 +17,8 @@ by the snaplet framework:
 
   * each snaplet has its own configuration given to it at startup.
 
-  * each snaplet is given its own directory on the filesystem, where it reads
-    its configuration from and in which it can store whatever it likes.
+  * each snaplet is given its own directory on the filesystem, from which it
+    reads its configuration and in which it can store files.
 
   * each snaplet comes with an 'Initializer' which defines how to create an
     instance of the Snaplet at startup. The initializer decides how to
@@ -34,7 +34,8 @@ by the snaplet framework:
     'Handler's when serving HTTP requests.
 
 NOTE: This documentation is written as a prose tutorial of the snaplets
-API.  Skip past the synopsis to continue reading.
+API.  Don't be scared by the fact that it's auto-generated and is filled with
+type signatures.  Just keep reading.
 
 -}
 
@@ -43,9 +44,11 @@ module Snap.Snaplet
   -- * Snaplet
   -- $snapletDoc
     Snaplet
+  , SnapletConfig
 
   -- * Snaplet Helper Functions
   -- $snapletHelpers
+  , snapletConfig
   , snapletValue
   , subSnaplet
 
@@ -55,42 +58,50 @@ module Snap.Snaplet
   -- * MonadSnaplet
   -- $monadSnaplet
   , MonadSnaplet(..)
-  , wrap
-  , wrapTop
+  , getSnapletAncestry
+  , getSnapletFilePath
+  , getSnapletName
+  , getSnapletDescription
+  , getSnapletUserConfig
+  , getSnapletRootURL
 
-  -- * Handler
-  -- $handler
-  , Handler
-  , reloadSite
+  , getSnapletState
+  , putSnapletState
+  , modifySnapletState
+  , getsSnapletState
+
+--  , wrap
+--  , wrapTop
 
   -- * Initializer
   -- $initializer
   , Initializer
   , SnapletInit
+  , makeSnaplet
+
   , nestSnaplet
   , embedSnaplet
   , nameSnaplet
+
+  , onUnload
+  , addPostInitHook
+  , addPostInitHookBase
+  , printInfo
 
   -- * Routes
   -- $routes
   , addRoutes
   , wrapHandlers
 
-  -- * Writing Snaplets
-  -- $writingSnaplets
-  , makeSnaplet
-  , onUnload
-  , addPostInitHook
-  , addPostInitHookBase
-  , printInfo
+  -- * Handlers
+  -- $handler
+  , Handler
+  , reloadSite
 
   -- * Serving Applications
   , runSnaplet
   , combineConfig
   , serveSnaplet
-
-  , Base
-  , Env
   ) where
 
 
@@ -141,11 +152,11 @@ import           Snap.Snaplet.Internal.Types
 -- 
 -- which allow you to get and set a value of type @b@ within the context of type
 -- @a@. The @data-lens@ package comes with a Template Haskell function called
--- 'mkLabels', which auto-magically defines a lens for every record field having a
+-- 'makeLenses', which auto-magically defines a lens for every record field having a
 -- name beginning with an underscore. In the @App@ example above, adding the
 -- declaration:
 -- 
--- > mkLabels [''App]
+-- > makeLenses [''App]
 -- 
 -- would define lenses:
 -- 
@@ -163,7 +174,7 @@ import           Snap.Snaplet.Internal.Types
 -- >                                -- use Control.Category.(.)
 -- >
 -- > data Foo = Foo { _quux :: Quux }
--- > mkLabels [''Foo]
+-- > makeLenses [''Foo]
 -- >
 -- > -- snapletValue is defined in the framework:
 -- > snapletValue :: Lens (Snaplet a) a
@@ -188,15 +199,44 @@ import           Snap.Snaplet.Internal.Types
 -- children without knowing anything about the rest of the tree.
 -- 
 -- Several monads use this infrastructure. These monads need at least three type
--- parameters. Two for the lens type, and the standard 'a' denoting the monad
--- return value. You will usually see this written in type signatures as "m b v a"
--- or some variation. The 'm' is the type variable of the MonadSnaplet type class.
--- 'b' is the base state, and 'v' is the state of the current "view" snaplet (or
--- simply, current state).
+-- parameters. Two for the lens type, and the standard \'a\' denoting the monad
+-- return value. You will usually see this written in type signatures as
+-- \"m b v a\" or some variation. The \'m\' is the type variable of the
+-- MonadSnaplet type class. \'b\' is the base state, and \'v\' is the state of the
+-- current \"view\" snaplet (or simply, current state).
 -- 
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
 -- snaplet trees.
+
+-- $initializer
+-- The Initializer monad is where your application's initialization happens.
+-- Initializers are run at startup and any time a site reload is triggered.
+-- The Initializer's job is to construct a snaplet's routes and initial state,
+-- set up filesystem data, read config files, etc.  
+--
+-- In order to initialize its state, a snaplet needs to initialize all the
+-- @Snaplet a@ state for each of its subsnaplets.  The only way to construct
+-- a @Snaplet a@ type is by calling 'nestSnaplet' or 'embedSnaplet' from
+-- within an initializer. 
+
+
+-- $writingSnaplets
+-- When writing a snaplet, you must define an initializer function.  The
+-- initializer function for the Foo snaplet (where Foo is the snaplet's
+-- state type) must have a return type of @Initializer b Foo Foo@.
+-- To create an initializer like this, you have to use the 'makeSnaplet'
+-- function.  It takes care of the necessary internal bookkeeping needed when
+-- initializing a new snaplet.  Haskell's strong type system allows us to
+-- ensure that calling 'makeSnaplet' is the only way you can construct a
+-- Snaplet type.
+
+
+-- $routes
+-- Snaplet initializers are also responsible for setting up any routes defined
+-- by the snaplet.  To do that you'll usually use either 'addRoutes' or
+-- 'wrapHandlers'.
+
 
 -- $handler
 -- Snaplet infrastructure is available during runtime request processing
@@ -206,35 +246,6 @@ import           Snap.Snaplet.Internal.Types
 -- monad you will use to write all your application routes.  It also has a
 -- 'MonadSnaplet' instance, which gives you all the functionality described
 -- above.
-
--- $initializer
--- The Initializer monad is where your application's initialization happens.
--- Initializers are run at startup and any time a site reload is triggered.
--- The Initializer's job is to construct a snaplet's state and routes, set up
--- filesystem data, read config files, etc.  
---
--- In order for a snaplet to initialize its state, it needs to initialize all
--- of its subsnaplets.  Every snaplet will have an initializer with a return
--- type of @Initializer b v (Snaplet a)@ where 'a' is the snaplet's state.
--- You must call these initializer functions wrapped in a call to
--- 'nestSnaplet'.
-
-
--- $routes
--- Snaplet initializers are also responsible for setting up any routes defined
--- by the snaplet.  To do that you'll usually use either 'addRoutes' or
--- 'wrapHandlers'.
-
-
--- $writingSnaplets
--- When writing a snaplet, you must define an initializer function.  The
--- initializer function for the Foo snaplet (where Foo is the snaplet's
--- state type) must have a return type of @Initializer b v (Snaplet Foo)@.
--- To create an initializer like this, you have to use the 'makeSnaplet'
--- function.  It takes care of the necessary internal bookkeeping needed when
--- initializing a new snaplet.  Haskell's strong type system allows us to
--- ensure that calling 'makeSnaplet' is the only way you can construct a
--- Snaplet type.
 
 {-
 
@@ -275,7 +286,7 @@ Snaplet) we want to use as well as any other state we might want.}
 >     , _companyName :: String
 >     }
 >
-> mkLabels [''App]
+> makeLenses [''App]
 
 The next thing we need to do is define an initializer.
 

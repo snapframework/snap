@@ -1,10 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Snap.Snaplet.Internal.Lensed.Tests (tests) where
+module Snap.Snaplet.Internal.LensT.Tests (tests) where
 
 import           Control.Applicative
 import           Control.Category
 import           Control.Exception
+import           Control.Monad.Identity
 import           Control.Monad.State.Strict
 import           Data.Lens.Template
 import           Prelude hiding (catch, (.))
@@ -14,7 +15,7 @@ import           Test.HUnit hiding (Test, path)
 
 
 ------------------------------------------------------------------------------
-import           Snap.Snaplet.Internal.Lensed
+import           Snap.Snaplet.Internal.LensT
 
 
 ------------------------------------------------------------------------------
@@ -42,7 +43,7 @@ defaultState = TestType 1 $ TestSubType 2 999 $ TestBotType 3
 
 
 ------------------------------------------------------------------------------
-tests = testGroup "Snap.Snaplet.Internal.Lensed"
+tests = testGroup "Snap.Snaplet.Internal.LensT"
                   [ testfmap
                   , testApplicative
                   , testMonadState
@@ -52,17 +53,18 @@ tests = testGroup "Snap.Snaplet.Internal.Lensed"
 ------------------------------------------------------------------------------
 testfmap :: Test
 testfmap = testCase "lensed/fmap" $ do
-    x <- evalStateT (lensedAsState (fmap (*2) three) (bot . sub)) defaultState
+--    x <- evalStateT (lensedAsState (fmap (*2) three) (bot . sub)) defaultState
+    let x = fst $ runIdentity (runLensT (fmap (*2) three) (bot . sub) defaultState)
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
+    let (y,s') = runIdentity (runLensT twiddle (bot . sub) defaultState)
 
     assertEqual "fmap2" 12 y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
     return ()
 
   where
-    three :: Lensed TestType TestBotType IO Int
+--    three :: LensT TestType TestBotType IO Int
     three = return 3
 
     twiddle = do
@@ -73,17 +75,18 @@ testfmap = testCase "lensed/fmap" $ do
 ------------------------------------------------------------------------------
 testApplicative :: Test
 testApplicative = testCase "lensed/applicative" $ do
-    x <- evalStateT (lensedAsState (pure (*2) <*> three) (bot . sub)) defaultState
+--    x <- evalStateT (lensedAsState (pure (*2) <*> three) (bot . sub)) defaultState
+    let x = fst $ runIdentity (runLensT (pure (*2) <*> three) (bot . sub) defaultState)
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
+    let (y,s') = runIdentity (runLensT twiddle (bot . sub) defaultState)
 
     assertEqual "fmap2" (12::Int) y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
     return ()
 
   where
-    three :: Lensed TestType TestBotType IO Int
+--    three :: LensT TestType TestBotType IO Int
     three = pure 3
 
     twiddle = do
@@ -94,30 +97,28 @@ testApplicative = testCase "lensed/applicative" $ do
 ------------------------------------------------------------------------------
 testMonadState :: Test
 testMonadState = testCase "lens/MonadState" $ do
-    s <- execStateT (lensedAsState go (bot0 . bot . sub)) defaultState
+--    s <- execStateT (lensedAsState go (bot0 . bot . sub)) defaultState
+    let s = snd $ runIdentity (runLensT go (bot0 . bot . sub) defaultState)
 
     assertEqual "bot0" 9 $ _bot0 $ _bot $ _sub s
     assertEqual "sub0" 3 $ _sub0 $ _sub s
-    assertEqual "sub1" 1000 $ _sub1 $ _sub s
+    assertEqual "sub1" 999 $ _sub1 $ _sub s
 
   where
-    go :: Lensed TestType Int IO ()
+--    go :: LensT TestType Int IO ()
     go = do
         modify (*2)
         modify (+3)
         withTop sub go'
 
-    go' :: Lensed TestType TestSubType IO ()
+--    go' :: LensT TestType TestSubType IO ()
     go' = do
         a <- with sub0 get
         with sub0 $ put $ a+1
-        embed sub1 go''
-
-    go'' :: Lensed TestSubType Int IO ()
-    go'' = modify (+1)
 
 
 eat :: SomeException -> IO ()
 eat _ = return ()
 
 qqq = defaultMainWithArgs [tests] ["--plain"] `catch` eat
+

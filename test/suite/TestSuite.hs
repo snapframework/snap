@@ -10,19 +10,30 @@ import           System.Directory
 import           Test.Framework (defaultMain)
 
 import           Snap.Http.Server (simpleHttpServe)
-import           Snap.Snaplet.App
-import qualified Snap.Snaplet.Tests
+import           Blackbox.App
+import qualified Blackbox.Tests
 import qualified Snap.Snaplet.Internal.Lensed.Tests
+import qualified Snap.Snaplet.Internal.LensT.Tests
+import qualified Snap.Snaplet.Internal.RST.Tests
+import qualified Snap.Snaplet.Internal.Tests
 
 
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
+    Blackbox.Tests.remove "non-cabal-appdir/templates/bad.tpl"
+    Blackbox.Tests.remove "non-cabal-appdir/templates/good.tpl"
+    Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
+
     tid <- startServer
     defaultMain tests
     throwTo tid UserInterrupt
-  where tests = [ Snap.Snaplet.Tests.tests,
-                  Snap.Snaplet.Internal.Lensed.Tests.tests
+
+  where tests = [ Blackbox.Tests.tests
+                , Snap.Snaplet.Internal.Lensed.Tests.tests
+                , Snap.Snaplet.Internal.LensT.Tests.tests
+                , Snap.Snaplet.Internal.RST.Tests.tests
+                , Snap.Snaplet.Internal.Tests.tests
                 ]
 
 startServer :: IO ThreadId

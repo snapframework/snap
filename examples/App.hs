@@ -6,9 +6,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import           Prelude hiding (catch)
-import           Control.Monad.CatchIO (catch, try)
-import           Data.Lens.Lazy
 import           Data.Lens.Template
 import qualified Data.Text as T
 import           Snap.Core
