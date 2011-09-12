@@ -126,10 +126,15 @@ defAuthUser = AuthUser {
 -- | Authetication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen :: Int
+  -- ^ Currently not used/checked
   , asRememberCookieName :: ByteString
   , asRememberPeriod :: Maybe Int
+  -- ^ How long to remember when the option is used in rest of the API.
+  -- 'Nothing' means remember indefinitely.
   , asLockout :: Maybe (Int, Int)
+  -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
   , asSiteKey :: FilePath
+  -- ^ Location of app's encryption key 
 }
 
 defAuthSettings = AuthSettings {

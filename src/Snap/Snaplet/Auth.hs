@@ -19,6 +19,8 @@ module Snap.Snaplet.Auth
 
   -- * Higher Level Functions
     createUser
+  , saveUser
+  , destroyUser
   , loginByUsername
   , loginByRememberToken
   , forceLogin
@@ -146,6 +148,26 @@ isLoggedIn :: Handler b (AuthManager b) Bool
 isLoggedIn = do
   au <- currentUser
   return $ isJust au 
+
+
+------------------------------------------------------------------------------
+-- | Create or update a given user
+--
+-- May throw a 'BackendError' if something goes wrong.
+saveUser :: AuthUser -> Handler b (AuthManager b) ()
+saveUser u = do
+  (AuthManager r _ _ _ _ _ _ _) <- get
+  liftIO $ save r u
+
+
+------------------------------------------------------------------------------
+-- | Destroy the given user
+--
+-- May throw a 'BackendError' if something goes wrong.
+destroyUser :: AuthUser -> Handler b (AuthManager b) ()
+destroyUser u = do
+  (AuthManager r _ _ _ _ _ _ _) <- get
+  liftIO $ destroy r u
 
 
 ------------------------------------------------------------------------------
