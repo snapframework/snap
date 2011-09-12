@@ -17,6 +17,7 @@ import           Data.Time
 import           Data.Typeable
 import           Data.Text (Text)
 import           Crypto.PasswordStore
+import           Web.ClientSession
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Session
@@ -167,7 +168,7 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
   , rememberPeriod :: Maybe Int
   -- ^ Remember period in seconds. Defaults to 2 weeks.
 
-  , siteKey :: ByteString
+  , siteKey :: Key
   -- ^ A unique encryption key used to encrypt remember cookie
 
   , lockout :: Maybe (Int, Int)

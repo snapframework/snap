@@ -82,7 +82,7 @@ Library
     aeson                     >= 0.3.2,
     bytestring                >= 0.9.1 && < 0.10,
     cereal                    >= 0.3,
-    clientsession             >= 0.4,
+    clientsession             >= 0.7.2,
     compact-string-fix        >= 0.3,
     configurator              >= 0.0.1.1 && < 0.2,
     containers                >= 0.3,
