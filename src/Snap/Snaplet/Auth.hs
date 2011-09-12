@@ -81,7 +81,7 @@ createUser
   -> ByteString -- Password
   -> Handler b (AuthManager b) AuthUser
 createUser unm pass = do
-  mgr@(AuthManager r _ _ _ _ _ _ _) <- get
+  mgr@(AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   now <- liftIO getCurrentTime
   pw <- Encrypted `fmap` liftIO (makePassword pass 12)
   let au = defAuthUser {
@@ -102,7 +102,7 @@ loginByUsername
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
 loginByUsername unm pwd rm  = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
   case au of
     Nothing  -> return $ Left UserNotFound
@@ -115,7 +115,7 @@ loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
 loginByRememberToken = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r _ _ _ rc rp sk _) <- get
+      mgr@(AuthManager r _ _ _ rc rp sk _) <- getSnapletState
       token <- getRememberToken sk rc rp
       maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
 
@@ -124,9 +124,9 @@ loginByRememberToken = cacheOrLookup f
 -- | Logout the active user
 logout :: Handler b (AuthManager b) ()
 logout = do 
-  s <- gets session
+  s <- getsSnapletState session
   withTop s $ withSession s removeSessionUserId 
-  modify (\mgr -> mgr { activeUser = Nothing } )
+  modifySnapletState (\mgr -> mgr { activeUser = Nothing } )
 
 
 ------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r s _ _ _ _ _ _) <- get
+      mgr@(AuthManager r s _ _ _ _ _ _) <- getSnapletState
       uid <- withTop s getSessionUserId 
       case uid of
         Nothing -> return Nothing
@@ -154,9 +154,9 @@ isLoggedIn = do
 -- | Create or update a given user
 --
 -- May throw a 'BackendError' if something goes wrong.
-saveUser :: AuthUser -> Handler b (AuthManager b) ()
+saveUser :: AuthUser -> Handler b (AuthManager b) AuthUser
 saveUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   liftIO $ save r u
 
 
@@ -166,7 +166,7 @@ saveUser u = do
 -- May throw a 'BackendError' if something goes wrong.
 destroyUser :: AuthUser -> Handler b (AuthManager b) ()
 destroyUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   liftIO $ destroy r u
 
 
@@ -182,20 +182,19 @@ destroyUser u = do
 -- This will save the user to the backend.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthFail u = do
-  (AuthManager r _ _ _ _ _ _ lo) <- get
-  proc u >>= liftIO . save r
+  (AuthManager r _ _ _ _ _ _ lo) <- getSnapletState
+  incFailCtr u >>= checkLockout lo >>= liftIO . save r
   where
-    proc = incFailCtr >=> checkLockout
     incFailCtr u' = return $ u' 
                       { userFailedLoginCount = userFailedLoginCount u' + 1}
-    checkLockout u' = case lo of
+    checkLockout lo u' = case lo of
       Nothing -> return u'
       Just (mx, wait) -> 
         case userFailedLoginCount u' >= mx of
           True -> do
             now <- liftIO getCurrentTime
             let reopen = addUTCTime wait now
-            return $ u' { userLockedOutUntil = Just dur }
+            return $ u' { userLockedOutUntil = Just reopen }
 
 
 ------------------------------------------------------------------------------
@@ -204,7 +203,7 @@ markAuthFail u = do
 -- This will save the user to the backend.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   now <- liftIO getCurrentTime
   incLoginCtr u >>= updateIp >>= updateLoginTS 
     >>= resetFailCtr >>= liftIO . save r
@@ -246,7 +245,7 @@ checkPasswordAndLogin u pw remember =
       if now > x then
       	auth u
       else
-      	return $ Left LockedOut
+      	return . Left $ LockedOut x
   where
     auth u = 
       case authenticatePassword u pw of
@@ -255,7 +254,7 @@ checkPasswordAndLogin u pw remember =
           return $ Left e
         Nothing -> do
           forceLogin u remember
-          modify (\mgr -> mgr { activeUser = Just u })
+          modifySnapletState (\mgr -> mgr { activeUser = Just u })
           u' <- markAuthSuccess u
           return $ Right u'
 
@@ -274,7 +273,7 @@ forceLogin
   -- ^ Set remember cookie?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 forceLogin u rc = do
-  AuthManager _ s _ _ cn rp sk _ <- get
+  AuthManager _ s _ _ cn rp sk _ <- getSnapletState
   withSession s $ do
     case userId u of
       Just x -> do
@@ -342,12 +341,12 @@ cacheOrLookup
   -- ^ Lookup action to perform if request local cache is empty
   -> Handler b (AuthManager b) (Maybe AuthUser)
 cacheOrLookup f = do
-  au <- gets activeUser
+  au <- getsSnapletState activeUser
   if isJust au 
     then return au
     else do
       au' <- f
-      modify (\mgr -> mgr { activeUser = au' })
+      modifySnapletState (\mgr -> mgr { activeUser = au' })
       return au'
 
 

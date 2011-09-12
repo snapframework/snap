@@ -39,7 +39,7 @@ registerUser
   -> ByteString -- Password field
   -> Handler b (AuthManager b) AuthUser
 registerUser lf pf = do
-  mgr@(AuthManager r _ _ _ _ _ _ _) <- get
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
   l <- fmap decodeUtf8 `fmap` getParam lf
   p <- getParam pf
   case liftM2 (,) l p of
@@ -67,12 +67,12 @@ loginUser
 loginUser unf pwdf remf loginFail loginSucc = do
     username <- getParam unf
     password <- getParam pwdf
-    remember <- maybe False (=="1") `fmap` getParam remf
+    remember <- maybe False (=="1") `fmap` maybe (return Nothing) getParam remf
     mMatch <- case password of
       Nothing -> return $ Left PasswordMissing
       Just password' -> do 
         case username of
-          Nothing -> return $ Left UsernameMissing
+          Nothing -> return . Left $ AuthError "Username is missing"
           Just username' -> do
             loginByUsername username' (ClearText password') remember
     either loginFail (const loginSucc) mMatch

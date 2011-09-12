@@ -6,6 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
+import           Control.Monad.CatchIO (try)
 import           Data.Lens.Template
 import qualified Data.Text as T
 import           Snap.Core

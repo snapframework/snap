@@ -56,7 +56,8 @@ data AuthFailure =
     UserNotFound
   | IncorrectPassword
   | PasswordMissing
-  | LockedOut Int               -- ^ Locked out with given seconds to go
+  | LockedOut UTCTime
+  -- ^ Locked out until given time
   | AuthError String
   deriving (Read, Show, Ord, Eq, Typeable)
 
@@ -132,7 +133,7 @@ data AuthSettings = AuthSettings {
   , asRememberPeriod :: Maybe Int
   -- ^ How long to remember when the option is used in rest of the API.
   -- 'Nothing' means remember indefinitely.
-  , asLockout :: Maybe (Int, Int)
+  , asLockout :: Maybe (Int, NominalDiffTime)
   -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
   , asSiteKey :: FilePath
   -- ^ Location of app's encryption key 
@@ -171,13 +172,15 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
   , siteKey :: Key
   -- ^ A unique encryption key used to encrypt remember cookie
 
-  , lockout :: Maybe (Int, Int)
+  , lockout :: Maybe (Int, NominalDiffTime)
   -- ^ Lockout after x tries, re-allow entry after y seconds
   }
 
 
 
-data BackendError = DuplicateLogin | BackendError String
+data BackendError = 
+    DuplicateLogin 
+  | BackendError String
   deriving (Eq,Show,Read,Typeable)
 
 

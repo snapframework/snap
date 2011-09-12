@@ -280,7 +280,7 @@ instance ToJSON AuthUser where
     , "remember_token" .= userRememberToken u
     , "login_count" .= userLoginCount u
     , "failed_login_count" .= userFailedLoginCount u
-    , "locked_at" .= userLockedOutAt u
+    , "locked_until" .= userLockedOutUntil u
     , "current_login_at" .= userCurrentLoginAt u
     , "last_login_at" .= userLastLoginAt u
     , "current_ip" .= userCurrentLoginIp u
@@ -300,7 +300,7 @@ instance FromJSON AuthUser where
     <*> v .: "remember_token"
     <*> v .: "login_count"
     <*> v .: "failed_login_count"
-    <*> v .: "locked_at"
+    <*> v .: "locked_until"
     <*> v .: "current_login_at"
     <*> v .: "last_login_at"
     <*> v .: "current_ip"
