@@ -15,9 +15,9 @@ Executable testsuite
     filepath,
     Glob == 0.5.*,
     HUnit >= 1.2 && < 2,
-    http-enumerator >= 0.6.5.4 && <0.7,
+    http-enumerator >= 0.7 && <0.8,
     process == 1.*,
-    test-framework >= 0.3.1 && <0.4,
+    test-framework >= 0.3.1 && <0.5,
     test-framework-hunit >= 0.2.5 && < 0.3,
     test-framework-quickcheck2 >= 0.2.6 && < 0.3
     

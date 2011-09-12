@@ -28,7 +28,7 @@ Executable projname
     snap-core == 0.5.*,
     snap-server == 0.5.*,
     text >= 0.11 && < 0.12,
-    time >= 1.1 && < 1.3,
+    time >= 1.1 && < 1.4,
     xmlhtml == 0.1.*
 
   extensions: TypeSynonymInstances MultiParamTypeClasses
