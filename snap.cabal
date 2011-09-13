@@ -37,7 +37,7 @@ extra-source-files:
 
 Flag hint
   Description: Support dynamic project reloading via hint
-  Default: False
+  Default: True
 
 Library
   hs-source-dirs: src
