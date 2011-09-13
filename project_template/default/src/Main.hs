@@ -62,7 +62,7 @@ import           Snap.Loader.Prod
 
 main :: IO ()
 main = do
-    (conf, site, cleanup) <- $(loadSnapTH 'getConf 'getActions ["Snap.Http.Server.Config"] ["resources/templates"])
+    (conf, site, cleanup) <- $(loadSnapTH 'getConf 'getActions ["resources/templates"])
 
     _ <- try $ httpServe conf $ site :: IO (Either SomeException ())
     cleanup

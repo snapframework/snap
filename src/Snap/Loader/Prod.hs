@@ -13,9 +13,9 @@ import           Language.Haskell.TH
 --
 -- This could be considered a TH wrapper around a function
 --
--- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> IO (a, Snap (), IO ())
-loadSnapTH :: Name -> Name -> [String] -> [String] -> Q Exp
-loadSnapTH initializer action _additionalImports _additionalWatchDirs =
+-- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> [String] -> IO (a, Snap (), IO ())
+loadSnapTH :: Name -> Name -> [String] -> Q Exp
+loadSnapTH initializer action _additionalWatchDirs =
     [| do value <- $(varE initializer)
           (site, conf) <- $(varE action) value
           return (value, site, conf) |]

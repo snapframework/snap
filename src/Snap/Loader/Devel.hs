@@ -11,12 +11,13 @@ module Snap.Loader.Devel
 
 import           Control.Monad (liftM2)
 
+import           Data.Char (isAlphaNum)
 import           Data.List
 import           Data.Maybe (catMaybes)
 import           Data.Time.Clock (diffUTCTime, getCurrentTime)
-import           Data.Typeable (Typeable)
+import           Data.Typeable
 
-import           Language.Haskell.Interpreter hiding (lift, liftIO)
+import           Language.Haskell.Interpreter hiding (lift, liftIO, typeOf)
 import           Language.Haskell.Interpreter.Unsafe
 
 import           Language.Haskell.TH
@@ -36,15 +37,15 @@ import           Snap.Loader.Devel.TreeWatcher
 --
 -- This could be considered a TH wrapper around a function
 --
--- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> IO (a, Snap (), IO ())
+-- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> [String] -> IO (a, Snap (), IO ())
 --
 -- with a magical implementation.
 --
 -- The upshot is that you shouldn't need to recompile your server
 -- during development unless your .cabal file changes, or the code
 -- that uses this splice changes.
-loadSnapTH :: Name -> Name -> [String] -> [String] -> Q Exp
-loadSnapTH initializer action additionalImports additionalWatchDirs =
+loadSnapTH :: Name -> Name -> [String] -> Q Exp
+loadSnapTH initializer action additionalWatchDirs =
     loadSnapTH' modules imports additionalWatchDirs initializer actBase
   where
     initMod = nameModule initializer
@@ -52,7 +53,7 @@ loadSnapTH initializer action additionalImports additionalWatchDirs =
     actBase = nameBase action
 
     modules = catMaybes [initMod, actMod]
-    imports = catMaybes [actMod] ++ additionalImports
+    imports = catMaybes [actMod]
 
 
 ------------------------------------------------------------------------------
@@ -142,9 +143,15 @@ hintSnap opts modules imports srcPaths action value =
   where
     witness x = undefined $ x `asTypeOf` value :: HintLoadable
 
+    witnessModules = map (reverse . drop 1 . dropWhile (/= '.') . reverse) .
+                     filter (elem '.') . groupBy typePart . show . typeOf $
+                     witness
+
+    typePart x y = (isAlphaNum x && isAlphaNum  y) || x == '.' || y == '.'
+
     interpreter = do
         loadModules . nub $ modules
-        setImports . nub $ "Prelude" : "Snap.Core" : imports ++ modules
+        setImports . nub $ "Prelude" : witnessModules ++ imports ++ modules
 
         f <- interpret action witness
         return $ f value
