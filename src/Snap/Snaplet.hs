@@ -12,8 +12,8 @@ Snaplets allow you to build web applications out of composable parts. This
 allows you to build self-contained units and glue them together to make your
 overall application.
 
-A snaplet component has a few moving parts, some user-defined and some provided
-by the snaplet framework:
+A snaplet has a few moving parts, some user-defined and some provided by the
+snaplet API:
 
   * each snaplet has its own configuration given to it at startup.
 
@@ -30,8 +30,8 @@ by the snaplet framework:
     snaplet that talks to a database might contain a reference to a connection
     pool. The snaplet state is an ordinary Haskell record, with a datatype
     defined by the snaplet author. The initial state record is created during
-    initialization and is available (with a 'MonadState' instance) to snaplet
-    'Handler's when serving HTTP requests.
+    initialization and is available to snaplet 'Handler's when serving HTTP
+    requests.
 
 NOTE: This documentation is written as a prose tutorial of the snaplets
 API.  Don't be scared by the fact that it's auto-generated and is filled with
@@ -65,6 +65,8 @@ module Snap.Snaplet
   , getSnapletUserConfig
   , getSnapletRootURL
 
+  -- * Snaplet state manipulation
+  -- $snapletState
   , getSnapletState
   , putSnapletState
   , modifySnapletState
@@ -149,12 +151,13 @@ import           Snap.Snaplet.Internal.Types
 -- 
 -- > getL :: (Lens a b) -> a -> b
 -- > setL :: (Lens a b) -> b -> a -> a
+-- > modL :: (Lens a b) -> (b -> b) -> a -> a
 -- 
--- which allow you to get and set a value of type @b@ within the context of type
--- @a@. The @data-lens@ package comes with a Template Haskell function called
--- 'makeLenses', which auto-magically defines a lens for every record field having a
--- name beginning with an underscore. In the @App@ example above, adding the
--- declaration:
+-- which allow you to get, set, and modify a value of type @b@ within the
+-- context of type of type @a@. The @data-lens@ package comes with a Template
+-- Haskell function called 'makeLenses', which auto-magically defines a lens
+-- for every record field having a name beginning with an underscore. In the
+-- @App@ example above, adding the declaration:
 -- 
 -- > makeLenses [''App]
 -- 
@@ -208,6 +211,12 @@ import           Snap.Snaplet.Internal.Types
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
 -- snaplet trees.
+
+-- $snapletState
+-- MonadSnaplet instances will typically have (MonadState (Snaplet v))
+-- instances.  We provide the following convenience functions which give the
+-- equivalent to (MonadState v).  These functions are what you use to access
+-- and manipulate your user-defined snaplet state.
 
 -- $initializer
 -- The Initializer monad is where your application's initialization happens.

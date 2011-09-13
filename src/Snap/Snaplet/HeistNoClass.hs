@@ -156,8 +156,7 @@ instance MonadState (Snaplet v) (SnapletHeist b v) where
 
 
 ------------------------------------------------------------------------------
--- | MonadSnaplet instance gives us access to all Snap's request processing
--- goodness.
+-- | MonadSnaplet instance gives us access to the snaplet infrastructure.
 instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
