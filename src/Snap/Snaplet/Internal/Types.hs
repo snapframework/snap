@@ -179,7 +179,7 @@ getSnapletRootURL = liftM getRootURL getOpaqueConfig
 -- wrap' proj _filter m = do
 --     currentLens <- getLens
 --     proj (_filter (withTop' currentLens m))
--- 
+--
 -- ------------------------------------------------------------------------------
 -- -- | Applies a "filter" style function on snaplet monads with a descendent
 -- -- snaplet.
@@ -188,8 +188,8 @@ getSnapletRootURL = liftM getRootURL getOpaqueConfig
 --      -> (m b v  a -> m b v  a)
 --      -> (m b v' a -> m b v' a)
 -- wrap l = wrap' (with' l)
--- 
--- 
+--
+--
 -- ------------------------------------------------------------------------------
 -- -- | Applies a "filter" style function on snaplet monads with a sibling
 -- -- snaplet.
@@ -303,7 +303,7 @@ instance Monoid (Hook a) where
 
 ------------------------------------------------------------------------------
 -- | Monad used for initializing snaplets.
-newtype Initializer b v a = 
+newtype Initializer b v a =
     Initializer (LT.LensT (Snaplet b)
                           (Snaplet v)
                           (InitializerState b)
