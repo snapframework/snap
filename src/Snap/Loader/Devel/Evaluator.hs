@@ -24,10 +24,10 @@ type HintLoadable = IO (Snap (), IO ())
 
 
 ------------------------------------------------------------------------------
--- | Convert an action to generate 'HintLoadable's into an action to
--- generate Snap actions.  The resulting action will share initialized
--- state until the next execution of the input action.  At this time,
--- the cleanup action will be executed.
+-- | Convert an action to generate 'HintLoadable's into Snap and IO
+-- actions that handle periodic reloading.  The resulting action will
+-- share initialized state until the next execution of the input
+-- action.  At this time, the cleanup action will be executed.
 --
 -- The first two arguments control when recompiles are done.  The
 -- first argument is an action that is executed when compilation
@@ -43,7 +43,7 @@ protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)
                        -> IO HintLoadable
-                       -> HintLoadable
+                       -> IO (Snap (), IO ())
 protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
