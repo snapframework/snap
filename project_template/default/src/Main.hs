@@ -41,39 +41,39 @@ change.
 
 module Main where
 
-import Snap.Http.Server.Config
-import Snap.Snaplet
-
-import Site
-
-{-
-#ifdef DEVELOPMENT
 import           Control.Exception (SomeException, try)
 
-import           Snap.Loader.Devel
-import           Snap.Http.Server (quickHttpServe)
-#else
-import           Snap.Snaplet
-#endif
+import qualified Data.Text as T
 
-import           Application
+import           Snap.Http.Server
+import           Snap.Snaplet
+import           Snap.Core
+
+import           System.IO
+
 import           Site
 
-main :: IO ()
 #ifdef DEVELOPMENT
-main = do
-    -- All source directories will be watched for updates
-    -- automatically.  If any extra directories should be watched for
-    -- updates, include them here.
-    (snap, cleanup) <- $(let watchDirs = ["resources/templates"]
-                         in loadSnapTH 'applicationInitializer 'site watchDirs)
-    try $ quickHttpServe snap :: IO (Either SomeException ())
-    cleanup
+import           Snap.Loader.Devel
 #else
-main = quickHttpServe applicationInitializer site
+import           Snap.Loader.Prod
 #endif
--}
+
 
 main :: IO ()
-main = serveSnaplet defaultConfig app
+main = do
+    (conf, site, cleanup) <- $(loadSnapTH 'getConf 'getActions ["Snap.Http.Server.Config"] ["resources/templates"])
 
+    _ <- try $ httpServe conf $ site :: IO (Either SomeException ())
+    cleanup
+
+
+getConf :: IO (Config Snap ())
+getConf = commandLineConfig defaultConfig
+
+
+getActions :: Config Snap () -> IO (Snap (), IO ())
+getActions _ = do
+    (msgs, site, cleanup) <- runSnaplet app
+    hPutStrLn stderr $ T.unpack msgs
+    return (site, cleanup)

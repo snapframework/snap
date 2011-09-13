@@ -47,6 +47,7 @@ Library
       Snap.Loader.Devel
 
   exposed-modules:
+    Snap.Loader.Prod
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Session,

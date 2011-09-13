@@ -43,7 +43,7 @@ protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)
                        -> IO HintLoadable
-                       -> IO (Snap (), IO ())
+                       -> HintLoadable
 protectedHintEvaluator start test getInternals = do
     -- The list of requesters waiting for a result.  Contains the
     -- ThreadId in case of exceptions, and an empty MVar awaiting a
@@ -120,9 +120,7 @@ protectedHintEvaluator start test getInternals = do
                     case (valid, res) of
                         (True, Right (x, _)) -> return x
                         (True, Left e)       -> throwIO e
-                        (False, _)           -> do
-                            _ <- swapMVar resultContainer Nothing
-                            waitForNewResult
+                        (False, _)           -> waitForNewResult
                 Nothing -> waitForNewResult
             getResult
 
