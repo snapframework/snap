@@ -14,6 +14,9 @@ import           Language.Haskell.TH
 -- This could be considered a TH wrapper around a function
 --
 -- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> [String] -> IO (a, Snap (), IO ())
+--
+-- The third argument is unused, and only present for
+-- type-compatibility with Snap.Loader.Devel
 loadSnapTH :: Name -> Name -> [String] -> Q Exp
 loadSnapTH initializer action _additionalWatchDirs =
     [| do value <- $(varE initializer)
