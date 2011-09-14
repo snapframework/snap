@@ -6,7 +6,6 @@
 -- the calls to the dynamic loader.
 module Snap.Loader.Devel
   ( loadSnapTH
-  , loadSnapTH'
   ) where
 
 import           Control.Monad (liftM2)
@@ -62,37 +61,25 @@ loadSnapTH :: Name     -- ^ the name of the initializer
            -> [String] -- ^ a list of directories to watch in addition
                        -- to those containing code
            -> Q Exp
-loadSnapTH initializer action additionalWatchDirs =
-    loadSnapTH' modules imports additionalWatchDirs initializer actBase
-  where
-    initMod = nameModule initializer
-    actMod = nameModule action
-    actBase = nameBase action
-
-    modules = catMaybes [initMod, actMod]
-    imports = catMaybes [actMod]
-
-
-------------------------------------------------------------------------------
--- | This is the backing implementation for 'loadSnapTH'.
-loadSnapTH' :: [String] -- ^ the list of modules to interpret
-            -> [String] -- ^ the list of modules to import in addition
-                        -- to those being interpreted
-            -> [String] -- ^ additional directories to watch for
-                        -- changes to trigger to recompile/reload
-            -> Name     -- ^ an initialization expression
-            -> String   -- ^ the expression to interpret in the
-                        -- context of the loaded modules and imports.
-            -> Q Exp
-loadSnapTH' modules imports additionalWatchDirs initName loadStr = do
+loadSnapTH initializer action additionalWatchDirs = do
     args <- runIO getArgs
 
     let opts = getHintOpts args
         srcPaths = additionalWatchDirs ++ getSrcPaths args
 
-    [| do res <- $(varE initName)
-          (handler, cleanup) <- hintSnap opts modules imports srcPaths loadStr res
-          return (res, handler, cleanup) |]
+    -- The first line is an extra type check to ensure the provided
+    -- names refer to expressions with the correct types
+    [| do let _ = $(varE initializer) >>= $(varE action)
+          v <- $(varE initializer)
+          (handler, cleanup) <- hintSnap opts modules imports srcPaths loadStr v
+          return (v, handler, cleanup) |]
+  where
+    initMod = nameModule initializer
+    actMod = nameModule action
+    loadStr = nameBase action
+
+    modules = catMaybes [initMod, actMod]
+    imports = catMaybes [actMod]
 
 
 ------------------------------------------------------------------------------
