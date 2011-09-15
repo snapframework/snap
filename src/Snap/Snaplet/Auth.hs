@@ -97,22 +97,31 @@ loginByUsername
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
 loginByUsername unm pwd rm  = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  AuthManager r s _ _ cn rp sk _ <- getSnapletState
   au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
   case au of
     Nothing  -> return $ Left UserNotFound
-    Just au' -> checkPasswordAndLogin au' pwd rm
+    Just au' -> do
+      res <- checkPasswordAndLogin au' pwd
+      case res of
+        Left e -> return $ Left e
+        Right au'' -> do
+          when rm $ do
+            token <- liftIO $ randomToken 64
+            setRememberToken sk cn rp token
+          return $ Right au''
 
 
 ------------------------------------------------------------------------------
--- | Remember user from the remember token if possible.
+-- | Remember user from the remember token if possible and perform login
 loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
-loginByRememberToken = cacheOrLookup f
-  where 
-    f = do
-      mgr@(AuthManager r _ _ _ rc rp sk _) <- getSnapletState
-      token <- getRememberToken sk rc rp
-      maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
+loginByRememberToken = do
+  mgr@(AuthManager r _ _ _ rc rp sk _) <- getSnapletState
+  token <- getRememberToken sk rc rp
+  au <- maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
+  case au of
+    Just au' -> forceLogin au' >> return au
+    Nothing -> return Nothing
 
 
 ------------------------------------------------------------------------------
@@ -125,7 +134,7 @@ logout = do
 
 
 ------------------------------------------------------------------------------
--- | Return the current user
+-- | Return the current user; trying to remember from cookie if possible.
 currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup f
   where 
@@ -133,16 +142,14 @@ currentUser = cacheOrLookup f
       mgr@(AuthManager r s _ _ _ _ _ _) <- getSnapletState
       uid <- withTop s getSessionUserId 
       case uid of
-        Nothing -> return Nothing
+        Nothing -> loginByRememberToken 
         Just uid' -> liftIO $ lookupByUserId r uid'
 
 
 ------------------------------------------------------------------------------
 -- | Convenience wrapper around 'rememberUser' that returns a bool result
 isLoggedIn :: Handler b (AuthManager b) Bool
-isLoggedIn = do
-  au <- currentUser
-  return $ isJust au 
+isLoggedIn = isJust `fmap` currentUser
 
 
 ------------------------------------------------------------------------------
@@ -234,9 +241,8 @@ markAuthSuccess u = do
 checkPasswordAndLogin
   :: AuthUser               -- ^ An existing user, somehow looked up from db
   -> Password               -- ^ A ClearText password
-  -> Bool                   -- ^ Set remember cookie?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-checkPasswordAndLogin u pw remember = 
+checkPasswordAndLogin u pw = 
   case userLockedOutUntil u of
     Just x -> do
       now <- liftIO getCurrentTime
@@ -252,7 +258,7 @@ checkPasswordAndLogin u pw remember =
           markAuthFail u
           return $ Left e
         Nothing -> do
-          forceLogin u remember
+          forceLogin u 
           modifySnapletState (\mgr -> mgr { activeUser = Just u })
           u' <- markAuthSuccess u
           return $ Right u'
@@ -263,22 +269,16 @@ checkPasswordAndLogin u pw remember =
 --
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
---
--- TODO: Implement remember cookie
 forceLogin 
   :: AuthUser
   -- ^ An existing user, somehow looked up from db
-  -> Bool 
-  -- ^ Set remember cookie?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-forceLogin u rc = do
-  AuthManager _ s _ _ cn rp sk _ <- getSnapletState
+forceLogin u = do
+  AuthManager _ s _ _ _ _ _ _ <- getSnapletState
   withSession s $ do
     case userId u of
       Just x -> do
         withTop s (setSessionUserId x) 
-        token <- liftIO $ randomToken 64
-        setRememberToken sk cn rp token
         return $ Right u
       Nothing -> return . Left $ 
         AuthError "forceLogin: Can't force the login of a user without userId"

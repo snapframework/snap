@@ -143,17 +143,27 @@ data AuthSettings = AuthSettings {
   -- ^ Name of the desired remember cookie
   , asRememberPeriod :: Maybe Int
   -- ^ How long to remember when the option is used in rest of the API.
-  -- 'Nothing' means remember indefinitely.
+  -- 'Nothing' means remember until end of session.
   , asLockout :: Maybe (Int, NominalDiffTime)
   -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
   , asSiteKey :: FilePath
   -- ^ Location of app's encryption key 
 }
 
+
+------------------------------------------------------------------------------
+-- | Default settings for Auth.
+--
+-- > asMinPasswdLen = 8
+-- > asRememberCookieName = "_remember"
+-- > asRememberPeriod = Just (2*7*24*60*60) = 2 weeks
+-- > asLockout = Nothing
+-- > asSiteKey = "site_key.txt"
+defAuthSettings :: AuthSettings
 defAuthSettings = AuthSettings {
     asMinPasswdLen = 8
-  , asRememberCookieName = "remember"
-  , asRememberPeriod = Just $ 14 * 24 * 60
+  , asRememberCookieName = "_remember"
+  , asRememberPeriod = Just (2*7*24*60*60)
   , asLockout = Nothing
   , asSiteKey = "site_key.txt"
 }
