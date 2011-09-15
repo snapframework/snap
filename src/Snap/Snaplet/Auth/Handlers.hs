@@ -28,6 +28,7 @@ import           Data.Time
 
 import           Snap.Core
 import           Snap.Snaplet.Auth
+import           Snap.Snaplet.Auth.AuthManager (AuthManager(..))
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet
 

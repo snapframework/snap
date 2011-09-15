@@ -103,6 +103,7 @@ data AuthUser = AuthUser
   } deriving (Show,Eq)
 
 
+defAuthUser :: AuthUser
 defAuthUser = AuthUser {
     userId = Nothing
   , userLogin = ""
@@ -125,11 +126,21 @@ defAuthUser = AuthUser {
 
 
 ------------------------------------------------------------------------------
+-- | Set a new password for the given user. Given password should be
+-- clear-text; it will be encrypted into a 'Encrypted'.
+setPassword :: AuthUser -> ByteString -> IO AuthUser
+setPassword au pass = do
+  pw <- Encrypted `fmap` (makePassword pass 12)
+  return $ au { userPassword = Just pw }
+
+
+------------------------------------------------------------------------------
 -- | Authetication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen :: Int
   -- ^ Currently not used/checked
   , asRememberCookieName :: ByteString
+  -- ^ Name of the desired remember cookie
   , asRememberPeriod :: Maybe Int
   -- ^ How long to remember when the option is used in rest of the API.
   -- 'Nothing' means remember indefinitely.
@@ -148,36 +159,6 @@ defAuthSettings = AuthSettings {
 }
 
 
-------------------------------------------------------------------------------
--- | Abstract data type holding all necessary information for auth operation
-data AuthManager b = forall r. IAuthBackend r => AuthManager { 
-    backend :: r
-  -- ^ Storage back-end 
-
-  , session :: Lens b (Snaplet SessionManager)
-  -- ^ A lens pointer to a SessionManager
-  
-  , activeUser :: Maybe AuthUser
-  -- ^ A per-request logged-in user cache
-
-  , minPasswdLen :: Int
-  -- ^ Password length range
-
-  , rememberCookieName :: ByteString
-  -- ^ Cookie name for the remember token
-
-  , rememberPeriod :: Maybe Int
-  -- ^ Remember period in seconds. Defaults to 2 weeks.
-
-  , siteKey :: Key
-  -- ^ A unique encryption key used to encrypt remember cookie
-
-  , lockout :: Maybe (Int, NominalDiffTime)
-  -- ^ Lockout after x tries, re-allow entry after y seconds
-  }
-
-
-
 data BackendError = 
     DuplicateLogin 
   | BackendError String
@@ -185,23 +166,4 @@ data BackendError =
 
 
 instance Exception BackendError
-
-
-------------------------------------------------------------------------------
--- | All storage backends need to implement this typeclass
---
--- Backend operations may throw 'BackendError's
-class IAuthBackend r where
-  
-  -- | Needs to create or update the given 'AuthUser' record
-  save :: r -> AuthUser -> IO AuthUser
-
-  lookupByUserId :: r -> UserId -> IO (Maybe AuthUser)
-
-  lookupByLogin :: r -> Text -> IO (Maybe AuthUser)
-
-  lookupByRememberToken :: r -> Text -> IO (Maybe AuthUser)
-
-  destroy :: r -> AuthUser -> IO ()
-
 

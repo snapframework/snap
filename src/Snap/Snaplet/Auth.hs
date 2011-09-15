@@ -17,7 +17,7 @@
 module Snap.Snaplet.Auth 
   ( 
 
-  -- * Higher Level Functions
+  -- * Higher Level Handler Functions
     createUser
   , saveUser
   , destroyUser
@@ -45,6 +45,7 @@ module Snap.Snaplet.Auth
 
   -- * Other Utilities
   , authenticatePassword
+  , setPassword
   )
   where
 
@@ -59,6 +60,8 @@ import           Data.Text (Text)
 
 import           Snap.Core
 import           Snap.Snaplet
+import qualified Snap.Snaplet.Auth.AuthManager as AM
+import           Snap.Snaplet.Auth.AuthManager (IAuthBackend(..), AuthManager(..))
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Common
@@ -81,16 +84,8 @@ createUser
   -> ByteString -- Password
   -> Handler b (AuthManager b) AuthUser
 createUser unm pass = do
-  mgr@(AuthManager r _ _ _ _ _ _ _) <- getSnapletState
-  now <- liftIO getCurrentTime
-  pw <- Encrypted `fmap` liftIO (makePassword pass 12)
-  let au = defAuthUser {
-              userLogin = unm
-            , userPassword = Just pw
-            , userCreatedAt = Just now
-            , userUpdatedAt = Just now
-            }
-  liftIO $ save r au
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  liftIO $ AM.createUser r unm pass
 
 
 ------------------------------------------------------------------------------
