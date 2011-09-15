@@ -243,9 +243,10 @@ checkPasswordAndLogin u pw remember =
     Just x -> do
       now <- liftIO getCurrentTime
       if now > x then
-      	auth u
+        auth u
       else
-      	return . Left $ LockedOut x
+        return . Left $ LockedOut x
+    Nothing -> auth u
   where
     auth u = 
       case authenticatePassword u pw of
