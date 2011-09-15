@@ -204,7 +204,10 @@ markAuthSuccess u = do
     >>= resetFailCtr >>= liftIO . save r
   where
     incLoginCtr u' = return $ u' { userLoginCount = userLoginCount u' + 1 }
-    updateIp u' = fail "updateIP not defined in markAuthSuccess"
+    updateIp u' = do
+      ip <- rqRemoteAddr `fmap` getRequest 
+      return $ u' { userLastLoginIp = userCurrentLoginIp u'
+                  , userCurrentLoginIp = Just ip }
     updateLoginTS u' = do
       now <- liftIO getCurrentTime
       return $

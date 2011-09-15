@@ -22,6 +22,7 @@ import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Crypto.PasswordStore
 import           Data.ByteString (ByteString)
+import           Data.Lens.Lazy
 import           Data.Text.Encoding (decodeUtf8)
 import           Data.Text (Text)
 import           Data.Time
@@ -94,11 +95,13 @@ logoutUser target = logout >> target
 -- This function has no DB cost - only checks to see if a user_id is present in
 -- the current session.
 requireUser 
-  :: Handler b (AuthManager b) a
+  :: Lens b (Snaplet (AuthManager b))
+  -- Lens reference to an "AuthManager"
+  -> Handler b v a
   -- ^ Do this if no authenticated user is present.
-  -> Handler b (AuthManager b) a
+  -> Handler b v a
   -- ^ Do this if an authenticated user is present.
-  -> Handler b (AuthManager b) a
-requireUser bad good = do
-  loggedIn <- isLoggedIn
+  -> Handler b v a
+requireUser auth bad good = do
+  loggedIn <- withTop auth isLoggedIn
   if loggedIn then good else bad
