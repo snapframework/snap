@@ -200,12 +200,12 @@ instance IAuthBackend JsonFileAuthManager where
             let lc = if oldLogin /= userLogin u 
                       then HM.insert newLogin uid . HM.delete oldLogin $ loginCache cache
                       else loginCache cache
-            let tc = if oldToken /= userRememberToken u && isJust oldToken
+            let tc = if oldToken /= newToken && isJust oldToken
                       then HM.delete (fromJust oldToken) $ loginCache cache
                       else tokenCache cache
-            let tc' = if isJust newToken
-                       then HM.insert (fromJust newToken) uid tc
-                       else tc
+            let tc' = case newToken of 
+                        Just t -> HM.insert t uid tc
+                        Nothing -> tc
             let u' = u { userUpdatedAt = Just now }
             let new = cache {
                           uidCache = HM.insert uid u' $ uidCache cache

@@ -55,7 +55,7 @@ import qualified Data.ByteString.Char8 as B
 import           Data.ByteString (ByteString)
 import           Data.Maybe (isJust)
 import           Data.Time
-import           Data.Text.Encoding (decodeUtf8)
+import           Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import           Data.Text (Text)
 
 import           Snap.Core
@@ -106,10 +106,14 @@ loginByUsername unm pwd rm  = do
       case res of
         Left e -> return $ Left e
         Right au'' -> do
-          when rm $ do
-            token <- liftIO $ randomToken 64
-            setRememberToken sk cn rp token
-          return $ Right au''
+          case rm of
+            True -> do
+              token <- liftIO $ randomToken 64
+              setRememberToken sk cn rp token
+              let au''' = au'' { userRememberToken = Just (decodeUtf8 token) }
+              saveUser au'''
+              return $ Right au'''
+            False -> return $ Right au''
 
 
 ------------------------------------------------------------------------------
