@@ -77,7 +77,7 @@ Library
     cereal                    >= 0.3,
     clientsession             >= 0.4     && < 0.7,
     compact-string-fix        >= 0.3,
-    configurator              >= 0.0.1.1 && < 0.2,
+    configurator              >= 0.1.0.0 && < 0.2,
     containers                >= 0.3,
     directory                 >= 1.0     && < 1.2,
     directory-tree            >= 0.10    && < 0.11,
