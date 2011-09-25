@@ -12,8 +12,8 @@ Snaplets allow you to build web applications out of composable parts. This
 allows you to build self-contained units and glue them together to make your
 overall application.
 
-A snaplet component has a few moving parts, some user-defined and some provided
-by the snaplet framework:
+A snaplet has a few moving parts, some user-defined and some provided by the
+snaplet API:
 
   * each snaplet has its own configuration given to it at startup.
 
@@ -30,8 +30,8 @@ by the snaplet framework:
     snaplet that talks to a database might contain a reference to a connection
     pool. The snaplet state is an ordinary Haskell record, with a datatype
     defined by the snaplet author. The initial state record is created during
-    initialization and is available (with a 'MonadState' instance) to snaplet
-    'Handler's when serving HTTP requests.
+    initialization and is available to snaplet 'Handler's when serving HTTP
+    requests.
 
 NOTE: This documentation is written as a prose tutorial of the snaplets
 API.  Don't be scared by the fact that it's auto-generated and is filled with
@@ -65,6 +65,8 @@ module Snap.Snaplet
   , getSnapletUserConfig
   , getSnapletRootURL
 
+  -- * Snaplet state manipulation
+  -- $snapletState
   , getSnapletState
   , putSnapletState
   , modifySnapletState
@@ -116,17 +118,17 @@ import           Snap.Snaplet.Internal.Types
 -- environment data. The datatype we use to handle this is called 'Snaplet':
 
 -- $snapletHelpers
--- 
+--
 -- Your web application will itself get wrapped in a 'Snaplet', and the top-level
 -- user state of your application (which will likely contain other snaplets nested
 -- inside it) will look something like this:
--- 
+--
 -- > data App = App
 -- >     { _foo                :: Snaplet Foo
 -- >     , _bar                :: Snaplet Bar
 -- >     , _someNonSnapletData :: String
 -- >     }
--- 
+--
 -- Every web application using snaplets has a top-most user state which contains
 -- all of the application state; we call this state the \"base\" state.
 --
@@ -138,37 +140,38 @@ import           Snap.Snaplet.Internal.Types
 -- the @Foo@ snaplet want to be able to modify the @Foo@ record /within the context/
 -- of the base state. Given that Haskell datatypes are pure, how do you
 -- allow for this?
--- 
+--
 -- Our solution is to use /lenses/, as defined in the @data-lens@ library
 -- (<http://hackage.haskell.org/package/data-lens>). A lens, notated as follows:
--- 
+--
 -- > Lens a b
--- 
+--
 -- is a \"getter\" and a \"setter\" rolled up into one. The @data-lens@ library
 -- provides the following functions:
--- 
+--
 -- > getL :: (Lens a b) -> a -> b
 -- > setL :: (Lens a b) -> b -> a -> a
--- 
--- which allow you to get and set a value of type @b@ within the context of type
--- @a@. The @data-lens@ package comes with a Template Haskell function called
--- 'makeLenses', which auto-magically defines a lens for every record field having a
--- name beginning with an underscore. In the @App@ example above, adding the
--- declaration:
--- 
+-- > modL :: (Lens a b) -> (b -> b) -> a -> a
+--
+-- which allow you to get, set, and modify a value of type @b@ within the
+-- context of type of type @a@. The @data-lens@ package comes with a Template
+-- Haskell function called 'makeLenses', which auto-magically defines a lens
+-- for every record field having a name beginning with an underscore. In the
+-- @App@ example above, adding the declaration:
+--
 -- > makeLenses [''App]
--- 
+--
 -- would define lenses:
--- 
+--
 -- > foo                :: Lens App (Snaplet Foo)
 -- > bar                :: Lens App (Snaplet Bar)
 -- > someNonSnapletData :: Lens App String
--- 
+--
 -- The coolest thing about @data-lens@ lenses is that they /compose/, using the
 -- "Control.Category"'s generalization of the @(.)@ operator. If the @Foo@ type
 -- had a field of type @Quux@ within it with a lens @quux :: Lens Foo Quux@, then
 -- you could create a lens of type @Lens App Quux@ by composition:
--- 
+--
 -- > import Control.Category
 -- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude to
 -- >                                -- use Control.Category.(.)
@@ -178,10 +181,10 @@ import           Snap.Snaplet.Internal.Types
 -- >
 -- > -- snapletValue is defined in the framework:
 -- > snapletValue :: Lens (Snaplet a) a
--- > 
+-- >
 -- > appQuuxLens :: Lens App (Snaplet Quux)
 -- > appQuuxLens = quux . snapletValue . foo
--- 
+--
 -- Lens composition is very similar to function composition, but it gives you a
 -- composed getter and setter at the same time.
 
@@ -197,28 +200,34 @@ import           Snap.Snaplet.Internal.Types
 -- and other pieces of data. The lenses are like pointers to nodes of the tree.
 -- If you have a pointer to a node, you can access the node and all of its
 -- children without knowing anything about the rest of the tree.
--- 
+--
 -- Several monads use this infrastructure. These monads need at least three type
 -- parameters. Two for the lens type, and the standard \'a\' denoting the monad
 -- return value. You will usually see this written in type signatures as
 -- \"m b v a\" or some variation. The \'m\' is the type variable of the
 -- MonadSnaplet type class. \'b\' is the base state, and \'v\' is the state of the
 -- current \"view\" snaplet (or simply, current state).
--- 
+--
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating
 -- snaplet trees.
+
+-- $snapletState
+-- MonadSnaplet instances will typically have (MonadState (Snaplet v))
+-- instances.  We provide the following convenience functions which give the
+-- equivalent to (MonadState v).  These functions are what you use to access
+-- and manipulate your user-defined snaplet state.
 
 -- $initializer
 -- The Initializer monad is where your application's initialization happens.
 -- Initializers are run at startup and any time a site reload is triggered.
 -- The Initializer's job is to construct a snaplet's routes and initial state,
--- set up filesystem data, read config files, etc.  
+-- set up filesystem data, read config files, etc.
 --
 -- In order to initialize its state, a snaplet needs to initialize all the
 -- @Snaplet a@ state for each of its subsnaplets.  The only way to construct
 -- a @Snaplet a@ type is by calling 'nestSnaplet' or 'embedSnaplet' from
--- within an initializer. 
+-- within an initializer.
 
 
 -- $writingSnaplets

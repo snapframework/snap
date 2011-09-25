@@ -6,11 +6,11 @@ overall application. Here are some of the things provided by the snaplet
 infrastructure:
 
   - Infrastructure for application state/environment
-  
+
   - Snaplet initialization, reload, and cleanup
-  
+
   - Management of filesystem data and automatic snaplet installation
-  
+
   - Unified config file infrastructure
 
 

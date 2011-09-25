@@ -47,13 +47,13 @@ sessionTest = withSession session $ do
     , ("csrf", liftHeist $ textSplice csrf) ]
 
 ------------------------------------------------------------------------------
--- | 
+-- |
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     h <- nestSnaplet "heist" heist $ heistInit "resources/templates"
     with heist $ addSplices
         [("mysplice", liftHeist $ textSplice "YAY, it worked")]
-    s <- nestSnaplet "session" session $ 
+    s <- nestSnaplet "session" session $
       initCookieSessionManager "config/site_key.txt" "_session" Nothing
     addRoutes [ ("/hello", helloHandler)
               , ("/aoeu", with heist $ heistServeSingle "foo")
