@@ -63,7 +63,7 @@ data CookieSessionManager = CookieSessionManager {
 
   , timeOut :: Maybe Int
   -- ^ Session cookies will be considered "stale" after this many seconds.
-} deriving (Eq,Show,Typeable)
+} deriving (Show,Typeable)
 
 
 loadDefSession :: CookieSessionManager -> IO CookieSessionManager
