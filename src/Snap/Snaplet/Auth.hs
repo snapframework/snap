@@ -25,6 +25,7 @@ module Snap.Snaplet.Auth
   , loginByRememberToken
   , forceLogin
   , logout
+  , currentUser
   , isLoggedIn
 
   -- * Lower Level Functions
