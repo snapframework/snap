@@ -6,7 +6,6 @@
 -- the calls to the dynamic loader.
 module Snap.Loader.Devel
   ( loadSnapTH
-  , loadSnapTH'
   ) where
 
 import           Control.Monad (liftM2)
@@ -39,44 +38,48 @@ import           Snap.Loader.Devel.TreeWatcher
 --
 -- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> [String] -> IO (a, Snap (), IO ())
 --
--- with a magical implementation.
+-- with a magical implementation.  The [String] argument is a list of
+-- directories to watch for updates to trigger a reloading.
+-- Directories containing code should be automatically picked up by
+-- this splice.
 --
--- The upshot is that you shouldn't need to recompile your server
--- during development unless your .cabal file changes, or the code
--- that uses this splice changes.
-loadSnapTH :: Name -> Name -> [String] -> Q Exp
-loadSnapTH initializer action additionalWatchDirs =
-    loadSnapTH' modules imports additionalWatchDirs initializer actBase
-  where
-    initMod = nameModule initializer
-    actMod = nameModule action
-    actBase = nameBase action
-
-    modules = catMaybes [initMod, actMod]
-    imports = catMaybes [actMod]
-
-
-------------------------------------------------------------------------------
--- | This is the backing implementation for 'loadSnapTH'.
-loadSnapTH' :: [String] -- ^ the list of modules to interpret
-            -> [String] -- ^ the list of modules to import in addition
-                        -- to those being interpreted
-            -> [String] -- ^ additional directories to watch for
-                        -- changes to trigger to recompile/reload
-            -> Name     -- ^ an initialization expression
-            -> String   -- ^ the expression to interpret in the
-                        -- context of the loaded modules and imports.
-                        -- It should have the type 'HintLoadable'
-            -> Q Exp
-loadSnapTH' modules imports additionalWatchDirs initName loadStr = do
+-- The generated splice executes the initialiser once, sets up the
+-- interpreter for the load function, and returns the initializer's
+-- result along with the interpreter's proxy handler and cleanup
+-- actions.  The behavior of the proxy actions will change to reflect
+-- changes in the watched files, reinterpreting the load function as
+-- needed and applying it to the initializer result.
+--
+-- This will handle reloading the application successfully in most
+-- cases.  The cases in which it is certain to fail are those
+-- involving changing the types of the initializer or the load
+-- function, or changing the compiler options required, such as by
+-- changing/adding dependencies in the project's .cabal file.  In
+-- those cases, a full recompile will be needed.
+loadSnapTH :: Name     -- ^ the name of the initializer
+           -> Name     -- ^ the name of the load function
+           -> [String] -- ^ a list of directories to watch in addition
+                       -- to those containing code
+           -> Q Exp
+loadSnapTH initializer action additionalWatchDirs = do
     args <- runIO getArgs
 
     let opts = getHintOpts args
         srcPaths = additionalWatchDirs ++ getSrcPaths args
 
-    [| do res <- $(varE initName)
-          (handler, cleanup) <- hintSnap opts modules imports srcPaths loadStr res
-          return (res, handler, cleanup) |]
+    -- The first line is an extra type check to ensure the provided
+    -- names refer to expressions with the correct types
+    [| do let _ = $(varE initializer) >>= $(varE action)
+          v <- $(varE initializer)
+          (handler, cleanup) <- hintSnap opts modules imports srcPaths loadStr v
+          return (v, handler, cleanup) |]
+  where
+    initMod = nameModule initializer
+    actMod = nameModule action
+    loadStr = nameBase action
+
+    modules = catMaybes [initMod, actMod]
+    imports = catMaybes [actMod]
 
 
 ------------------------------------------------------------------------------
@@ -143,6 +146,9 @@ hintSnap opts modules imports srcPaths action value =
   where
     witness x = undefined $ x `asTypeOf` value :: HintLoadable
 
+    -- This is somewhat fragile, and probably can be cleaned up with a
+    -- future version of Typeable.  For the moment, and
+    -- backwards-compatibility, this is the approach being taken.
     witnessModules = map (reverse . drop 1 . dropWhile (/= '.') . reverse) .
                      filter (elem '.') . groupBy typePart . show . typeOf $
                      witness
