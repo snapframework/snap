@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Snap.Snaplet.Session.Backends.CookieSession 

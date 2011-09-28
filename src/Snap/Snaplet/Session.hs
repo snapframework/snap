@@ -1,7 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeOperators #-}
-
 module Snap.Snaplet.Session 
 
 (
@@ -18,16 +14,10 @@ module Snap.Snaplet.Session
 
 ) where
 
-import           Control.Monad.Reader
-import           Control.Monad.State
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
 import           Data.Lens.Lazy
-import           Data.Serialize (Serialize)
 import           Data.Text (Text)
 
 import           Snap.Snaplet
-import           Snap.Snaplet.Session.SecureCookie
 import           Snap.Core
 
 import           Snap.Snaplet.Session.SessionManager 

@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 {-|
 
   This module contains functionality common among multiple back-ends.

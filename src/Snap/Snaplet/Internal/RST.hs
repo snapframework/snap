@@ -1,10 +1,6 @@
 {-# LANGUAGE BangPatterns               #-}
-{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeOperators              #-}
 
 module Snap.Snaplet.Internal.RST where
 

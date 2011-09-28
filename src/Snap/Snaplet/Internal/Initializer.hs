@@ -1,12 +1,5 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE BangPatterns               #-}
-{-# LANGUAGE ExistentialQuantification  #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE TemplateHaskell            #-}
 
 module Snap.Snaplet.Internal.Initializer
 ( addPostInitHook

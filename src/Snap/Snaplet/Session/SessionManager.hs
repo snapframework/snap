@@ -1,16 +1,11 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Snap.Snaplet.Session.SessionManager where
 
-import           Control.Monad.State
-import           Data.ByteString (ByteString)
-import           Data.Serialize (Serialize)
 import           Data.Text (Text)
 import           Prelude hiding (lookup)
 
 import           Snap.Core (Snap)
-import           Snap.Snaplet
 
 
 -- | Any Haskell record that is a member of the 'ISessionManager' typeclass can
