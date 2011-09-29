@@ -37,5 +37,5 @@ fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     return $ FooSnaplet "foo snaplet data string"
 
 getFooField :: Handler b FooSnaplet String
-getFooField = getsSnapletState fooField
+getFooField = gets fooField
 

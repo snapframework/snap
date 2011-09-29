@@ -11,6 +11,7 @@
 module Blackbox.EmbeddedSnaplet where
 
 import Prelude hiding ((.))
+import Control.Monad.State
 import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
@@ -56,6 +57,6 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
 embeddedSplice :: (Lens (Snaplet b) (Snaplet EmbeddedSnaplet))
               -> SnapletHeist b v Template
 embeddedSplice embeddedLens = do
-    val <- liftWith embeddedLens $ getsSnapletState _embeddedVal
+    val <- liftWith embeddedLens $ gets _embeddedVal
     liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
 

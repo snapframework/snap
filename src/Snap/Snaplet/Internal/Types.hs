@@ -4,6 +4,9 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Snap.Snaplet.Internal.Types where
 
@@ -220,44 +223,29 @@ newtype Handler b v a =
            , MonadSnap)
 
 
-------------------------------------------------------------------------------
-instance MonadState (Snaplet v) (Handler b v) where
-    get = Handler get
-    put = Handler . put
+getSnapletState :: Handler b v (Snaplet v)
+getSnapletState = Handler get
 
 
-------------------------------------------------------------------------------
--- The following functions provide the equivalent of a (MonadState v) instance
--- for anything with a (MonadState (Snaplet v)) instance.  If we put these in
--- MonadSnaplet, then we won't be able to write an instance for Initializer
--- because it's in the process of constructing the state.  If we did it the
--- other way around, we wouldn't be able to define the (MonadState (Snaplet
--- v)) functions in terms of the (MonadState v) functions.
-------------------------------------------------------------------------------
+putSnapletState :: Snaplet v -> Handler b v ()
+putSnapletState = Handler . put
 
 
-------------------------------------------------------------------------------
--- | Gets the current snaplet's state.
-getSnapletState :: MonadState (Snaplet a) m => m a
-getSnapletState = liftM _snapletValue get
+modifySnapletState :: (Snaplet v -> Snaplet v) -> Handler b v ()
+modifySnapletState f = do
+    s <- getSnapletState
+    putSnapletState (f s)
 
 
-------------------------------------------------------------------------------
--- | Modifies the current snaplet's state.
-modifySnapletState :: MonadState (Snaplet a) m => (a -> a) -> m ()
-modifySnapletState f = modify (modL snapletValue f)
+getsSnapletState :: (Snaplet v -> b) -> Handler b1 v b
+getsSnapletState f = do
+    s <- getSnapletState
+    return (f s)
 
 
-------------------------------------------------------------------------------
--- | Puts the current snaplet's state.
-putSnapletState :: MonadState (Snaplet a) m => a -> m ()
-putSnapletState s = modifySnapletState (const s)
-
-
-------------------------------------------------------------------------------
--- | Gets the current snaplet's state.
-getsSnapletState :: MonadState (Snaplet a) m => (a -> b) -> m b
-getsSnapletState f = liftM (f . _snapletValue) get
+instance MonadState v (Handler b v) where
+    get = getsSnapletState _snapletValue
+    put v = modifySnapletState (setL snapletValue v)
 
 
 instance MonadSnaplet Handler where

@@ -85,7 +85,7 @@ createUser
   -> ByteString -- Password
   -> Handler b (AuthManager b) AuthUser
 createUser unm pass = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ _) <- get
   liftIO $ AM.createUser r unm pass
 
 
@@ -98,7 +98,7 @@ loginByUsername
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
 loginByUsername unm pwd rm  = do
-  AuthManager r s _ _ cn rp sk _ <- getSnapletState
+  AuthManager r s _ _ cn rp sk _ <- get
   au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
   case au of
     Nothing  -> return $ Left UserNotFound
@@ -121,7 +121,7 @@ loginByUsername unm pwd rm  = do
 -- | Remember user from the remember token if possible and perform login
 loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
 loginByRememberToken = do
-  mgr@(AuthManager r _ _ _ rc rp sk _) <- getSnapletState
+  mgr@(AuthManager r _ _ _ rc rp sk _) <- get
   token <- getRememberToken sk rc rp
   au <- maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
   case au of
@@ -133,11 +133,11 @@ loginByRememberToken = do
 -- | Logout the active user
 logout :: Handler b (AuthManager b) ()
 logout = do 
-  s <- getsSnapletState session
+  s <- gets session
   withTop s $ withSession s removeSessionUserId 
-  AuthManager _ _ _ _ rc _ _ _ <- getSnapletState
+  AuthManager _ _ _ _ rc _ _ _ <- get
   forgetRememberToken rc
-  modifySnapletState (\mgr -> mgr { activeUser = Nothing } )
+  modify (\mgr -> mgr { activeUser = Nothing } )
 
 
 ------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r s _ _ _ _ _ _) <- getSnapletState
+      mgr@(AuthManager r s _ _ _ _ _ _) <- get
       uid <- withTop s getSessionUserId 
       case uid of
         Nothing -> loginByRememberToken 
@@ -165,7 +165,7 @@ isLoggedIn = isJust `fmap` currentUser
 -- May throw a 'BackendError' if something goes wrong.
 saveUser :: AuthUser -> Handler b (AuthManager b) AuthUser
 saveUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ _) <- get
   liftIO $ save r u
 
 
@@ -175,7 +175,7 @@ saveUser u = do
 -- May throw a 'BackendError' if something goes wrong.
 destroyUser :: AuthUser -> Handler b (AuthManager b) ()
 destroyUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ _) <- get
   liftIO $ destroy r u
 
 
@@ -191,7 +191,7 @@ destroyUser u = do
 -- This will save the user to the backend.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthFail u = do
-  (AuthManager r _ _ _ _ _ _ lo) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ lo) <- get
   incFailCtr u >>= checkLockout lo >>= liftIO . save r
   where
     incFailCtr u' = return $ u' 
@@ -212,7 +212,7 @@ markAuthFail u = do
 -- This will save the user to the backend.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ _) <- get
   now <- liftIO getCurrentTime
   incLoginCtr u >>= updateIp >>= updateLoginTS 
     >>= resetFailCtr >>= liftIO . save r
@@ -265,7 +265,7 @@ checkPasswordAndLogin u pw =
           return $ Left e
         Nothing -> do
           forceLogin u 
-          modifySnapletState (\mgr -> mgr { activeUser = Just u })
+          modify (\mgr -> mgr { activeUser = Just u })
           u' <- markAuthSuccess u
           return $ Right u'
 
@@ -280,7 +280,7 @@ forceLogin
   -- ^ An existing user, somehow looked up from db
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 forceLogin u = do
-  AuthManager _ s _ _ _ _ _ _ <- getSnapletState
+  AuthManager _ s _ _ _ _ _ _ <- get
   withSession s $ do
     case userId u of
       Just x -> do
@@ -350,12 +350,12 @@ cacheOrLookup
   -- ^ Lookup action to perform if request local cache is empty
   -> Handler b (AuthManager b) (Maybe AuthUser)
 cacheOrLookup f = do
-  au <- getsSnapletState activeUser
+  au <- gets activeUser
   if isJust au 
     then return au
     else do
       au' <- f
-      modifySnapletState (\mgr -> mgr { activeUser = au' })
+      modify (\mgr -> mgr { activeUser = au' })
       return au'
 
 

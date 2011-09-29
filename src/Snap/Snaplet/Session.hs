@@ -14,6 +14,7 @@ module Snap.Snaplet.Session
 
 ) where
 
+import           Control.Monad.State
 import           Data.Lens.Lazy
 import           Data.Text (Text)
 
@@ -46,7 +47,7 @@ setInSession :: Text -> Text -> Handler b SessionManager ()
 setInSession k v = do
   SessionManager r <- loadSession
   let r' = SM.insert k v r
-  putSnapletState $ SessionManager r'
+  put $ SessionManager r'
 
 
 -- | Get a key from the current session
@@ -61,14 +62,14 @@ deleteFromSession :: Text -> Handler b SessionManager ()
 deleteFromSession k = do
   SessionManager r <- loadSession
   let r' = SM.delete k r
-  putSnapletState $ SessionManager r'
+  put $ SessionManager r'
 
 
 -- | Returns a CSRF Token unique to the current session
 csrfToken :: Handler b SessionManager Text
 csrfToken = do
   mgr@(SessionManager r) <- loadSession
-  putSnapletState mgr
+  put mgr
   return $ SM.csrf r
 
 
@@ -84,7 +85,7 @@ resetSession :: Handler b SessionManager ()
 resetSession = do
   SessionManager r <- loadSession
   r' <- liftSnap $ SM.reset r
-  putSnapletState $ SessionManager r'
+  put $ SessionManager r'
 
 
 -- | Touch the session so the timeout gets refreshed
@@ -92,13 +93,13 @@ touchSession :: Handler b SessionManager ()
 touchSession = do
   SessionManager r <- loadSession
   let r' = SM.touch r
-  putSnapletState $ SessionManager r'
+  put $ SessionManager r'
 
 
 -- | Load the session into the manager
 loadSession :: Handler b SessionManager SessionManager
 loadSession = do
-  SessionManager r <- getSnapletState
+  SessionManager r <- get
   r' <- liftSnap $ load r 
   return $ SessionManager r'
 

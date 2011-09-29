@@ -41,7 +41,7 @@ registerUser
   -> ByteString -- Password field
   -> Handler b (AuthManager b) AuthUser
 registerUser lf pf = do
-  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  (AuthManager r _ _ _ _ _ _ _) <- get
   l <- fmap decodeUtf8 `fmap` getParam lf
   p <- getParam pf
   case liftM2 (,) l p of

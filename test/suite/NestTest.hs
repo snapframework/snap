@@ -11,6 +11,7 @@
 module Main where
 
 import Prelude hiding ((.))
+import Control.Monad.State
 import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
@@ -53,7 +54,7 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
 fooSplice :: (Lens (Snaplet b) (Snaplet FooSnaplet))
           -> SnapletHeist b v Template
 fooSplice fooLens = do
-    val <- liftWith fooLens $ getsSnapletState _fooVal
+    val <- liftWith fooLens $ gets _fooVal
     liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
 
 ------------------------------------------------------------------------------

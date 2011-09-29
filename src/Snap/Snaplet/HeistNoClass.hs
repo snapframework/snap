@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FlexibleInstances          #-}
 module Snap.Snaplet.HeistNoClass
   ( Heist
   , heistInit
@@ -138,15 +139,15 @@ liftWith :: (Lens (Snaplet b) (Snaplet v'))
 liftWith l = liftHandler . withTop' l
 
 
-instance MonadState (Snaplet v) (SnapletHeist b v) where
+instance MonadState v (SnapletHeist b v) where
     get = do
         l <- ask
-        b <- liftHandler get
-        return $ getL l b
+        b <- liftHandler getSnapletState
+        return $ getL (snapletValue . l) b
     put s = do
         l <- ask
-        b <- liftHandler get
-        liftHandler $ put $ setL l s b
+        b <- liftHandler getSnapletState
+        liftHandler $ putSnapletState $ setL (snapletValue . l) s b
 
 
 ------------------------------------------------------------------------------
@@ -157,7 +158,7 @@ instance MonadSnaplet SnapletHeist where
     withTop' l = withSS (const id) . with' l
     getOpaqueConfig = do
         l <- ask
-        b <- liftHandler get
+        b <- liftHandler getSnapletState
         return $ getL (snapletConfig . l) b
 
 
@@ -232,7 +233,7 @@ renderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 renderHelper c t = do
-    (Heist ts _) <- getSnapletState
+    (Heist ts _) <- get
     withTop' id $ renderTemplate ts t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -270,10 +271,10 @@ heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> Handler b v a
             -> Handler b v a
 heistLocal' heist f m = do
-    hs  <- withTop' heist $ getSnapletState
-    withTop' heist $ modifySnapletState $ changeTS f
+    hs  <- withTop' heist get
+    withTop' heist $ modify $ changeTS f
     res <- m
-    withTop' heist $ putSnapletState hs
+    withTop' heist $ put hs
     return res
 
 
