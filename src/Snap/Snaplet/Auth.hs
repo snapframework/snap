@@ -135,6 +135,8 @@ logout :: Handler b (AuthManager b) ()
 logout = do 
   s <- getsSnapletState session
   withTop s $ withSession s removeSessionUserId 
+  AuthManager _ _ _ _ rc _ _ _ <- getSnapletState
+  forgetRememberToken rc
   modifySnapletState (\mgr -> mgr { activeUser = Nothing } )
 
 
@@ -297,9 +299,13 @@ forceLogin u = do
 
 getRememberToken sk rc rp = getSecureCookie rc sk rp
 
+
 setRememberToken sk rc rp token = setSecureCookie rc sk rp token
 
 
+forgetRememberToken rc = expireCookie rc (Just "/")
+
+                                       
 ------------------------------------------------------------------------------
 -- | Set the current user's 'UserId' in the active session
 setSessionUserId :: UserId -> Handler b SessionManager ()
