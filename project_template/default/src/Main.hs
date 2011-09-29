@@ -87,23 +87,3 @@ main = do
 -- production mode is in use.
 getConf :: IO (Config Snap ())
 getConf = commandLineConfig defaultConfig
-
-
--- | This function generates the the site handler and cleanup action
--- from the configuration.  In production mode, this action is only
--- run once.  In development mode, this action is run whenever the
--- application is reloaded.
---
--- Development mode also makes sure that the cleanup actions are run
--- appropriately before shutdown.  The cleanup action returned from
--- loadSnapTH should still be used after the server has stopped
--- handling requests, as the cleanup actions are only automatically
--- run when a reload is triggered.
---
--- This sample doesn't actually use the config passed in, but more
--- sophisticated code might.
-getActions :: Config Snap () -> IO (Snap (), IO ())
-getActions _ = do
-    (msgs, site, cleanup) <- runSnaplet app
-    hPutStrLn stderr $ T.unpack msgs
-    return (site, cleanup)

@@ -56,7 +56,7 @@ data CookieSessionManager = CookieSessionManager {
     session :: Maybe CookieSession
   -- ^ Per request cache for 'CookieSession'
 
-  , siteKey :: ByteString
+  , siteKey :: Key
   -- ^ A long encryption key used for secure cookie transport
 
   , cookieName :: ByteString
@@ -64,7 +64,7 @@ data CookieSessionManager = CookieSessionManager {
 
   , timeOut :: Maybe Int
   -- ^ Session cookies will be considered "stale" after this many seconds.
-} deriving (Eq,Show,Typeable)
+} deriving (Show,Typeable)
 
 
 loadDefSession :: CookieSessionManager -> IO CookieSessionManager

@@ -1,69 +1,92 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 {-|
 
-  Provides generic, somewhat customizable handlers that can be plugged 
-  directly into Snap applications.
-
-  The core 'Snap.Auth' module is pretty much stand-alone and taking these as
-  starting point examples, you should be able to write your own custom
-  handlers.
+  Pre-packaged Handlers that deal with form submissions and standard use-cases
+  involving authentication.
 
 -}
 
 module Snap.Snaplet.Auth.Handlers 
-  ( AuthHandlerConfig(..)
-  , loginHandler
-  , logoutHandler
+  ( 
+    registerUser
+  , loginUser
+  , logoutUser
   , requireUser
   ) where
 
-import Data.ByteString (ByteString)
+import           Control.Monad.CatchIO (throw)
+import           Control.Monad.State
+import           Crypto.PasswordStore
+import           Data.ByteString (ByteString)
+import           Data.Lens.Lazy
+import           Data.Text.Encoding (decodeUtf8)
+import           Data.Text (Text)
+import           Data.Time
 
-import Snap.Core
-import Snap.Snaplet.Auth.Types
-import Snap.Snaplet
+import           Snap.Core
+import           Snap.Snaplet.Auth
+import           Snap.Snaplet.Auth.AuthManager (AuthManager(..))
+import           Snap.Snaplet.Auth.Types
+import           Snap.Snaplet
 
-data AuthHandlerConfig b = AuthHandlerConfig
-    { passwordParamField :: ByteString
-    , rememberField :: Maybe ByteString
-    , loginFailure :: AuthFailure -> Handler b b ()
-    , loginSuccess :: Handler b b ()
-    , afterLogout :: Handler b b ()
-    }
 
 ------------------------------------------------------------------------------
--- | A 'MonadSnap' handler that processes a login form. 
+-- | Register a new user by specifying login and password 'Param' fields
+registerUser
+  :: ByteString -- Login field
+  -> ByteString -- Password field
+  -> Handler b (AuthManager b) AuthUser
+registerUser lf pf = do
+  (AuthManager r _ _ _ _ _ _ _) <- getSnapletState
+  l <- fmap decodeUtf8 `fmap` getParam lf
+  p <- getParam pf
+  case liftM2 (,) l p of
+    Nothing -> throw PasswordMissing
+    Just (lgn, pass) -> do
+      createUser lgn pass
+
+
+------------------------------------------------------------------------------
+-- | A 'MonadSnap' handler that processes a login form.
 --
 -- The request paremeters are passed to 'performLogin'
-loginHandler :: MonadAuthUser (Handler b b)
-             => ByteString 
-             -- ^ The password param field
-             -> Maybe ByteString
-             -- ^ Remember field; Nothing if you want to remember function.
-             -> (AuthFailure -> Handler b b ())
-             -- ^ Upon failure
-             -> Handler b b ()
-             -- ^ Upon success
-             -> Handler b b ()
-loginHandler pwdf remf loginFail loginSucc = do
+loginUser 
+  :: ByteString
+  -- ^ Username field
+  -> ByteString
+  -- ^ Password field
+  -> Maybe ByteString
+  -- ^ Remember field; Nothing if you want no remember function.
+  -> (AuthFailure -> Handler b (AuthManager b) ())
+  -- ^ Upon failure
+  -> Handler b (AuthManager b) ()
+  -- ^ Upon success
+  -> Handler b (AuthManager b) ()
+loginUser unf pwdf remf loginFail loginSucc = do
+    username <- getParam unf
     password <- getParam pwdf
-    remember <- maybe (return Nothing) getParam remf
-    let r = maybe False (=="1") remember
+    remember <- maybe False (=="1") `fmap` maybe (return Nothing) getParam remf
     mMatch <- case password of
-      Nothing -> return $ Left PasswordFailure
-      Just p  -> performLogin p r
+      Nothing -> return $ Left PasswordMissing
+      Just password' -> do 
+        case username of
+          Nothing -> return . Left $ AuthError "Username is missing"
+          Just username' -> do
+            loginByUsername username' (ClearText password') remember
     either loginFail (const loginSucc) mMatch
 
 
 ------------------------------------------------------------------------------
 -- | Simple handler to log the user out. Deletes user from session.
-logoutHandler :: MonadAuthUser (Handler b b)
-              => Handler b b ()
-              -- ^ What to do after logging out
-              -> Handler b b ()
-logoutHandler target = performLogout >> target
+logoutUser 
+  :: Handler b (AuthManager b) ()
+  -- ^ What to do after logging out
+  -> Handler b (AuthManager b) ()
+logoutUser target = logout >> target
 
 
 ------------------------------------------------------------------------------
@@ -71,9 +94,14 @@ logoutHandler target = performLogout >> target
 --
 -- This function has no DB cost - only checks to see if a user_id is present in
 -- the current session.
-requireUser :: MonadAuthUser m => m a   
-            -- ^ Do this if no authenticated user is present.
-            -> m a    
-            -- ^ Do this if an authenticated user is present.
-            -> m a
-requireUser bad good = authenticatedUserId >>= maybe bad (const good)
+requireUser 
+  :: Lens b (Snaplet (AuthManager b))
+  -- Lens reference to an "AuthManager"
+  -> Handler b v a
+  -- ^ Do this if no authenticated user is present.
+  -> Handler b v a
+  -- ^ Do this if an authenticated user is present.
+  -> Handler b v a
+requireUser auth bad good = do
+  loggedIn <- withTop auth isLoggedIn
+  if loggedIn then good else bad

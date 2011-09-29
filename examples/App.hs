@@ -3,23 +3,30 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import Data.Lens.Template
+import           Control.Monad.CatchIO (try)
+import           Data.Lens.Template
 import qualified Data.Text as T
-import Snap.Core
-import Snap.Http.Server.Config
-import Snap.Util.FileServe
+import           Snap.Core
+import           Snap.Http.Server.Config
+import           Snap.Util.FileServe
 
-import Snap.Snaplet
-import Snap.Snaplet.Heist
-import Snap.Snaplet.Session
-import Snap.Snaplet.Session.Backends.CookieSession
-import Text.Templating.Heist
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Session
+import           Snap.Snaplet.Session.Backends.CookieSession
+import           Snap.Snaplet.Auth
+import           Snap.Snaplet.Auth.Handlers
+import           Snap.Snaplet.Auth.Backends.JsonFile
+import           Snap.Snaplet.Auth.Types (BackendError(..))
+import           Text.Templating.Heist
 
 data App = App
     { _heist :: Snaplet (Heist App)
     , _session :: Snaplet SessionManager
+    , _auth :: Snaplet (AuthManager App)
     }
 
 type AppHandler = Handler App App
@@ -46,6 +53,17 @@ sessionTest = withSession session $ do
     [ ("session", liftHeist $ textSplice list)
     , ("csrf", liftHeist $ textSplice csrf) ]
 
+
+newUserH = do
+  renderWithSplices "registerUser" []
+
+registerH = do
+  res <- try $ registerUser "login" "password"
+  case res of
+    Left (e :: BackendError) -> 
+      writeText $ T.concat ["Caught error: " , (T.pack . show) e]
+    Right r -> writeText "Done"
+
 ------------------------------------------------------------------------------
 -- |
 app :: SnapletInit App App
@@ -58,10 +76,14 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     addRoutes [ ("/hello", helloHandler)
               , ("/aoeu", with heist $ heistServeSingle "foo")
               , ("/sessionTest", sessionTest)
+              , ("/newUser", newUserH)
+              , ("/registerUser", with auth $ registerH)
               , ("", with heist heistServe)
               , ("", with heist $ serveDirectory "resources/doc")
               ]
-    return $ App h s
+    a <- nestSnaplet "auth" auth $ 
+      initJsonFileAuthManager defAuthSettings session "config/user.json"
+    return $ App h s a
 
 main :: IO ()
 main = serveSnaplet defaultConfig app
