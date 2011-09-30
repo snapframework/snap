@@ -19,16 +19,9 @@ module Snap.Snaplet.Auth.AuthManager
 ) where
 
 
-import           Control.Monad.CatchIO
-import           Data.Aeson
-import qualified Data.ByteString.Char8 as B
 import           Data.ByteString (ByteString)
-import           Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HM
-import           Data.Hashable (Hashable)
 import           Data.Lens.Lazy
 import           Data.Time
-import           Data.Typeable
 import           Data.Text (Text)
 import           Web.ClientSession
 

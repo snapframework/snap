@@ -7,22 +7,14 @@ module Snap.Snaplet.Internal.RST.Tests
   ( tests ) where
 
 import           Control.Applicative
-import           Control.Category
-import           Control.Exception
 import           Control.Monad.Identity
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.ByteString.Char8 (ByteString)
-import           Data.Lens.Template
-import           Data.List
-import           Data.Word
 import           Prelude hiding (catch, (.))
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.Framework.Providers.QuickCheck2
 import           Test.HUnit hiding (Test, path)
-import           Test.QuickCheck
-import           Test.QuickCheck.Monadic
 
 import Snap.Snaplet.Internal.RST
 
@@ -71,5 +63,5 @@ rstAlt2 :: Maybe (Int, Int)
 rstAlt2 = runRST (addEnv >> ((return 5) <|> empty)) 1 0
 
 rstFail :: Maybe Int
-rstFail = evalRST (fail "foo") 0 0
+rstFail = evalRST (fail "foo") (0 :: Int) (0 :: Int)
 

@@ -17,21 +17,11 @@ module Snap.Snaplet.Auth.SpliceHelpers
   , ifLoggedOut
   ) where
 
-import           Control.Monad.CatchIO (throw)
-import           Control.Monad.State
-import           Crypto.PasswordStore
-import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy
-import           Data.Text.Encoding (decodeUtf8)
-import           Data.Text (Text)
-import           Data.Time
 import qualified Text.XmlHtml as X
 import           Text.Templating.Heist
 
-import           Snap.Core
 import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Auth.AuthManager (AuthManager(..))
-import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 

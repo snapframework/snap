@@ -20,17 +20,12 @@ module Snap.Snaplet.Auth.Handlers
 
 import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
-import           Crypto.PasswordStore
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy
 import           Data.Text.Encoding (decodeUtf8)
-import           Data.Text (Text)
-import           Data.Time
 
 import           Snap.Core
 import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Auth.AuthManager (AuthManager(..))
-import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet
 
 
@@ -41,13 +36,12 @@ registerUser
   -> ByteString -- Password field
   -> Handler b (AuthManager b) AuthUser
 registerUser lf pf = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
   l <- fmap decodeUtf8 `fmap` getParam lf
   p <- getParam pf
   case liftM2 (,) l p of
     Nothing -> throw PasswordMissing
-    Just (lgn, pass) -> do
-      createUser lgn pass
+    Just (lgn, pwd) -> do
+      createUser lgn pwd
 
 
 ------------------------------------------------------------------------------

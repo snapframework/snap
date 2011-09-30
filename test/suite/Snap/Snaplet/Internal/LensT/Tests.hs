@@ -4,7 +4,6 @@ module Snap.Snaplet.Internal.LensT.Tests (tests) where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Exception
 import           Control.Monad.Identity
 import           Control.Monad.State.Strict
 import           Data.Lens.Template
@@ -43,6 +42,7 @@ defaultState = TestType 1 $ TestSubType 2 999 $ TestBotType 3
 
 
 ------------------------------------------------------------------------------
+tests :: Test
 tests = testGroup "Snap.Snaplet.Internal.LensT"
                   [ testfmap
                   , testApplicative
@@ -59,8 +59,8 @@ testfmap = testCase "lensed/fmap" $ do
 
     let (y,s') = runIdentity (runLensT twiddle (bot . sub) defaultState)
 
-    assertEqual "fmap2" 12 y
-    assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
+    assertEqual "fmap2" (12 :: Int) y
+    assertEqual "lens" (13 :: Int) $ _bot0 $ _bot $ _sub s'
     return ()
 
   where
@@ -116,9 +116,4 @@ testMonadState = testCase "lens/MonadState" $ do
         a <- with sub0 get
         with sub0 $ put $ a+1
 
-
-eat :: SomeException -> IO ()
-eat _ = return ()
-
-qqq = defaultMainWithArgs [tests] ["--plain"] `catch` eat
 

@@ -20,7 +20,6 @@ import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Auth.Types (BackendError(..))
 import           Text.Templating.Heist
 
 data App = App
@@ -54,15 +53,17 @@ sessionTest = withSession session $ do
     , ("csrf", liftHeist $ textSplice csrf) ]
 
 
+newUserH :: Handler App v ()
 newUserH = do
   renderWithSplices "registerUser" []
 
+registerH :: Handler b (AuthManager b) ()
 registerH = do
   res <- try $ registerUser "login" "password"
   case res of
     Left (e :: BackendError) -> 
       writeText $ T.concat ["Caught error: " , (T.pack . show) e]
-    Right r -> writeText "Done"
+    Right _ -> writeText "Done"
 
 ------------------------------------------------------------------------------
 -- |

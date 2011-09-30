@@ -51,13 +51,13 @@ module Snap.Snaplet.Auth
   where
 
 import           Control.Monad.State
-import           Crypto.PasswordStore
-import qualified Data.ByteString.Char8 as B
 import           Data.ByteString (ByteString)
 import           Data.Maybe (isJust)
+import           Data.Serialize hiding (get)
 import           Data.Time
-import           Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import           Data.Text.Encoding (decodeUtf8)
 import           Data.Text (Text)
+import           Web.ClientSession
 
 import           Snap.Core
 import           Snap.Snaplet
@@ -84,9 +84,9 @@ createUser
   :: Text -- Username
   -> ByteString -- Password
   -> Handler b (AuthManager b) AuthUser
-createUser unm pass = do
+createUser unm pwd = do
   (AuthManager r _ _ _ _ _ _ _) <- get
-  liftIO $ AM.createUser r unm pass
+  liftIO $ AM.createUser r unm pwd
 
 
 ------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ loginByUsername
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
 loginByUsername unm pwd rm  = do
-  AuthManager r s _ _ cn rp sk _ <- get
+  AuthManager r _ _ _ cn rp sk _ <- get
   au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
   case au of
     Nothing  -> return $ Left UserNotFound
@@ -121,7 +121,7 @@ loginByUsername unm pwd rm  = do
 -- | Remember user from the remember token if possible and perform login
 loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
 loginByRememberToken = do
-  mgr@(AuthManager r _ _ _ rc rp sk _) <- get
+  (AuthManager r _ _ _ rc rp sk _) <- get
   token <- getRememberToken sk rc rp
   au <- maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
   case au of
@@ -146,7 +146,7 @@ currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup f
   where 
     f = do
-      mgr@(AuthManager r s _ _ _ _ _ _) <- get
+      (AuthManager r s _ _ _ _ _ _) <- get
       uid <- withTop s getSessionUserId 
       case uid of
         Nothing -> loginByRememberToken 
@@ -213,7 +213,6 @@ markAuthFail u = do
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = do
   (AuthManager r _ _ _ _ _ _ _) <- get
-  now <- liftIO getCurrentTime
   incLoginCtr u >>= updateIp >>= updateLoginTS 
     >>= resetFailCtr >>= liftIO . save r
   where
@@ -258,16 +257,16 @@ checkPasswordAndLogin u pw =
         else return . Left $ LockedOut x
     Nothing -> auth u
   where
-    auth u = 
-      case authenticatePassword u pw of
+    auth user = 
+      case authenticatePassword user pw of
         Just e -> do
-          markAuthFail u
+          markAuthFail user
           return $ Left e
         Nothing -> do
-          forceLogin u 
-          modify (\mgr -> mgr { activeUser = Just u })
-          u' <- markAuthSuccess u
-          return $ Right u'
+          forceLogin user 
+          modify (\mgr -> mgr { activeUser = Just user })
+          user' <- markAuthSuccess user
+          return $ Right user'
 
 
 ------------------------------------------------------------------------------
@@ -297,12 +296,24 @@ forceLogin u = do
 ------------------------------------------------------------------------------
 
 
+getRememberToken :: (Serialize t, MonadSnap m)
+                 => Key
+                 -> ByteString
+                 -> Maybe Int
+                 -> m (Maybe t)
 getRememberToken sk rc rp = getSecureCookie rc sk rp
 
 
+setRememberToken :: (Serialize t, MonadSnap m)
+                 => Key
+                 -> ByteString
+                 -> Maybe Int
+                 -> t
+                 -> m ()
 setRememberToken sk rc rp token = setSecureCookie rc sk rp token
 
 
+forgetRememberToken :: MonadSnap m => ByteString -> m ()
 forgetRememberToken rc = expireCookie rc (Just "/")
 
                                        

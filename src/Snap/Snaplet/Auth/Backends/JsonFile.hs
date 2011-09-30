@@ -18,7 +18,7 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
 import qualified Data.Map as HM
 import           Data.Map (Map)
-import           Data.Maybe (isNothing, fromJust, isJust)
+import           Data.Maybe (fromJust, isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Lens.Lazy
@@ -50,14 +50,14 @@ initJsonFileAuthManager s l db =
     key <- getKey (asSiteKey s)
     jsonMgr <- mkJsonAuthMgr db
     return $ AuthManager {
-    	  backend = jsonMgr
-    	, session = l
-    	, activeUser = Nothing
-    	, minPasswdLen = asMinPasswdLen s
-    	, rememberCookieName = asRememberCookieName s
-    	, rememberPeriod = asRememberPeriod s
-    	, siteKey = key
-    	, lockout = asLockout s 
+        backend = jsonMgr
+      , session = l
+      , activeUser = Nothing
+      , minPasswdLen = asMinPasswdLen s
+      , rememberCookieName = asRememberCookieName s
+      , rememberPeriod = asRememberPeriod s
+      , siteKey = key
+      , lockout = asLockout s 
     }
 
 
@@ -98,18 +98,19 @@ type RemTokenUserCache = Map Text UserId
 -- JSON user back-end stores the user data and indexes for login and token
 -- based logins.
 data UserCache = UserCache {
-	  uidCache    :: UserIdCache          -- the actual datastore
-	, loginCache  :: LoginUserCache       -- fast lookup for login field
-	, tokenCache  :: RemTokenUserCache    -- fast lookup for remember tokens
-	, uidCounter  :: Int                  -- user id counter
+    uidCache    :: UserIdCache          -- the actual datastore
+  , loginCache  :: LoginUserCache       -- fast lookup for login field
+  , tokenCache  :: RemTokenUserCache    -- fast lookup for remember tokens
+  , uidCounter  :: Int                  -- user id counter
 }
 
 
+defUserCache :: UserCache
 defUserCache = UserCache {
-	  uidCache = HM.empty
-	, loginCache = HM.empty
-	, tokenCache = HM.empty
-	, uidCounter = 0
+    uidCache = HM.empty
+  , loginCache = HM.empty
+  , tokenCache = HM.empty
+  , uidCounter = 0
 }
 
 
@@ -130,8 +131,8 @@ loadUserCache fp = do
 
 
 data JsonFileAuthManager = JsonFileAuthManager {
-	  memcache :: TVar UserCache
-	, dbfile :: FilePath
+    memcache :: TVar UserCache
+  , dbfile :: FilePath
 }
 
 
@@ -172,7 +173,7 @@ instance IAuthBackend JsonFileAuthManager where
               let uid' = UserId . showT $ uidCounter cache + 1
               let u' = u { userUpdatedAt = Just now, userId = Just uid' }
               return $ cache {
-              	uidCache = HM.insert uid' u' $ uidCache cache
+                uidCache = HM.insert uid' u' $ uidCache cache
               , loginCache = HM.insert (userLogin u') uid' $ loginCache cache
               , tokenCache = case userRememberToken u' of
                                 Nothing -> tokenCache cache
@@ -240,11 +241,13 @@ instance IAuthBackend JsonFileAuthManager where
         where getUid = HM.lookup token (tokenCache cache)
 
 
+withCache :: JsonFileAuthManager -> (UserCache -> a) -> IO a
 withCache mgr f = atomically $ do
   cache <- readTVar $ memcache mgr
   return $ f cache
 
 
+getUser :: UserCache -> UserId -> Maybe AuthUser
 getUser cache uid = HM.lookup uid (uidCache cache)
 
 
@@ -321,4 +324,5 @@ instance FromJSON Password where
   parseJSON = fmap Encrypted . parseJSON
   
 
+showT :: Int -> Text
 showT = T.pack . show

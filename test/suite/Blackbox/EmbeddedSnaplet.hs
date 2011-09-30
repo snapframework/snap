@@ -15,9 +15,6 @@ import Control.Monad.State
 import Data.Lens.Lazy
 import Data.Lens.Template
 import qualified Data.Text as T
-import           Snap.Http.Server.Config
-import Snap.Core
-import Snap.Util.FileServe
 import System.FilePath.Posix
 
 import Snap.Snaplet

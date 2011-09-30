@@ -1,7 +1,5 @@
 module Blackbox.Common where
 
-import Control.Monad.Trans
-import Data.Configurator
 import qualified Data.Text as T
 import Snap.Core
 import Snap.Snaplet
