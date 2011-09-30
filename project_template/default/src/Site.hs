@@ -49,7 +49,7 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
 -- | For your convenience, a splice which shows the start time.
 startTimeSplice :: Splice AppHandler
 startTimeSplice = do
-    time <- lift $ getsSnapletState _startTime
+    time <- lift $ gets _startTime
     return $ [TextNode $ T.pack $ show $ time]
 
 
