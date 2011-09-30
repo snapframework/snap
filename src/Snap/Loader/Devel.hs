@@ -12,7 +12,7 @@ import           Control.Monad (liftM2)
 
 import           Data.Char (isAlphaNum)
 import           Data.List
-import           Data.Maybe (catMaybes)
+import           Data.Maybe (maybeToList)
 import           Data.Time.Clock (diffUTCTime, getCurrentTime)
 import           Data.Typeable
 
@@ -56,7 +56,7 @@ import           Snap.Loader.Devel.TreeWatcher
 -- function, or changing the compiler options required, such as by
 -- changing/adding dependencies in the project's .cabal file.  In
 -- those cases, a full recompile will be needed.
-loadSnapTH :: Name     -- ^ the name of the initializer
+loadSnapTH :: Q Exp    -- ^ the initializer expression
            -> Name     -- ^ the name of the load function
            -> [String] -- ^ a list of directories to watch in addition
                        -- to those containing code
@@ -69,17 +69,13 @@ loadSnapTH initializer action additionalWatchDirs = do
 
     -- The first line is an extra type check to ensure the provided
     -- names refer to expressions with the correct types
-    [| do let _ = $(varE initializer) >>= $(varE action)
-          v <- $(varE initializer)
-          (handler, cleanup) <- hintSnap opts modules imports srcPaths loadStr v
+    [| do let _ = $initializer >>= $(varE action)
+          v <- $initializer
+          (handler, cleanup) <- hintSnap opts actMods srcPaths loadStr v
           return (v, handler, cleanup) |]
   where
-    initMod = nameModule initializer
-    actMod = nameModule action
+    actMods = maybeToList $ nameModule action
     loadStr = nameBase action
-
-    modules = catMaybes [initMod, actMod]
-    imports = catMaybes [actMod]
 
 
 ------------------------------------------------------------------------------
@@ -131,17 +127,11 @@ hintSnap :: Typeable a
                      -- modules which contain the initialization,
                      -- cleanup, and handler actions.  Everything else
                      -- they require will be loaded transitively.
-         -> [String] -- ^ A list of modules that need to be be
-                     -- imported, in addition to the ones that need to
-                     -- be interpreted.  This only needs to contain
-                     -- modules that aren't being interpreted, such as
-                     -- those from other libraries, that are used in
-                     -- the expression passed in.
          -> [String] -- ^ A list of paths to watch for updates
          -> String   -- ^ The name of the function to load
          -> a        -- ^ The value to apply the loaded function to
          -> IO (Snap (), IO ())
-hintSnap opts modules imports srcPaths action value =
+hintSnap opts modules srcPaths action value =
     protectedHintEvaluator initialize test loader
   where
     witness x = undefined $ x `asTypeOf` value :: HintLoadable
@@ -157,7 +147,7 @@ hintSnap opts modules imports srcPaths action value =
 
     interpreter = do
         loadModules . nub $ modules
-        setImports . nub $ "Prelude" : witnessModules ++ imports ++ modules
+        setImports . nub $ "Prelude" : witnessModules ++ modules
 
         f <- interpret action witness
         return $ f value

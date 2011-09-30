@@ -17,8 +17,8 @@ import           Language.Haskell.TH
 --
 -- The third argument is unused, and only present for
 -- type-compatibility with Snap.Loader.Devel
-loadSnapTH :: Name -> Name -> [String] -> Q Exp
+loadSnapTH :: Q Exp -> Name -> [String] -> Q Exp
 loadSnapTH initializer action _additionalWatchDirs =
-    [| do value <- $(varE initializer)
+    [| do value <- $initializer
           (site, conf) <- $(varE action) value
           return (value, site, conf) |]

@@ -67,7 +67,7 @@ main = do
     -- watch for changes to trigger reloads in development mode.  It
     -- doesn't need to include source directories, those are picked up
     -- automatically by the splice.
-    (conf, site, cleanup) <- $(loadSnapTH 'getConf
+    (conf, site, cleanup) <- $(loadSnapTH [| getConf |]
                                           'getActions
                                           ["resources/templates"])
 
