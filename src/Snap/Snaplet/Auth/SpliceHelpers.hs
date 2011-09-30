@@ -30,8 +30,8 @@ import           Snap.Snaplet.Heist
 -- | Add all standard auth splices to a Heist-enabled application.
 --
 -- This adds the following splices:
--- > <ifLoggedIn>
--- > <ifLoggedOut>
+-- \<ifLoggedIn\>
+-- \<ifLoggedOut\>
 addAuthSplices 
   :: HasHeist b 
   => Lens b (Snaplet (AuthManager b)) 

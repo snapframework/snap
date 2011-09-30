@@ -32,7 +32,7 @@ import           Snap.Snaplet.Auth.Types
 ------------------------------------------------------------------------------
 -- | Create a new user from just a username and password
 --
--- May throw a "DuplicateLogin' if given username is not unique
+-- May throw a "DuplicateLogin" if given username is not unique
 createUser
   :: (IAuthBackend r) 
   => r

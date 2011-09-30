@@ -79,7 +79,7 @@ import           Snap.Snaplet.Session.SecureCookie
 ------------------------------------------------------------------------------
 -- | Create a new user from just a username and password
 --
--- May throw a "DuplicateLogin' if given username is not unique
+-- May throw a "DuplicateLogin" if given username is not unique
 createUser
   :: Text -- Username
   -> ByteString -- Password
@@ -340,7 +340,7 @@ getSessionUserId = do
 ------------------------------------------------------------------------------
 -- | Check password for a given user. 
 --
--- Returns 'Nothing" if check is successful and an 'IncorrectPassword' error
+-- Returns "Nothing" if check is successful and an "IncorrectPassword" error
 -- otherwise
 authenticatePassword 
   :: AuthUser        -- ^ Looked up from the back-end
