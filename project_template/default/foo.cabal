@@ -37,7 +37,6 @@ Executable projname
 
   if flag(development)
     cpp-options: -DDEVELOPMENT
-    build-depends: hint >= 0.3.2 && < 0.4
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags.  Additionally, disable all
     -- warnings.  The hint library doesn't give an option to execute
