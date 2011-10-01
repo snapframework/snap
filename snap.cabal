@@ -60,6 +60,7 @@ Library
     Snap.Snaplet.Session.Backends.CookieSession
 
   other-modules:
+    Control.Monad.Generic,
     Snap.Loader.Devel.Evaluator,
     Snap.Loader.Devel.Signal,
     Snap.Loader.Devel.TreeWatcher
