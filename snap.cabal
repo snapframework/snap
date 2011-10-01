@@ -60,7 +60,7 @@ Library
       Snap.Extension.Loader.Devel.TreeWatcher
 
   build-depends:
-    base                      >= 4.3 && < 5,
+    base                      >= 4 && < 5,
     blaze-builder             >= 0.2.1.4 && <0.4,
     bytestring                >= 0.9.1 && < 0.10,
     directory                 >= 1.0 && < 1.2,
