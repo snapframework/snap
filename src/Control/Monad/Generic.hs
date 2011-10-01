@@ -72,10 +72,10 @@ override dt conf = G $ modify $ Map.insert dname (dt,conf)
 
 ------------------------------------------------------------------------------
 makeData :: (Data a, Monad m, MonadPlus m) =>
-            -- | code to try for overridden datatypes
             (forall d . Data d => conf -> GenericT conf m d)
-            -- | code to try for non-overridden datatypes
+            -- ^ code to try for overridden datatypes
          -> (forall d . Data d => m d)
+            -- ^ code to try for non-overridden datatypes
          -> GenericT conf m a
 makeData overridden nonOverridden = go
   where
