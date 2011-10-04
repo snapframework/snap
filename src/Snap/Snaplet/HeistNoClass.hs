@@ -35,6 +35,7 @@ import           Prelude hiding ((.), id)
 import           Control.Arrow
 import           Control.Applicative
 import           Control.Category
+import           Control.Monad.CatchIO (MonadCatchIO)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -85,6 +86,10 @@ clearHeistCache = clearCacheTagState . _heistCTS
 ------------------------------------------------------------------------------
 
 
+instance MonadSnap m => MonadSnap (TemplateMonad m) where
+    liftSnap = lift . liftSnap
+
+
 ------------------------------------------------------------------------------
 -- | Monad for working with Heist's API from within a snaplet.
 newtype SnapletHeist b v a = SnapletHeist
@@ -96,6 +101,8 @@ newtype SnapletHeist b v a = SnapletHeist
            , MonadIO
            , MonadPlus
            , MonadReader (Lens (Snaplet b) (Snaplet v))
+           , MonadCatchIO
+           , MonadSnap
            )
 
 
