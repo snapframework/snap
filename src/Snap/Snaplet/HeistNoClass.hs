@@ -26,8 +26,9 @@ module Snap.Snaplet.HeistNoClass
   , SnapletSplice
   , runSnapletSplice
   , liftHeist
-  , liftHandler
   , liftWith
+  , liftHandler
+  , liftAppHandler
   , bindSnapletSplices
   ) where
 
@@ -136,28 +137,36 @@ liftHeist = SnapletHeist . lift
 
 
 ------------------------------------------------------------------------------
--- | Lifts a Handler into SnapletHeist.
-liftHandler :: Handler b b a -> SnapletHeist b v a
-liftHandler = liftHeist . lift
-
-
-------------------------------------------------------------------------------
 -- | Common idiom for the combination of liftHandler and withTop.
 liftWith :: (Lens (Snaplet b) (Snaplet v'))
          -> Handler b v' a
          -> SnapletHeist b v a
-liftWith l = liftHandler . withTop' l
+liftWith l = liftHeist . lift . withTop' l
+
+
+------------------------------------------------------------------------------
+-- | Lifts a Handler into SnapletHeist.
+liftHandler :: Handler b v a -> SnapletHeist b v a
+liftHandler m = do
+    l <- ask
+    liftWith l m
+
+
+------------------------------------------------------------------------------
+-- | Lifts a (Handler b b) into SnapletHeist.
+liftAppHandler :: Handler b b a -> SnapletHeist b v a
+liftAppHandler = liftHeist . lift
 
 
 instance MonadState v (SnapletHeist b v) where
     get = do
         l <- ask
-        b <- liftHandler getSnapletState
+        b <- liftAppHandler getSnapletState
         return $ getL (snapletValue . l) b
     put s = do
         l <- ask
-        b <- liftHandler getSnapletState
-        liftHandler $ putSnapletState $ setL (snapletValue . l) s b
+        b <- liftAppHandler getSnapletState
+        liftAppHandler $ putSnapletState $ setL (snapletValue . l) s b
 
 
 ------------------------------------------------------------------------------
@@ -168,7 +177,7 @@ instance MonadSnaplet SnapletHeist where
     withTop' l = withSS (const id) . with' l
     getOpaqueConfig = do
         l <- ask
-        b <- liftHandler getSnapletState
+        b <- liftAppHandler getSnapletState
         return $ getL (snapletConfig . l) b
 
 
