@@ -90,7 +90,7 @@ clearHeistCache = clearCacheTagState . _heistCTS
 ------------------------------------------------------------------------------
 -- | This instance is here because we don't want the heist package to depend
 -- on anything from snap packages.
-instance MonadSnap m => MonadSnap (TemplateMonad m) where
+instance MonadSnap m => MonadSnap (HeistT m) where
     liftSnap = lift . liftSnap
 
 
