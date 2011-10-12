@@ -34,6 +34,7 @@ module Snap.Snaplet.Heist
   , Unclassed.SnapletSplice
   , Unclassed.liftHeist
   , Unclassed.liftHandler
+  , Unclassed.liftAppHandler
   , Unclassed.liftWith
   , Unclassed.bindSnapletSplices
 
@@ -88,7 +89,7 @@ addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 
 ------------------------------------------------------------------------------
 -- | Adds templates to the Heist TemplateState, and lets you specify where
--- they are fonud in the filesystem.
+-- they are found in the filesystem.
 addTemplatesAt :: HasHeist b => ByteString -> FilePath -> Initializer b v ()
 addTemplatesAt pfx p = withTop' heistLens (Unclassed.addTemplatesAt pfx p)
 

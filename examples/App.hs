@@ -17,8 +17,7 @@ import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Auth.Handlers
+import           Snap.Snaplet.Auth hiding (session)
 import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Text.Templating.Heist
 

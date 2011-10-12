@@ -30,7 +30,7 @@ import           System.Directory
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types
-import           Snap.Snaplet.Auth.AuthManager hiding (createUser)
+import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Session
 
 

@@ -97,6 +97,8 @@ data AuthUser = AuthUser
   } deriving (Show,Eq)
 
 
+------------------------------------------------------------------------------
+-- | Default AuthUser that has all empty values.
 defAuthUser :: AuthUser
 defAuthUser = AuthUser {
     userId = Nothing
