@@ -21,8 +21,9 @@ import           Data.Lens.Lazy
 import qualified Text.XmlHtml as X
 import           Text.Templating.Heist
 
-import           Snap.Snaplet.Auth
 import           Snap.Snaplet
+import           Snap.Snaplet.Auth.AuthManager
+import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Heist
 
 

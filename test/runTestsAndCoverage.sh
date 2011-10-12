@@ -31,6 +31,7 @@ EXCLUDES='Main
 Blackbox.App
 Blackbox.BarSnaplet
 Blackbox.Common
+Blackbox.EmbeddedSnaplet
 Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types

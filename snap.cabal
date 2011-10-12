@@ -51,10 +51,6 @@ Library
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Auth,
-    Snap.Snaplet.Auth.AuthManager,
-    Snap.Snaplet.Auth.Types,
-    Snap.Snaplet.Auth.Handlers,
-    Snap.Snaplet.Auth.SpliceHelpers,
     Snap.Snaplet.Auth.Backends.JsonFile,
     Snap.Snaplet.Session,
     Snap.Snaplet.Session.Backends.CookieSession
@@ -62,7 +58,11 @@ Library
   other-modules:
     Snap.Loader.Devel.Evaluator,
     Snap.Loader.Devel.Signal,
-    Snap.Loader.Devel.TreeWatcher
+    Snap.Loader.Devel.TreeWatcher,
+    Snap.Snaplet.Auth.AuthManager,
+    Snap.Snaplet.Auth.Types,
+    Snap.Snaplet.Auth.Handlers,
+    Snap.Snaplet.Auth.SpliceHelpers,
     Snap.Snaplet.HeistNoClass,
     Snap.Snaplet.Internal.Initializer,
     Snap.Snaplet.Internal.LensT,
@@ -153,32 +153,6 @@ Executable snap
     time                >= 1.1      && < 1.4,
     unix-compat,
     zlib
-
-  ghc-prof-options: -prof -auto-all
-
-  if impl(ghc >= 6.12.0)
-    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans -fno-warn-unused-do-bind
-  else
-    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans
-
-Executable app
-  hs-source-dirs: src, examples
-  main-is: App.hs
-
-  build-depends:
-    base                >= 4        && < 5,
-    bytestring,
-    mtl                 >= 2,
-    old-locale,
-    old-time,
-    snap-core           >= 0.6      && < 0.7,
-    snap-server         >= 0.6      && < 0.7,
-    template-haskell    >= 2.3      && < 2.7,
-    text                >= 0.11     && <0.12,
-    time,
-    unix-compat
 
   ghc-prof-options: -prof -auto-all
 

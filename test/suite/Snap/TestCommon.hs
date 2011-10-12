@@ -32,6 +32,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         flip onException (setCurrentDirectory cwd >>
                           removeDirectoryRecursive projectPath) $ do
             makeWorkDirectory projectPath
+            putStrLn $ "Changing directory to "++projectPath
             setCurrentDirectory projectPath
             snapExe <- findSnap
             systemOrDie $ snapExe ++ " init " ++ snapInitArgs

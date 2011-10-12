@@ -14,7 +14,7 @@ module Snap.Snaplet.Auth.AuthManager
   , IAuthBackend(..)
 
   -- * Context-free Operations 
-  , createUser
+  , buildAuthUser
 
 ) where
 
@@ -33,7 +33,7 @@ import           Snap.Snaplet.Auth.Types
 -- | Create a new user from just a username and password
 --
 -- May throw a "DuplicateLogin" if given username is not unique
-createUser
+buildAuthUser
   :: (IAuthBackend r) 
   => r
   -- ^ An auth backend
@@ -42,7 +42,7 @@ createUser
   -> ByteString 
   -- ^ Password
   -> IO AuthUser
-createUser r unm pass = do
+buildAuthUser r unm pass = do
   now <- getCurrentTime
   let au = defAuthUser {
               userLogin = unm
