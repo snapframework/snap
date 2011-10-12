@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 
 module Snap.Snaplet.Auth.Backends.JsonFile 
   ( initJsonFileAuthManager
