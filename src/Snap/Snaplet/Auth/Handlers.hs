@@ -156,16 +156,17 @@ markAuthFail u = do
   (AuthManager r _ _ _ _ _ _ lo) <- get
   incFailCtr u >>= checkLockout lo >>= liftIO . save r
   where
-    incFailCtr u' = return $ u' 
+    incFailCtr u' = return $ u'
                       { userFailedLoginCount = userFailedLoginCount u' + 1}
     checkLockout lo u' = case lo of
-      Nothing -> return u'
-      Just (mx, wait) -> 
-        case userFailedLoginCount u' >= mx of
-          True -> do
+      Nothing          -> return u'
+      Just (mx, wait)  ->
+        if userFailedLoginCount u' >= mx
+          then do
             now <- liftIO getCurrentTime
             let reopen = addUTCTime wait now
             return $ u' { userLockedOutUntil = Just reopen }
+          else return u'
 
 
 ------------------------------------------------------------------------------

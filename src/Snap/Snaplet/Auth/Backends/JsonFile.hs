@@ -1,6 +1,8 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 
 module Snap.Snaplet.Auth.Backends.JsonFile 
   ( initJsonFileAuthManager
@@ -231,10 +233,10 @@ instance IAuthBackend JsonFileAuthManager where
     where f cache = getUser cache uid
 
   lookupByLogin mgr login = withCache mgr f
-    where 
+    where
       f cache = getUid >>= getUser cache
         where getUid = HM.lookup login (loginCache cache)
-              
+
   lookupByRememberToken mgr token = withCache mgr f
     where
       f cache = getUid >>= getUser cache
@@ -258,21 +260,21 @@ getUser cache uid = HM.lookup uid (uidCache cache)
 
 
 instance ToJSON UserCache where
-  toJSON uc = object 
-    [ "uidCache" .= uidCache uc
+  toJSON uc = object
+    [ "uidCache"   .= uidCache uc
     , "loginCache" .= loginCache uc
-    , "tokenCache" .= tokenCache uc 
+    , "tokenCache" .= tokenCache uc
     , "uidCounter" .= uidCounter uc]
 
 
 instance FromJSON UserCache where
-  parseJSON (Object v) = 
+  parseJSON (Object v) =
     UserCache
       <$> v .: "uidCache"
       <*> v .: "loginCache"
       <*> v .: "tokenCache"
       <*> v .: "uidCounter"
-
+  parseJSON _ = error "Unexpected JSON input"
 
 instance ToJSON AuthUser where
   toJSON u = object
@@ -313,6 +315,7 @@ instance FromJSON AuthUser where
     <*> v .: "updated_at"
     <*> return []
     <*> v .: "meta"
+  parseJSON _ = error "Unexpected JSON input"
 
 
 instance ToJSON Password where
@@ -322,7 +325,7 @@ instance ToJSON Password where
 
 instance FromJSON Password where
   parseJSON = fmap Encrypted . parseJSON
-  
+
 
 showT :: Int -> Text
 showT = T.pack . show
