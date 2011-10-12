@@ -4,7 +4,7 @@ synopsis:       Snap: A Haskell Web Framework: project starter executable and gl
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
 license-file:   LICENSE
-author:         James Sanders, Shu-yu Guo, Gregory Collins, Doug Beardsley
+author:         Ozgun Ataman, Doug Beardsley, Gregory Collins, Carl Howells, Chris Smith
 maintainer:     snap@snapframework.com
 build-type:     Simple
 cabal-version:  >= 1.6
