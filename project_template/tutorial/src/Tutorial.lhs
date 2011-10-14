@@ -85,8 +85,8 @@ The next thing we need to do is define an initializer.
 >               , ("/company", companyHandler)
 >               ]
 >     wrapHandlers (<|> heistServe)
->     mvar <- liftIO $ newIORef "fooCorp"
->     return $ App hs fs bs mvar
+>     ref <- liftIO $ newIORef "fooCorp"
+>     return $ App hs fs bs ref
 
 For now don't worry about the two type parameters to SnapletInit. We'll
 discuss them in more detail later. The basic idea here is that to initialize an
