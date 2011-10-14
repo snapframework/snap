@@ -211,12 +211,22 @@ The Heist Snaplet
 =================
 
 The astute reader might ask why there is no "with heist" in front of the call
-to heistServe.
-
+to heistServe.  And indeed, that would normally be the case.  But we decided
+that an application will never need more than one instance of a Heist snaplet.
+So we provided a type class called HasHeist that allows an application to
+define the global reference to its Heist snaplet by writing a HasHeist
+instance.  In this example we define the instance as follows:
 
 > instance HasHeist App where heistLens = subSnaplet heist
+
+Now all we need is a simple main function to serve our application.
 
 > main :: IO ()
 > main = serveSnaplet defaultConfig app
 
+This completes a full working application.  We did leave out a little dummy
+code for the Foo and Bar snaplets.  This code is included in Part2.hs.  For
+more information look in our API documentation.  No really, that wasn't a
+joke.  The API docs are written as prose.  It is written to be very easy to
+read, while having the benefit of including all the actual type signatures.
 
