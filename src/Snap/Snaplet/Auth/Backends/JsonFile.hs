@@ -11,7 +11,7 @@ module Snap.Snaplet.Auth.Backends.JsonFile
 
 
 import           Control.Applicative
-import           Control.Monad.CatchIO (throw)
+import           Control.Exception.Control (throw)
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson

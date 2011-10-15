@@ -5,7 +5,7 @@
 
 module Snap.Snaplet.Auth.Types where
 
-import           Control.Monad.CatchIO
+import           Control.Exception.Control
 import           Data.Aeson
 import           Data.ByteString (ByteString)
 import           Data.HashMap.Strict (HashMap)

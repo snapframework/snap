@@ -6,7 +6,8 @@ module Snap.Snaplet.Internal.RST where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad.CatchIO
+import           Control.Monad.Trans.Control
+import           Control.Monad.IO.Control
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
 import           Prelude hiding ((.), id, catch)
@@ -65,12 +66,15 @@ instance (Monad m) => MonadState s (RST r s m) where
 mapRST :: (m (a, s) -> n (b, s)) -> RST r s m a -> RST r s n b
 mapRST f m = RST $ \r s -> f (runRST m r s)
 
+instance MonadControlIO m => MonadControlIO (RST r s m) where
+  liftControlIO = liftLiftControlBase liftControlIO
 
-instance (MonadCatchIO m) => MonadCatchIO (RST r s m) where
-    m `catch` f = RST $ \r s -> runRST m r s
-                           `catch` \e -> runRST (f e) r s
-    block       = mapRST block
-    unblock     = mapRST unblock
+instance MonadTransControl (RST r s) where
+    liftControl f =
+        RST $ \r s ->
+          let run t = liftM (\ ~(x, s') -> RST $ \_ _ -> return (x, s'))
+                            (runRST t r s)
+          in liftM (\x -> (x, s)) (f run)
 
 instance (MonadSnap m) => MonadSnap (RST r s m) where
     liftSnap s = lift $ liftSnap s

@@ -7,7 +7,8 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Lens.Strict
-import Control.Monad.CatchIO
+import Control.Monad.Trans.Control
+import Control.Monad.IO.Control
 import Control.Monad.Reader.Class
 import Control.Monad.State.Class
 import Control.Monad.State.Strict
@@ -70,14 +71,15 @@ instance MonadIO m => MonadIO (Lensed b v m) where
 
 
 ------------------------------------------------------------------------------
-instance MonadCatchIO m => MonadCatchIO (Lensed b v m) where
-    catch (Lensed m) f = Lensed $ \l v b -> m l v b `catch` handler l v b
-      where
-        handler l v b e = let (Lensed h) = f e
-                          in h l v b
+instance MonadControlIO m => MonadControlIO (Lensed b v m) where
+  liftControlIO = liftLiftControlBase liftControlIO
 
-    block (Lensed m)   = Lensed $ \l v b -> block (m l v b)
-    unblock (Lensed m) = Lensed $ \l v b -> unblock (m l v b)
+instance MonadTransControl (Lensed b v) where
+    liftControl f = undefined
+        {- Lensed $ \r v b ->-}
+          {- let run t = liftM (\ ~(a, v', b) -> Lensed $ \_ _ _ -> return (a, v', b))-}
+                            {- (unlensed t r v)-}
+          {- in liftM (\a -> (a, v, b)) (f run)-}
 
 
 ------------------------------------------------------------------------------

@@ -36,7 +36,7 @@ import           Prelude hiding ((.), id)
 import           Control.Arrow
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad.CatchIO (MonadCatchIO)
+import           Control.Monad.IO.Control
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -105,7 +105,7 @@ newtype SnapletHeist b v a = SnapletHeist
            , MonadIO
            , MonadPlus
            , MonadReader (Lens (Snaplet b) (Snaplet v))
-           , MonadCatchIO
+           , MonadControlIO
            , MonadSnap
            )
 

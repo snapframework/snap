@@ -7,7 +7,7 @@ module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Monad.CatchIO
+import           Control.Monad.IO.Control
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
 import           Data.Lens.Lazy
@@ -24,7 +24,7 @@ newtype LensT b v s m a = LensT (RST (Lens b v) s m a)
            , Applicative
            , MonadIO
            , MonadPlus
-           , MonadCatchIO
+           , MonadControlIO
            , Alternative
            , MonadReader (Lens b v)
            , MonadSnap )

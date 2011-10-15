@@ -24,9 +24,8 @@ module Snap.Snaplet.Internal.Initializer
 import           Prelude hiding ((.), id, catch)
 import           Control.Category
 import           Control.Concurrent.MVar
-import           Control.Exception (SomeException)
+import           Control.Exception.Control hiding (Handler)
 import           Control.Monad
-import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Writer hiding (pass)

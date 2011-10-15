@@ -12,7 +12,7 @@
 
 module Snap.Snaplet.Auth.Handlers where
 
-import           Control.Monad.CatchIO (throw)
+import           Control.Exception.Control
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy

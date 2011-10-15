@@ -10,7 +10,7 @@ module Snap.Snaplet.Internal.Types where
 import           Prelude hiding ((.))
 import           Control.Applicative
 import           Control.Category ((.))
-import           Control.Monad.CatchIO hiding (Handler)
+import           Control.Monad.IO.Control
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.Writer hiding (pass)
@@ -215,7 +215,7 @@ newtype Handler b v a =
            , Applicative
            , MonadIO
            , MonadPlus
-           , MonadCatchIO
+           , MonadControlIO
            , Alternative
            , MonadSnap)
 
