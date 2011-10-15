@@ -12,7 +12,7 @@
 
 module Snap.Snaplet.Auth.Handlers where
 
-import           Control.Exception.Control
+import           Control.Exception.Control hiding (Handler)
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy

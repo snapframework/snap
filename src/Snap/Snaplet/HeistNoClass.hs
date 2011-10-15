@@ -93,7 +93,6 @@ clearHeistCache = clearCacheTagState . _heistCTS
 instance MonadSnap m => MonadSnap (HeistT m) where
     liftSnap = lift . liftSnap
 
-
 ------------------------------------------------------------------------------
 -- | Monad for working with Heist's API from within a snaplet.
 newtype SnapletHeist b v a = SnapletHeist
