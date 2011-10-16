@@ -429,10 +429,11 @@ runInitializer :: MVar (Snaplet b)
                -> IO (Snaplet b, InitializerState b)
 runInitializer mvar b@(Initializer i) = do
     userConfig <- load [Optional "snaplet.cfg"]
+    let builtinHandlers = [("/admin/reload", reloadSite)]
     let cfg = SnapletConfig [] "" Nothing "" userConfig [] (mkReloader mvar b)
     logRef <- newIORef ""
     ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
-        InitializerState True (return ()) [] id cfg logRef
+        InitializerState True (return ()) builtinHandlers id cfg logRef
     res' <- hook res
     return (res', s)
 
