@@ -10,7 +10,7 @@ Executable testsuite
   build-depends:
     Glob                       >= 0.5 && < 0.7,
     HUnit                      >= 1.2 && < 2,
-    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    monad-control              >= 0.2,
     QuickCheck                 >= 2.3.0.2,
     attoparsec                 (>= 0.8   && < 0.10),
     base                       >= 4.3 && < 5,
@@ -46,7 +46,7 @@ Executable app
   main-is:         AppMain.hs
 
   build-depends:
-    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    monad-control              >= 0.2,
     attoparsec                 (>= 0.8   && < 0.10),
     base                       >= 4 && < 5,
     bytestring                 >= 0.9 && < 0.10,
@@ -83,7 +83,7 @@ Executable nesttest
   main-is:         NestTest.hs
 
   build-depends:
-    MonadCatchIO-transformers  >= 0.2 && < 0.3,
+    monad-control              >= 0.2,
     attoparsec                 (>= 0.8   && < 0.10),
     base                       >= 4 && < 5,
     bytestring                 >= 0.9 && < 0.10,
