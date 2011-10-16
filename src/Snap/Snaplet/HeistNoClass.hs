@@ -227,6 +227,20 @@ addTemplatesAt urlPrefix templateDir = do
         (`mappend` addTemplatePathPrefix urlPrefix ts)
 
 
+modifyHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+               -> Initializer b v ()
+modifyHeistTS' heist f = do
+    _lens <- getLens
+    withTop' heist $ addPostInitHook $ return . changeTS f
+
+
+modifyHeistTS :: (Lens b (Snaplet (Heist b)))
+              -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+              -> Initializer b v ()
+modifyHeistTS heist f = modifyHeist' (subSnaplet heist) f
+
+
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> [(Text, SnapletSplice b v)]
             -> Initializer b v ()
