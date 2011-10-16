@@ -49,9 +49,9 @@ because it is desirable to be able to use the identity lens to construct a
 `Handler b b`.  The only issue with this formulation is that the lens
 manipulation functions provided by LensT are not what the end user needs.  The
 end user has a lens of type `Lens b (Snaplet v)` created by the `mkLabels`
-function.  But LensT's withXYZ functions need (Lens (Snaplet b) (Snaplet v))
+function.  But LensT's withXYZ functions need `Lens (Snaplet b) (Snaplet v)`
 lenses.  These can be derived easily by composing the user-supplied lens with
-the internal lens (Lens (Snaplet a) a) derived from the definition of the
+the internal lens `Lens (Snaplet a) a` derived from the definition of the
 Snaplet data structure.
 
 NOTE: The above definition for Handler is no longer correct.  We switched to a
@@ -64,7 +64,7 @@ to Edward Kmett for pointing this out and writing the code for us.
 The second important component of snaplets is initialization.  This involves
 setting up the state used by the handlers as well as defining a snaplet's
 routes and cleanup actions, reading on-disk config files, and initializing and
-interacting with other snaplets.  Initializer still uses a LensT
+interacting with other snaplets.  `Initializer` still uses a LensT
 implementation because it does not fit the more specialized case for which
 Lensed is optimized.  But it is similar enough that we can still refer to
 snaplets using the same lenses that we use in Handlers.  These similarities
@@ -75,14 +75,14 @@ snaplet's initialization.  For instance, maybe you want to add templates or
 bind splices for a sitewide Heist snaplet.  Or perhaps you want to add
 controls to the admin panel snaplet.  This involves modifying the state of
 other snaplets.  It would be nice to use the same lenses and scoped
-modification via top-level state that we use in Handler.  But in the
+modification via top-level state that we use in `Handler`.  But in the
 initializer we don't yet have a fully constructed top-level state object to
 modify.  So instead of actually modifying the state directly, we construct
 modifier functions to be applied at the end of initialization.  Since these
 functions form a monoid, we can build them up using WriterT as LensT's
 underlying monad.
 
-The Initializer monad is used for both initialization and application
+The `Initializer` monad is used for both initialization and application
 reloading.  When an application is reloaded from the browser, status and error
 messages should go to the browser instead of the console.  The printInfo
 function sends messages to the appropriate place and should be used to
@@ -94,11 +94,12 @@ The Heist snaplet is a fairly complex snaplet that illustrates a number of
 concepts that you may encounter while writing your own snaplets.  The biggest
 issue arises because Heist's TemplateState is parameterized by the handler
 monad.  This means that if you want to do something like a with transformation
-with a lens (Lens b v) you will naturally want to apply the same transformation
-to the Handler parameter of the TemplateState.  Unfortunately, due to Heist's
-design, this is computationally intensive, must be performed at runtime, and
-requires that you have a bijection (b :<->: v).  To avoid this issue, we only
-use the base application state, `TemplateState (Handler b b)`.
+with a lens `Lens b v` you will naturally want to apply the same
+transformation to the Handler parameter of the TemplateState.  Unfortunately,
+due to Heist's design, this is computationally intensive, must be performed at
+runtime, and requires that you have a bijection between b and v.  To avoid
+this issue, we only use the base application state, `TemplateState (Handler b
+b)`.
 
 The basic functions for manipulating templates are not affected by this
 decision.  But the splice functions are more problematic since they are the
