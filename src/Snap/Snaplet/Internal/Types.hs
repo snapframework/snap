@@ -58,7 +58,7 @@ getRootURL sc = buildPath $ _scRouteContext sc
 
 ------------------------------------------------------------------------------
 -- | Snaplet's type parameter 's' here is user-defined and can be any Haskell
--- type.  A value of type @Snaplet Foo@ countains a couple of things:
+-- type.  A value of type @Snaplet s@ countains a couple of things:
 --
 -- * a value of type @s@, called the \"user state\".
 --
