@@ -3,22 +3,29 @@
 {-|
 
 This is where all the routes and handlers are defined for your site. The
-'site' function combines everything together and is exported by this module.
+'app' function is the initializer that combines everything together and
+is exported by this module.
 
 -}
 
 module Site
-  ( site
+  ( app
   ) where
 
 import           Control.Applicative
+import           Control.Monad.Trans
+import           Control.Monad.State
+import           Data.ByteString (ByteString)
 import           Data.Maybe
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import           Snap.Extension.Heist
-import           Snap.Extension.Timer
+import           Data.Time.Clock
+import           Snap.Core
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
 import           Snap.Util.FileServe
-import           Snap.Types
 import           Text.Templating.Heist
+import           Text.XmlHtml hiding (render)
 
 import           Application
 
@@ -29,7 +36,7 @@ import           Application
 -- The 'ifTop' is required to limit this to the top of a route.
 -- Otherwise, the way the route table is currently set up, this action
 -- would be given every request.
-index :: Application ()
+index :: Handler App App ()
 index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
   where
     indexSplices =
@@ -39,8 +46,24 @@ index = ifTop $ heistLocal (bindSplices indexSplices) $ render "index"
 
 
 ------------------------------------------------------------------------------
+-- | For your convenience, a splice which shows the start time.
+startTimeSplice :: Splice AppHandler
+startTimeSplice = do
+    time <- lift $ gets _startTime
+    return $ [TextNode $ T.pack $ show $ time]
+
+
+------------------------------------------------------------------------------
+-- | For your convenience, a splice which shows the current time.
+currentTimeSplice :: Splice AppHandler
+currentTimeSplice = do
+    time <- liftIO getCurrentTime
+    return $ [TextNode $ T.pack $ show $ time]
+
+
+------------------------------------------------------------------------------
 -- | Renders the echo page.
-echo :: Application ()
+echo :: Handler App App ()
 echo = do
     message <- decodedParam "stuff"
     heistLocal (bindString "message" (T.decodeUtf8 message)) $ render "echo"
@@ -49,9 +72,21 @@ echo = do
 
 
 ------------------------------------------------------------------------------
--- | The main entry point handler.
-site :: Application ()
-site = route [ ("/",            index)
-             , ("/echo/:stuff", echo)
-             ]
-       <|> serveDirectory "resources/static"
+-- | The application's routes.
+routes :: [(ByteString, Handler App App ())]
+routes = [ ("/",            index)
+         , ("/echo/:stuff", echo)
+         , ("", with heist heistServe)
+         , ("", serveDirectory "resources/static")
+         ]
+
+------------------------------------------------------------------------------
+-- | The application initializer.
+app :: SnapletInit App App
+app = makeSnaplet "app" "An snaplet example application." Nothing $ do
+    sTime <- liftIO getCurrentTime
+    h <- nestSnaplet "heist" heist $ heistInit "resources/templates"
+    addRoutes routes
+    return $ App h sTime
+
+

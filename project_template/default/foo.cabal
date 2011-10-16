@@ -21,21 +21,20 @@ Executable projname
   Build-depends:
     base >= 4 && < 5,
     bytestring >= 0.9.1 && < 0.10,
-    heist >= 0.5 && < 0.6,
+    data-lens >= 2.0.1 && < 2.1,
+    data-lens-template >= 2.1 && < 2.2,
+    heist >= 0.6 && < 0.7,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     mtl >= 2 && < 3,
-    snap == 0.5.*,
-    snap-core == 0.5.*,
-    snap-server == 0.5.*,
+    snap == 0.6.*,
+    snap-core   == 0.6.*,
+    snap-server == 0.6.*,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.4,
     xmlhtml == 0.1.*
 
-  extensions: TypeSynonymInstances MultiParamTypeClasses
-
   if flag(development)
     cpp-options: -DDEVELOPMENT
-    build-depends: hint >= 0.3.2 && < 0.4
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags.  Additionally, disable all
     -- warnings.  The hint library doesn't give an option to execute
