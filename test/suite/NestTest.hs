@@ -70,7 +70,6 @@ app = makeSnaplet "app" "nested snaplet application" Nothing $ do
     fs <- embedSnaplet "foo" foo fooInit
     addRoutes [ ("/hello", writeText "hello world")
               , ("/public", serveDirectory "public")
-              , ("/admin/reload", reloadSite)
               ]
     return $ App fs
 
