@@ -89,7 +89,7 @@ want to use as well as any other state we might want.
 
 The field names begin with an underscore because of some more complicated
 things going on under the hood. However, all you need to know right now is
-that you should prefix things with an underscore and then call makeLenses.
+that you should prefix things with an underscore and then call `makeLenses`.
 This lets you use the names without an underscore in the rest of your
 application.
 
@@ -123,10 +123,10 @@ All calls to child snaplet initializer functions must be wrapped in a call to
 nestSnaplet. The first parameter is a URL path segment that is used to prefix
 all routes defined by the snaplet. This lets you ensure that there will be no
 problems with duplicate routes defined in different snaplets. If the foo
-snaplet defines a route /foopage, then in the above example, that page will be
-available at /foo/foopage. Sometimes though, you might want a snaplet's routes
-to be available at the top level. To do that, just pass an empty string to
-nestSnaplet as shown above with the bar snaplet.
+snaplet defines a route `/foopage`, then in the above example, that page will
+be available at `/foo/foopage`. Sometimes though, you might want a snaplet's
+routes to be available at the top level. To do that, just pass an empty string
+to nestSnaplet as shown above with the bar snaplet.
 
 The second parameter to nestSnaplet is the lens to the snaplet you're nesting.
 In order to place a piece into the puzzle, you need to know where it goes.
@@ -144,47 +144,48 @@ nameSnaplet
 
 Snaplets usually define a default name used to identify the snaplet. This name
 is used for the snaplet's directory in the filesystem. If you don't want to use
-the default name, you can override it with the nameSnaplet function. Also, if
+the default name, you can override it with the `nameSnaplet` function. Also, if
 you want to have two instances of the same snaplet, then you will need to use
-nameSnaplet to give at least one of them a unique name.
+`nameSnaplet` to give at least one of them a unique name.
 
 addRoutes
 ---------
 
-The addRoutes function is how an application (or snaplet) defines its routes.
-Under the hood the snaplet infrastructure merges all the routes from all
-snaplets, prepends prefixes from nestSnaplet calls, and passes the list to
-Snap's
+The `addRoutes` function is how an application (or snaplet) defines its
+routes.  Under the hood the snaplet infrastructure merges all the routes from
+all snaplets, prepends prefixes from `nestSnaplet` calls, and passes the list
+to Snap's
 [route](http://hackage.haskell.org/packages/archive/snap-core/0.5.1.4/doc/html/Snap-Types.html#v:route)
-function. This gives us the first introduction to Handler, the other main data
-type defined by the snaplet infrastructure. During initialization, snaplets use
-the Initializer monad. During runtime, snaplets use the Handler monad. We'll
-discuss Handler in more detail later. If you're familiar with Snap's old
-extension system, you can think of it as roughly equivalent to the Application
-monad. It has a MonadState instance that lets you access and modify the current
-snaplet's state, and a MonadSnap instance providing the request-processing
-functions defined in Snap.Types.
+function. This gives us the first introduction to `Handler`, the other main
+data type defined by the snaplet infrastructure. During initialization,
+snaplets use the `Initializer` monad. During runtime, snaplets use the
+`Handler` monad. We'll discuss `Handler` in more detail later. If you're
+familiar with Snap's old extension system, you can think of it as roughly
+equivalent to the Application monad. It has a `MonadState` instance that lets
+you access and modify the current snaplet's state, and a `MonadSnap` instance
+providing the request-processing functions defined in Snap.Types.
 
 wrapHandlers
 ------------
 
-wrapHandlers allows you to apply an arbitrary Handler transformation to the
-top-level handler. This is useful if you want to do some generic processing at
-the beginning or end of every request. For instance, a session snaplet might
-use it to touch a session activity token at the beginning of every request. It
-could also be used to implement custom logging. The example above uses it to
-define heistServe (provided by the Heist snaplet) as the default handler to be
-tried if no other handler matched. This example is easy to understand, but
-defining routes in this way gives O(n) time complexity, whereas routes defined
-with addRoutes have O(log n) time complexity. In a real-world application you
-would probably want to have ("", heistServe) in the list passed to addRoutes.
+`wrapHandlers` allows you to apply an arbitrary `Handler` transformation to
+the top-level handler. This is useful if you want to do some generic
+processing at the beginning or end of every request. For instance, a session
+snaplet might use it to touch a session activity token at the beginning of
+every request. It could also be used to implement custom logging. The example
+above uses it to define heistServe (provided by the Heist snaplet) as the
+default handler to be tried if no other handler matched. This example is easy
+to understand, but defining routes in this way gives O(n) time complexity,
+whereas routes defined with `addRoutes` have O(log n) time complexity. In a
+real-world application you would probably want to have `("", heistServe)` in
+the list passed to `addRoutes`.
 
 with
 ----
 
-The last unfamiliar function in the example is 'with'. Here it accompanies a
-call to the function namePage.  namePage is a simple example handler and looks
-like this.
+The last unfamiliar function in the example is `with`. Here it accompanies a
+call to the function `namePage`.  `namePage` is a simple example handler and
+looks like this.
 
 > namePage :: Handler b v ()
 > namePage = do
@@ -195,16 +196,16 @@ This function is a simple handler that gets the name of the current snaplet
 and writes it into the response with the writeText function defined by the
 snap-core project.  The type variables 'b' and 'v' indicate that this function
 will work in any snaplet with any base application.  The 'with' function is
-used to run namePage in the context of the snaplets foo and bar for the
+used to run `namePage` in the context of the snaplets foo and bar for the
 corresponding routes.  
 
 Working with state
 ------------------
 
-"Handler b v" has a "MonadState v" instance.  This means that you can access
+`Handler b v` has a `MonadState v` instance.  This means that you can access
 all your snaplet state through the get, put, gets, and modify functions that
 are probably familiar from the state monad.  In our example application we
-demonstrate this with companyHandler.
+demonstrate this with `companyHandler`.
 
 > companyHandler :: Handler App App ()
 > companyHandler = method GET getter <|> method POST setter
@@ -219,23 +220,23 @@ demonstrate this with companyHandler.
 >         liftIO $ maybe (return ()) (writeIORef nameRef) mname
 >         getter
 
-If you set a GET request to /company, you'll get the string "fooCorp" back.
-If you send a POST request, it will set the IORef held in the _companyName
-field in the App data structure to the value of the "name" field.  Then it
+If you set a GET request to `/company`, you'll get the string "fooCorp" back.
+If you send a POST request, it will set the IORef held in the `_companyName`
+field in the `App` data structure to the value of the `name` field.  Then it
 calls the getter to return that value back to you so you can see it was
 actually changed.  Again, remember that this change only persists across
-requests because we used an IORef.  If _companyName was just a plain string
+requests because we used an IORef.  If `_companyName` was just a plain string
 and we had used modify, the changed result would only be visible in the rest
 of the processing for that request.
 
 The Heist Snaplet
 =================
 
-The astute reader might ask why there is no "with heist" in front of the call
-to heistServe.  And indeed, that would normally be the case.  But we decided
+The astute reader might ask why there is no `with heist` in front of the call
+to `heistServe`.  And indeed, that would normally be the case.  But we decided
 that an application will never need more than one instance of a Heist snaplet.
-So we provided a type class called HasHeist that allows an application to
-define the global reference to its Heist snaplet by writing a HasHeist
+So we provided a type class called `HasHeist` that allows an application to
+define the global reference to its Heist snaplet by writing a `HasHeist`
 instance.  In this example we define the instance as follows:
 
 > instance HasHeist App where heistLens = subSnaplet heist
@@ -278,7 +279,7 @@ O'Sullivan's excellent [configurator
 package](http://hackage.haskell.org/package/configurator).  In this example,
 the user has chosen to put db config items in a separate file and use
 configurator's import functionality to include it in snaplet.cfg.  If
-foosnaplet uses nestSnaplet or embedSnaplet to include any other snaplets,
+foosnaplet uses `nestSnaplet` or `embedSnaplet` to include any other snaplets,
 then filesystem data defined by those snaplets will be included in
 subdirectories under the snaplets/ directory.
 
@@ -304,21 +305,21 @@ snaplet that will look like this:
     killerInit = makeSnaplet "killerapp" "42" (Just dataDir) $ do
 
 The primary function of Cabal is to install code.  But it has the ability to
-install data files and provides a function called getDataDir for retrieving
+install data files and provides a function called `getDataDir` for retrieving
 the location of these files.  Since it returns a different result depending on
-what machine you're using, the third argument to makeSnaplet has to be "Maybe
-(IO FilePath)" instead of the more natural pure version.  To make things more
+what machine you're using, the third argument to `makeSnaplet` has to be `Maybe
+(IO FilePath)` instead of the more natural pure version.  To make things more
 organized, we use the convention of putting all your snaplet's data files in a
 subdirectory called resources.  So we need to create a small function that
-appends "/resources" to the result of getDataDir.
+appends `/resources` to the result of `getDataDir`.
 
     import Paths_snaplet_killerapp
     dataDir = liftM (++"/resources") getDataDir
 
-If our project is named snaplet-killerapp, the getDataDir function is defined
-in the module Paths_snaplet_killerapp, which we have to import.  To make
-everything work, you have to tell Cabal about your data files by including a
-section like the following in snaplet-killerapp.cabal:
+If our project is named snaplet-killerapp, the `getDataDir` function is
+defined in the module Paths_snaplet_killerapp, which we have to import.  To
+make everything work, you have to tell Cabal about your data files by
+including a section like the following in snaplet-killerapp.cabal:
 
     data-files:
       resources/snaplet.cfg,

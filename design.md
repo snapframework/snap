@@ -22,8 +22,8 @@ Implementing the goal of request local state means that we need some kind of a
 Handler monad that will look roughly like a state transformer built on top of
 the Snap monad with the top level application data as the state.  To implement
 composability we also need an additional type parameter that can be changed to
-match the scope of the current snaplet.  We use the "withReader :: (r1 -> r2)
--> Reader r2 a -> Reader r1 a" pattern to manage scope changes, but in order
+match the scope of the current snaplet.  We use the `withReader :: (r1 -> r2)
+-> Reader r2 a -> Reader r1 a` pattern to manage scope changes, but in order
 to make our state composably mutable, we need to enlist the help of lenses
 instead of accessor functions.  This allows us to keep only the top level
 state and mutate the current context using the lens.
@@ -34,21 +34,21 @@ not conceptually mutable in the same way as the actual state, it is stored in
 the reader environment.  The state monad part is used for the top level state
 b, giving is the following newtype.
 
-newtype LensT b v s m a = LensT (RST (Lens b v) s m a)
+    newtype LensT b v s m a = LensT (RST (Lens b v) s m a)
 
 LensT comes with a (MonadReader (Lens b v)) instance for retrieving the lens
 and a (MonadState v) instance that uses the lens transparently to achieve
 stateful behavior with the type v.  From here the definition of Handler is
 fairly natural:
 
-newtype Handler b v a =
-    Handler (LensT (Snaplet b) (Snaplet v) (Snaplet b) Snap a)
+    newtype Handler b v a =
+        Handler (LensT (Snaplet b) (Snaplet v) (Snaplet b) Snap a)
 
-We use "LensT (Snaplet b) (Snaplet v)" instead of "LensT b (Snaplet v)"
+We use `LensT (Snaplet b) (Snaplet v)` instead of `LensT b (Snaplet v)`
 because it is desirable to be able to use the identity lens to construct a
-"Handler b b".  The only issue with this formulation is that the lens
+`Handler b b`.  The only issue with this formulation is that the lens
 manipulation functions provided by LensT are not what the end user needs.  The
-end user has a lens of type (Lens b (Snaplet v)) created by the mkLabels
+end user has a lens of type `Lens b (Snaplet v)` created by the `mkLabels`
 function.  But LensT's withXYZ functions need (Lens (Snaplet b) (Snaplet v))
 lenses.  These can be derived easily by composing the user-supplied lens with
 the internal lens (Lens (Snaplet a) a) derived from the definition of the
@@ -98,7 +98,7 @@ with a lens (Lens b v) you will naturally want to apply the same transformation
 to the Handler parameter of the TemplateState.  Unfortunately, due to Heist's
 design, this is computationally intensive, must be performed at runtime, and
 requires that you have a bijection (b :<->: v).  To avoid this issue, we only
-use the base application state, (TemplateState (Handler b b)).
+use the base application state, `TemplateState (Handler b b)`.
 
 The basic functions for manipulating templates are not affected by this
 decision.  But the splice functions are more problematic since they are the
@@ -122,7 +122,7 @@ look something like this:
     instance HasHeist App where
         heistLens = subSnaplet heist
 
-The call to subSnaplet is required because HasHeist needs a lens (Lens
-(Snaplet v) (Snaplet (Heist b))) instead of the lens (Lens v (Snaplet (Heist
-b))) that you willll get from mkLabels.
+The call to subSnaplet is required because HasHeist needs a `Lens
+(Snaplet v) (Snaplet (Heist b))` instead of the lens `Lens v (Snaplet (Heist
+b))` that you willll get from mkLabels.
 
