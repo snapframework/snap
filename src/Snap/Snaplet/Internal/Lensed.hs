@@ -74,13 +74,12 @@ instance MonadIO m => MonadIO (Lensed b v m) where
 instance MonadControlIO m => MonadControlIO (Lensed b v m) where
   liftControlIO = liftLiftControlBase liftControlIO
 
-instance MonadTransControl (Lensed b v) where
-    liftControl f = undefined
-        {- Lensed $ \r v b ->-}
-          {- let run t = liftM (\ ~(a, v', b) -> Lensed $ \_ _ _ -> return (a, v', b))-}
-                            {- (unlensed t r v)-}
-          {- in liftM (\a -> (a, v, b)) (f run)-}
 
+instance MonadTransControl (Lensed b v) where
+    liftControl f = Lensed $ \l v b ->
+        let run t = liftM (\ (a, v', b') -> Lensed $ \_ _ _ -> return (a, v', b'))
+                          (unlensed t l v b)
+        in  liftM (\a -> (a, v, b)) (f run)
 
 ------------------------------------------------------------------------------
 instance MonadPlus m => MonadPlus (Lensed b v m) where
