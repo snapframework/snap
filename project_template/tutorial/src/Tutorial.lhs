@@ -14,12 +14,33 @@ provided by the snaplet infrastructure:
 
   - Unified config file infrastructure
 
+One example might be a wiki snaplet.  It would be distributed as a haskell
+package that would be installed with cabal and would probably include code,
+config files, HTML templates, stylesheets, javascript, images, etc.  The code
+would provide the necessary API to let your application interact seamlessly
+with the wiki functionality.  When you run your application for the first
+time, all of the wiki snaplet's filesystem resources will automatically be
+copied into the appropriate places.  Then you will immediately be able to
+customize it to fit your needs by editing config files, or even providing your
+own stylesheets.
+
+A snaplet can represent anything from back end Haskell infrastructure with no
+user facing functionality to a small widget like a chat box that goes in the
+corner of a web page to an entire standalone website like a blog or forum.
+The possibilities are endless.  A snaplet is a web application, and web
+applications are snaplets.  This means that using snaplets and writing
+snaplets are almost the same thing, and it's trivial to include drop a whole
+website into another one.
+
+We're really excited about the possibilities available with snaplets.  In
+fact, Snap already ships with snaplets for sessions, authentication, and
+templating (with Heist),  This not only gives you useful functionality out of
+the box, but it also gives you examples of how to use the snaplet API and help
+you to start writing your own snaplets quickly.  So without further ado,
+let's get started.
 
 Snaplet Overview
 ================
-
-A snaplet is a web application, and web applications are snaplets. This means
-that using snaplets and writing snaplets are almost the same thing.
 
 The heart of the snaplets infrastructure is state management. Most nontrivial
 pieces of a web app need some kind of state or environment data. Components
@@ -74,8 +95,8 @@ application.
 
 The next thing we need to do is define an initializer.
 
-> app :: SnapletInit App App
-> app = makeSnaplet "myapp" "My example application" Nothing $ do
+> appInit :: SnapletInit App App
+> appInit = makeSnaplet "myapp" "My example application" Nothing $ do
 >     hs <- nestSnaplet "heist" heist $ heistInit "templates"
 >     fs <- nestSnaplet "foo" foo $ fooInit
 >     bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
@@ -222,11 +243,89 @@ instance.  In this example we define the instance as follows:
 Now all we need is a simple main function to serve our application.
 
 > main :: IO ()
-> main = serveSnaplet defaultConfig app
+> main = serveSnaplet defaultConfig appInit
 
 This completes a full working application.  We did leave out a little dummy
 code for the Foo and Bar snaplets.  This code is included in Part2.hs.  For
 more information look in our API documentation.  No really, that wasn't a
 joke.  The API docs are written as prose.  It is written to be very easy to
 read, while having the benefit of including all the actual type signatures.
+
+Filesystem Data and Automatic Installation
+==========================================
+
+Some snaplets will have data stored in the filesystem that should be installed
+into the directory of any project that uses it.  Here's an example of what a
+snaplet filesystem layout might look like:
+
+    foosnaplet/
+      |-- *snaplet.cfg*
+      |-- db.cfg
+      |-- public/
+          |-- stylesheets/
+          |-- images/
+          |-- js/
+      |-- *snaplets/*
+          |-- subsnaplet1/
+          |-- subsnaplet2/
+      |-- templates/
+
+Only the starred items are actually enforced by current code, but we want to
+establish the others as a convention.  The file snaplet.cfg is automatically
+read by the snaplet infrastructure.  It is available to you via the
+getSnapletUserConfig function.  Config files use the format defined by Bryan
+O'Sullivan's excellent [configurator
+package](http://hackage.haskell.org/package/configurator).  In this example,
+the user has chosen to put db config items in a separate file and use
+configurator's import functionality to include it in snaplet.cfg.  If
+foosnaplet uses nestSnaplet or embedSnaplet to include any other snaplets,
+then filesystem data defined by those snaplets will be included in
+subdirectories under the snaplets/ directory.
+
+So how do you tell the snaplet infrastructure that your snaplet has filesystem
+data that should be installed?  Look at the definition of appInit above.  The
+third argument to the makeSnaplet function is where we specify the filesystem
+directory that should be installed.  That argument has the type "Maybe (IO
+FilePath)".  In this case we used Nothing because our simple example doesn't
+have any filesystem data.  As an example, let's say you are creating a snaplet
+called killerapp that will be distributed as a hackage project called
+snaplet-killerapp.  Your project directory structure will look something like
+this:
+
+    snaplet-killerapp/
+      |-- resources/
+      |-- snaplet-killerapp.cabal
+      |-- src/
+
+All of the files and directories listed above under foosnaplet/ will be in
+resources/.  Somewhere in the code you will define an initializer for the
+snaplet that will look like this:
+
+    killerInit = makeSnaplet "killerapp" "42" (Just dataDir) $ do
+
+The primary function of Cabal is to install code.  But it has the ability to
+install data files and provides a function called getDataDir for retrieving
+the location of these files.  Since it returns a different result depending on
+what machine you're using, the third argument to makeSnaplet has to be "Maybe
+(IO FilePath)" instead of the more natural pure version.  To make things more
+organized, we use the convention of putting all your snaplet's data files in a
+subdirectory called resources.  So we need to create a small function that
+appends "/resources" to the result of getDataDir.
+
+    import Paths_snaplet_killerapp
+    dataDir = liftM (++"/resources") getDataDir
+
+If our project is named snaplet-killerapp, the getDataDir function is defined
+in the module Paths_snaplet_killerapp, which we have to import.  To make
+everything work, you have to tell Cabal about your data files by including a
+section like the following in snaplet-killerapp.cabal:
+
+    data-files:
+      resources/snaplet.cfg,
+      resources/public/stylesheets/style.css,
+      resources/templates/page.tpl
+
+Now whenever your snaplet is used, its filesystem data will be automagically
+copied into the local project that is using it, whenever the application is
+run and it sees that the files don't already exist.
 

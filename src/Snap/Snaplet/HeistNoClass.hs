@@ -10,6 +10,8 @@ module Snap.Snaplet.HeistNoClass
 
   , addTemplates
   , addTemplatesAt
+  , modifyHeistTS
+  , modifyHeistTS'
   , addSplices
   , addSplices'
   , render
@@ -238,7 +240,7 @@ modifyHeistTS' heist f = do
 modifyHeistTS :: (Lens b (Snaplet (Heist b)))
               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
               -> Initializer b v ()
-modifyHeistTS heist f = modifyHeist' (subSnaplet heist) f
+modifyHeistTS heist f = modifyHeistTS' (subSnaplet heist) f
 
 
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
