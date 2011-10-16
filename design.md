@@ -49,23 +49,26 @@ because it is desirable to be able to use the identity lens to construct a
 "Handler b b".  The only issue with this formulation is that the lens
 manipulation functions provided by LensT are not what the end user needs.  The
 end user has a lens of type (Lens b (Snaplet v)) created by the mkLabels
-function.  But LensT's downcast and withLens functions need (Lens (Snaplet b)
-(Snaplet v)) lenses.  These can be derived easily by composing the user-supplied
-lens with the internal lens (Lens (Snaplet a) a) derived from the definition of
-the Snaplet data structure.
+function.  But LensT's withXYZ functions need (Lens (Snaplet b) (Snaplet v))
+lenses.  These can be derived easily by composing the user-supplied lens with
+the internal lens (Lens (Snaplet a) a) derived from the definition of the
+Snaplet data structure.
+
+NOTE: The above definition for Handler is no longer correct.  We switched to a
+slightly more specialized monad formulation called Lensed that avoids
+traversal of the whole state hierarchy when the state is manipulated.  Thanks
+to Edward Kmett for pointing this out and writing the code for us.
 
 ## Initializer
 
 The second important component of snaplets is initialization.  This involves
 setting up the state used by the handlers as well as defining a snaplet's
 routes and cleanup actions, reading on-disk config files, and initializing and
-interacting with other snaplets.  Like the Handler monad, Initializer is
-implemented with a LensT.  This lets us refer to snaplets using the same
-lenses that we use in Handlers.  However, Initialzer has a different state
-type and underlying monad.
-
-The MonadSnaplet type class abstracts functionality common to both the
-Initializer and Handler monads.  
+interacting with other snaplets.  Initializer still uses a LensT
+implementation because it does not fit the more specialized case for which
+Lensed is optimized.  But it is similar enough that we can still refer to
+snaplets using the same lenses that we use in Handlers.  These similarities
+are abstracted in the MonadSnaplet type class.
 
 During initialization, sometimes you want to modify the result of another
 snaplet's initialization.  For instance, maybe you want to add templates or
@@ -76,12 +79,13 @@ modification via top-level state that we use in Handler.  But in the
 initializer we don't yet have a fully constructed top-level state object to
 modify.  So instead of actually modifying the state directly, we construct
 modifier functions to be applied at the end of initialization.  Since these
-functions form a monoid, we can build them up using a WriterT monad.
+functions form a monoid, we can build them up using WriterT as LensT's
+underlying monad.
 
 The Initializer monad is used for both initialization and application
 reloading.  When an application is reloaded from the browser, status and error
 messages should go to the browser instead of the console.  The printInfo
-function sends messages to the appropriate plate and should be used to
+function sends messages to the appropriate place and should be used to
 communicate all initializer status and errors.
 
 ## Heist
@@ -89,7 +93,7 @@ communicate all initializer status and errors.
 The Heist snaplet is a fairly complex snaplet that illustrates a number of
 concepts that you may encounter while writing your own snaplets.  The biggest
 issue arises because Heist's TemplateState is parameterized by the handler
-monad.  This means that if you want to do something like a wih transformation
+monad.  This means that if you want to do something like a with transformation
 with a lens (Lens b v) you will naturally want to apply the same transformation
 to the Handler parameter of the TemplateState.  Unfortunately, due to Heist's
 design, this is computationally intensive, must be performed at runtime, and
@@ -115,19 +119,10 @@ HasHeist instance for your application or snaplet type and all the Heist API
 functions will work without needing with.  Your HasHeist instance will
 look something like this:
 
-    instance HasHeist App App where
+    instance HasHeist App where
         heistLens = subSnaplet heist
 
 The call to subSnaplet is required because HasHeist needs a lens (Lens
 (Snaplet v) (Snaplet (Heist b))) instead of the lens (Lens v (Snaplet (Heist
-b))) that you willll get from mkLabels.  We did it this way because it allows
-us to make a default instance using the id function from Control.Category.
-
-    instance HasHeist b (Heist b) where heistLens = id
-
-This allows you the option of using the Heist snaplet without defining the
-HasHeist type class.  You will just have to manually change context using
-with or withTop.
-
-
+b))) that you willll get from mkLabels.
 

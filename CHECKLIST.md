@@ -2,11 +2,11 @@ Snaplets release checklist
 
 # Base library
 
-  - [ ]  basic structure of the snaplets library
+  - [X]  basic structure of the snaplets library
 
     - [X]  snaplet nesting / components
 
-    - [ ]  configuration
+    - [X]  configuration
 
       - Chris is going to switch us to bos's configurator
 
@@ -14,7 +14,7 @@ Snaplets release checklist
     - [X]  solution for on-disk layout
 
 
-  - [ ]  haddocks up to standard (Greg)
+  - [ ]  haddocks up to standard
 
 
   - [X]  test suite with good code coverage
@@ -29,16 +29,16 @@ Snaplets release checklist
   - [ ]  design documentation (probably Doug)
 
 
-  - [ ]  Merge in old snap executable and update project templates
+  - [X]  Merge in old snap executable and update project templates
 
 
-  - [ ]  Get Carl's Hint stuff working
+  - [X]  Get Carl's Hint stuff working
 
 # Stock set of snaplets
 
-  - [ ]  session snaplet interface
+  - [X]  session snaplet interface
 
-  - [ ]  user/auth snaplet interface
+  - [X]  user/auth snaplet interface
 
   - [X]  heist snaplet
     

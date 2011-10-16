@@ -101,6 +101,16 @@ addSplices :: (HasHeist b)
 addSplices = Unclassed.addSplices' heistLens
 
 
+------------------------------------------------------------------------------
+-- | More general function allowing arbitrary TemplateState modification.
+-- Without this function you wouldn't be able to bind more complicated splices
+-- like the cache tag.
+modifyHeistTS :: (HasHeist b)
+              => (TemplateState (Handler b b) -> TemplateState (Handler b b))
+              -> Initializer b v ()
+modifyHeistTS = Unclassed.modifyHeistTS' heistLens
+
+
 -- $handlerSection
 -- This section contains functions in the 'Handler' monad that you'll use in
 -- processing requests.

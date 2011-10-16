@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 module Snap.Snaplet.HeistNoClass
   ( Heist
   , heistInit
@@ -9,6 +10,8 @@ module Snap.Snaplet.HeistNoClass
 
   , addTemplates
   , addTemplatesAt
+  , modifyHeistTS
+  , modifyHeistTS'
   , addSplices
   , addSplices'
   , render
@@ -223,6 +226,20 @@ addTemplatesAt urlPrefix templateDir = do
                    >>= either error return
     addPostInitHook $ return . changeTS
         (`mappend` addTemplatePathPrefix urlPrefix ts)
+
+
+modifyHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+               -> Initializer b v ()
+modifyHeistTS' heist f = do
+    _lens <- getLens
+    withTop' heist $ addPostInitHook $ return . changeTS f
+
+
+modifyHeistTS :: (Lens b (Snaplet (Heist b)))
+              -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+              -> Initializer b v ()
+modifyHeistTS heist f = modifyHeistTS' (subSnaplet heist) f
 
 
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
