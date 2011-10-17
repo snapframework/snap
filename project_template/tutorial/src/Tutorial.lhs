@@ -299,20 +299,20 @@ snaplet filesystem layout might look like:
 Only the starred items are actually enforced by current code, but we want to
 establish the others as a convention.  The file snaplet.cfg is automatically
 read by the snaplet infrastructure.  It is available to you via the
-getSnapletUserConfig function.  Config files use the format defined by Bryan
+`getSnapletUserConfig` function.  Config files use the format defined by Bryan
 O'Sullivan's excellent [configurator
 package](http://hackage.haskell.org/package/configurator).  In this example,
 the user has chosen to put db config items in a separate file and use
 configurator's import functionality to include it in snaplet.cfg.  If
 foosnaplet uses `nestSnaplet` or `embedSnaplet` to include any other snaplets,
 then filesystem data defined by those snaplets will be included in
-subdirectories under the snaplets/ directory.
+subdirectories under the `snaplets/` directory.
 
 So how do you tell the snaplet infrastructure that your snaplet has filesystem
 data that should be installed?  Look at the definition of appInit above.  The
 third argument to the makeSnaplet function is where we specify the filesystem
-directory that should be installed.  That argument has the type "Maybe (IO
-FilePath)".  In this case we used Nothing because our simple example doesn't
+directory that should be installed.  That argument has the type `Maybe (IO
+FilePath)`.  In this case we used `Nothing` because our simple example doesn't
 have any filesystem data.  As an example, let's say you are creating a snaplet
 called killerapp that will be distributed as a hackage project called
 snaplet-killerapp.  Your project directory structure will look something like
