@@ -12,6 +12,7 @@
 
 module Snap.Snaplet.Auth.Handlers where
 
+import           Control.Applicative
 import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -48,6 +49,13 @@ createUser
   -> Handler b (AuthManager b) AuthUser
 createUser unm pwd = withBackend (\r -> liftIO $ buildAuthUser r unm pwd)
 
+------------------------------------------------------------------------------
+-- | Check whether a user with the given username exists.
+usernameExists
+  :: Text
+  -- ^ The username to be checked
+  -> Handler b (AuthManager b) Bool
+usernameExists username = withBackend $ \r -> liftIO $ isJust <$> lookupByLogin r username
 
 ------------------------------------------------------------------------------
 -- | Lookup a user by her username, check given password and perform login
@@ -63,7 +71,8 @@ loginByUsername unm pwd rm = do
   rp <- gets rememberPeriod
   withBackend $ loginByUsername' sk cn rp
   where 
-    loginByUsername' :: (IAuthBackend t) => Key -> ByteString -> Maybe Int -> t -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+    loginByUsername' :: (IAuthBackend t) => Key -> ByteString -> Maybe Int -> t
+                        -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
     loginByUsername' sk cn rp r = do
       au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
       case au of
