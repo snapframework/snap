@@ -17,6 +17,7 @@ module Snap.Snaplet.Heist
   , addTemplates
   , addTemplatesAt
   , modifyHeistTS 
+  , withHeistTS 
   , addSplices
 
   -- * Handler Functions
@@ -110,6 +111,14 @@ modifyHeistTS :: (HasHeist b)
               => (TemplateState (Handler b b) -> TemplateState (Handler b b))
               -> Initializer b v ()
 modifyHeistTS = Unclassed.modifyHeistTS' heistLens
+
+
+------------------------------------------------------------------------------
+-- | Runs a function on with the Heist snaplet's 'TemplateState'.
+withHeistTS :: (HasHeist b)
+            => (TemplateState (Handler b b) -> a)
+            -> Handler b v a
+withHeistTS = Unclassed.withHeistTS' heistLens
 
 
 -- $handlerSection

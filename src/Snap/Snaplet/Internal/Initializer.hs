@@ -237,8 +237,8 @@ bracketInit m = do
 -- snaplet is called with either nestSnaplet or embedSnaplet.
 setupSnapletCall :: ByteString -> Initializer b v ()
 setupSnapletCall rte = do
-    curId <- iGets (_scId . _curConfig)
-    modifyCfg (modL scAncestry (fromJust curId:))
+    curId <- iGets (fromJust . _scId . _curConfig)
+    modifyCfg (modL scAncestry (curId:))
     modifyCfg (modL scId (const Nothing))
     unless (B.null rte) $ modifyCfg (modL scRouteContext (rte:))
 

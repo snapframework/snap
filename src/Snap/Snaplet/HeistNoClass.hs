@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 module Snap.Snaplet.HeistNoClass
   ( Heist
@@ -12,6 +13,8 @@ module Snap.Snaplet.HeistNoClass
   , addTemplatesAt
   , modifyHeistTS
   , modifyHeistTS'
+  , withHeistTS
+  , withHeistTS'
   , addSplices
   , addSplices'
   , render
@@ -204,10 +207,18 @@ bindSnapletSplices l splices =
 heistInit :: FilePath
           -> SnapletInit b (Heist b)
 heistInit templateDir =
-    makeSnaplet "heist" "" Nothing $ liftIO $ do
-        (cacheFunc, cts) <- mkCacheTag
+    makeSnaplet "heist" "" Nothing $ do
+        (cacheFunc, cts) <- liftIO mkCacheTag
         let origTs = cacheFunc emptyTemplateState
-        ts <- loadTemplates templateDir origTs >>= either error return
+        ts <- liftIO $ loadTemplates templateDir origTs >>=
+                       either error return
+        addRoutes [ ("", heistServe) ]
+        printInfo $ T.pack $ unwords
+            [ "...loaded"
+            , (show $ length $ templateNames ts)
+            , "templates"
+            ]
+        
         return $ Heist ts cts
 
 
@@ -221,10 +232,16 @@ addTemplatesAt :: ByteString
                -> FilePath
                -> Initializer b (Heist b) ()
 addTemplatesAt urlPrefix templateDir = do
-    printInfo $ T.pack $ "Adding templates from "++ templateDir ++
-                        " with route prefix " ++ (U.toString urlPrefix) ++ "/"
     ts <- liftIO $ loadTemplates templateDir emptyTemplateState
                    >>= either error return
+    printInfo $ T.pack $ unwords
+        [ "...adding"
+        , (show $ length $ templateNames ts)
+        , "templates from"
+        , templateDir
+        , "with route prefix"
+        , (U.toString urlPrefix) ++ "/"
+        ]
     addPostInitHook $ return . changeTS
         (`mappend` addTemplatePathPrefix urlPrefix ts)
 
@@ -241,6 +258,18 @@ modifyHeistTS :: (Lens b (Snaplet (Heist b)))
               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
               -> Initializer b v ()
 modifyHeistTS heist f = modifyHeistTS' (subSnaplet heist) f
+
+
+withHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+             -> (TemplateState (Handler b b) -> a)
+             -> Handler b v a
+withHeistTS' heist f = withTop' heist $ gets (f . _heistTS)
+
+
+withHeistTS :: (Lens b (Snaplet (Heist b)))
+            -> (TemplateState (Handler b b) -> a)
+            -> Handler b v a
+withHeistTS heist f = withHeistTS' (subSnaplet heist) f
 
 
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
