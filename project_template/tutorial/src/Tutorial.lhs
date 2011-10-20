@@ -64,15 +64,10 @@ of the way.
 > 
 > module Main where
 > 
-> import           Control.Applicative
 > import           Data.IORef
-> import           Control.Monad.State
-> import           Data.Lens.Template
-> import           Data.Maybe
 > import qualified Data.ByteString.Char8 as B
-> import           Snap.Core
-> import           Snap.Http.Server
-> import           Snap.Snaplet
+> import           Data.Maybe
+> import           Snap
 > import           Snap.Snaplet.Heist
 > import           Part2
 
