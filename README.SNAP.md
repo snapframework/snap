@@ -22,6 +22,8 @@ The Snap core system consists of:
     bind Haskell functionality to XML tags without getting PHP-style tag soup
     all over your pants
 
+  * a "snaplet" system for building web sites from composable pieces.
+
 Snap is currently only officially supported on Unix platforms; it has been
 tested on Linux and Mac OSX Snow Leopard, and is reported to work on Windows.
 
