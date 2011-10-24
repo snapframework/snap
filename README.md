@@ -1,16 +1,14 @@
 Snap Framework
 ==============
 
-For more information about Snap, read the `README.SNAP.md` or visit the Snap
-project website at http://www.snapframework.com/.
-
 Snap is a web framework for Haskell, based on iteratee I/O (as [popularized by
-Oleg Kiselyov](http://okmij.org/ftp/Streams.html#iteratee)).
-
+Oleg Kiselyov](http://okmij.org/ftp/Streams.html#iteratee)).  For more
+information about Snap, read the `README.SNAP.md` or visit the Snap project
+website at http://www.snapframework.com/.
 
 ## Library contents
 
-This is the `snap` executable and supporting library, which contains:
+This is top-level project for the Snap Framework, which contains:
 
   * a command-line utility for creating initial Snap applications
 
