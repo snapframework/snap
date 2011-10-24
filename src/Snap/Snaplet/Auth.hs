@@ -19,6 +19,7 @@ module Snap.Snaplet.Auth
 
   -- * Higher Level Handler Functions
     createUser
+  , usernameExists
   , saveUser
   , destroyUser
   , loginByUsername
