@@ -92,7 +92,7 @@ Library
     cereal                    >= 0.3     && < 0.4,
     clientsession             >= 0.7.2   && < 0.8,
     configurator              >= 0.1     && < 0.2,
-    containers                >= 0.4     && < 0.5,
+    containers                >= 0.3     && < 0.5,
     directory                 >= 1.0     && < 1.2,
     directory-tree            >= 0.10    && < 0.11,
     data-lens                 >= 2.0.1   && < 2.1,
@@ -144,7 +144,7 @@ Executable snap
   build-depends:
     base                >= 4       && < 5,
     bytestring          >= 0.9.1   && < 0.10,
-    containers          >= 0.4     && < 0.5,
+    containers          >= 0.3     && < 0.5,
     directory           >= 1.0     && < 1.2,
     directory-tree      >= 0.10    && < 0.11,
     filepath            >= 1.1     && < 1.3,
