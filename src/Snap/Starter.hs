@@ -19,8 +19,9 @@ import Snap.StarterTH
 
 ------------------------------------------------------------------------------
 -- Creates a value tDir :: ([String], [(String, String)])
-$(buildData "tDirBareBones" "barebones")
-$(buildData "tDirDefault"   "default")
+buildData "tDirBareBones" "barebones"
+buildData "tDirDefault"   "default"
+buildData "tDirTutorial"  "tutorial"
 
 ------------------------------------------------------------------------------
 usage :: String
@@ -41,9 +42,30 @@ usage = unlines
 
 
 ------------------------------------------------------------------------------
-data InitFlag = InitBareBones
-              | InitHelp
-              | InitExtensions
+initUsage :: String
+initUsage = unlines
+    [ "Snap " ++ (S.unpack snapServerVersion) ++ " Project Kickstarter"
+    , ""
+    , "Usage:"
+    , ""
+    , "  snap init [type]"
+    , ""
+    , "    [type] can be one of:"
+    , "      default   - A default project using snaplets and heist"
+    , "      barebones - A barebones project with minimal dependencies"
+    , "      tutorial  - The literate Haskell tutorial project"
+    , ""
+    , "  If [type] is omitted, the default project is generated."
+    ]
+
+
+printUsage :: [String] -> IO ()
+printUsage ("init":_) = putStrLn initUsage
+printUsage _ = putStrLn usage
+
+------------------------------------------------------------------------------
+-- Only one option for now
+data Option = Help
   deriving (Show, Eq)
 
 
@@ -65,42 +87,43 @@ setup projName tDir = do
 initProject :: [String] -> IO ()
 initProject args = do
     case getOpt Permute options args of
-      (flags, _, [])
-        | InitHelp `elem` flags -> do putStrLn initUsage
-                                      exitFailure
-        | otherwise             -> init' flags
+      (flags, other, [])
+        | Help `elem` flags -> do printUsage other
+                                  exitFailure
+        | otherwise         -> go other
+      (_, other, errs) -> do putStrLn $ concat errs
+                             printUsage other
+                             exitFailure
 
-      (_, _, errs) -> do putStrLn $ concat errs
-                         putStrLn initUsage
-                         exitFailure
   where
-    initUsage = usageInfo "Usage\n  snap init\n\nOptions:" options
-
     options =
-        [ Option ['b'] ["barebones"]  (NoArg InitBareBones)
-                 "Depend only on -core and -server"
-        , Option ['h'] ["help"]       (NoArg InitHelp)
+        [ Option ['h'] ["help"]       (NoArg Help)
                  "Print this message"
-        , Option ['e'] ["extensions"] (NoArg InitExtensions)
-                 "Depend on snap w/ extensions (default)"
         ]
 
-    init' flags = do
+    go ("init":rest) = init' rest
+    go _ = do
+        putStrLn "Error: Invalid action!"
+        putStrLn usage
+        exitFailure
+
+    init' args' = do
         cur <- getCurrentDirectory
         let dirs = splitDirectories cur
             projName = last dirs
             setup' = setup projName
-        case flags of
-          (_:_) | InitBareBones  `elem` flags -> setup' tDirBareBones
-                | InitExtensions `elem` flags -> setup' tDirDefault
-          _                                   -> setup' tDirDefault
+        case args' of
+          []            -> setup' tDirDefault
+          ["barebones"] -> setup' tDirBareBones
+          ["default"]   -> setup' tDirDefault
+          ["tutorial"]  -> setup' tDirTutorial
+          _             -> do
+            putStrLn initUsage
+            exitFailure
 
 
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
     args <- getArgs
-    case args of
-        ("init":args') -> initProject args'
-        _              -> do putStrLn usage
-                             exitFailure
+    initProject args

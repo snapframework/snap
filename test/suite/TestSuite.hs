@@ -11,7 +11,8 @@ import qualified Network.HTTP.Enumerator as HTTP
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
 import           System.Directory
-import           Test.Framework (defaultMain, Test)
+--import           Test.Framework (defaultMain, Test)
+import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
 
@@ -34,20 +35,31 @@ main = do
 
     -- Test generated projects before we start the test server.
     -- TODO Get this working properly.  Might have to put in the test list.
---    defaultMain [testBarebones, testDefault]
+    defaultMain [testBarebones]
 
-    tid <- startServer
-    defaultMain tests
-    throwTo tid UserInterrupt
+--    tid <- startServer
+--    defaultMain tests
+--    throwTo tid UserInterrupt
 
-  where tests = [ Blackbox.Tests.tests
-                , Snap.Snaplet.Internal.Lensed.Tests.tests
-                , Snap.Snaplet.Internal.LensT.Tests.tests
-                , Snap.Snaplet.Internal.RST.Tests.tests
-                , Snap.Snaplet.Internal.Tests.tests
+  where tests = [ internalServerTests
 --                , testBarebones
 --                , testDefault
                 ]
+
+
+internalServerTests = buildTest $ do
+    cwd <- getCurrentDirectory
+    flip onException (setCurrentDirectory cwd) $ do
+        tid <- startServer
+        return $ testGroup "internal server tests"
+            [ Blackbox.Tests.tests
+            , Snap.Snaplet.Internal.Lensed.Tests.tests
+            , Snap.Snaplet.Internal.LensT.Tests.tests
+            , Snap.Snaplet.Internal.RST.Tests.tests
+            , Snap.Snaplet.Internal.Tests.tests
+            ]
+        --Would like to be able to do this
+        --throwTo tid UserInterrupt
 
 startServer :: IO ThreadId
 startServer = do
@@ -68,7 +80,7 @@ testBarebones :: Test
 testBarebones = testCase "snap/barebones" go
   where
     go = testGeneratedProject "barebonesTest"
-                              "-b"
+                              "barebones"
                               ""
                               port
                               testIt
