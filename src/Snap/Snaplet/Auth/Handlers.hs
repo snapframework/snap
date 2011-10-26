@@ -260,7 +260,6 @@ forceLogin u = do
         AuthError "forceLogin: Can't force the login of a user without userId"
 
 
-
 ------------------------------------------------------------------------------
 -- Internal, non-exported helpers
 --
@@ -341,7 +340,6 @@ cacheOrLookup f = do
       return au'
 
 
-
 ------------------------------------------------------------------------------
 -- | Register a new user by specifying login and password 'Param' fields
 registerUser
@@ -412,6 +410,7 @@ requireUser
 requireUser auth bad good = do
   loggedIn <- withTop auth isLoggedIn
   if loggedIn then good else bad
+
 
 ------------------------------------------------------------------------------
 -- | Run a function on the backend, and return the result.

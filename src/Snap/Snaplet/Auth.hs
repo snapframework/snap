@@ -48,6 +48,7 @@ module Snap.Snaplet.Auth
   , Role(..)
 
   -- * Other Utilities
+  , withBackend
   , encryptPassword
   , checkPassword
   , authenticatePassword
@@ -66,8 +67,8 @@ module Snap.Snaplet.Auth
   )
   where
 
-import           Snap.Snaplet.Auth.AuthManager
-import           Snap.Snaplet.Auth.Handlers
-import           Snap.Snaplet.Auth.SpliceHelpers
-import           Snap.Snaplet.Auth.Types
+import Snap.Snaplet.Auth.AuthManager
+import Snap.Snaplet.Auth.Handlers
+import Snap.Snaplet.Auth.SpliceHelpers
+import Snap.Snaplet.Auth.Types
 
