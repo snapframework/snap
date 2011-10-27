@@ -47,9 +47,6 @@ Library
       Snap.Loader.Devel
 
   exposed-modules:
-    Data.RBAC.Checker,
-    Data.RBAC.Role,
-    Data.RBAC.Types,
     Snap,
     Snap.Loader.Prod
     Snap.Snaplet,
@@ -60,6 +57,9 @@ Library
     Snap.Snaplet.Session.Backends.CookieSession
 
   other-modules:
+    Data.RBAC.Checker,
+    Data.RBAC.Role,
+    Data.RBAC.Types,
     Data.RBAC.Internal.Role,
     Data.RBAC.Internal.RoleMap,
     Data.RBAC.Internal.Rule,
