@@ -3,12 +3,12 @@
 set -e
 
 if [ -z "$DEBUG" ]; then
-    export DEBUG=testsuite
+    export DEBUG=snap-testsuite
 fi
 
-SUITE=./dist/build/testsuite/testsuite
+SUITE=./dist/build/snap-testsuite/snap-testsuite
 
-rm -f testsuite.tix
+rm -f snap-testsuite.tix
 
 if [ ! -f $SUITE ]; then
     cat <<EOF
@@ -21,6 +21,8 @@ EOF
 fi
 
 $SUITE $*
+
+killall -HUP snap-testsuite
 
 DIR=dist/hpc
 
@@ -48,12 +50,11 @@ for m in $EXCLUDES; do
     EXCL="$EXCL --exclude=$m"
 done
 
-mv non-cabal-appdir/testsuite.tix .
 rm -f non-cabal-appdir/templates/bad.tpl
 rm -f non-cabal-appdir/templates/good.tpl
 rm -fr non-cabal-appdir/snaplets/foosnaplet
 
-hpc markup $EXCL --destdir=$DIR testsuite >/dev/null 2>&1
+hpc markup $EXCL --destdir=$DIR snap-testsuite >/dev/null 2>&1
 
 cat <<EOF
 

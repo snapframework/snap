@@ -12,6 +12,7 @@ import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Encoding as T
 import qualified Network.HTTP.Enumerator as HTTP
 import           System.Directory
+import           System.FilePath
 import           Test.Framework (Test, testGroup)
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
@@ -30,9 +31,10 @@ requestNoError url desired = testCase ("/"++url) $ requestNoError' url desired
 
 requestNoError' :: String -> Text -> IO ()
 requestNoError' url desired = do
-    url' <- HTTP.parseUrl $ "http://127.0.0.1:9753/" ++ url
+    let fullUrl = "http://127.0.0.1:9753/" ++ url
+    url' <- HTTP.parseUrl fullUrl
     HTTP.Response _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbsRedirect url'
-    assertEqual url desired (T.decodeUtf8 b)
+    assertEqual fullUrl desired (T.decodeUtf8 b)
 
 tests :: Test
 tests = testGroup "non-cabal-tests"
@@ -86,17 +88,21 @@ removeDir d = do
 
 reloadTest :: Test
 reloadTest = testCase "reload test" $ do
-    goodExists <- doesFileExist "templates/good.tpl"
-    badExists <- doesFileExist "templates/bad.tpl"
+    let goodTplOrig = "non-cabal-appdir" </> "good.tpl"
+    let badTplOrig = "non-cabal-appdir" </> "bad.tpl"
+    let goodTplNew = "non-cabal-appdir" </> "templates" </> "good.tpl"
+    let badTplNew = "non-cabal-appdir" </> "templates" </> "bad.tpl"
+    goodExists <- doesFileExist goodTplNew
+    badExists <- doesFileExist badTplNew
     assertBool "good.tpl exists" (not goodExists)
     assertBool "bad.tpl exists" (not badExists)
     requestNoError' "bad" "404"
-    copyFile "bad.tpl" "templates/bad.tpl"
+    copyFile badTplOrig badTplNew
     requestNoError' "good" "404"
     requestNoError' "bad" "404"
     requestTest' "admin/reload" "Error reloading site!\n\ntemplates/bad.tpl \"templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n"
-    remove "templates/bad.tpl"
-    copyFile "good.tpl" "templates/good.tpl"
+    remove badTplNew
+    copyFile goodTplOrig goodTplNew
     requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\n...loaded 5 templates\nInitializing foosnaplet @ /foo\n...adding 1 templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\n...adding 2 templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /embed\nInitializing heist @ /embed/heist\n...loaded 5 templates\n...adding 1 templates from snaplets/embedded/templates with route prefix embedded/\nSite successfully reloaded.\n"
     requestTest' "good" "Good template\n"
 

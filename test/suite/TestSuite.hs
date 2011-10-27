@@ -10,7 +10,8 @@ import qualified Data.ByteString.Char8 as S
 import qualified Network.HTTP.Enumerator as HTTP
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
-import           System.Directory
+import           System.Posix.Process
+import           System.Posix.Types
 --import           Test.Framework (defaultMain, Test)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -25,6 +26,8 @@ import qualified Snap.Snaplet.Internal.RST.Tests
 import qualified Snap.Snaplet.Internal.Tests
 import           Snap.TestCommon
 
+import SafeCWD
+
 
 ------------------------------------------------------------------------------
 main :: IO ()
@@ -33,40 +36,29 @@ main = do
     Blackbox.Tests.remove "non-cabal-appdir/templates/good.tpl"
     Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
-    -- Test generated projects before we start the test server.
-    -- TODO Get this working properly.  Might have to put in the test list.
-    defaultMain [testBarebones]
-
---    tid <- startServer
---    defaultMain tests
---    throwTo tid UserInterrupt
+    inDir False "non-cabal-appdir" startServer
+    threadDelay $ 2*10^(6::Int)
+    defaultMain tests
 
   where tests = [ internalServerTests
---                , testBarebones
---                , testDefault
+                , testDefault
+                , testBarebones
+                , testTutorial
                 ]
 
 
-internalServerTests = buildTest $ do
-    cwd <- getCurrentDirectory
-    flip onException (setCurrentDirectory cwd) $ do
-        tid <- startServer
-        return $ testGroup "internal server tests"
-            [ Blackbox.Tests.tests
-            , Snap.Snaplet.Internal.Lensed.Tests.tests
-            , Snap.Snaplet.Internal.LensT.Tests.tests
-            , Snap.Snaplet.Internal.RST.Tests.tests
-            , Snap.Snaplet.Internal.Tests.tests
-            ]
-        --Would like to be able to do this
-        --throwTo tid UserInterrupt
+internalServerTests :: Test
+internalServerTests =
+    testGroup "internal server tests"
+        [ Blackbox.Tests.tests
+        , Snap.Snaplet.Internal.Lensed.Tests.tests
+        , Snap.Snaplet.Internal.LensT.Tests.tests
+        , Snap.Snaplet.Internal.RST.Tests.tests
+        , Snap.Snaplet.Internal.Tests.tests
+        ]
 
-startServer :: IO ThreadId
-startServer = do
-    setCurrentDirectory "non-cabal-appdir"
-    tid <- forkIO $ serve (setPort 9753 defaultConfig) app
-    threadDelay $ 2*10^(6::Int)
-    return tid
+startServer :: IO ProcessID
+startServer = forkProcess $ serve (setPort 9753 defaultConfig) app
   where
     serve config initializer = do
         (_, handler, doCleanup) <- runSnaplet initializer
@@ -86,7 +78,7 @@ testBarebones = testCase "snap/barebones" go
                               testIt
     port = 9990
     testIt = do
-        body <- HTTP.simpleHttp "http://127.0.0.1:9990"
+        body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
         assertEqual "server not up" "hello world" body
 
 
@@ -101,7 +93,22 @@ testDefault = testCase "snap/default" go
     port = 9991
     testIt = do
         body <- liftM (S.concat . L.toChunks) $
-                HTTP.simpleHttp "http://127.0.0.1:9991"
+                HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
         assertBool "response contains phrase 'it works!'"
                    $ "It works!" `S.isInfixOf` body
+
+
+testTutorial :: Test
+testTutorial = testCase "snap/tutorial" go
+  where
+    go = testGeneratedProject "tutorialTest"
+                              "tutorial"
+                              ""
+                              port
+                              testIt
+    port = 9992
+    testIt = do
+        body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)++"/hello"
+        assertEqual "server not up" "hello world" body
+
 
