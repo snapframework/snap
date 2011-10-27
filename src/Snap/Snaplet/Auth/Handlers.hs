@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 {-|
 
@@ -12,6 +12,7 @@
 
 module Snap.Snaplet.Auth.Handlers where
 
+import           Control.Applicative
 import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -46,10 +47,15 @@ createUser
   :: Text -- Username
   -> ByteString -- Password
   -> Handler b (AuthManager b) AuthUser
-createUser unm pwd = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
-  liftIO $ buildAuthUser r unm pwd
+createUser unm pwd = withBackend (\r -> liftIO $ buildAuthUser r unm pwd)
 
+------------------------------------------------------------------------------
+-- | Check whether a user with the given username exists.
+usernameExists
+  :: Text
+  -- ^ The username to be checked
+  -> Handler b (AuthManager b) Bool
+usernameExists username = withBackend $ \r -> liftIO $ isJust <$> lookupByLogin r username
 
 ------------------------------------------------------------------------------
 -- | Lookup a user by her username, check given password and perform login
@@ -59,31 +65,40 @@ loginByUsername
   -> Bool             -- ^ Set remember token?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
-loginByUsername unm pwd rm  = do
-  AuthManager r _ _ _ cn rp sk _ <- get
-  au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
-  case au of
-    Nothing  -> return $ Left UserNotFound
-    Just au' -> do
-      res <- checkPasswordAndLogin au' pwd
-      case res of
-        Left e -> return $ Left e
-        Right au'' -> do
-          case rm of
-            True -> do
-              token <- liftIO $ randomToken 64
-              setRememberToken sk cn rp token
-              let au''' = au'' { userRememberToken = Just (decodeUtf8 token) }
-              saveUser au'''
-              return $ Right au'''
-            False -> return $ Right au''
+loginByUsername unm pwd rm = do
+  sk <- gets siteKey
+  cn <- gets rememberCookieName
+  rp <- gets rememberPeriod
+  withBackend $ loginByUsername' sk cn rp
+  where 
+    loginByUsername' :: (IAuthBackend t) => Key -> ByteString -> Maybe Int -> t
+                        -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+    loginByUsername' sk cn rp r = do
+      au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
+      case au of
+        Nothing  -> return $ Left UserNotFound
+        Just au' -> do
+          res <- checkPasswordAndLogin au' pwd
+          case res of
+            Left e -> return $ Left e
+            Right au'' -> do
+              case rm of
+                True -> do
+                  token <- liftIO $ randomToken 64
+                  setRememberToken sk cn rp token
+                  let au''' = au'' { userRememberToken = Just (decodeUtf8 token) }
+                  saveUser au'''
+                  return $ Right au'''
+                False -> return $ Right au''
 
 
 ------------------------------------------------------------------------------
 -- | Remember user from the remember token if possible and perform login
 loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
-loginByRememberToken = do
-  (AuthManager r _ _ _ rc rp sk _) <- get
+loginByRememberToken = withBackend $ \r -> do
+  sk <- gets siteKey
+  rc <- gets rememberCookieName
+  rp <- gets rememberPeriod
   token <- getRememberToken sk rc rp
   au <- maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
   case au of
@@ -97,7 +112,7 @@ logout :: Handler b (AuthManager b) ()
 logout = do 
   s <- gets session
   withTop s $ withSession s removeSessionUserId 
-  AuthManager _ _ _ _ rc _ _ _ <- get
+  rc <- gets rememberCookieName
   forgetRememberToken rc
   modify (\mgr -> mgr { activeUser = Nothing } )
 
@@ -105,14 +120,12 @@ logout = do
 ------------------------------------------------------------------------------
 -- | Return the current user; trying to remember from cookie if possible.
 currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
-currentUser = cacheOrLookup f
-  where 
-    f = do
-      (AuthManager r s _ _ _ _ _ _) <- get
-      uid <- withTop s getSessionUserId 
-      case uid of
-        Nothing -> loginByRememberToken 
-        Just uid' -> liftIO $ lookupByUserId r uid'
+currentUser = cacheOrLookup $ withBackend $ \r -> do
+  s <- gets session
+  uid <- withTop s getSessionUserId 
+  case uid of
+    Nothing -> loginByRememberToken 
+    Just uid' -> liftIO $ lookupByUserId r uid'
 
 
 ------------------------------------------------------------------------------
@@ -126,9 +139,7 @@ isLoggedIn = isJust `fmap` currentUser
 --
 -- May throw a 'BackendError' if something goes wrong.
 saveUser :: AuthUser -> Handler b (AuthManager b) AuthUser
-saveUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
-  liftIO $ save r u
+saveUser u = withBackend $ liftIO . flip save u
 
 
 ------------------------------------------------------------------------------
@@ -136,9 +147,7 @@ saveUser u = do
 --
 -- May throw a 'BackendError' if something goes wrong.
 destroyUser :: AuthUser -> Handler b (AuthManager b) ()
-destroyUser u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
-  liftIO $ destroy r u
+destroyUser u = withBackend $ liftIO . flip destroy u
 
 
 ------------------------------------------------------------------------------
@@ -152,8 +161,8 @@ destroyUser u = do
 --
 -- This will save the user to the backend.
 markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
-markAuthFail u = do
-  (AuthManager r _ _ _ _ _ _ lo) <- get
+markAuthFail u = withBackend $ \r -> do
+  lo <- gets lockout
   incFailCtr u >>= checkLockout lo >>= liftIO . save r
   where
     incFailCtr u' = return $ u'
@@ -174,8 +183,7 @@ markAuthFail u = do
 --
 -- This will save the user to the backend.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
-markAuthSuccess u = do
-  (AuthManager r _ _ _ _ _ _ _) <- get
+markAuthSuccess u = withBackend $ \r -> do
   incLoginCtr u >>= updateIp >>= updateLoginTS 
     >>= resetFailCtr >>= liftIO . save r
   where
@@ -242,7 +250,7 @@ forceLogin
   -- ^ An existing user, somehow looked up from db
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 forceLogin u = do
-  AuthManager _ s _ _ _ _ _ _ <- get
+  s <- gets session
   withSession s $ do
     case userId u of
       Just x -> do
@@ -250,7 +258,6 @@ forceLogin u = do
         return $ Right u
       Nothing -> return . Left $ 
         AuthError "forceLogin: Can't force the login of a user without userId"
-
 
 
 ------------------------------------------------------------------------------
@@ -333,7 +340,6 @@ cacheOrLookup f = do
       return au'
 
 
-
 ------------------------------------------------------------------------------
 -- | Register a new user by specifying login and password 'Param' fields
 registerUser
@@ -405,3 +411,19 @@ requireUser auth bad good = do
   loggedIn <- withTop auth isLoggedIn
   if loggedIn then good else bad
 
+
+------------------------------------------------------------------------------
+-- | Run a function on the backend, and return the result.
+--
+-- This uses an existential type so that the backend type doesn't
+-- 'escape' AuthManager.  The reason that the type is Handler b
+-- (AuthManager v) a and not a is because anything that uses the
+-- backend will return an IO something, which you can liftIO, or a
+-- Handler b (AuthManager v) a if it uses other handler things.
+withBackend
+  :: (forall r. (IAuthBackend r) => r -> Handler b (AuthManager v) a)
+  -- ^ The function to run with the handler.
+  -> Handler b (AuthManager v) a
+withBackend f = join $ do
+  (AuthManager backend _ _ _ _ _ _ _) <- get
+  return $ f backend
