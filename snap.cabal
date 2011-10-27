@@ -7,7 +7,7 @@ license-file:   LICENSE
 author:         Ozgun Ataman, Doug Beardsley, Gregory Collins, Carl Howells, Chris Smith
 maintainer:     snap@snapframework.com
 build-type:     Simple
-cabal-version:  >= 1.6
+cabal-version:  >= 1.8
 homepage:       http://snapframework.com/
 category:       Web
 

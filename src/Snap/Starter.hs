@@ -20,8 +20,8 @@ import Snap.StarterTH
 ------------------------------------------------------------------------------
 -- Creates a value tDir :: ([String], [(String, String)])
 buildData "tDirBareBones" "barebones"
-buildData "tDirDefault"   "default"
-buildData "tDirTutorial"  "tutorial"
+buildData "tDirDefault" "default"
+buildData "tDirTutorial" "tutorial"
 
 ------------------------------------------------------------------------------
 usage :: String
