@@ -8,7 +8,7 @@
 
 module Snap.Snaplet.Session.Helpers
   ( metaCSRFTag
-  , hiddenCSRFTag 
+  , hiddenCSRFTag
   , checkCSRF
   ) where
 
@@ -28,7 +28,7 @@ import           Text.Templating.Heist
 
 ------------------------------------------------------------------------------
 -- Use this 'Splice' in your <head> section to insert a meta tag with the
--- authenticity token. 
+-- authenticity token.
 --
 -- Use-case similar to Rails 3; you can use unobtrusive JS bindings to extract
 -- the token from the webpage and add to your buttons/forms.
@@ -41,8 +41,8 @@ metaCSRFTag = do
   let metaToken = X.Element "meta"
                     [ ("name", "csrf-token")
                     , ("content", T.decodeUtf8 embeddedToken) ] []
-  let metaParam = X.Element "meta" 
-                    [ ("name", "csrf-param") 
+  let metaParam = X.Element "meta"
+                    [ ("name", "csrf-param")
                     , ("content", param) ] []
   return $ [metaParam, metaToken]
 
@@ -55,10 +55,10 @@ hiddenCSRFTag
 hiddenCSRFTag = do
   embeddedToken <- lift sessionCSRFToken
   let param = "authenticity_token"
-  return . return $ X.Element "input" 
+  return . return $ X.Element "input"
     [ ("type", "hidden")
-    , ("name", T.decodeUtf8 param) 
-    , ("value", T.decodeUtf8 embeddedToken) 
+    , ("name", T.decodeUtf8 param)
+    , ("value", T.decodeUtf8 embeddedToken)
     ] []
 
 
@@ -75,14 +75,15 @@ hiddenCSRFTag = do
 -- @
 --
 -- The convention is to submit an "authenticity_token" parameter with each
--- 'POST' request. This action will confirm its presence against what is safely
--- embedded in the session and execute the given action if they don't match.
--- The exact name of the parameter is defined by 'authAuthenticityTokenParam'.
+-- 'POST' request. This action will confirm its presence against what is
+-- safely embedded in the session and execute the given action if they don't
+-- match. The exact name of the parameter is defined by
+-- 'authAuthenticityTokenParam'.
 checkCSRF :: MonadSession m => m ()
           -- ^ Do this if CSRF token does not match.
           -> m ()
-checkCSRF failAct = method POST doCheck <|> return () 
-  where 
+checkCSRF failAct = method POST doCheck <|> return ()
+  where
     doCheck = do
       embeddedToken <- sessionCSRFToken
       let param = "authenticity_token"

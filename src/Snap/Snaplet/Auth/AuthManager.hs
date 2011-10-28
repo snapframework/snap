@@ -4,16 +4,16 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Snap.Snaplet.Auth.AuthManager 
+module Snap.Snaplet.Auth.AuthManager
 
-( 
+(
   -- * AuthManager Datatype
     AuthManager(..)
 
   -- * Backend Typeclass
   , IAuthBackend(..)
 
-  -- * Context-free Operations 
+  -- * Context-free Operations
   , buildAuthUser
 
 ) where
@@ -34,12 +34,12 @@ import           Snap.Snaplet.Auth.Types
 --
 -- May throw a "DuplicateLogin" if given username is not unique
 buildAuthUser
-  :: (IAuthBackend r) 
+  :: (IAuthBackend r)
   => r
   -- ^ An auth backend
-  -> Text 
+  -> Text
   -- ^ Username
-  -> ByteString 
+  -> ByteString
   -- ^ Password
   -> IO AuthUser
 buildAuthUser r unm pass = do
@@ -59,7 +59,7 @@ buildAuthUser r unm pass = do
 --
 -- Backend operations may throw 'BackendError's
 class IAuthBackend r where
-  
+
   -- | Needs to create or update the given 'AuthUser' record
   save :: r -> AuthUser -> IO AuthUser
 
@@ -74,13 +74,13 @@ class IAuthBackend r where
 
 ------------------------------------------------------------------------------
 -- | Abstract data type holding all necessary information for auth operation
-data AuthManager b = forall r. IAuthBackend r => AuthManager { 
+data AuthManager b = forall r. IAuthBackend r => AuthManager {
     backend :: r
-  -- ^ Storage back-end 
+  -- ^ Storage back-end
 
   , session :: Lens b (Snaplet SessionManager)
   -- ^ A lens pointer to a SessionManager
-  
+
   , activeUser :: Maybe AuthUser
   -- ^ A per-request logged-in user cache
 

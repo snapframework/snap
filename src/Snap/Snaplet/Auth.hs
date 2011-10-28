@@ -6,16 +6,16 @@
   This module contains all the central authentication functionality.
 
   It exports a number of high-level functions to be used directly in your
-  application handlers. 
-  
+  application handlers.
+
   We also export a number of mid-level functions that
-  should be helpful when you are integrating with another way of confirming the
-  authentication of login requests.
+  should be helpful when you are integrating with another way of confirming
+  the authentication of login requests.
 
 -}
 
-module Snap.Snaplet.Auth 
-  ( 
+module Snap.Snaplet.Auth
+  (
 
   -- * Higher Level Handler Functions
     createUser

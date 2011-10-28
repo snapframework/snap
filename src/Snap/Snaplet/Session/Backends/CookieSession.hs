@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Snap.Snaplet.Session.Backends.CookieSession 
+module Snap.Snaplet.Session.Backends.CookieSession
 
 ( initCookieSessionManager ) where
 
@@ -39,7 +39,7 @@ instance Serialize CookieSession where
   put (CookieSession a b) = S.put (a,b)
   get                     = (\(a,b) -> CookieSession a b) `fmap` S.get
 
-instance (Serialize k, Serialize v, Hashable k, Eq k) => 
+instance (Serialize k, Serialize v, Hashable k, Eq k) =>
   Serialize (HashMap k v) where
   put = S.put . HM.toList
   get = HM.fromList `fmap` S.get
@@ -84,29 +84,29 @@ modSession f (CookieSession t ses) = CookieSession t (f ses)
 -- stuffed inside your application's state. This 'SessionManager' will enable
 -- the use of all session storage functionality defined in
 -- 'Snap.Snaplet.Session'
-initCookieSessionManager 
+initCookieSessionManager
   :: FilePath             -- ^ Path to site-wide encryption key
   -> ByteString           -- ^ Session cookie name
   -> Maybe Int            -- ^ Session time-out (replay attack protection)
   -> SnapletInit b SessionManager
-initCookieSessionManager fp cn to = 
+initCookieSessionManager fp cn to =
   makeSnaplet "CookieSession" "A snaplet providing sessions via HTTP cookies."
          Nothing $ liftIO $ do
     key <- getKey fp
-    return . SessionManager $ CookieSessionManager Nothing key cn to 
+    return . SessionManager $ CookieSessionManager Nothing key cn to
 
 
 instance ISessionManager CookieSessionManager where
   load mgr@(CookieSessionManager r _ _ _) = do
     case r of
-      Just _ -> return mgr 
+      Just _ -> return mgr
       Nothing -> do
         pl <- getPayload mgr
         case pl of
           Nothing -> liftIO $ loadDefSession mgr
           Just (Payload x) -> do
             let c = S.decode x
-            case c of 
+            case c of
               Left _ -> liftIO $ loadDefSession mgr
               Right cs -> return $ mgr { session = Just cs }
 
@@ -117,7 +117,7 @@ instance ISessionManager CookieSessionManager where
     setPayload mgr pl
 
   reset mgr = do
-    cs <- liftIO mkCookieSession 
+    cs <- liftIO mkCookieSession
     return $ mgr { session = Just cs }
 
   touch = id
@@ -126,7 +126,7 @@ instance ISessionManager CookieSessionManager where
     Just r' -> mgr { session = Just $ modSession (HM.insert k v) r' }
     Nothing -> mgr
 
-  lookup k (CookieSessionManager r _ _ _) = r >>= HM.lookup k . csSession 
+  lookup k (CookieSessionManager r _ _ _) = r >>= HM.lookup k . csSession
 
   delete k mgr@(CookieSessionManager r _ _ _) = case r of
     Just r' -> mgr { session = Just $ modSession (HM.delete k) r' }
@@ -154,6 +154,7 @@ getPayload mgr = getSecureCookie (cookieName mgr) (siteKey mgr) (timeOut mgr)
 
 -- | Set the client-side value
 setPayload :: CookieSessionManager -> Payload -> Snap ()
-setPayload mgr x = setSecureCookie (cookieName mgr) (siteKey mgr) (timeOut mgr) x
+setPayload mgr x =
+    setSecureCookie (cookieName mgr) (siteKey mgr) (timeOut mgr) x
 
-  
+

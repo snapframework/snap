@@ -36,7 +36,8 @@ import           Snap.Loader.Devel.TreeWatcher
 --
 -- This could be considered a TH wrapper around a function
 --
--- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ())) -> [String] -> IO (a, Snap (), IO ())
+-- > loadSnap :: Typeable a => IO a -> (a -> IO (Snap (), IO ()))
+-- >                        -> [String] -> IO (a, Snap (), IO ())
 --
 -- with a magical implementation.  The [String] argument is a list of
 -- directories to watch for updates to trigger a reloading.

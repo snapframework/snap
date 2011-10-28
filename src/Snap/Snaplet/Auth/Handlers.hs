@@ -35,7 +35,7 @@ import           Snap.Snaplet.Session.SecureCookie
 
 
 ------------------------------------------------------------------------------
--- Higher level functions 
+-- Higher level functions
 ------------------------------------------------------------------------------
 
 
@@ -55,7 +55,8 @@ usernameExists
   :: Text
   -- ^ The username to be checked
   -> Handler b (AuthManager b) Bool
-usernameExists username = withBackend $ \r -> liftIO $ isJust <$> lookupByLogin r username
+usernameExists username = withBackend $
+    \r -> liftIO $ isJust <$> lookupByLogin r username
 
 ------------------------------------------------------------------------------
 -- | Lookup a user by her username, check given password and perform login
@@ -64,15 +65,18 @@ loginByUsername
   -> Password         -- ^ Should be ClearText
   -> Bool             -- ^ Set remember token?
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-loginByUsername _ (Encrypted _) _ = error "Cannot login with encrypted password"
+loginByUsername _ (Encrypted _) _ =
+  error "Cannot login with encrypted password"
 loginByUsername unm pwd rm = do
   sk <- gets siteKey
   cn <- gets rememberCookieName
   rp <- gets rememberPeriod
   withBackend $ loginByUsername' sk cn rp
-  where 
-    loginByUsername' :: (IAuthBackend t) => Key -> ByteString -> Maybe Int -> t
-                        -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+  where
+    loginByUsername' :: (IAuthBackend t)
+                     => Key -> ByteString -> Maybe Int -> t
+                     -> Handler b (AuthManager b)
+                                (Either AuthFailure AuthUser)
     loginByUsername' sk cn rp r = do
       au <- liftIO $ lookupByLogin r (decodeUtf8 unm)
       case au of
@@ -86,7 +90,8 @@ loginByUsername unm pwd rm = do
                 True -> do
                   token <- liftIO $ randomToken 64
                   setRememberToken sk cn rp token
-                  let au''' = au'' { userRememberToken = Just (decodeUtf8 token) }
+                  let au''' = au''
+                          { userRememberToken = Just (decodeUtf8 token) }
                   saveUser au'''
                   return $ Right au'''
                 False -> return $ Right au''
@@ -100,7 +105,8 @@ loginByRememberToken = withBackend $ \r -> do
   rc <- gets rememberCookieName
   rp <- gets rememberPeriod
   token <- getRememberToken sk rc rp
-  au <- maybe (return Nothing) (liftIO . lookupByRememberToken r . decodeUtf8) token
+  au <- maybe (return Nothing)
+              (liftIO . lookupByRememberToken r . decodeUtf8) token
   case au of
     Just au' -> forceLogin au' >> return au
     Nothing -> return Nothing
@@ -109,9 +115,9 @@ loginByRememberToken = withBackend $ \r -> do
 ------------------------------------------------------------------------------
 -- | Logout the active user
 logout :: Handler b (AuthManager b) ()
-logout = do 
+logout = do
   s <- gets session
-  withTop s $ withSession s removeSessionUserId 
+  withTop s $ withSession s removeSessionUserId
   rc <- gets rememberCookieName
   forgetRememberToken rc
   modify (\mgr -> mgr { activeUser = Nothing } )
@@ -122,9 +128,9 @@ logout = do
 currentUser :: Handler b (AuthManager b) (Maybe AuthUser)
 currentUser = cacheOrLookup $ withBackend $ \r -> do
   s <- gets session
-  uid <- withTop s getSessionUserId 
+  uid <- withTop s getSessionUserId
   case uid of
-    Nothing -> loginByRememberToken 
+    Nothing -> loginByRememberToken
     Just uid' -> liftIO $ lookupByUserId r uid'
 
 
@@ -184,12 +190,12 @@ markAuthFail u = withBackend $ \r -> do
 -- This will save the user to the backend.
 markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
 markAuthSuccess u = withBackend $ \r -> do
-  incLoginCtr u >>= updateIp >>= updateLoginTS 
+  incLoginCtr u >>= updateIp >>= updateLoginTS
     >>= resetFailCtr >>= liftIO . save r
   where
     incLoginCtr u' = return $ u' { userLoginCount = userLoginCount u' + 1 }
     updateIp u' = do
-      ip <- rqRemoteAddr `fmap` getRequest 
+      ip <- rqRemoteAddr `fmap` getRequest
       return $ u' { userLastLoginIp = userCurrentLoginIp u'
                   , userCurrentLoginIp = Just ip }
     updateLoginTS u' = do
@@ -197,8 +203,8 @@ markAuthSuccess u = withBackend $ \r -> do
       return $
         u' { userCurrentLoginAt = Just now
            , userLastLoginAt = userCurrentLoginAt u' }
-    resetFailCtr u' = return $ 
-      u' { userFailedLoginCount = 0 
+    resetFailCtr u' = return $
+      u' { userFailedLoginCount = 0
          , userLockedOutUntil = Nothing }
 
 
@@ -219,22 +225,22 @@ checkPasswordAndLogin
   :: AuthUser               -- ^ An existing user, somehow looked up from db
   -> Password               -- ^ A ClearText password
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-checkPasswordAndLogin u pw = 
+checkPasswordAndLogin u pw =
   case userLockedOutUntil u of
     Just x -> do
       now <- liftIO getCurrentTime
-      if now > x 
+      if now > x
         then auth u
         else return . Left $ LockedOut x
     Nothing -> auth u
   where
-    auth user = 
+    auth user =
       case authenticatePassword user pw of
         Just e -> do
           markAuthFail user
           return $ Left e
         Nothing -> do
-          forceLogin user 
+          forceLogin user
           modify (\mgr -> mgr { activeUser = Just user })
           user' <- markAuthSuccess user
           return $ Right user'
@@ -245,7 +251,7 @@ checkPasswordAndLogin u pw =
 --
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
-forceLogin 
+forceLogin
   :: AuthUser
   -- ^ An existing user, somehow looked up from db
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
@@ -254,9 +260,9 @@ forceLogin u = do
   withSession s $ do
     case userId u of
       Just x -> do
-        withTop s (setSessionUserId x) 
+        withTop s (setSessionUserId x)
         return $ Right u
-      Nothing -> return . Left $ 
+      Nothing -> return . Left $
         AuthError "forceLogin: Can't force the login of a user without userId"
 
 
@@ -286,7 +292,7 @@ setRememberToken sk rc rp token = setSecureCookie rc sk rp token
 forgetRememberToken :: MonadSnap m => ByteString -> m ()
 forgetRememberToken rc = expireCookie rc (Just "/")
 
-                                       
+
 ------------------------------------------------------------------------------
 -- | Set the current user's 'UserId' in the active session
 setSessionUserId :: UserId -> Handler b SessionManager ()
@@ -303,16 +309,16 @@ removeSessionUserId = deleteFromSession "__user_id"
 -- | Get the current user's 'UserId' from the active session
 getSessionUserId :: Handler b SessionManager (Maybe UserId)
 getSessionUserId = do
-  uid <- getFromSession "__user_id" 
+  uid <- getFromSession "__user_id"
   return $ uid >>= return . UserId
 
 
 ------------------------------------------------------------------------------
--- | Check password for a given user. 
+-- | Check password for a given user.
 --
 -- Returns "Nothing" if check is successful and an "IncorrectPassword" error
 -- otherwise
-authenticatePassword 
+authenticatePassword
   :: AuthUser        -- ^ Looked up from the back-end
   -> Password        -- ^ Check against this password
   -> Maybe AuthFailure
@@ -320,19 +326,19 @@ authenticatePassword u pw = auth
   where
     auth = case userPassword u of
       Nothing -> Just PasswordMissing
-      Just upw -> check $ checkPassword pw upw 
+      Just upw -> check $ checkPassword pw upw
     check b = if b then Nothing else Just IncorrectPassword
 
 
 ------------------------------------------------------------------------------
 -- | Wrap lookups around request-local cache
-cacheOrLookup 
+cacheOrLookup
   :: Handler b (AuthManager b) (Maybe AuthUser)
   -- ^ Lookup action to perform if request local cache is empty
   -> Handler b (AuthManager b) (Maybe AuthUser)
 cacheOrLookup f = do
   au <- gets activeUser
-  if isJust au 
+  if isJust au
     then return au
     else do
       au' <- f
@@ -359,7 +365,7 @@ registerUser lf pf = do
 -- | A 'MonadSnap' handler that processes a login form.
 --
 -- The request paremeters are passed to 'performLogin'
-loginUser 
+loginUser
   :: ByteString
   -- ^ Username field
   -> ByteString
@@ -374,10 +380,11 @@ loginUser
 loginUser unf pwdf remf loginFail loginSucc = do
     username <- getParam unf
     password <- getParam pwdf
-    remember <- maybe False (=="1") `fmap` maybe (return Nothing) getParam remf
+    remember <- maybe False (=="1") `fmap`
+                maybe (return Nothing) getParam remf
     mMatch <- case password of
       Nothing -> return $ Left PasswordMissing
-      Just password' -> do 
+      Just password' -> do
         case username of
           Nothing -> return . Left $ AuthError "Username is missing"
           Just username' -> do
@@ -387,7 +394,7 @@ loginUser unf pwdf remf loginFail loginSucc = do
 
 ------------------------------------------------------------------------------
 -- | Simple handler to log the user out. Deletes user from session.
-logoutUser 
+logoutUser
   :: Handler b (AuthManager b) ()
   -- ^ What to do after logging out
   -> Handler b (AuthManager b) ()
@@ -395,11 +402,12 @@ logoutUser target = logout >> target
 
 
 ------------------------------------------------------------------------------
--- | Require that an authenticated 'AuthUser' is present in the current session.
+-- | Require that an authenticated 'AuthUser' is present in the current
+-- session.
 --
--- This function has no DB cost - only checks to see if a user_id is present in
--- the current session.
-requireUser 
+-- This function has no DB cost - only checks to see if a user_id is present
+-- in the current session.
+requireUser
   :: Lens b (Snaplet (AuthManager b))
   -- Lens reference to an "AuthManager"
   -> Handler b v a
@@ -425,5 +433,5 @@ withBackend
   -- ^ The function to run with the handler.
   -> Handler b (AuthManager v) a
 withBackend f = join $ do
-  (AuthManager backend _ _ _ _ _ _ _) <- get
-  return $ f backend
+  (AuthManager back _ _ _ _ _ _ _) <- get
+  return $ f back

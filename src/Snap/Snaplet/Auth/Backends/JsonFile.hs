@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 
-module Snap.Snaplet.Auth.Backends.JsonFile 
+module Snap.Snaplet.Auth.Backends.JsonFile
   ( initJsonFileAuthManager
   , mkJsonAuthMgr
   ) where
@@ -37,7 +37,7 @@ import           Snap.Snaplet.Session
 
 ------------------------------------------------------------------------------
 -- | Initialize a JSON file backed 'AuthManager'
-initJsonFileAuthManager 
+initJsonFileAuthManager
   :: AuthSettings
   -- ^ Authentication settings for your app
   -> Lens b (Snaplet SessionManager)
@@ -45,10 +45,10 @@ initJsonFileAuthManager
   -> FilePath
   -- ^ Where to store user data as JSON
   -> SnapletInit b (AuthManager b)
-initJsonFileAuthManager s l db = 
-  makeSnaplet "JsonFileAuthManager" 
-              "A snaplet providing user authentication using a JSON-file backend"
-              Nothing $ liftIO $ do
+initJsonFileAuthManager s l db =
+  makeSnaplet "JsonFileAuthManager"
+      "A snaplet providing user authentication using a JSON-file backend"
+      Nothing $ liftIO $ do
     key <- getKey (asSiteKey s)
     jsonMgr <- mkJsonAuthMgr db
     return $ AuthManager {
@@ -59,7 +59,7 @@ initJsonFileAuthManager s l db =
       , rememberCookieName = asRememberCookieName s
       , rememberPeriod = asRememberPeriod s
       , siteKey = key
-      , lockout = asLockout s 
+      , lockout = asLockout s
     }
 
 
@@ -125,7 +125,8 @@ loadUserCache fp = do
       case Atto.parseOnly json d of
         Left e -> return . Left $ "Can't open JSON auth backend. Error: " ++ e
         Right v -> case fromJSON v of
-          Error e -> return . Left $ "Malformed JSON auth data store. Error: " ++ e
+          Error e -> return . Left $
+              "Malformed JSON auth data store. Error: " ++ e
           Success db -> return $ Right db
     False -> do
       putStrLn "User JSON datafile not found. Creating a new one."
@@ -162,10 +163,10 @@ instance IAuthBackend JsonFileAuthManager where
         dumpToDisk cache'
         return u'
     where
-      create 
-        :: UserCache 
-        -> UTCTime 
-        -> (Maybe AuthUser) 
+      create
+        :: UserCache
+        -> UTCTime
+        -> (Maybe AuthUser)
         -> STM (Either BackendError (UserCache, AuthUser))
       create cache now old = do
         case old of
@@ -186,27 +187,29 @@ instance IAuthBackend JsonFileAuthManager where
 
 
       -- lookup old record, see what's changed and update indexes accordingly
-      update 
-        :: UserCache 
-        -> UTCTime 
-        -> (Maybe AuthUser) 
+      update
+        :: UserCache
+        -> UTCTime
+        -> (Maybe AuthUser)
         -> STM (Either BackendError (UserCache, AuthUser))
-      update cache now old = 
+      update cache now old =
         case old of
-          Nothing -> return $ Left (BackendError "User not found; should never happen")
+          Nothing -> return $ Left $
+                       BackendError "User not found; should never happen"
           Just x -> do
             let oldLogin = userLogin x
             let oldToken = userRememberToken x
             let uid = fromJust $ userId u
             let newLogin = userLogin u
             let newToken = userRememberToken u
-            let lc = if oldLogin /= userLogin u 
-                      then HM.insert newLogin uid . HM.delete oldLogin $ loginCache cache
+            let lc = if oldLogin /= userLogin u
+                      then HM.insert newLogin uid . HM.delete oldLogin $
+                               loginCache cache
                       else loginCache cache
             let tc = if oldToken /= newToken && isJust oldToken
                       then HM.delete (fromJust oldToken) $ loginCache cache
                       else tokenCache cache
-            let tc' = case newToken of 
+            let tc' = case newToken of
                         Just t -> HM.insert t uid tc
                         Nothing -> tc
             let u' = u { userUpdatedAt = Just now }
@@ -319,8 +322,9 @@ instance FromJSON AuthUser where
 
 
 instance ToJSON Password where
-  toJSON (ClearText _) = error "ClearText passwords can't be serialized into JSON"
   toJSON (Encrypted x) = toJSON x
+  toJSON (ClearText _) =
+      error "ClearText passwords can't be serialized into JSON"
 
 
 instance FromJSON Password where

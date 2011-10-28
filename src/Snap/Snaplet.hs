@@ -23,8 +23,8 @@ snaplet API:
   * each snaplet comes with an 'Initializer' which defines how to create an
     instance of the Snaplet at startup. The initializer decides how to
     interpret the snaplet configuration, which URLs to handle (and how), sets
-    up the initial snaplet state, tells the snaplet runtime system how to clean
-    the snaplet up, etc.
+    up the initial snaplet state, tells the snaplet runtime system how to
+    clean the snaplet up, etc.
 
   * each snaplet contains some user-defined in-memory state; for instance, a
     snaplet that talks to a database might contain a reference to a connection
@@ -111,17 +111,17 @@ import           Snap.Snaplet.Internal.Initializer
 import           Snap.Snaplet.Internal.Types
 
 -- $snapletDoc
--- The heart of the snaplets infrastructure is state management. (Note: when we
--- say \"state\" here, we mean in-memory Haskell objects, not external data
+-- The heart of the snaplets infrastructure is state management. (Note: when
+-- we say \"state\" here, we mean in-memory Haskell objects, not external data
 -- storage or databases; how you deal with persisted data is up to you.) Most
 -- nontrivial pieces of a web application need some kind of runtime state or
 -- environment data. The datatype we use to handle this is called 'Snaplet':
 
 -- $snapletHelpers
 --
--- Your web application will itself get wrapped in a 'Snaplet', and the top-level
--- user state of your application (which will likely contain other snaplets nested
--- inside it) will look something like this:
+-- Your web application will itself get wrapped in a 'Snaplet', and the
+-- top-level user state of your application (which will likely contain other
+-- snaplets nested inside it) will look something like this:
 --
 -- > data App = App
 -- >     { _foo                :: Snaplet Foo
@@ -129,25 +129,27 @@ import           Snap.Snaplet.Internal.Types
 -- >     , _someNonSnapletData :: String
 -- >     }
 --
--- Every web application using snaplets has a top-most user state which contains
--- all of the application state; we call this state the \"base\" state.
+-- Every web application using snaplets has a top-most user state which
+-- contains all of the application state; we call this state the \"base\"
+-- state.
 --
 -- We provide a couple of helper functions for working with Snaplet types.
 
 -- $lenses
--- In the example above, the @Foo@ snaplet has to be written to work with any base
--- state (otherwise it wouldn't be reusable!), but functions written to work with
--- the @Foo@ snaplet want to be able to modify the @Foo@ record /within the context/
--- of the base state. Given that Haskell datatypes are pure, how do you
--- allow for this?
+-- In the example above, the @Foo@ snaplet has to be written to work with any
+-- base state (otherwise it wouldn't be reusable!), but functions written to
+-- work with the @Foo@ snaplet want to be able to modify the @Foo@ record
+-- /within the context/ of the base state. Given that Haskell datatypes are
+-- pure, how do you allow for this?
 --
 -- Our solution is to use /lenses/, as defined in the @data-lens@ library
--- (<http://hackage.haskell.org/package/data-lens>). A lens, notated as follows:
+-- (<http://hackage.haskell.org/package/data-lens>). A lens, notated as
+-- follows:
 --
 -- > Lens a b
 --
--- is a \"getter\" and a \"setter\" rolled up into one. The @data-lens@ library
--- provides the following functions:
+-- is a \"getter\" and a \"setter\" rolled up into one. The @data-lens@
+-- library provides the following functions:
 --
 -- > getL :: (Lens a b) -> a -> b
 -- > setL :: (Lens a b) -> b -> a -> a
@@ -167,14 +169,14 @@ import           Snap.Snaplet.Internal.Types
 -- > bar                :: Lens App (Snaplet Bar)
 -- > someNonSnapletData :: Lens App String
 --
--- The coolest thing about @data-lens@ lenses is that they /compose/, using the
--- "Control.Category"'s generalization of the @(.)@ operator. If the @Foo@ type
--- had a field of type @Quux@ within it with a lens @quux :: Lens Foo Quux@, then
--- you could create a lens of type @Lens App Quux@ by composition:
+-- The coolest thing about @data-lens@ lenses is that they /compose/, using
+-- the "Control.Category"'s generalization of the @(.)@ operator. If the @Foo@
+-- type had a field of type @Quux@ within it with a lens @quux :: Lens Foo
+-- Quux@, then you could create a lens of type @Lens App Quux@ by composition:
 --
 -- > import Control.Category
--- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude to
--- >                                -- use Control.Category.(.)
+-- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude
+-- >                                -- to use Control.Category.(.)
 -- >
 -- > data Foo = Foo { _quux :: Quux }
 -- > makeLenses [''Foo]
@@ -185,28 +187,29 @@ import           Snap.Snaplet.Internal.Types
 -- > appQuuxLens :: Lens App (Snaplet Quux)
 -- > appQuuxLens = quux . snapletValue . foo
 --
--- Lens composition is very similar to function composition, but it gives you a
--- composed getter and setter at the same time.
+-- Lens composition is very similar to function composition, but it gives you
+-- a composed getter and setter at the same time.
 
 -- $monadSnaplet
--- The primary abstraction in the snaplet infrastructure is a combination of the
--- reader and state monads.  The state monad holds the top level application data
--- type (from now on referred to as the base state).  The reader monad holds a
--- lens from the base state to the current snaplet's state.  This allows quux
--- snaplet functions to access and modify the Quux data structure without knowing
--- anything about the App or Foo data structures. It also lets other snaplets
--- call functions from the quux snaplet if they have the quux snaplet's lens
--- (Lens App (Snaplet Quux)). We can view our application as a tree of snaplets
--- and other pieces of data. The lenses are like pointers to nodes of the tree.
--- If you have a pointer to a node, you can access the node and all of its
--- children without knowing anything about the rest of the tree.
+-- The primary abstraction in the snaplet infrastructure is a combination of
+-- the reader and state monads.  The state monad holds the top level
+-- application data type (from now on referred to as the base state).  The
+-- reader monad holds a lens from the base state to the current snaplet's
+-- state.  This allows quux snaplet functions to access and modify the Quux
+-- data structure without knowing anything about the App or Foo data
+-- structures. It also lets other snaplets call functions from the quux
+-- snaplet if they have the quux snaplet's lens (Lens App (Snaplet Quux)).
+-- We can view our application as a tree of snaplets and other pieces of data.
+-- The lenses are like pointers to nodes of the tree. If you have a pointer to
+-- a node, you can access the node and all of its children without knowing
+-- anything about the rest of the tree.
 --
--- Several monads use this infrastructure. These monads need at least three type
--- parameters. Two for the lens type, and the standard \'a\' denoting the monad
--- return value. You will usually see this written in type signatures as
+-- Several monads use this infrastructure. These monads need at least three
+-- type parameters. Two for the lens type, and the standard \'a\' denoting the
+-- monad return value. You will usually see this written in type signatures as
 -- \"m b v a\" or some variation. The \'m\' is the type variable of the
--- MonadSnaplet type class. \'b\' is the base state, and \'v\' is the state of the
--- current \"view\" snaplet (or simply, current state).
+-- MonadSnaplet type class. \'b\' is the base state, and \'v\' is the state of
+-- the current \"view\" snaplet (or simply, current state).
 --
 -- The MonadSnaplet type class distills the essence of the operations used
 -- with this pattern.  Its functions define fundamental methods for navigating

@@ -8,15 +8,15 @@ import           Prelude hiding (lookup)
 import           Snap.Core (Snap)
 
 
--- | Any Haskell record that is a member of the 'ISessionManager' typeclass can
--- be stuffed inside a 'SessionManager' to enable all session-related
+-- | Any Haskell record that is a member of the 'ISessionManager' typeclass
+-- can be stuffed inside a 'SessionManager' to enable all session-related
 -- functionality.
 data SessionManager = forall a. ISessionManager a => SessionManager a
 
 
 class ISessionManager r where
 
-  -- | Load a session from given payload. 
+  -- | Load a session from given payload.
   --
   -- Will always be called before any other operation. If possible, cache and
   -- do nothing when called multiple times within the same request cycle.
@@ -33,7 +33,7 @@ class ISessionManager r where
 
   -- | Insert a key-value pair into session
   insert :: Text -> Text -> r -> r
-  
+
   -- | Lookup a key in session
   lookup :: Text -> r -> (Maybe Text)
 

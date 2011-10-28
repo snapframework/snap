@@ -2,7 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Data.RBAC.Internal.Types 
+module Data.RBAC.Internal.Types
   ( module Data.RBAC.Internal.Role
   , module Data.RBAC.Internal.Rule
   , RoleMonad(..)

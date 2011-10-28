@@ -35,9 +35,9 @@ encryptPassword (ClearText p) = do
   return $ Encrypted hashed
 
 
-checkPassword :: Password -> Password -> Bool 
+checkPassword :: Password -> Password -> Bool
 checkPassword (ClearText pw) (Encrypted pw') = verifyPassword pw pw'
-checkPassword _ _ = 
+checkPassword _ _ =
   error "checkPassword failed. Make sure you pass ClearText passwords"
 
 
@@ -46,7 +46,7 @@ checkPassword _ _ =
 -- They may provide useful information to the developer, although it is
 -- generally not advisable to show the user the exact details about why login
 -- failed.
-data AuthFailure = 
+data AuthFailure =
     UserNotFound
   | IncorrectPassword
   | PasswordMissing
@@ -76,7 +76,7 @@ data Role = Role ByteString
 
 ------------------------------------------------------------------------------
 -- | Type representing the concept of a User in your application.
-data AuthUser = AuthUser 
+data AuthUser = AuthUser
   { userId :: Maybe UserId
   , userLogin :: Text
   , userPassword :: Maybe Password
@@ -143,7 +143,7 @@ data AuthSettings = AuthSettings {
   , asLockout :: Maybe (Int, NominalDiffTime)
   -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
   , asSiteKey :: FilePath
-  -- ^ Location of app's encryption key 
+  -- ^ Location of app's encryption key
 }
 
 
@@ -165,8 +165,8 @@ defAuthSettings = AuthSettings {
 }
 
 
-data BackendError = 
-    DuplicateLogin 
+data BackendError =
+    DuplicateLogin
   | BackendError String
   deriving (Eq,Show,Read,Typeable)
 

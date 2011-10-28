@@ -218,7 +218,7 @@ heistInit templateDir =
             , (show $ length $ templateNames ts)
             , "templates"
             ]
-        
+
         return $ Heist ts cts
 
 
