@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Rank2Types #-}
 
 {-|
 
@@ -219,22 +219,22 @@ checkPasswordAndLogin
   :: AuthUser               -- ^ An existing user, somehow looked up from db
   -> Password               -- ^ A ClearText password
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-checkPasswordAndLogin u pw = 
+checkPasswordAndLogin u pw =
   case userLockedOutUntil u of
     Just x -> do
       now <- liftIO getCurrentTime
-      if now > x 
+      if now > x
         then auth u
         else return . Left $ LockedOut x
     Nothing -> auth u
   where
-    auth user = 
+    auth user =
       case authenticatePassword user pw of
         Just e -> do
           markAuthFail user
           return $ Left e
         Nothing -> do
-          forceLogin user 
+          forceLogin user
           modify (\mgr -> mgr { activeUser = Just user })
           user' <- markAuthSuccess user
           return $ Right user'
@@ -245,7 +245,7 @@ checkPasswordAndLogin u pw =
 --
 -- Meant to be used if you have other means of being sure that the person is
 -- who she says she is.
-forceLogin 
+forceLogin
   :: AuthUser
   -- ^ An existing user, somehow looked up from db
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
@@ -254,9 +254,9 @@ forceLogin u = do
   withSession s $ do
     case userId u of
       Just x -> do
-        withTop s (setSessionUserId x) 
+        withTop s (setSessionUserId x)
         return $ Right u
-      Nothing -> return . Left $ 
+      Nothing -> return . Left $
         AuthError "forceLogin: Can't force the login of a user without userId"
 
 
@@ -286,7 +286,7 @@ setRememberToken sk rc rp token = setSecureCookie rc sk rp token
 forgetRememberToken :: MonadSnap m => ByteString -> m ()
 forgetRememberToken rc = expireCookie rc (Just "/")
 
-                                       
+
 ------------------------------------------------------------------------------
 -- | Set the current user's 'UserId' in the active session
 setSessionUserId :: UserId -> Handler b SessionManager ()
@@ -303,12 +303,12 @@ removeSessionUserId = deleteFromSession "__user_id"
 -- | Get the current user's 'UserId' from the active session
 getSessionUserId :: Handler b SessionManager (Maybe UserId)
 getSessionUserId = do
-  uid <- getFromSession "__user_id" 
+  uid <- getFromSession "__user_id"
   return $ uid >>= return . UserId
 
 
 ------------------------------------------------------------------------------
--- | Check password for a given user. 
+-- | Check password for a given user.
 --
 -- Returns "Nothing" if check is successful and an "IncorrectPassword" error
 -- otherwise
