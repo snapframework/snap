@@ -1,5 +1,5 @@
 name:           snap
-version:        0.6.0
+version:        0.6.0.2
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -119,6 +119,25 @@ Library
     vector                    >= 0.7.1   && < 0.10,
     vector-algorithms         >= 0.4     && < 0.6,
     xmlhtml                   >= 0.1     && < 0.2
+
+  extensions:
+    BangPatterns,
+    CPP,
+    DeriveDataTypeable,
+    ExistentialQuantification,
+    FlexibleContexts,
+    FlexibleInstances,
+    GeneralizedNewtypeDeriving,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    OverloadedStrings,
+    PackageImports,
+    Rank2Types,
+    ScopedTypeVariables,
+    TemplateHaskell,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances
 
   if flag(hint)
     build-depends:

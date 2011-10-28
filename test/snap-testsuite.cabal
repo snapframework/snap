@@ -37,6 +37,25 @@ Executable snap-testsuite
     template-haskell
 -- FIXME
 
+  extensions:
+    BangPatterns,
+    CPP,
+    DeriveDataTypeable,
+    ExistentialQuantification,
+    FlexibleContexts,
+    FlexibleInstances,
+    GeneralizedNewtypeDeriving,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    OverloadedStrings,
+    PackageImports,
+    Rank2Types,
+    ScopedTypeVariables,
+    TemplateHaskell,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances
+
   ghc-options: -O2 -Wall -fhpc -fwarn-tabs -funbox-strict-fields -threaded
                -fno-warn-unused-do-bind
 
@@ -75,6 +94,25 @@ Executable app
     template-haskell
     --FIXME
 
+  extensions:
+    BangPatterns,
+    CPP,
+    DeriveDataTypeable,
+    ExistentialQuantification,
+    FlexibleContexts,
+    FlexibleInstances,
+    GeneralizedNewtypeDeriving,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    OverloadedStrings,
+    PackageImports,
+    Rank2Types,
+    ScopedTypeVariables,
+    TemplateHaskell,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances
+
   ghc-options: -O2 -Wall -fwarn-tabs -funbox-strict-fields -threaded
                -fno-warn-unused-do-bind
 
@@ -103,6 +141,25 @@ Executable nesttest
     utf8-string                >= 0.3   && < 0.4,
     template-haskell
     --FIXME
+
+  extensions:
+    BangPatterns,
+    CPP,
+    DeriveDataTypeable,
+    ExistentialQuantification,
+    FlexibleContexts,
+    FlexibleInstances,
+    GeneralizedNewtypeDeriving,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    OverloadedStrings,
+    PackageImports,
+    Rank2Types,
+    ScopedTypeVariables,
+    TemplateHaskell,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances
 
   ghc-options: -O2 -Wall -fwarn-tabs -funbox-strict-fields -threaded
                -fno-warn-unused-do-bind
