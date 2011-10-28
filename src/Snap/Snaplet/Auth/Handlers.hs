@@ -433,5 +433,5 @@ withBackend
   -- ^ The function to run with the handler.
   -> Handler b (AuthManager v) a
 withBackend f = join $ do
-  (AuthManager back _ _ _ _ _ _ _) <- get
-  return $ f back
+  (AuthManager bckend _ _ _ _ _ _ _) <- get
+  return $ f bckend
