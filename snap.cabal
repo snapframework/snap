@@ -9,7 +9,7 @@ maintainer:     snap@snapframework.com
 build-type:     Simple
 cabal-version:  >= 1.8
 homepage:       http://snapframework.com/
-category:       Web
+category:       Web, Snap
 
 extra-source-files:
   CONTRIBUTORS,
