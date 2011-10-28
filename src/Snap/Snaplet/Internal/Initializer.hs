@@ -2,7 +2,7 @@
 {-# LANGUAGE BangPatterns               #-}
 
 module Snap.Snaplet.Internal.Initializer
-( addPostInitHook
+  ( addPostInitHook
   , addPostInitHookBase
   , toSnapletHook
   , bracketInit
@@ -100,6 +100,7 @@ addPostInitHook' h = do
 
 
 ------------------------------------------------------------------------------
+-- | Variant of addPostInitHook for when you have things wrapped in a Snaplet.
 addPostInitHookBase :: (Snaplet b -> IO (Snaplet b))
                     -> Initializer b v ()
 addPostInitHookBase = Initializer . lift . tell . Hook

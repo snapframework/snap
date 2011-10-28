@@ -69,7 +69,7 @@ newtype UserId = UserId { unUid :: Text }
     deriving (Read,Show,Ord,Eq,FromJSON,ToJSON,Hashable)
 
 
--- | This will be replaced by Greg's role-based permission system.
+-- | This will be replaced by a role-based permission system.
 data Role = Role ByteString
   deriving (Read,Show,Ord,Eq)
 

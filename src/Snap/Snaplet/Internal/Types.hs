@@ -151,27 +151,38 @@ class MonadSnaplet m where
     -- because Initializer has SnapletConfig, but doesn't have a full Snaplet.
 
 
+------------------------------------------------------------------------------
 -- | Gets a list of the names of snaplets that are direct ancestors of the
 -- current snaplet.
 getSnapletAncestry :: (Monad (m b v), MonadSnaplet m) => m b v [Text]
 getSnapletAncestry = return . _scAncestry =<< getOpaqueConfig
 
+
+------------------------------------------------------------------------------
 -- | Gets the snaplet's path on the filesystem.
 getSnapletFilePath :: (Monad (m b v), MonadSnaplet m) => m b v FilePath
 getSnapletFilePath = return . _scFilePath =<< getOpaqueConfig
 
+
+------------------------------------------------------------------------------
 -- | Gets the current snaple's name.
 getSnapletName :: (Monad (m b v), MonadSnaplet m) => m b v (Maybe Text)
 getSnapletName = return . _scId =<< getOpaqueConfig
 
+
+------------------------------------------------------------------------------
 -- | Gets a human readable description of the snaplet.
 getSnapletDescription :: (Monad (m b v), MonadSnaplet m) => m b v Text
 getSnapletDescription = return . _scDescription =<< getOpaqueConfig
 
+
+------------------------------------------------------------------------------
 -- | Gets the config data structure for the current snaplet.
 getSnapletUserConfig :: (Monad (m b v), MonadSnaplet m) => m b v Config
 getSnapletUserConfig = return . _scUserConfig =<< getOpaqueConfig
 
+
+------------------------------------------------------------------------------
 -- | Gets the base URL for the current snaplet.  Directories get added to
 -- the current snaplet path by calls to 'nestSnaplet'.
 getSnapletRootURL :: (Monad (m b v), MonadSnaplet m) => m b v ByteString
@@ -179,6 +190,13 @@ getSnapletRootURL = liftM getRootURL getOpaqueConfig
 
 
 ------------------------------------------------------------------------------
+-- | Snaplet infrastructure is available during runtime request processing
+-- through the Handler monad.  There aren't very many standalone functions to
+-- read about here, but this is deceptive.  The key is in the type class
+-- instances.  Handler is an instance of 'MonadSnap', which means it is the
+-- monad you will use to write all your application routes.  It also has a
+-- 'MonadSnaplet' instance, which gives you all the functionality described
+-- above.
 newtype Handler b v a =
     Handler (L.Lensed (Snaplet b) (Snaplet v) Snap a)
   deriving ( Monad
@@ -191,26 +209,37 @@ newtype Handler b v a =
            , MonadSnap)
 
 
+------------------------------------------------------------------------------
+-- | Gets the @Snaplet v@ from the current snaplet's state.
 getSnapletState :: Handler b v (Snaplet v)
 getSnapletState = Handler get
 
 
+------------------------------------------------------------------------------
+-- | Puts a new @Snaplet v@ in the current snaplet's state.
 putSnapletState :: Snaplet v -> Handler b v ()
 putSnapletState = Handler . put
 
 
+------------------------------------------------------------------------------
+-- | Modifies the @Snaplet v@ in the current snaplet's state.
 modifySnapletState :: (Snaplet v -> Snaplet v) -> Handler b v ()
 modifySnapletState f = do
     s <- getSnapletState
     putSnapletState (f s)
 
 
+------------------------------------------------------------------------------
+-- | Gets the @Snaplet v@ from the current snaplet's state and applies a
+-- function to it.
 getsSnapletState :: (Snaplet v -> b) -> Handler b1 v b
 getsSnapletState f = do
     s <- getSnapletState
     return (f s)
 
 
+------------------------------------------------------------------------------
+-- | The MonadState instance gives you access to the current snaplet's state.
 instance MonadState v (Handler b v) where
     get = getsSnapletState _snapletValue
     put v = modifySnapletState (setL snapletValue v)

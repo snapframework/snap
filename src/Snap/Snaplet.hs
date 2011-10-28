@@ -96,7 +96,6 @@ module Snap.Snaplet
   , wrapHandlers
 
   -- * Handlers
-  -- $handler
   , Handler
   , reloadSite
 
@@ -198,7 +197,7 @@ import           Snap.Snaplet.Internal.Types
 -- state.  This allows quux snaplet functions to access and modify the Quux
 -- data structure without knowing anything about the App or Foo data
 -- structures. It also lets other snaplets call functions from the quux
--- snaplet if they have the quux snaplet's lens (Lens App (Snaplet Quux)).
+-- snaplet if they have the quux snaplet's lens @Lens App (Snaplet Quux)@.
 -- We can view our application as a tree of snaplets and other pieces of data.
 -- The lenses are like pointers to nodes of the tree. If you have a pointer to
 -- a node, you can access the node and all of its children without knowing
@@ -216,10 +215,10 @@ import           Snap.Snaplet.Internal.Types
 -- snaplet trees.
 
 -- $snapletState
--- MonadSnaplet instances will typically have (MonadState (Snaplet v))
--- instances.  We provide the following convenience functions which give the
--- equivalent to (MonadState v).  These functions are what you use to access
--- and manipulate your user-defined snaplet state.
+-- MonadSnaplet instances will typically have @MonadState v@ instances.  We
+-- provide the following convenience functions which give the equivalent to
+-- @MonadState (Snaplet v)@ for the less common cases where you need to work
+-- with the Snaplet wrapper.
 
 -- $initializer
 -- The Initializer monad is where your application's initialization happens.
@@ -249,15 +248,6 @@ import           Snap.Snaplet.Internal.Types
 -- by the snaplet.  To do that you'll usually use either 'addRoutes' or
 -- 'wrapHandlers'.
 
-
--- $handler
--- Snaplet infrastructure is available during runtime request processing
--- through the Handler monad.  There aren't very many standalone functions to
--- read about here, but this is deceptive.  The key is in the type class
--- instances.  Handler is an instance of 'MonadSnap', which means it is the
--- monad you will use to write all your application routes.  It also has a
--- 'MonadSnaplet' instance, which gives you all the functionality described
--- above.
 
 {-
 
