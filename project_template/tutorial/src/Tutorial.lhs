@@ -1,10 +1,9 @@
 What Are Snaplets?
 ==================
 
-Snaplets allow you to build web applications out of composable parts.  This
-lets you build self-contained pieces of functionality and glue them together
-to make your overall application.  Here are some of the things provided by the
-snaplet infrastructure:
+A snaplet is a composable web application.  Snaplets allow you to build
+self-contained pieces of functionality and glue them together to make larger
+applications.  Here are some of the things provided by the snaplet API:
 
   - Infrastructure for application state/environment
 
@@ -21,9 +20,9 @@ snaplet's code would provide the necessary API to let your application
 interact seamlessly with the wiki functionality.  When you run your
 application for the first time, all of the wiki snaplet's filesystem resources
 will automatically be copied into the appropriate places.  Then you will
-immediately be able to customize it to fit your needs by editing config files,
-or even providing your own stylesheets.  We will discuss this in more detail
-later.
+immediately be able to customize the wiki to fit your needs by editing config
+files, providing your own stylesheets, etc.  We will discuss this in more
+detail later.
 
 A snaplet can represent anything from backend Haskell infrastructure with no
 user facing functionality to a small widget like a chat box that goes in the
@@ -35,10 +34,9 @@ into another one.
 
 We're really excited about the possibilities available with snaplets.  In
 fact, Snap already ships with snaplets for sessions, authentication, and
-templating (with Heist),  This not only gives you useful functionality out of
-the box, but it also gives you examples of how to use the snaplet API and help
-you to start writing your own snaplets quickly.  So without further ado,
-let's get started.
+templating (with Heist),  This gives you useful functionality out of the box,
+and jump starts your own snaplet development by demonstrating some useful
+design patterns.  So without further ado, let's get started.
 
 Snaplet Overview
 ================
