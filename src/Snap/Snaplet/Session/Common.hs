@@ -20,10 +20,10 @@ import           System.Random.MWC
 ------------------------------------------------------------------------------
 -- | Generates a random salt of given length
 randomToken :: Int -> IO ByteString
-randomToken n = 
+randomToken n =
   let
     mk :: GenIO -> IO Int
-    mk gen = uniformR (0,15) gen 
+    mk gen = uniformR (0,15) gen
   in do
     is <- withSystemRandom $ \gen -> sequence . take n . repeat $ mk gen
     return . B.pack . concat . map (flip showHex "") $ is

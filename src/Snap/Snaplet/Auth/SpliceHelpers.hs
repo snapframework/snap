@@ -10,8 +10,8 @@
 
 -}
 
-module Snap.Snaplet.Auth.SpliceHelpers 
-  ( 
+module Snap.Snaplet.Auth.SpliceHelpers
+  (
     addAuthSplices
   , ifLoggedIn
   , ifLoggedOut
@@ -27,15 +27,15 @@ import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Heist
 
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 -- | Add all standard auth splices to a Heist-enabled application.
 --
 -- This adds the following splices:
 -- \<ifLoggedIn\>
 -- \<ifLoggedOut\>
-addAuthSplices 
-  :: HasHeist b 
-  => Lens b (Snaplet (AuthManager b)) 
+addAuthSplices
+  :: HasHeist b
+  => Lens b (Snaplet (AuthManager b))
   -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
 addAuthSplices auth = addSplices
@@ -49,13 +49,13 @@ addAuthSplices auth = addSplices
 -- present, this will run the contents of the node.
 --
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
-ifLoggedIn 
+ifLoggedIn
   :: Lens b (Snaplet (AuthManager b))
   -> SnapletSplice b v
 ifLoggedIn auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
-    True -> liftHeist $ getParamNode >>= return . X.childNodes 
+    True -> liftHeist $ getParamNode >>= return . X.childNodes
     False -> return []
 
 
@@ -64,12 +64,12 @@ ifLoggedIn auth = do
 -- not present, this will run the contents of the node.
 --
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
-ifLoggedOut 
+ifLoggedOut
   :: Lens b (Snaplet (AuthManager b))
   -> SnapletSplice b v
 ifLoggedOut auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
-    False -> liftHeist $ getParamNode >>= return . X.childNodes 
+    False -> liftHeist $ getParamNode >>= return . X.childNodes
     True -> return []
 

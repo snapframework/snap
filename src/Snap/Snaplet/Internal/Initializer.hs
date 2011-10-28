@@ -2,7 +2,7 @@
 {-# LANGUAGE BangPatterns               #-}
 
 module Snap.Snaplet.Internal.Initializer
-( addPostInitHook
+  ( addPostInitHook
   , addPostInitHookBase
   , toSnapletHook
   , bracketInit
@@ -100,6 +100,7 @@ addPostInitHook' h = do
 
 
 ------------------------------------------------------------------------------
+-- | Variant of addPostInitHook for when you have things wrapped in a Snaplet.
 addPostInitHookBase :: (Snaplet b -> IO (Snaplet b))
                     -> Initializer b v ()
 addPostInitHookBase = Initializer . lift . tell . Hook
@@ -338,8 +339,8 @@ nameSnaplet nm (SnapletInit m) = SnapletInit $
 
 
 ------------------------------------------------------------------------------
--- | Adds routing to the current 'Handler'.  The new routes are merged with the
--- main routing section and take precedence over existing routing that was
+-- | Adds routing to the current 'Handler'.  The new routes are merged with
+-- the main routing section and take precedence over existing routing that was
 -- previously defined.
 addRoutes :: [(ByteString, Handler b v ())]
            -> Initializer b v ()
@@ -462,7 +463,8 @@ combineConfig config handler = do
     conf <- completeConfig config
 
     let catch500 = (flip catch $ fromJust $ getErrorHandler conf)
-    let compress = if fromJust $ getCompression conf then withCompression else id
+    let compress = if fromJust (getCompression conf)
+                     then withCompression else id
     let site     = compress $ catch500 handler
 
     return (conf, site)

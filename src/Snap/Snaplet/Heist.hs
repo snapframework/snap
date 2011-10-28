@@ -16,8 +16,8 @@ module Snap.Snaplet.Heist
   , heistInit
   , addTemplates
   , addTemplatesAt
-  , modifyHeistTS 
-  , withHeistTS 
+  , modifyHeistTS
+  , withHeistTS
   , addSplices
 
   -- * Handler Functions

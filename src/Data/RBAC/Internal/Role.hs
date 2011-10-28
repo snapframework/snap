@@ -26,7 +26,8 @@ instance Hashable RoleValue where
     hashWithSalt salt (RoleBool e)   = hashWithSalt salt e `combine` 7
     hashWithSalt salt (RoleText t)   = hashWithSalt salt t `combine` 196613
     hashWithSalt salt (RoleInt i)    = hashWithSalt salt i `combine` 12582917
-    hashWithSalt salt (RoleDouble d) = hashWithSalt salt d `combine` 1610612741
+    hashWithSalt salt (RoleDouble d) =
+        hashWithSalt salt d `combine` 1610612741
 
 
 ------------------------------------------------------------------------------

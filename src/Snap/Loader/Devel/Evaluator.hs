@@ -91,7 +91,8 @@ protectedHintEvaluator start test getInternals = do
 
                                 let a = fst res
 
-                                clearAndNotify (Right res) (flip putMVar a . snd)
+                                clearAndNotify (Right res)
+                                               (flip putMVar a . snd)
 
                             killWaiting :: SomeException -> IO ()
                             killWaiting e = block $ do

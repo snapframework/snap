@@ -5,12 +5,12 @@
 
   It gives us an encrypted and timestamped cookie that can store an arbitrary
   serializable payload. For security, it will:
-  
-    * Encrypt its payload together with a timestamp.  
-    
+
+    * Encrypt its payload together with a timestamp.
+
     * Check the timestamp for session expiration everytime you read from the
-    cookie. This will limit intercept-and-replay attacks by disallowing cookies
-    older than the timeout threshold. 
+    cookie. This will limit intercept-and-replay attacks by disallowing
+    cookies older than the timeout threshold.
 
 -}
 
@@ -45,7 +45,7 @@ type SecureCookie t = (UTCTime, t)
 
 ------------------------------------------------------------------------------
 -- Get the payload back
-getSecureCookie :: (MonadSnap m, Serialize t) 
+getSecureCookie :: (MonadSnap m, Serialize t)
                 => ByteString       -- ^ Cookie name
                 -> Key              -- ^ Encryption key
                 -> Maybe Int        -- ^ Timeout in seconds
@@ -55,7 +55,7 @@ getSecureCookie name key timeout = do
     rspCookie <- getResponseCookie name `fmap` getResponse
     let ck = rspCookie `mplus` rqCookie
     let val = fmap cookieValue ck >>= decrypt key >>= return . decode
-    let val' = val >>= either (const Nothing) Just 
+    let val' = val >>= either (const Nothing) Just
     case val' of
       Nothing -> return Nothing
       Just (ts, t) -> do
@@ -67,9 +67,9 @@ getSecureCookie name key timeout = do
 
 ------------------------------------------------------------------------------
 -- | Inject the payload
-setSecureCookie :: (MonadSnap m, Serialize t) 
+setSecureCookie :: (MonadSnap m, Serialize t)
                 => ByteString       -- ^ Cookie name
-                -> Key              -- ^ Encryption key 
+                -> Key              -- ^ Encryption key
                 -> Maybe Int        -- ^ Max age in seconds
                 -> t                -- ^ Serializable payload
                 -> m ()
@@ -89,7 +89,7 @@ setSecureCookie name key to val = do
 -- timestamp.
 checkTimeout :: (MonadSnap m) => Maybe Int -> UTCTime -> m Bool
 checkTimeout Nothing _ = return False
-checkTimeout (Just x) t0 = 
+checkTimeout (Just x) t0 =
   let x' = fromIntegral x
   in do
       t1 <- liftIO getCurrentTime

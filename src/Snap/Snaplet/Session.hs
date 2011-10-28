@@ -1,4 +1,4 @@
-module Snap.Snaplet.Session 
+module Snap.Snaplet.Session
 
 (
     SessionManager
@@ -21,21 +21,23 @@ import           Data.Text (Text)
 import           Snap.Snaplet
 import           Snap.Core
 
-import           Snap.Snaplet.Session.SessionManager 
+import           Snap.Snaplet.Session.SessionManager
                    ( SessionManager(..), ISessionManager(..) )
 import qualified Snap.Snaplet.Session.SessionManager as SM
 
 
 
 -- | Wrap around a handler, committing any changes in the session at the end
-withSession :: (Lens b (Snaplet SessionManager)) -> Handler b v a -> Handler b v a
+withSession :: (Lens b (Snaplet SessionManager))
+            -> Handler b v a
+            -> Handler b v a
 withSession l h = do
-  a <- h 
+  a <- h
   withTop l commitSession
   return a
 
 
--- | Commit changes to session within the current request cycle 
+-- | Commit changes to session within the current request cycle
 commitSession :: Handler b SessionManager ()
 commitSession = do
   SessionManager b <- loadSession
@@ -100,6 +102,6 @@ touchSession = do
 loadSession :: Handler b SessionManager SessionManager
 loadSession = do
   SessionManager r <- get
-  r' <- liftSnap $ load r 
+  r' <- liftSnap $ load r
   return $ SessionManager r'
 
