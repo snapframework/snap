@@ -183,7 +183,7 @@ import           Snap.Snaplet.Internal.Types
 -- > -- snapletValue is defined in the framework:
 -- > snapletValue :: Lens (Snaplet a) a
 -- >
--- > appQuuxLens :: Lens App (Snaplet Quux)
+-- > appQuuxLens :: Lens App Quux
 -- > appQuuxLens = quux . snapletValue . foo
 --
 -- Lens composition is very similar to function composition, but it gives you
