@@ -266,9 +266,11 @@ Now all we need is a simple main function to serve our application.
 
 This completes a full working application.  We did leave out a little dummy
 code for the Foo and Bar snaplets.  This code is included in Part2.hs.  For
-more information look in our API documentation.  No really, that wasn't a
-joke.  The API docs are written as prose.  It is written to be very easy to
-read, while having the benefit of including all the actual type signatures.
+more information look in our [API
+documentation](http://hackage.haskell.org/packages/archive/snap/0.6.0.2/doc/html/Snap-Snaplet.html).
+No really, that wasn't a joke.  The API docs are written as prose.  It is
+written to be very easy to read, while having the benefit of including all the
+actual type signatures.
 
 Filesystem Data and Automatic Installation
 ==========================================
