@@ -40,6 +40,9 @@ data SnapletConfig = SnapletConfig
     , _scDescription     :: Text
     , _scUserConfig      :: Config
     , _scRouteContext    :: [ByteString]
+    , _scRoutePattern    :: Maybe ByteString
+    -- ^ Holds the actual route pattern passed to addRoutes for the current
+    -- handler.  Nothing during initialization and before route dispatech.
     , _reloader          :: IO (Either String String) -- might change
     }
 
@@ -250,6 +253,22 @@ instance MonadSnaplet Handler where
     with' !l (Handler !m) = Handler $ L.with l m
     withTop' !l (Handler m) = Handler $ L.withTop l m
     getOpaqueConfig = Handler $ gets _snapletConfig
+
+
+------------------------------------------------------------------------------
+-- | Gets the route pattern that matched for the handler.  This lets you find
+-- out exactly which of the strings you used in addRoutes matched.
+getRoutePattern :: Handler b v (Maybe ByteString)
+getRoutePattern = liftM _scRoutePattern getOpaqueConfig
+
+
+------------------------------------------------------------------------------
+-- | Sets the route pattern that matched for the handler.  Use this when to
+-- override the default pattern which is the key to the alist passed to
+-- addRoutes.
+setRoutePattern :: ByteString -> Handler b v ()
+setRoutePattern p =
+    modifySnapletState (setL (scRoutePattern . snapletConfig) (Just p))
 
 
 ------------------------------------------------------------------------------

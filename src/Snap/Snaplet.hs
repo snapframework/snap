@@ -64,6 +64,8 @@ module Snap.Snaplet
   , getSnapletDescription
   , getSnapletUserConfig
   , getSnapletRootURL
+  , getRoutePattern
+  , setRoutePattern
 
   -- * Snaplet state manipulation
   -- $snapletState
