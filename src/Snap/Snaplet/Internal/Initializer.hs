@@ -352,7 +352,7 @@ addRoutes rs = do
     let rs' = map modRoute rs
     iModify (\v -> modL handlers (++rs') v)
   where
-    setPattern r = do
+    setPattern r = withTop' id $ do
       p <- getRoutePattern
       when (isNothing p) $ setRoutePattern r
 
