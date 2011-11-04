@@ -259,7 +259,7 @@ instance MonadSnaplet Handler where
 -- | Gets the route pattern that matched for the handler.  This lets you find
 -- out exactly which of the strings you used in addRoutes matched.
 getRoutePattern :: Handler b v (Maybe ByteString)
-getRoutePattern = liftM _scRoutePattern getOpaqueConfig
+getRoutePattern = withTop' id $ liftM _scRoutePattern getOpaqueConfig
 
 
 ------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ getRoutePattern = liftM _scRoutePattern getOpaqueConfig
 -- override the default pattern which is the key to the alist passed to
 -- addRoutes.
 setRoutePattern :: ByteString -> Handler b v ()
-setRoutePattern p =
+setRoutePattern p = withTop' id $
     modifySnapletState (setL (scRoutePattern . snapletConfig) (Just p))
 
 
