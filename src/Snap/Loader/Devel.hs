@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE CPP #-}
 -- | This module includes the machinery necessary to use hint to load
 -- action code dynamically.  It includes a Template Haskell function
 -- to gather the necessary compile-time information about code
@@ -8,6 +9,7 @@ module Snap.Loader.Devel
   ( loadSnapTH
   ) where
 
+#ifdef HINT_ENABLED
 import           Control.Monad (liftM2)
 
 import           Data.Char (isAlphaNum)
@@ -23,11 +25,13 @@ import           Language.Haskell.TH
 
 import           System.Environment (getArgs)
 
-------------------------------------------------------------------------------
 import           Snap.Core
 import           Snap.Loader.Devel.Signal
 import           Snap.Loader.Devel.Evaluator
 import           Snap.Loader.Devel.TreeWatcher
+#else
+import           Language.Haskell.TH
+#endif
 
 ------------------------------------------------------------------------------
 -- | This function derives all the information necessary to use the
@@ -62,14 +66,20 @@ loadSnapTH :: Q Exp    -- ^ the initializer expression
            -> [String] -- ^ a list of directories to watch in addition
                        -- to those containing code
            -> Q Exp
+#ifndef HINT_ENABLED
+loadSnapTH _ _ _ = fail $ "Snap was built without hint support.  Hint " ++
+                   "support is necessary for development mode.  " ++
+                   "Please reinstall snap with hint support.\n\n " ++
+                   "  cabal install snap -fhint\n\n"
+#else
 loadSnapTH initializer action additionalWatchDirs = do
     args <- runIO getArgs
 
     let opts = getHintOpts args
         srcPaths = additionalWatchDirs ++ getSrcPaths args
 
-    -- The first line is an extra type check to ensure the provided
-    -- names refer to expressions with the correct types
+    -- The first line is an extra type check to ensure the arguments
+    -- provided have the the correct types
     [| do let _ = $initializer >>= $(varE action)
           v <- $initializer
           (handler, cleanup) <- hintSnap opts actMods srcPaths loadStr v
@@ -178,3 +188,4 @@ format (GhcException e)   = "GHC error:\r\n\r\n" ++ e
 format (WontCompile errs) = "Compile errors:\r\n\r\n" ++
     (intercalate "\r\n" $ nub $ map errMsg errs)
 
+#endif

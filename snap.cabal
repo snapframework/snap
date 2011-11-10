@@ -50,13 +50,10 @@ Flag hint
 Library
   hs-source-dirs: src
 
-  if flag(hint)
-    exposed-modules:
-      Snap.Loader.Devel
-
   exposed-modules:
     Snap,
-    Snap.Loader.Prod
+    Snap.Loader.Prod,
+    Snap.Loader.Devel,
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Auth,
@@ -72,9 +69,6 @@ Library
     Data.RBAC.Internal.RoleMap,
     Data.RBAC.Internal.Rule,
     Data.RBAC.Internal.Types,
-    Snap.Loader.Devel.Evaluator,
-    Snap.Loader.Devel.Signal,
-    Snap.Loader.Devel.TreeWatcher,
     Snap.Snaplet.Auth.AuthManager,
     Snap.Snaplet.Auth.Types,
     Snap.Snaplet.Auth.Handlers,
@@ -89,12 +83,27 @@ Library
     Snap.Snaplet.Session.SecureCookie,
     Snap.Snaplet.Session.SessionManager
 
+  if flag(hint)
+    other-modules:
+      Snap.Loader.Devel.Evaluator,
+      Snap.Loader.Devel.Signal,
+      Snap.Loader.Devel.TreeWatcher
+
+    cpp-options: -DHINT_ENABLED
+
+    build-depends:
+      hint                    >= 0.3.3.1 && < 0.4
+
   if impl(ghc >= 7.0) && impl(ghc < 7.4)
     build-depends:
       aeson-native            >= 0.3     && < 0.4
   else
     build-depends:
       aeson                   >= 0.3.2   && < 0.4
+
+  if !os(windows)
+    build-depends:
+      unix                    >= 2.2.0.0 && < 2.6
 
   build-depends:
     Crypto                    >= 4.2     && < 4.3,
@@ -152,14 +161,6 @@ Library
     TypeFamilies,
     TypeOperators,
     TypeSynonymInstances
-
-  if flag(hint)
-    build-depends:
-      hint                    >= 0.3.3.1 && < 0.4
-
-  if !os(windows)
-    build-depends:
-      unix                    >= 2.2.0.0 && < 2.6
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
