@@ -1,5 +1,5 @@
 name:           snap
-version:        0.6.0.2
+version:        0.6.1
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -129,8 +129,8 @@ Library
     old-time                  >= 1.0     && < 1.1,
     pwstore-fast              >= 2.2     && < 2.3,
     safe                      >= 0.3     && < 0.4,
-    snap-core                 >= 0.6     && < 0.7,
-    snap-server               >= 0.6     && < 0.7,
+    snap-core                 >= 0.6.1   && < 0.7,
+    snap-server               >= 0.6.1   && < 0.7,
     stm                       >= 2.2     && < 2.3,
     syb                       >= 0.1     && < 0.4,
     template-haskell          >= 2.2     && < 2.7,
