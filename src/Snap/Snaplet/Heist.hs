@@ -14,6 +14,7 @@ module Snap.Snaplet.Heist
   -- * Initializer Functions
   -- $initializerSection
   , heistInit
+  , heistInit'
   , addTemplates
   , addTemplatesAt
   , modifyHeistTS
@@ -52,7 +53,8 @@ import           Text.Templating.Heist
 import           Snap.Snaplet
 
 import qualified Snap.Snaplet.HeistNoClass as Unclassed
-import           Snap.Snaplet.HeistNoClass (Heist, heistInit, clearHeistCache)
+import           Snap.Snaplet.HeistNoClass (Heist, heistInit
+                                           ,heistInit', clearHeistCache)
 
 
 ------------------------------------------------------------------------------

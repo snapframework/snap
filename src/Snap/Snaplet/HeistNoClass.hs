@@ -7,6 +7,7 @@
 module Snap.Snaplet.HeistNoClass
   ( Heist
   , heistInit
+  , heistInit'
   , clearHeistCache
 
   , addTemplates
@@ -203,23 +204,50 @@ bindSnapletSplices l splices =
 
 
 ------------------------------------------------------------------------------
--- | The 'Initializer' for 'Heist'.
+-- | The 'Initializer' for 'Heist'.  This function is a convenience wrapper
+-- around `heistInit'` that uses the default `emptyTemplateState` from Heist
+-- and sets up routes for all the templates.
 heistInit :: FilePath
           -> SnapletInit b (Heist b)
-heistInit templateDir =
+heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
-        (cacheFunc, cts) <- liftIO mkCacheTag
-        let origTs = cacheFunc emptyTemplateState
-        ts <- liftIO $ loadTemplates templateDir origTs >>=
-                       either error return
+        hs <- heistInitWorker templateDir emptyTemplateState
         addRoutes [ ("", heistServe) ]
-        printInfo $ T.pack $ unwords
-            [ "...loaded"
-            , (show $ length $ templateNames ts)
-            , "templates"
-            ]
+        return hs
 
-        return $ Heist ts cts
+
+------------------------------------------------------------------------------
+-- | A lower level 'Initializer' for 'Heist'.  This initializer requires you
+-- to specify the initial TemplateState.  It also does not add any routes for
+-- templates, allowing you complete control over which templates get routed.
+heistInit' :: FilePath
+           -- ^ Path to templates
+           -> TemplateState (Handler b b)
+           -- ^ Initial TemplateState
+           -> SnapletInit b (Heist b)
+heistInit' templateDir initialTemplateState =
+    makeSnaplet "heist" "" Nothing $
+        heistInitWorker templateDir initialTemplateState
+
+
+------------------------------------------------------------------------------
+-- | Internal worker function used by variantsof heistInit.  This is necessary
+-- because of the divide between SnapletInit and Initializer.
+heistInitWorker :: FilePath
+                -> TemplateState (Handler b b)
+                -> Initializer b v (Heist b)
+heistInitWorker templateDir initialTemplateState = do
+    (cacheFunc, cts) <- liftIO mkCacheTag
+    let origTs = cacheFunc initialTemplateState
+    ts <- liftIO $ loadTemplates templateDir origTs >>=
+                   either error return
+    printInfo $ T.pack $ unwords
+        [ "...loaded"
+        , (show $ length $ templateNames ts)
+        , "templates"
+        ]
+
+    return $ Heist ts cts
 
 
 addTemplates :: ByteString -> Initializer b (Heist b) ()
