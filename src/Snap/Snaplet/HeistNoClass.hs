@@ -208,6 +208,7 @@ bindSnapletSplices l splices =
 -- around `heistInit'` that uses the default `emptyTemplateState` from Heist
 -- and sets up routes for all the templates.
 heistInit :: FilePath
+           -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
@@ -250,14 +251,18 @@ heistInitWorker templateDir initialTemplateState = do
     return $ Heist ts cts
 
 
-addTemplates :: ByteString -> Initializer b (Heist b) ()
+addTemplates :: ByteString
+             -- ^ Path to templates (also the url prefix for their routes)
+             -> Initializer b (Heist b) ()
 addTemplates urlPrefix = do
     snapletPath <- getSnapletFilePath
     addTemplatesAt urlPrefix (snapletPath </> "templates")
 
 
 addTemplatesAt :: ByteString
+               -- ^ URL prefix for template routes
                -> FilePath
+               -- ^ Path to templates
                -> Initializer b (Heist b) ()
 addTemplatesAt urlPrefix templateDir = do
     ts <- liftIO $ loadTemplates templateDir emptyTemplateState

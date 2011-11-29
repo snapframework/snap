@@ -87,21 +87,31 @@ class HasHeist b where
 -- | Adds templates to the Heist TemplateState.  Other snaplets should use
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
-addTemplates :: HasHeist b => ByteString -> Initializer b v ()
+addTemplates :: HasHeist b
+             => ByteString
+             -- ^ Path to templates (also the url prefix for their routes)
+             -> Initializer b v ()
 addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 
 
 ------------------------------------------------------------------------------
 -- | Adds templates to the Heist TemplateState, and lets you specify where
 -- they are found in the filesystem.
-addTemplatesAt :: HasHeist b => ByteString -> FilePath -> Initializer b v ()
+addTemplatesAt :: HasHeist b
+               => ByteString
+               -- ^ URL prefix for template routes
+               -> FilePath
+               -- ^ Path to templates
+               -> Initializer b v ()
 addTemplatesAt pfx p = withTop' heistLens (Unclassed.addTemplatesAt pfx p)
 
 
 ------------------------------------------------------------------------------
 -- | Allows snaplets to add splices.
 addSplices :: (HasHeist b)
-           => [(Text, Unclassed.SnapletSplice b v)] -> Initializer b v ()
+           => [(Text, Unclassed.SnapletSplice b v)]
+           -- ^ Splices to bind
+           -> Initializer b v ()
 addSplices = Unclassed.addSplices' heistLens
 
 
@@ -111,6 +121,7 @@ addSplices = Unclassed.addSplices' heistLens
 -- like the cache tag.
 modifyHeistTS :: (HasHeist b)
               => (TemplateState (Handler b b) -> TemplateState (Handler b b))
+              -- ^ TemplateState modifying function
               -> Initializer b v ()
 modifyHeistTS = Unclassed.modifyHeistTS' heistLens
 
@@ -119,6 +130,7 @@ modifyHeistTS = Unclassed.modifyHeistTS' heistLens
 -- | Runs a function on with the Heist snaplet's 'TemplateState'.
 withHeistTS :: (HasHeist b)
             => (TemplateState (Handler b b) -> a)
+            -- ^ TemplateState function to run
             -> Handler b v a
 withHeistTS = Unclassed.withHeistTS' heistLens
 
@@ -131,14 +143,22 @@ withHeistTS = Unclassed.withHeistTS' heistLens
 ------------------------------------------------------------------------------
 -- | Renders a template as text\/html. If the given template is not found,
 -- this returns 'empty'.
-render :: HasHeist b => ByteString -> Handler b v ()
+render :: HasHeist b
+       => ByteString
+       -- ^ Template name
+       -> Handler b v ()
 render t = withTop' heistLens (Unclassed.render t)
 
 
 ------------------------------------------------------------------------------
 -- | Renders a template as the given content type.  If the given template
 -- is not found, this returns 'empty'.
-renderAs :: HasHeist b => ByteString -> ByteString -> Handler b v ()
+renderAs :: HasHeist b
+         => ByteString
+         -- ^ Content type to render with
+         -> ByteString
+         -- ^ Template name
+         -> Handler b v ()
 renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
 
 
@@ -152,7 +172,10 @@ heistServe = withTop' heistLens Unclassed.heistServe
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServeSingle'. If the given template is not found,
 -- this throws an error.
-heistServeSingle :: HasHeist b => ByteString -> Handler b v ()
+heistServeSingle :: HasHeist b
+                 => ByteString
+                 -- ^ Template name
+                 -> Handler b v ()
 heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 
 
@@ -161,7 +184,9 @@ heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 -- a common combination of heistLocal, bindSplices, and render.
 renderWithSplices :: HasHeist b
                   => ByteString
+                  -- ^ Template name
                   -> [(Text, Unclassed.SnapletSplice b v)]
+                  -- ^ Splices to bind
                   -> Handler b v ()
 renderWithSplices = Unclassed.renderWithSplices' heistLens
 
@@ -171,7 +196,9 @@ renderWithSplices = Unclassed.renderWithSplices' heistLens
 -- 'TemplateState'.
 withSplices :: HasHeist b
             => [(Text, Unclassed.SnapletSplice b v)]
+            -- ^ Splices to bind
             -> Handler b v a
+            -- ^ Handler to run
             -> Handler b v a
 withSplices = Unclassed.withSplices' heistLens
 
@@ -184,7 +211,9 @@ withSplices = Unclassed.withSplices' heistLens
 -- > heistLocal (bindSplices mySplices) handlerThatNeedsSplices
 heistLocal :: HasHeist b
            => (TemplateState (Handler b b) -> TemplateState (Handler b b))
+           -- ^ TemplateState modifying function
            -> Handler b v a
+            -- ^ Handler to run
            -> Handler b v a
 heistLocal = Unclassed.heistLocal' heistLens
 
