@@ -67,7 +67,7 @@ import           Snap.Snaplet.HeistNoClass (Heist, heistInit, clearHeistCache)
 -- > instance HasHeist App where heistLens = subSnaplet heist
 -- >
 -- > appInit = makeSnaplet "app" "" Nothing $ do
--- >     h <- nestSnaplet "heist" $ heistInit "templates"
+-- >     h <- nestSnaplet "heist" heist $ heistInit "templates"
 -- >     addSplices myAppSplices
 -- >     return $ App h
 class HasHeist b where
