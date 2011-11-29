@@ -347,8 +347,14 @@ addRoutes :: [(ByteString, Handler b v ())]
 addRoutes rs = do
     l <- getLens
     ctx <- iGets (_scRouteContext . _curConfig)
-    let rs' = map (\(r,h) -> (buildPath (r:ctx), withTop' l h)) rs
+    let modRoute (r,h) = ( buildPath (r:ctx)
+                         , setPattern r >> withTop' l h)
+    let rs' = map modRoute rs
     iModify (\v -> modL handlers (++rs') v)
+  where
+    setPattern r = do
+      p <- getRoutePattern
+      when (isNothing p) $ setRoutePattern r
 
 
 ------------------------------------------------------------------------------
@@ -431,7 +437,8 @@ runInitializer :: MVar (Snaplet b)
 runInitializer mvar b@(Initializer i) = do
     userConfig <- load [Optional "snaplet.cfg"]
     let builtinHandlers = [("/admin/reload", reloadSite)]
-    let cfg = SnapletConfig [] "" Nothing "" userConfig [] (mkReloader mvar b)
+    let cfg = SnapletConfig [] "" Nothing "" userConfig [] Nothing
+                            (mkReloader mvar b)
     logRef <- newIORef ""
     ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
         InitializerState True (return ()) builtinHandlers id cfg logRef
