@@ -12,7 +12,7 @@ Executable snap-testsuite
     HUnit                      >= 1.2 && < 2,
     MonadCatchIO-transformers  >= 0.2 && < 0.3,
     QuickCheck                 >= 2.3.0.2,
-    attoparsec                 (>= 0.8   && < 0.10),
+    attoparsec                 >= 0.10 && <0.11,
     base                       >= 4 && < 5,
     bytestring                 >= 0.9 && < 0.10,
     containers                 >= 0.3,
@@ -21,7 +21,7 @@ Executable snap-testsuite
     directory,
     directory-tree             >= 0.10 && < 0.11,
     filepath,
-    heist                      >= 0.6 && < 0.7,
+    heist                      >= 0.6.1 && < 0.7,
     http-enumerator            >= 0.6.5.3 && < 0.8,
     mtl                        >= 2,
     process                    == 1.*,
@@ -66,7 +66,7 @@ Executable app
 
   build-depends:
     MonadCatchIO-transformers  >= 0.2 && < 0.3,
-    attoparsec                 (>= 0.8   && < 0.10),
+    attoparsec                 >= 0.10 && <0.11,
     base                       >= 4 && < 5,
     bytestring                 >= 0.9 && < 0.10,
     cereal                     >= 0.3,
@@ -79,7 +79,7 @@ Executable app
     directory-tree             >= 0.10 && < 0.11,
     filepath,
     hashable                   >= 1.1,
-    heist                      >= 0.6 && < 0.7,
+    heist                      >= 0.6.1 && < 0.7,
     mtl                        >= 2,
     mwc-random                 >= 0.8,
     process                    == 1.*,
@@ -122,7 +122,7 @@ Executable nesttest
 
   build-depends:
     MonadCatchIO-transformers  >= 0.2 && < 0.3,
-    attoparsec                 (>= 0.8   && < 0.10),
+    attoparsec                 >= 0.10 && <0.11,
     base                       >= 4 && < 5,
     bytestring                 >= 0.9 && < 0.10,
     containers                 >= 0.3,
@@ -131,7 +131,7 @@ Executable nesttest
     directory,
     directory-tree             >= 0.10 && < 0.11,
     filepath,
-    heist                      >= 0.6 && < 0.7,
+    heist                      >= 0.6.1 && < 0.7,
     mtl                        >= 2,
     process                    == 1.*,
     snap-core                  >= 0.6 && < 0.7,
