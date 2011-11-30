@@ -122,6 +122,7 @@ Library
     old-time                  >= 1.0      && < 1.1,
     pwstore-fast              >= 2.2      && < 2.3,
     safe                      >= 0.3      && < 0.4,
+    skein                     >= 0.1.0.3  && < 0.2,
     snap-core                 >= 0.6.1    && < 0.7,
     snap-server               >= 0.6.1    && < 0.7,
     stm                       >= 2.2      && < 2.3,
