@@ -101,7 +101,7 @@ Library
   build-depends:
     Crypto                    >= 4.2      && < 4.3,
     MonadCatchIO-transformers >= 0.2      && < 0.3,
-    aeson                     >= 0.3.2.13 && < 0.4,
+    aeson                     >= 0.4      && < 0.5,
     attoparsec                >= 0.10     && < 0.11,
     base                      >= 4        && < 5,
     bytestring                >= 0.9.1    && < 0.10,
