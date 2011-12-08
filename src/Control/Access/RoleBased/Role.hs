@@ -1,7 +1,7 @@
-module Data.RBAC.Role where
+module Control.Access.RoleBased.Role where
 
 import qualified Data.HashMap.Strict as M
-import           Data.RBAC.Internal.Types
+import           Control.Access.RoleBased.Internal.Types
 import           Data.Text (Text)
 
 

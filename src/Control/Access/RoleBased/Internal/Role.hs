@@ -1,4 +1,4 @@
-module Data.RBAC.Internal.Role where
+module Control.Access.RoleBased.Internal.Role where
 
 import           Control.Monad.ST
 import           Data.Hashable

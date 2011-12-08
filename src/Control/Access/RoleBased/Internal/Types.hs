@@ -2,9 +2,9 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Data.RBAC.Internal.Types
-  ( module Data.RBAC.Internal.Role
-  , module Data.RBAC.Internal.Rule
+module Control.Access.RoleBased.Internal.Types
+  ( module Control.Access.RoleBased.Internal.Role
+  , module Control.Access.RoleBased.Internal.Rule
   , RoleMonad(..)
   , RuleChecker(..)
   ) where
@@ -13,8 +13,8 @@ import           Control.Applicative
 import           Control.Monad.Reader
 import           Control.Monad.Logic
 
-import           Data.RBAC.Internal.Role
-import           Data.RBAC.Internal.Rule
+import           Control.Access.RoleBased.Internal.Role
+import           Control.Access.RoleBased.Internal.Rule
 
 
 ------------------------------------------------------------------------------

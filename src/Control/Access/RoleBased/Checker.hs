@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Data.RBAC.Checker where
+module Control.Access.RoleBased.Checker where
 
 import           Control.Monad
 import           Control.Monad.Logic
@@ -12,10 +12,10 @@ import qualified Data.HashMap.Strict as M
 import           Data.Maybe (fromMaybe, isJust)
 import           Data.Text (Text)
 
-import           Data.RBAC.Internal.RoleMap (RoleMap)
-import qualified Data.RBAC.Internal.RoleMap as RM
-import           Data.RBAC.Internal.Types
-import           Data.RBAC.Role
+import           Control.Access.RoleBased.Internal.RoleMap (RoleMap)
+import qualified Control.Access.RoleBased.Internal.RoleMap as RM
+import           Control.Access.RoleBased.Internal.Types
+import           Control.Access.RoleBased.Role
 
 
 ------------------------------------------------------------------------------

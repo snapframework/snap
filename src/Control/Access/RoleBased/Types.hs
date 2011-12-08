@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-module Data.RBAC.Types
+module Control.Access.RoleBased.Types
   ( Role(..)                    -- fixme: remove (..)
   , RoleValue(..)               -- fixme
   , RoleValueMeta(..)
@@ -11,4 +11,4 @@ module Data.RBAC.Types
   , RuleChecker
   ) where
 
-import Data.RBAC.Internal.Types
+import Control.Access.RoleBased.Internal.Types

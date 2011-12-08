@@ -1,4 +1,4 @@
-module Data.RBAC.Internal.Rule where
+module Control.Access.RoleBased.Internal.Rule where
 
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as M
@@ -6,7 +6,7 @@ import           Data.List (foldl')
 import           Data.Monoid
 import           Data.Text (Text)
 
-import           Data.RBAC.Internal.Role
+import           Control.Access.RoleBased.Internal.Role
 
 ------------------------------------------------------------------------------
 data Rule = Rule Text (Role -> [Role])
