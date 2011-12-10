@@ -70,13 +70,13 @@ import           Snap.Util.FileServe
 -- application.
 --
 data Heist b = Heist
-    { _heistTS       :: TemplateState (Handler b b)
+    { _heistTS       :: HeistState (Handler b b)
     , _heistCTS      :: CacheTagState
     }
 
 
 ------------------------------------------------------------------------------
-changeTS :: (TemplateState (Handler a a) -> TemplateState (Handler a a))
+changeTS :: (HeistState (Handler a a) -> HeistState (Handler a a))
          -> Heist a
          -> Heist a
 changeTS f (Heist ts cts) = Heist (f ts) cts
@@ -205,8 +205,8 @@ instance MonadSnaplet SnapletHeist where
 --
 bindSnapletSplices :: (Lens (Snaplet b) (Snaplet v))
                    -> [(Text, SnapletSplice b v)]
-                   -> TemplateState (Handler b b)
-                   -> TemplateState (Handler b b)
+                   -> HeistState (Handler b b)
+                   -> HeistState (Handler b b)
 bindSnapletSplices l splices =
     bindSplices $ map (second $ runSnapletSplice l) splices
 
@@ -216,32 +216,32 @@ bindSnapletSplices l splices =
                           ---------------------------
 
 ------------------------------------------------------------------------------
--- | The 'Initializer' for 'Heist'.  This function is a convenience wrapper
--- around `heistInit'` that uses the default `emptyTemplateState` from Heist
--- and sets up routes for all the templates.
+-- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
+-- around `heistInit'` that uses the default `mempty` HeistState and sets up
+-- routes for all the templates.
 --
 heistInit :: FilePath                 -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
-        hs <- heistInitWorker templateDir emptyTemplateState
+        hs <- heistInitWorker templateDir mempty
         addRoutes [ ("", heistServe) ]
         return hs
 
 
 ------------------------------------------------------------------------------
 -- | A lower level 'Initializer' for 'Heist'.  This initializer requires you
--- to specify the initial TemplateState.  It also does not add any routes for
+-- to specify the initial HeistState.  It also does not add any routes for
 -- templates, allowing you complete control over which templates get routed.
 --
 heistInit' :: FilePath
            -- ^ Path to templates
-           -> TemplateState (Handler b b)
-           -- ^ Initial TemplateState
+           -> HeistState (Handler b b)
+           -- ^ Initial HeistState
            -> SnapletInit b (Heist b)
-heistInit' templateDir initialTemplateState =
+heistInit' templateDir initialHeistState =
     makeSnaplet "heist" "" Nothing $
-        heistInitWorker templateDir initialTemplateState
+        heistInitWorker templateDir initialHeistState
 
 
 ------------------------------------------------------------------------------
@@ -249,11 +249,11 @@ heistInit' templateDir initialTemplateState =
 -- because of the divide between SnapletInit and Initializer.
 --
 heistInitWorker :: FilePath
-                -> TemplateState (Handler b b)
+                -> HeistState (Handler b b)
                 -> Initializer b v (Heist b)
-heistInitWorker templateDir initialTemplateState = do
+heistInitWorker templateDir initialHeistState = do
     (cacheFunc, cts) <- liftIO mkCacheTag
-    let origTs = cacheFunc initialTemplateState
+    let origTs = cacheFunc initialHeistState
     ts <- liftIO $ loadTemplates templateDir origTs >>=
                    either error return
     printInfo $ T.pack $ unwords
@@ -281,7 +281,7 @@ addTemplatesAt :: ByteString
                -- ^ Path to templates
                -> Initializer b (Heist b) ()
 addTemplatesAt urlPrefix templateDir = do
-    ts <- liftIO $ loadTemplates templateDir emptyTemplateState
+    ts <- liftIO $ loadTemplates templateDir mempty
                    >>= either error return
     printInfo $ T.pack $ unwords
         [ "...adding"
@@ -297,7 +297,7 @@ addTemplatesAt urlPrefix templateDir = do
 
 ------------------------------------------------------------------------------
 modifyHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
-               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+               -> (HeistState (Handler b b) -> HeistState (Handler b b))
                -> Initializer b v ()
 modifyHeistTS' heist f = do
     _lens <- getLens
@@ -306,21 +306,21 @@ modifyHeistTS' heist f = do
 
 ------------------------------------------------------------------------------
 modifyHeistTS :: (Lens b (Snaplet (Heist b)))
-              -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+              -> (HeistState (Handler b b) -> HeistState (Handler b b))
               -> Initializer b v ()
 modifyHeistTS heist f = modifyHeistTS' (subSnaplet heist) f
 
 
 ------------------------------------------------------------------------------
 withHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
-             -> (TemplateState (Handler b b) -> a)
+             -> (HeistState (Handler b b) -> a)
              -> Handler b v a
 withHeistTS' heist f = withTop' heist $ gets (f . _heistTS)
 
 
 ------------------------------------------------------------------------------
 withHeistTS :: (Lens b (Snaplet (Heist b)))
-            -> (TemplateState (Handler b b) -> a)
+            -> (HeistState (Handler b b) -> a)
             -> Handler b v a
 withHeistTS heist f = withHeistTS' (subSnaplet heist) f
 
@@ -391,7 +391,7 @@ heistServeSingle t =
 
 ------------------------------------------------------------------------------
 heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
-            -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+            -> (HeistState (Handler b b) -> HeistState (Handler b b))
             -> Handler b v a
             -> Handler b v a
 heistLocal' heist f m = do
@@ -404,7 +404,7 @@ heistLocal' heist f m = do
 
 ------------------------------------------------------------------------------
 heistLocal :: (Lens b (Snaplet (Heist b)))
-           -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
+           -> (HeistState (Handler b b) -> HeistState (Handler b b))
            -> Handler b v a
            -> Handler b v a
 heistLocal heist f m = heistLocal' (subSnaplet heist) f m

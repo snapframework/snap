@@ -85,7 +85,7 @@ class HasHeist b where
 
 
 ------------------------------------------------------------------------------
--- | Adds templates to the Heist TemplateState.  Other snaplets should use
+-- | Adds templates to the Heist HeistState.  Other snaplets should use
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: HasHeist b
@@ -96,7 +96,7 @@ addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 
 
 ------------------------------------------------------------------------------
--- | Adds templates to the Heist TemplateState, and lets you specify where
+-- | Adds templates to the Heist HeistState, and lets you specify where
 -- they are found in the filesystem.
 addTemplatesAt :: HasHeist b
                => ByteString
@@ -117,21 +117,21 @@ addSplices = Unclassed.addSplices' heistLens
 
 
 ------------------------------------------------------------------------------
--- | More general function allowing arbitrary TemplateState modification.
+-- | More general function allowing arbitrary HeistState modification.
 -- Without this function you wouldn't be able to bind more complicated splices
 -- like the cache tag.
 modifyHeistTS :: (HasHeist b)
-              => (TemplateState (Handler b b) -> TemplateState (Handler b b))
-              -- ^ TemplateState modifying function
+              => (HeistState (Handler b b) -> HeistState (Handler b b))
+              -- ^ HeistState modifying function
               -> Initializer b v ()
 modifyHeistTS = Unclassed.modifyHeistTS' heistLens
 
 
 ------------------------------------------------------------------------------
--- | Runs a function on with the Heist snaplet's 'TemplateState'.
+-- | Runs a function on with the Heist snaplet's 'HeistState'.
 withHeistTS :: (HasHeist b)
-            => (TemplateState (Handler b b) -> a)
-            -- ^ TemplateState function to run
+            => (HeistState (Handler b b) -> a)
+            -- ^ HeistState function to run
             -> Handler b v a
 withHeistTS = Unclassed.withHeistTS' heistLens
 
@@ -194,7 +194,7 @@ renderWithSplices = Unclassed.renderWithSplices' heistLens
 
 ------------------------------------------------------------------------------
 -- | Runs an action with additional splices bound into the Heist
--- 'TemplateState'.
+-- 'HeistState'.
 withSplices :: HasHeist b
             => [(Text, Unclassed.SnapletSplice b v)]
             -- ^ Splices to bind
@@ -205,14 +205,14 @@ withSplices = Unclassed.withSplices' heistLens
 
 
 ------------------------------------------------------------------------------
--- | Runs a handler with a modified 'TemplateState'.  You might want to use
+-- | Runs a handler with a modified 'HeistState'.  You might want to use
 -- this if you had a set of splices which were customised for a specific
 -- action.  To do that you would do:
 --
 -- > heistLocal (bindSplices mySplices) handlerThatNeedsSplices
 heistLocal :: HasHeist b
-           => (TemplateState (Handler b b) -> TemplateState (Handler b b))
-           -- ^ TemplateState modifying function
+           => (HeistState (Handler b b) -> HeistState (Handler b b))
+           -- ^ HeistState modifying function
            -> Handler b v a
             -- ^ Handler to run
            -> Handler b v a
@@ -221,7 +221,7 @@ heistLocal = Unclassed.heistLocal' heistLens
 
 -- $spliceSection
 -- As can be seen in the type signature of heistLocal, the internal
--- TemplateState used by the heist snaplet is parameterized by (Handler b b).
+-- HeistState used by the heist snaplet is parameterized by (Handler b b).
 -- The reasons for this are beyond the scope of this discussion, but the
 -- result is that 'lift' inside a splice only works with @Handler b b@
 -- actions.  When you're writing your own snaplets you obviously would rather
