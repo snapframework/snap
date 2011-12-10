@@ -68,6 +68,7 @@ import           Snap.Util.FileServe
 -- include this in your application state and use 'heistInit' to initialize
 -- it.  The type parameter b will typically be the base state type for your
 -- application.
+--
 data Heist b = Heist
     { _heistTS       :: TemplateState (Handler b b)
     , _heistCTS      :: CacheTagState
@@ -85,24 +86,26 @@ changeTS f (Heist ts cts) = Heist (f ts) cts
 -- | Clears data stored by the cache tag.  The cache tag automatically reloads
 -- its data when the specified TTL expires, but sometimes you may want to
 -- trigger a manual reload.  This function lets you do that.
+--
 clearHeistCache :: Heist b -> IO ()
 clearHeistCache = clearCacheTagState . _heistCTS
 
 
-------------------------------------------------------------------------------
--- SnapletSplice functions
-------------------------------------------------------------------------------
-
+                         -----------------------------
+                         -- SnapletSplice functions --
+                         -----------------------------
 
 ------------------------------------------------------------------------------
 -- | This instance is here because we don't want the heist package to depend
 -- on anything from snap packages.
+--
 instance MonadSnap m => MonadSnap (HeistT m) where
     liftSnap = lift . liftSnap
 
 
 ------------------------------------------------------------------------------
 -- | Monad for working with Heist's API from within a snaplet.
+--
 newtype SnapletHeist b v a = SnapletHeist
     (ReaderT (Lens (Snaplet b) (Snaplet v)) (HeistT (Handler b b)) a)
   deriving ( Monad
@@ -119,17 +122,20 @@ newtype SnapletHeist b v a = SnapletHeist
 
 ------------------------------------------------------------------------------
 -- | Type alias for convenience.
+--
 type SnapletSplice b v = SnapletHeist b v Template
 
 
 ------------------------------------------------------------------------------
 -- | Runs the SnapletSplice.
+--
 runSnapletSplice :: (Lens (Snaplet b) (Snaplet v))
                  -> SnapletHeist b v a
                  -> HeistT (Handler b b) a
 runSnapletSplice l (SnapletHeist m) = runReaderT m l
 
 
+------------------------------------------------------------------------------
 withSS :: (Lens (Snaplet b) (Snaplet v) -> Lens (Snaplet b) (Snaplet v'))
        -> SnapletHeist b v' a
        -> SnapletHeist b v a
@@ -139,12 +145,14 @@ withSS f (SnapletHeist m) = SnapletHeist $ withReaderT f m
 ------------------------------------------------------------------------------
 -- | Lifts a HeistT action into SnapletHeist.  Use this with all the functions
 -- from the Heist API.
+--
 liftHeist :: HeistT (Handler b b) a -> SnapletHeist b v a
 liftHeist = SnapletHeist . lift
 
 
 ------------------------------------------------------------------------------
 -- | Common idiom for the combination of liftHandler and withTop.
+--
 liftWith :: (Lens (Snaplet b) (Snaplet v'))
          -> Handler b v' a
          -> SnapletHeist b v a
@@ -153,6 +161,7 @@ liftWith l = liftHeist . lift . withTop' l
 
 ------------------------------------------------------------------------------
 -- | Lifts a Handler into SnapletHeist.
+--
 liftHandler :: Handler b v a -> SnapletHeist b v a
 liftHandler m = do
     l <- ask
@@ -161,10 +170,12 @@ liftHandler m = do
 
 ------------------------------------------------------------------------------
 -- | Lifts a (Handler b b) into SnapletHeist.
+--
 liftAppHandler :: Handler b b a -> SnapletHeist b v a
 liftAppHandler = liftHeist . lift
 
 
+------------------------------------------------------------------------------
 instance MonadState v (SnapletHeist b v) where
     get = do
         l <- ask
@@ -178,6 +189,7 @@ instance MonadState v (SnapletHeist b v) where
 
 ------------------------------------------------------------------------------
 -- | MonadSnaplet instance gives us access to the snaplet infrastructure.
+--
 instance MonadSnaplet SnapletHeist where
     getLens = ask
     with' l = withSS (l .)
@@ -190,6 +202,7 @@ instance MonadSnaplet SnapletHeist where
 
 ------------------------------------------------------------------------------
 -- | SnapletSplices version of bindSplices.
+--
 bindSnapletSplices :: (Lens (Snaplet b) (Snaplet v))
                    -> [(Text, SnapletSplice b v)]
                    -> TemplateState (Handler b b)
@@ -198,17 +211,16 @@ bindSnapletSplices l splices =
     bindSplices $ map (second $ runSnapletSplice l) splices
 
 
-------------------------------------------------------------------------------
--- Initializer functions
-------------------------------------------------------------------------------
-
+                          ---------------------------
+                          -- Initializer functions --
+                          ---------------------------
 
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for 'Heist'.  This function is a convenience wrapper
 -- around `heistInit'` that uses the default `emptyTemplateState` from Heist
 -- and sets up routes for all the templates.
-heistInit :: FilePath
-           -- ^ Path to templates
+--
+heistInit :: FilePath                 -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
@@ -221,6 +233,7 @@ heistInit templateDir = do
 -- | A lower level 'Initializer' for 'Heist'.  This initializer requires you
 -- to specify the initial TemplateState.  It also does not add any routes for
 -- templates, allowing you complete control over which templates get routed.
+--
 heistInit' :: FilePath
            -- ^ Path to templates
            -> TemplateState (Handler b b)
@@ -234,6 +247,7 @@ heistInit' templateDir initialTemplateState =
 ------------------------------------------------------------------------------
 -- | Internal worker function used by variantsof heistInit.  This is necessary
 -- because of the divide between SnapletInit and Initializer.
+--
 heistInitWorker :: FilePath
                 -> TemplateState (Handler b b)
                 -> Initializer b v (Heist b)
@@ -251,6 +265,7 @@ heistInitWorker templateDir initialTemplateState = do
     return $ Heist ts cts
 
 
+------------------------------------------------------------------------------
 addTemplates :: ByteString
              -- ^ Path to templates (also the url prefix for their routes)
              -> Initializer b (Heist b) ()
@@ -259,6 +274,7 @@ addTemplates urlPrefix = do
     addTemplatesAt urlPrefix (snapletPath </> "templates")
 
 
+------------------------------------------------------------------------------
 addTemplatesAt :: ByteString
                -- ^ URL prefix for template routes
                -> FilePath
@@ -279,6 +295,7 @@ addTemplatesAt urlPrefix templateDir = do
         (`mappend` addTemplatePathPrefix urlPrefix ts)
 
 
+------------------------------------------------------------------------------
 modifyHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
                -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
                -> Initializer b v ()
@@ -287,24 +304,28 @@ modifyHeistTS' heist f = do
     withTop' heist $ addPostInitHook $ return . changeTS f
 
 
+------------------------------------------------------------------------------
 modifyHeistTS :: (Lens b (Snaplet (Heist b)))
               -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
               -> Initializer b v ()
 modifyHeistTS heist f = modifyHeistTS' (subSnaplet heist) f
 
 
+------------------------------------------------------------------------------
 withHeistTS' :: (Lens (Snaplet b) (Snaplet (Heist b)))
              -> (TemplateState (Handler b b) -> a)
              -> Handler b v a
 withHeistTS' heist f = withTop' heist $ gets (f . _heistTS)
 
 
+------------------------------------------------------------------------------
 withHeistTS :: (Lens b (Snaplet (Heist b)))
             -> (TemplateState (Handler b b) -> a)
             -> Handler b v a
 withHeistTS heist f = withHeistTS' (subSnaplet heist) f
 
 
+------------------------------------------------------------------------------
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> [(Text, SnapletSplice b v)]
             -> Initializer b v ()
@@ -314,16 +335,16 @@ addSplices' heist splices = do
         return . changeTS (bindSnapletSplices _lens splices)
 
 
+------------------------------------------------------------------------------
 addSplices :: (Lens b (Snaplet (Heist b)))
            -> [(Text, SnapletSplice b v)]
            -> Initializer b v ()
 addSplices heist splices = addSplices' (subSnaplet heist) splices
 
 
-------------------------------------------------------------------------------
--- Handler functions
-------------------------------------------------------------------------------
-
+                            -----------------------
+                            -- Handler functions --
+                            -----------------------
 
 ------------------------------------------------------------------------------
 -- | Internal helper function for rendering.
@@ -339,12 +360,14 @@ renderHelper c t = do
         writeBuilder b
 
 
+------------------------------------------------------------------------------
 render :: ByteString
        -- ^ Name of the template
        -> Handler b (Heist b) ()
 render t = renderHelper Nothing t
 
 
+------------------------------------------------------------------------------
 renderAs :: ByteString
          -- ^ Content type
          -> ByteString
@@ -353,17 +376,20 @@ renderAs :: ByteString
 renderAs ct t = renderHelper (Just ct) t
 
 
+------------------------------------------------------------------------------
 heistServe :: Handler b (Heist b) ()
 heistServe =
     ifTop (render "index") <|> (render . B.pack =<< getSafePath)
 
 
+------------------------------------------------------------------------------
 heistServeSingle :: ByteString
                  -> Handler b (Heist b) ()
 heistServeSingle t =
     render t <|> error ("Template " ++ show t ++ " not found.")
 
 
+------------------------------------------------------------------------------
 heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
             -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
             -> Handler b v a
@@ -376,6 +402,7 @@ heistLocal' heist f m = do
     return res
 
 
+------------------------------------------------------------------------------
 heistLocal :: (Lens b (Snaplet (Heist b)))
            -> (TemplateState (Handler b b) -> TemplateState (Handler b b))
            -> Handler b v a
@@ -383,6 +410,7 @@ heistLocal :: (Lens b (Snaplet (Heist b)))
 heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 
+------------------------------------------------------------------------------
 withSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
              -> [(Text, SnapletSplice b v)]
              -> Handler b v a
@@ -392,6 +420,7 @@ withSplices' heist splices m = do
     heistLocal' heist (bindSnapletSplices _lens splices) m
 
 
+------------------------------------------------------------------------------
 withSplices :: (Lens b (Snaplet (Heist b)))
             -> [(Text, SnapletSplice b v)]
             -> Handler b v a
@@ -399,6 +428,7 @@ withSplices :: (Lens b (Snaplet (Heist b)))
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 
 
+------------------------------------------------------------------------------
 renderWithSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
                    -> ByteString
                    -> [(Text, SnapletSplice b v)]
@@ -407,6 +437,7 @@ renderWithSplices' heist t splices =
     withSplices' heist splices $ withTop' heist $ render t
 
 
+------------------------------------------------------------------------------
 renderWithSplices :: (Lens b (Snaplet (Heist b)))
                   -> ByteString
                   -> [(Text, SnapletSplice b v)]

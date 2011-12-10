@@ -1,9 +1,7 @@
-{-|
-
-The Heist snaplet makes it easy to add Heist to your application and use it in
-other snaplets.
-
--}
+------------------------------------------------------------------------------
+-- | The Heist snaplet makes it easy to add Heist to your application and use
+-- it in other snaplets.
+--
 
 module Snap.Snaplet.Heist
   (
@@ -44,17 +42,20 @@ module Snap.Snaplet.Heist
   , clearHeistCache
   ) where
 
+------------------------------------------------------------------------------
 import           Prelude hiding (id, (.))
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy
 import           Data.Text (Text)
 import           Text.Templating.Heist
-
+------------------------------------------------------------------------------
 import           Snap.Snaplet
-
 import qualified Snap.Snaplet.HeistNoClass as Unclassed
-import           Snap.Snaplet.HeistNoClass (Heist, heistInit
-                                           ,heistInit', clearHeistCache)
+import           Snap.Snaplet.HeistNoClass ( Heist
+                                           , heistInit
+                                           , heistInit'
+                                           , clearHeistCache
+                                           )
 
 
 ------------------------------------------------------------------------------

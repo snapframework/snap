@@ -32,6 +32,7 @@ import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Session
+import           Snap.Snaplet.Session.Common
 
 
 
@@ -45,23 +46,25 @@ initJsonFileAuthManager :: AuthSettings
                         -> FilePath
                            -- ^ Where to store user data as JSON
                         -> SnapletInit b (AuthManager b)
-initJsonFileAuthManager s l db =
-  makeSnaplet
-      "JsonFileAuthManager"
-      "A snaplet providing user authentication using a JSON-file backend"
-      Nothing $ liftIO $ do
-    key <- getKey (asSiteKey s)
-    jsonMgr <- mkJsonAuthMgr db
-    return $! AuthManager {
-        backend            = jsonMgr
-      , session            = l
-      , activeUser         = Nothing
-      , minPasswdLen       = asMinPasswdLen s
-      , rememberCookieName = asRememberCookieName s
-      , rememberPeriod     = asRememberPeriod s
-      , siteKey            = key
-      , lockout            = asLockout s
-    }
+initJsonFileAuthManager s l db = do
+    makeSnaplet
+        "JsonFileAuthManager"
+        "A snaplet providing user authentication using a JSON-file backend"
+        Nothing $ liftIO $ do
+            rng <- liftIO mkRNG
+            key <- getKey (asSiteKey s)
+            jsonMgr <- mkJsonAuthMgr db
+            return $! AuthManager {
+                         backend               = jsonMgr
+                       , session               = l
+                       , activeUser            = Nothing
+                       , minPasswdLen          = asMinPasswdLen s
+                       , rememberCookieName    = asRememberCookieName s
+                       , rememberPeriod        = asRememberPeriod s
+                       , siteKey               = key
+                       , lockout               = asLockout s
+                       , randomNumberGenerator = rng
+                       }
 
 
 ------------------------------------------------------------------------------

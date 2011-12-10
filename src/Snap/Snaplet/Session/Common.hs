@@ -1,41 +1,66 @@
-{-|
+------------------------------------------------------------------------------
+-- | This module contains functionality common among multiple back-ends.
+--
 
-  This module contains functionality common among multiple back-ends.
+module Snap.Snaplet.Session.Common
+  ( RNG
+  , mkRNG
+  , withRNG
+  , randomToken
+  , mkCSRFToken
+  ) where
 
--}
-
-module Snap.Snaplet.Session.Common where
-
-
-import           Numeric
+------------------------------------------------------------------------------
+import           Control.Applicative
+import           Control.Concurrent
+import           Control.Monad
+import           Control.Monad.Trans
 import           Data.Serialize
 import qualified Data.Serialize as S
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text.Encoding as T
 import           Data.Text (Text)
+import           Numeric
 import           System.Random.MWC
 
 
 ------------------------------------------------------------------------------
+newtype RNG = RNG (MVar GenIO)
+
+------------------------------------------------------------------------------
+withRNG :: RNG
+        -> (GenIO -> IO a)
+        -> IO a
+withRNG (RNG rng) m = withMVar rng m
+
+
+------------------------------------------------------------------------------
+mkRNG :: IO RNG
+mkRNG = withSystemRandom (newMVar >=> return . RNG)
+
+
+------------------------------------------------------------------------------
 -- | Generates a random salt of given length
-randomToken :: Int -> IO ByteString
-randomToken n =
-  let
-    mk :: GenIO -> IO Int
-    mk gen = uniformR (0,15) gen
-  in do
-    is <- withSystemRandom $ \gen -> sequence . take n . repeat $ mk gen
+--
+randomToken :: Int -> RNG -> IO ByteString
+randomToken n rng = do
+    is <- withRNG rng $ \gen -> sequence . take n . repeat $ mk gen
     return . B.pack . concat . map (flip showHex "") $ is
+  where
+    mk :: GenIO -> IO Int
+    mk = uniformR (0,15)
 
 
 ------------------------------------------------------------------------------
 -- | Generate a randomized CSRF token
-mkCSRFToken :: IO Text
-mkCSRFToken = T.decodeUtf8 `fmap` randomToken 40
+--
+mkCSRFToken :: RNG -> IO Text
+mkCSRFToken rng = T.decodeUtf8 <$> randomToken 40 rng
 
 
+------------------------------------------------------------------------------
 instance Serialize Text where
-  put = S.put . T.encodeUtf8
-  get = T.decodeUtf8 `fmap` S.get
+    put = S.put . T.encodeUtf8
+    get = T.decodeUtf8 <$> S.get
 

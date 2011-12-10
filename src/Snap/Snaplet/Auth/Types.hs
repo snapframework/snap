@@ -139,7 +139,7 @@ defAuthUser = AuthUser
 -- clear-text; it will be encrypted into a 'Encrypted'.
 setPassword :: AuthUser -> ByteString -> IO AuthUser
 setPassword au pass = do
-    pw <- Encrypted `fmap` (makePassword pass defaultStrength)
+    pw <- Encrypted <$> makePassword pass defaultStrength
     return $! au { userPassword = Just pw }
 
 

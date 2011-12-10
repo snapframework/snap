@@ -93,7 +93,9 @@ loginByUsername unm pwd shouldRemember = do
         ----------------------------------------------------------------------
         matched user
             | shouldRemember = do
-                  token <- liftIO $ randomToken 64
+                  token <- gets randomNumberGenerator >>=
+                           liftIO . randomToken 64
+
                   setRememberToken sk cn rp token
 
                   let user' = user {
@@ -151,7 +153,7 @@ currentUser = cacheOrLookup $ withBackend $ \r -> do
 -- | Convenience wrapper around 'rememberUser' that returns a bool result
 --
 isLoggedIn :: Handler b (AuthManager b) Bool
-isLoggedIn = isJust `fmap` currentUser
+isLoggedIn = isJust <$> currentUser
 
 
 ------------------------------------------------------------------------------
@@ -223,7 +225,7 @@ markAuthSuccess u = withBackend $ \r ->
 
     --------------------------------------------------------------------------
     updateIp u' = do
-        ip <- rqRemoteAddr `fmap` getRequest
+        ip <- rqRemoteAddr <$> getRequest
         return $ u' { userLastLoginIp = userCurrentLoginIp u'
                     , userCurrentLoginIp = Just ip }
 
@@ -394,7 +396,7 @@ registerUser
   -> ByteString            -- ^ Password field
   -> Handler b (AuthManager b) AuthUser
 registerUser lf pf = do
-    l <- fmap decodeUtf8 `fmap` getParam lf
+    l <- fmap decodeUtf8 <$> getParam lf
     p <- getParam pf
     case liftM2 (,) l p of
       Nothing         -> throw PasswordMissing
@@ -478,5 +480,5 @@ withBackend ::
       -- ^ The function to run with the handler.
   -> Handler b (AuthManager v) a
 withBackend f = join $ do
-  (AuthManager backend_ _ _ _ _ _ _ _) <- get
+  (AuthManager backend_ _ _ _ _ _ _ _ _) <- get
   return $ f backend_
