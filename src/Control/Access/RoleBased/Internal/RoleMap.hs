@@ -1,16 +1,18 @@
 module Control.Access.RoleBased.Internal.RoleMap where
 
+------------------------------------------------------------------------------
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as M
 import           Data.HashSet (HashSet)
 import qualified Data.HashSet as S
 import           Data.List (find, foldl')
 import           Data.Text (Text)
-
+------------------------------------------------------------------------------
 import           Control.Access.RoleBased.Role
 import           Control.Access.RoleBased.Internal.Types
 
 
+------------------------------------------------------------------------------
 newtype RoleMap = RoleMap (HashMap Text (HashSet Role))
 
 

@@ -9,10 +9,11 @@ module Control.Access.RoleBased.Internal.Types
   , RuleChecker(..)
   ) where
 
+------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Monad.Reader
 import           Control.Monad.Logic
-
+------------------------------------------------------------------------------
 import           Control.Access.RoleBased.Internal.Role
 import           Control.Access.RoleBased.Internal.Rule
 

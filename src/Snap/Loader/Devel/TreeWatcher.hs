@@ -1,14 +1,13 @@
 module Snap.Loader.Devel.TreeWatcher
-    ( TreeStatus
-    , getTreeStatus
-    , checkTreeStatus
-    ) where
+  ( TreeStatus
+  , getTreeStatus
+  , checkTreeStatus
+  ) where
 
+------------------------------------------------------------------------------
 import Control.Applicative
-
 import System.Directory
 import System.Directory.Tree
-
 import System.Time
 
 

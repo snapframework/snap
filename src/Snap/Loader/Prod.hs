@@ -1,8 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 module Snap.Loader.Prod
   ( loadSnapTH
   ) where
 
+------------------------------------------------------------------------------
 import           Language.Haskell.TH
 
 

@@ -1,18 +1,24 @@
 module Control.Access.RoleBased.Internal.Rule where
 
+------------------------------------------------------------------------------
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as M
 import           Data.List (foldl')
 import           Data.Monoid
 import           Data.Text (Text)
-
+------------------------------------------------------------------------------
 import           Control.Access.RoleBased.Internal.Role
+
 
 ------------------------------------------------------------------------------
 data Rule = Rule Text (Role -> [Role])
 
+
+------------------------------------------------------------------------------
 newtype RuleSet = RuleSet (HashMap Text (Role -> [Role]))
 
+
+------------------------------------------------------------------------------
 instance Monoid RuleSet where
     mempty = RuleSet M.empty
     (RuleSet m1) `mappend` (RuleSet m2) = RuleSet $ M.foldlWithKey' ins m2 m1

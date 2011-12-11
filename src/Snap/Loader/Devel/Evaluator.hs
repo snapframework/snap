@@ -5,16 +5,13 @@ module Snap.Loader.Devel.Evaluator
   , protectedHintEvaluator
   ) where
 
-
+------------------------------------------------------------------------------
 import Control.Exception
 import Control.Monad (when)
 import Control.Monad.Trans (liftIO)
-
 import Control.Concurrent (ThreadId, forkIO, myThreadId)
 import Control.Concurrent.MVar
-
 import Prelude hiding (catch, init, any)
-
 import Snap.Core (Snap)
 
 
@@ -24,43 +21,41 @@ type HintLoadable = IO (Snap (), IO ())
 
 
 ------------------------------------------------------------------------------
--- | Convert an action to generate 'HintLoadable's into Snap and IO
--- actions that handle periodic reloading.  The resulting action will
--- share initialized state until the next execution of the input
--- action.  At this time, the cleanup action will be executed.
+-- | Convert an action to generate 'HintLoadable's into Snap and IO actions
+-- that handle periodic reloading. The resulting action will share initialized
+-- state until the next execution of the input action. At this time, the
+-- cleanup action will be executed.
 --
--- The first two arguments control when recompiles are done.  The
--- first argument is an action that is executed when compilation
--- starts.  The second is a function from the result of the first
--- action to an action that determines whether the value from the
--- previous compilation is still good.  This abstracts out the
--- strategy for determining when a cached result is no longer valid.
+-- The first two arguments control when recompiles are done. The first argument
+-- is an action that is executed when compilation starts. The second is a
+-- function from the result of the first action to an action that determines
+-- whether the value from the previous compilation is still good. This
+-- abstracts out the strategy for determining when a cached result is no longer
+-- valid.
 --
--- If an exception is raised during the processing of the action, it
--- will be thrown to all waiting threads, and for all requests made
--- before the recompile condition is reached.
+-- If an exception is raised during the processing of the action, it will be
+-- thrown to all waiting threads, and for all requests made before the
+-- recompile condition is reached.
 protectedHintEvaluator :: forall a.
                           IO a
                        -> (a -> IO Bool)
                        -> IO HintLoadable
                        -> IO (Snap (), IO ())
 protectedHintEvaluator start test getInternals = do
-    -- The list of requesters waiting for a result.  Contains the
-    -- ThreadId in case of exceptions, and an empty MVar awaiting a
-    -- successful result.
+    -- The list of requesters waiting for a result. Contains the ThreadId in
+    -- case of exceptions, and an empty MVar awaiting a successful result.
     readerContainer <- newReaderContainer
 
-    -- Contains the previous result and initialization value, and the
-    -- time it was stored, if a previous result has been computed.
-    -- The result stored is either the actual result and
-    -- initialization result, or the exception thrown by the
-    -- calculation.
+    -- Contains the previous result and initialization value, and the time it
+    -- was stored, if a previous result has been computed. The result stored is
+    -- either the actual result and initialization result, or the exception
+    -- thrown by the calculation.
     resultContainer <- newResultContainer
 
-    -- The model used for the above MVars in the returned action is
-    -- "keep them full, unless updating them."  In every case, when
-    -- one of those MVars is emptied, the next action is to fill that
-    -- same MVar.  This makes deadlocking on MVar wait impossible.
+    -- The model used for the above MVars in the returned action is "keep them
+    -- full, unless updating them." In every case, when one of those MVars is
+    -- emptied, the next action is to fill that same MVar. This makes
+    -- deadlocking on MVar wait impossible.
     let snap = do
             let waitForNewResult :: IO (Snap ())
                 waitForNewResult = do
@@ -132,6 +127,7 @@ protectedHintEvaluator start test getInternals = do
              cleanup contents
 
     return (snap, clean)
+
   where
     newReaderContainer :: IO (MVar [(ThreadId, MVar (Snap ()))])
     newReaderContainer = newMVar []

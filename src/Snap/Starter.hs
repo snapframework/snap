@@ -13,8 +13,7 @@ import           System.Exit
 import           System.Console.GetOpt
 import           System.FilePath
 ------------------------------------------------------------------------------
-
-import Snap.StarterTH
+import           Snap.StarterTH
 
 
 ------------------------------------------------------------------------------
@@ -22,6 +21,7 @@ import Snap.StarterTH
 buildData "tDirBareBones" "barebones"
 buildData "tDirDefault" "default"
 buildData "tDirTutorial" "tutorial"
+
 
 ------------------------------------------------------------------------------
 usage :: String
@@ -59,9 +59,11 @@ initUsage = unlines
     ]
 
 
+------------------------------------------------------------------------------
 printUsage :: [String] -> IO ()
 printUsage ("init":_) = putStrLn initUsage
 printUsage _ = putStrLn usage
+
 
 ------------------------------------------------------------------------------
 -- Only one option for now
@@ -69,49 +71,60 @@ data Option = Help
   deriving (Show, Eq)
 
 
+------------------------------------------------------------------------------
 setup :: String -> ([FilePath], [(String, String)]) -> IO ()
 setup projName tDir = do
     mapM createDirectory (fst tDir)
     mapM_ write (snd tDir)
   where
+    --------------------------------------------------------------------------
     write (f,c) =
         if isSuffixOf "foo.cabal" f
           then writeFile (projName ++ ".cabal") (insertProjName $ T.pack c)
           else writeFile f c
+
+    --------------------------------------------------------------------------
     isNameChar c = isAlphaNum c || c == '-'
+
+    --------------------------------------------------------------------------
     insertProjName c = T.unpack $ T.replace
                            (T.pack "projname")
                            (T.pack $ filter isNameChar projName) c
+
 
 ------------------------------------------------------------------------------
 initProject :: [String] -> IO ()
 initProject args = do
     case getOpt Permute options args of
       (flags, other, [])
-        | Help `elem` flags -> do printUsage other
-                                  exitFailure
-        | otherwise         -> go other
+          | Help `elem` flags -> printUsage other >> exitFailure
+          | otherwise         -> go other
+
       (_, other, errs) -> do putStrLn $ concat errs
                              printUsage other
                              exitFailure
 
   where
+    --------------------------------------------------------------------------
     options =
         [ Option ['h'] ["help"]       (NoArg Help)
                  "Print this message"
         ]
 
+    --------------------------------------------------------------------------
     go ("init":rest) = init' rest
     go _ = do
         putStrLn "Error: Invalid action!"
         putStrLn usage
         exitFailure
 
+    --------------------------------------------------------------------------
     init' args' = do
         cur <- getCurrentDirectory
-        let dirs = splitDirectories cur
+        let dirs     = splitDirectories cur
             projName = last dirs
-            setup' = setup projName
+            setup'   = setup projName
+
         case args' of
           []            -> setup' tDirDefault
           ["barebones"] -> setup' tDirBareBones

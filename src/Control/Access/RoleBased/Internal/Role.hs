@@ -1,5 +1,6 @@
 module Control.Access.RoleBased.Internal.Role where
 
+------------------------------------------------------------------------------
 import           Control.Monad.ST
 import           Data.Hashable
 import           Data.HashMap.Strict (HashMap)
@@ -18,10 +19,12 @@ data RoleValue = RoleBool Bool
   deriving (Ord, Eq, Show)
 
 
+------------------------------------------------------------------------------
 instance IsString RoleValue where
     fromString = RoleText . fromString
 
 
+------------------------------------------------------------------------------
 instance Hashable RoleValue where
     hashWithSalt salt (RoleBool e)   = hashWithSalt salt e `combine` 7
     hashWithSalt salt (RoleText t)   = hashWithSalt salt t `combine` 196613
@@ -38,6 +41,7 @@ data Role = Role {
   deriving (Eq, Show)
 
 
+------------------------------------------------------------------------------
 instance IsString Role where
     fromString s = Role (fromString s) M.empty
 
@@ -51,7 +55,7 @@ toSortedList m = runST $ do
     return $ V.toList v'
 
 
-
+------------------------------------------------------------------------------
 instance Hashable Role where
     hashWithSalt salt (Role nm dat) =
         h $ hashWithSalt salt nm
@@ -67,6 +71,7 @@ data RoleValueMeta = RoleBoolMeta
                    | RoleDoubleMeta
 
 
+------------------------------------------------------------------------------
 data RoleDataDefinition = RoleDataDefinition {
       _roleDataName        :: Text
     , _roleValueMeta       :: RoleValueMeta
@@ -74,6 +79,7 @@ data RoleDataDefinition = RoleDataDefinition {
     }
 
 
+------------------------------------------------------------------------------
 data RoleMetadata = RoleMetadata {
       _roleMetadataName :: Text
     , _roleDescription  :: Text
