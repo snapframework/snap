@@ -224,7 +224,7 @@ heistInit :: FilePath                 -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
-        hs <- heistInitWorker templateDir mempty
+        hs <- heistInitWorker templateDir defaultHeistState
         addRoutes [ ("", heistServe) ]
         return hs
 
