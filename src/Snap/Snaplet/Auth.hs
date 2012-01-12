@@ -49,6 +49,7 @@ module Snap.Snaplet.Auth
   -- * Other Utilities
   , withBackend
   , encryptPassword
+  , encrypt
   , checkPassword
   , authenticatePassword
   , setPassword
