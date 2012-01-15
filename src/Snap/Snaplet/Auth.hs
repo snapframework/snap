@@ -65,6 +65,7 @@ module Snap.Snaplet.Auth
   , addAuthSplices
   , ifLoggedIn
   , ifLoggedOut
+  , loggedInUser
   )
   where
 
