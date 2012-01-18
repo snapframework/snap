@@ -59,6 +59,7 @@ Library
     Snap.Snaplet.Auth,
     Snap.Snaplet.Auth.Backends.JsonFile,
     Snap.Snaplet.Session,
+    Snap.Snaplet.Session.Common,
     Snap.Snaplet.Session.Backends.CookieSession
 
   other-modules:
@@ -79,7 +80,6 @@ Library
     Snap.Snaplet.Internal.Lensed,
     Snap.Snaplet.Internal.RST,
     Snap.Snaplet.Internal.Types
-    Snap.Snaplet.Session.Common,
     Snap.Snaplet.Session.SecureCookie,
     Snap.Snaplet.Session.SessionManager
 
