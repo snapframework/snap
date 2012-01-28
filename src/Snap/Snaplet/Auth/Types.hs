@@ -34,19 +34,34 @@ defaultStrength :: Int
 defaultStrength = 12
 
 
+-------------------------------------------------------------------------------
+-- | The underlying encryption function, in case you need it for
+-- external processing.
+encrypt :: ByteString -> IO ByteString
+encrypt = flip makePassword defaultStrength
+
+
+-------------------------------------------------------------------------------
+-- | The underlying verify function, in case you need it for external
+-- processing.
+verify 
+    :: ByteString               -- ^ Cleartext
+    -> ByteString               -- ^ Encrypted reference
+    -> Bool
+verify = verifyPassword 
+
+
 ------------------------------------------------------------------------------
--- Turn a 'ClearText' password into an 'Encrypted' password, ready to be
--- stuffed into a database.
+-- | Turn a 'ClearText' password into an 'Encrypted' password, ready to
+-- be stuffed into a database.
 encryptPassword :: Password -> IO Password
 encryptPassword p@(Encrypted {}) = return p
-encryptPassword (ClearText p)    = do
-  hashed <- makePassword p defaultStrength
-  return $ Encrypted hashed
+encryptPassword (ClearText p)    = Encrypted `fmap` encrypt p 
 
 
 ------------------------------------------------------------------------------
 checkPassword :: Password -> Password -> Bool
-checkPassword (ClearText pw) (Encrypted pw') = verifyPassword pw pw'
+checkPassword (ClearText pw) (Encrypted pw') = verify pw pw'
 checkPassword (ClearText pw) (ClearText pw') = pw == pw'
 checkPassword (Encrypted pw) (Encrypted pw') = pw == pw'
 checkPassword _ _ =

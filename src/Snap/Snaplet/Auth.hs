@@ -52,6 +52,8 @@ module Snap.Snaplet.Auth
   , checkPassword
   , authenticatePassword
   , setPassword
+  , encrypt
+  , verify
 
   -- * Handlers
   , registerUser
@@ -63,6 +65,7 @@ module Snap.Snaplet.Auth
   , addAuthSplices
   , ifLoggedIn
   , ifLoggedOut
+  , loggedInUser
   )
   where
 

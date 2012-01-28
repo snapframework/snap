@@ -15,6 +15,7 @@ module Snap.Snaplet.Auth.SpliceHelpers
     addAuthSplices
   , ifLoggedIn
   , ifLoggedOut
+  , loggedInUser
   ) where
 
 import           Data.Lens.Lazy
@@ -24,6 +25,7 @@ import           Text.Templating.Heist
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Auth.Handlers
+import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Heist
 
 
@@ -41,6 +43,7 @@ addAuthSplices
 addAuthSplices auth = addSplices
   [ ("ifLoggedIn", ifLoggedIn auth)
   , ("ifLoggedOut", ifLoggedOut auth)
+  , ("loggedInUser", loggedInUser auth)
   ]
 
 
@@ -49,9 +52,7 @@ addAuthSplices auth = addSplices
 -- present, this will run the contents of the node.
 --
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
-ifLoggedIn
-  :: Lens b (Snaplet (AuthManager b))
-  -> SnapletSplice b v
+ifLoggedIn :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
 ifLoggedIn auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
@@ -64,12 +65,18 @@ ifLoggedIn auth = do
 -- not present, this will run the contents of the node.
 --
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
-ifLoggedOut
-  :: Lens b (Snaplet (AuthManager b))
-  -> SnapletSplice b v
+ifLoggedOut :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
 ifLoggedOut auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
     False -> liftHeist $ getParamNode >>= return . X.childNodes
     True -> return []
 
+
+-------------------------------------------------------------------------------
+-- | A splice that will simply print the current user's login, if
+-- there is one.
+loggedInUser :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
+loggedInUser auth = do
+  u <- liftHandler $ withTop auth currentUser
+  liftHeist $ maybe (return []) (textSplice . userLogin) u 

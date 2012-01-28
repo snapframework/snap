@@ -8,7 +8,7 @@ Executable snap-testsuite
   main-is:         TestSuite.hs
 
   build-depends:
-    Glob                       >= 0.5 && < 0.7,
+    Glob                       >= 0.5 && < 0.8,
     HUnit                      >= 1.2 && < 2,
     MonadCatchIO-transformers  >= 0.2 && < 0.3,
     QuickCheck                 >= 2.3.0.2,
