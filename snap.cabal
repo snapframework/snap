@@ -101,7 +101,7 @@ Library
   build-depends:
     Crypto                    >= 4.2      && < 4.3,
     MonadCatchIO-transformers >= 0.2      && < 0.3,
-    aeson                     >= 0.4      && < 0.6,
+    aeson                     >= 0.4      && < 0.7,
     attoparsec                >= 0.10     && < 0.11,
     base                      >= 4        && < 5,
     bytestring                >= 0.9.1    && < 0.10,
@@ -118,7 +118,7 @@ Library
     heist                     >= 0.7      && < 0.9,
     logict                    >= 0.4.2    && < 0.6,
     mtl                       >  2.0      && < 2.1,
-    mwc-random                >= 0.8      && < 0.11,
+    mwc-random                >= 0.8      && < 0.12,
     old-time                  >= 1.0      && < 1.2,
     pwstore-fast              >= 2.2      && < 2.3,
     safe                      >= 0.3      && < 0.4,
