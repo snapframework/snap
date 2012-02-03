@@ -14,7 +14,6 @@ module Snap.Snaplet.Session.Common
 import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
-import           Control.Monad.Trans
 import           Data.Serialize
 import qualified Data.Serialize as S
 import           Data.ByteString (ByteString)
