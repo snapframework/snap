@@ -486,6 +486,7 @@ serveSnaplet startConfig initializer = do
 
     config       <- commandLineConfig startConfig
     (conf, site) <- combineConfig config handler
+    createDirectoryIfMissing False "log"
     let serve = simpleHttpServe conf
 
     liftIO $ hPutStrLn stderr $ T.unpack msgs
