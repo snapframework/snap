@@ -103,6 +103,6 @@ reloadTest = testCase "reload test" $ do
     requestTest' "admin/reload" "Error reloading site!\n\ntemplates/bad.tpl \"templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n"
     remove badTplNew
     copyFile goodTplOrig goodTplNew
-    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\n...loaded 5 templates\nInitializing foosnaplet @ /foo\n...adding 1 templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\n...adding 2 templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /embed\nInitializing heist @ /embed/heist\n...loaded 5 templates\n...adding 1 templates from snaplets/embedded/templates with route prefix embedded/\nSite successfully reloaded.\n"
+    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\n...loaded 5 templates\nInitializing foosnaplet @ /foo\n...adding 1 templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\n...adding 2 templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /embed\nInitializing heist @ /embed/heist\n...loaded 5 templates\n...adding 1 templates from snaplets/embedded/templates with route prefix embed/embedded/\nSite successfully reloaded.\n"
     requestTest' "good" "Good template\n"
 

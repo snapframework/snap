@@ -26,7 +26,7 @@ Executable projname
     heist >= 0.7 && < 0.8,
     MonadCatchIO-transformers >= 0.2.1 && < 0.3,
     mtl >= 2 && < 3,
-    snap == 0.7.*,
+    snap == 0.8.*,
     snap-core   == 0.8.*,
     snap-server == 0.8.*,
     text >= 0.11 && < 0.12,
