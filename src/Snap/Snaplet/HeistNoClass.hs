@@ -283,16 +283,18 @@ addTemplatesAt :: ByteString
 addTemplatesAt urlPrefix templateDir = do
     ts <- liftIO $ loadTemplates templateDir mempty
                    >>= either error return
+    rootUrl <- getSnapletRootURL
+    let fullPrefix = U.toString rootUrl </> U.toString urlPrefix
     printInfo $ T.pack $ unwords
         [ "...adding"
         , (show $ length $ templateNames ts)
         , "templates from"
         , templateDir
         , "with route prefix"
-        , (U.toString urlPrefix) ++ "/"
+        , fullPrefix ++ "/"
         ]
     addPostInitHook $ return . changeTS
-        (`mappend` addTemplatePathPrefix urlPrefix ts)
+        (`mappend` addTemplatePathPrefix (U.fromString fullPrefix) ts)
 
 
 ------------------------------------------------------------------------------

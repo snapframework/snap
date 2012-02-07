@@ -21,7 +21,7 @@ fooInit :: HasHeist b => SnapletInit b FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     (Just $ return "../foosnaplet") $ do
     config <- getSnapletUserConfig
-    addTemplates "foo"
+    addTemplates ""
     addSplices
         [("foosplice", liftHeist $ textSplice "contents of the foo splice")]
     rootUrl <- getSnapletRootURL
