@@ -146,11 +146,15 @@ setupFilesystem (Just getSnapletDataDir) targetDir = do
         printInfo "...setting up filesystem"
         liftIO $ createDirectoryIfMissing True targetDir
         srcDir <- liftIO getSnapletDataDir
-        (_ :/ dTree) <- liftIO $ readDirectoryWith B.readFile srcDir
-        let (topDir,snapletId) = splitFileName targetDir
-        _ <- liftIO $ writeDirectoryWith B.writeFile
-               (topDir :/ dTree { name = snapletId })
+        liftIO $ readDirectoryWith (doCopy srcDir targetDir) srcDir
         return ()
+  where
+    doCopy srcRoot targetRoot file = do
+        createDirectoryIfMissing True dir
+        copyFile file to
+      where
+        to = targetRoot </> makeRelative srcRoot file
+        dir = dropFileName to
 
 
 ------------------------------------------------------------------------------
