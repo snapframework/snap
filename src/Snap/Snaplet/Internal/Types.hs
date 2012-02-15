@@ -295,6 +295,30 @@ reloadSite = failIfNotLocal $ do
 
 
 ------------------------------------------------------------------------------
+-- | This function brackets a Handler action in resource acquisition and
+-- release.  Like 'bracketSnap',  this is provided because MonadCatchIO's
+-- 'bracket' function doesn't work properly in the case of a short-circuit
+-- return from the action being bracketed.
+--
+-- In order to prevent confusion regarding the effects of the
+-- aquisition and release actions on the Handler state, this function
+-- doesn't accept Handler actions for the acquire or release actions.
+--
+-- This function will run the release action in all cases where the
+-- acquire action succeeded.  This includes the following behaviors
+-- from the bracketed Snap action.
+--
+-- 1. Normal completion
+--
+-- 2. Short-circuit completion, either from calling 'fail' or 'finishWith'
+--
+-- 3. An exception being thrown.
+bracketHandler :: IO a -> (a -> IO x) -> (a -> Handler b v c) -> Handler b v c
+bracketHandler begin end f = Handler . L.Lensed $ \l v b -> do
+    bracketSnap begin end $ \a -> case f a of Handler m -> L.unlensed m l v b
+
+
+------------------------------------------------------------------------------
 -- | Information about a partially constructed initializer.  Used to
 -- automatically aggregate handlers and cleanup actions.
 data InitializerState b = InitializerState

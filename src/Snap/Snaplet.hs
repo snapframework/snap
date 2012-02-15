@@ -100,6 +100,7 @@ module Snap.Snaplet
   -- * Handlers
   , Handler
   , reloadSite
+  , bracketHandler
 
   -- * Serving Applications
   , runSnaplet
