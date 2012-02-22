@@ -227,6 +227,7 @@ instance ToJSON AuthUser where
     , "last_ip"            .= userLastLoginIp       u
     , "created_at"         .= userCreatedAt         u
     , "updated_at"         .= userUpdatedAt         u
+    , "roles"              .= userRoles             u
     , "meta"               .= userMeta              u
     ]
 
@@ -249,7 +250,7 @@ instance FromJSON AuthUser where
     <*> v .: "last_ip"
     <*> v .: "created_at"
     <*> v .: "updated_at"
-    <*> return []
+    <*> v .:? "roles" .!= []
     <*> v .: "meta"
   parseJSON _ = error "Unexpected JSON input"
 
@@ -264,3 +265,13 @@ instance ToJSON Password where
 ------------------------------------------------------------------------------
 instance FromJSON Password where
   parseJSON = fmap Encrypted . parseJSON
+
+
+------------------------------------------------------------------------------
+instance ToJSON Role where
+  toJSON (Role x) = toJSON x
+
+
+------------------------------------------------------------------------------
+instance FromJSON Role where
+  parseJSON = fmap Role . parseJSON
