@@ -250,7 +250,7 @@ instance FromJSON AuthUser where
     <*> v .: "last_ip"
     <*> v .: "created_at"
     <*> v .: "updated_at"
-    <*> v .: "roles"
+    <*> v .:? "roles" .!= []
     <*> v .: "meta"
   parseJSON _ = error "Unexpected JSON input"
 
