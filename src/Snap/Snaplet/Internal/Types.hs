@@ -43,7 +43,7 @@ data SnapletConfig = SnapletConfig
     , _scRoutePattern    :: Maybe ByteString
     -- ^ Holds the actual route pattern passed to addRoutes for the current
     -- handler.  Nothing during initialization and before route dispatech.
-    , _reloader          :: IO (Either String String) -- might change
+    , _reloader          :: IO (Either Text Text) -- might change
     }
 
 
@@ -281,9 +281,9 @@ reloadSite = failIfNotLocal $ do
   where
     bad msg = do
         writeText $ "Error reloading site!\n\n"
-        writeText $ T.pack msg
+        writeText msg
     good msg = do
-        writeText $ T.pack msg
+        writeText msg
         writeText $ "Site successfully reloaded.\n"
     failIfNotLocal m = do
         rip <- liftM rqRemoteAddr getRequest
@@ -323,7 +323,7 @@ bracketHandler begin end f = Handler . L.Lensed $ \l v b -> do
 -- automatically aggregate handlers and cleanup actions.
 data InitializerState b = InitializerState
     { _isTopLevel      :: Bool
-    , _cleanup         :: IO ()
+    , _cleanup         :: IORef (IO ())
     , _handlers        :: [(ByteString, Handler b b ())]
     -- ^ Handler routes built up and passed to route.
     , _hFilter         :: Handler b b () -> Handler b b ()
