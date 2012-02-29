@@ -56,7 +56,10 @@ buildAuthUser r unm pass = do
 --
 -- Backend operations may throw 'BackendError's
 class IAuthBackend r where
-  -- | Needs to create or update the given 'AuthUser' record
+  -- | Create or update the given 'AuthUser' record.  If the 'userId' in the
+  -- 'AuthUser' already exists in the database, then that user's information
+  -- should be updated.  If it does not exist, then a new user should be
+  -- created.
   save                  :: r -> AuthUser -> IO AuthUser
   lookupByUserId        :: r -> UserId   -> IO (Maybe AuthUser)
   lookupByLogin         :: r -> Text     -> IO (Maybe AuthUser)
