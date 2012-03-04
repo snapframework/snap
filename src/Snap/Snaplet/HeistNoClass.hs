@@ -266,8 +266,11 @@ heistInitWorker templateDir initialHeistState = do
 
 
 ------------------------------------------------------------------------------
+-- | Adds templates to the Heist HeistState.  Other snaplets should use
+-- this function to add their own templates.  The templates are automatically
+-- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: ByteString
-             -- ^ Path to templates (also the url prefix for their routes)
+             -- ^ The url prefix for the template routes
              -> Initializer b (Heist b) ()
 addTemplates urlPrefix = do
     snapletPath <- getSnapletFilePath
@@ -275,6 +278,12 @@ addTemplates urlPrefix = do
 
 
 ------------------------------------------------------------------------------
+-- | Adds templates to the Heist HeistState, and lets you specify where
+-- they are found in the filesystem.  Note that the path to the template
+-- directory is an absolute path.  This allows you more flexibility in where
+-- your templates are located, but means that you have to explicitly call
+-- getSnapletFilePath if you want your snaplet to use templates within its
+-- normal directory structure.
 addTemplatesAt :: ByteString
                -- ^ URL prefix for template routes
                -> FilePath

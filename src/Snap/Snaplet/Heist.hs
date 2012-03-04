@@ -90,14 +90,18 @@ class HasHeist b where
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: HasHeist b
              => ByteString
-             -- ^ Path to templates (also the url prefix for their routes)
+             -- ^ The url prefix for the template routes
              -> Initializer b v ()
 addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 
 
 ------------------------------------------------------------------------------
 -- | Adds templates to the Heist HeistState, and lets you specify where
--- they are found in the filesystem.
+-- they are found in the filesystem.  Note that the path to the template
+-- directory is an absolute path.  This allows you more flexibility in where
+-- your templates are located, but means that you have to explicitly call
+-- getSnapletFilePath if you want your snaplet to use templates within its
+-- normal directory structure.
 addTemplatesAt :: HasHeist b
                => ByteString
                -- ^ URL prefix for template routes
