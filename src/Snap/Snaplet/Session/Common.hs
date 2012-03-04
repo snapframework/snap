@@ -26,9 +26,11 @@ import           System.Random.MWC
 
 
 ------------------------------------------------------------------------------
+-- | High speed, mutable random number generator state
 newtype RNG = RNG (MVar GenIO)
 
 ------------------------------------------------------------------------------
+-- | Perform given action, mutating the RNG state
 withRNG :: RNG
         -> (GenIO -> IO a)
         -> IO a
@@ -36,13 +38,13 @@ withRNG (RNG rng) m = withMVar rng m
 
 
 ------------------------------------------------------------------------------
+-- | Create a new RNG
 mkRNG :: IO RNG
 mkRNG = withSystemRandom (newMVar >=> return . RNG)
 
 
 ------------------------------------------------------------------------------
 -- | Generates a random salt of given length
---
 randomToken :: Int -> RNG -> IO ByteString
 randomToken n rng = do
     is <- withRNG rng $ \gen -> sequence . take n . repeat $ mk gen
@@ -54,7 +56,6 @@ randomToken n rng = do
 
 ------------------------------------------------------------------------------
 -- | Generate a randomized CSRF token
---
 mkCSRFToken :: RNG -> IO Text
 mkCSRFToken rng = T.decodeUtf8 <$> randomToken 40 rng
 
