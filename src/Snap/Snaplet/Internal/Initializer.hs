@@ -290,7 +290,7 @@ embedSnaplet :: ByteString
              -> Initializer b v (Snaplet v1)
 embedSnaplet rte l (SnapletInit snaplet) = bracketInit $ do
     curLens <- getLens
-    setupSnapletCall rte
+    setupSnapletCall ""
     chroot rte (subSnaplet l . curLens) snaplet
 
 
