@@ -72,7 +72,9 @@ extra-source-files:
   test/non-cabal-appdir/snaplets/heist/templates/page.tpl,
   test/non-cabal-appdir/good.tpl,
   test/non-cabal-appdir/log/placeholder,
-  test/non-cabal-appdir/snaplet.cfg
+  test/non-cabal-appdir/snaplet.cfg,
+  test/foosnaplet/templates/foopage.tpl,
+  test/foosnaplet/snaplet.cfg
 
 Flag hint
   Description: Support dynamic project reloading via hint
