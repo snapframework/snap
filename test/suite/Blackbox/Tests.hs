@@ -27,10 +27,12 @@ requestTest url desired = testCase ("/"++url) $ requestTest' url desired
 
 
 ------------------------------------------------------------------------------
-expect404 :: IO a -> IO ()
-expect404 m = action `catch` h
+expect404 :: String -> IO ()
+expect404 url = action `catch` h
   where
-    action = m >> assertFailure "expected 404"
+    action = do
+        HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
+        assertFailure "expected 404"
 
     h e@(HTTP.StatusCodeException c _) | c == 404  = return ()
                                        | otherwise = throwIO e
@@ -39,10 +41,7 @@ expect404 m = action `catch` h
 
 ------------------------------------------------------------------------------
 request404Test :: String -> Test
-request404Test url = testCase ("/" ++ url) $
-                     expect404             $
-                     HTTP.simpleHttp       $
-                     "http://127.0.0.1:9753/" ++ url
+request404Test url = testCase ("/" ++ url) $ expect404 url
 
 
 ------------------------------------------------------------------------------
@@ -123,7 +122,6 @@ removeDir d = do
 
 
 ------------------------------------------------------------------------------
--- | 
 reloadTest :: Test
 reloadTest = testCase "reload test" $ do
     let goodTplOrig = "non-cabal-appdir" </> "good.tpl"
@@ -136,10 +134,10 @@ reloadTest = testCase "reload test" $ do
     badExists <- doesFileExist badTplNew
     assertBool "good.tpl exists" (not goodExists)
     assertBool "bad.tpl exists" (not badExists)
-    requestNoError' "bad" "404"
+    expect404 "bad"
     copyFile badTplOrig badTplNew
-    requestNoError' "good" "404"
-    requestNoError' "bad" "404"
+    expect404 "good"
+    expect404 "bad"
     requestTest' "admin/reload" "Error reloading site!\n\nInitializer threw an exception...\nsnaplets/heist/templates/bad.tpl \"snaplets/heist/templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n\n\n...but before it died it generated the following output:\nInitializing app @ /\nInitializing heist @ /heist\n\n"
     remove badTplNew
     copyFile goodTplOrig goodTplNew
