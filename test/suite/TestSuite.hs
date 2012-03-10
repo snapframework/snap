@@ -32,8 +32,8 @@ import SafeCWD
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
-    Blackbox.Tests.remove "non-cabal-appdir/templates/bad.tpl"
-    Blackbox.Tests.remove "non-cabal-appdir/templates/good.tpl"
+    Blackbox.Tests.remove "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
+    Blackbox.Tests.remove "non-cabal-appdir/snaplets/heist/templates/good.tpl"
     Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
     inDir False "non-cabal-appdir" startServer

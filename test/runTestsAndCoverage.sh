@@ -20,10 +20,6 @@ EOF
     exit;
 fi
 
-rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
-rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl
-rm -fr non-cabal-appdir/snaplets/foosnaplet
-
 $SUITE $*
 
 killall -HUP snap-testsuite
