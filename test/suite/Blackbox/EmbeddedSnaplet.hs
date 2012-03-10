@@ -40,13 +40,12 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
     -- This is the implementation of addTemplates, but we do it here manually
     -- to test coverage for addTemplatesAt.
     snapletPath <- getSnapletFilePath
-    addTemplatesAt "embedded" (snapletPath </> "templates")
+    addTemplatesAt "onemoredir" (snapletPath </> "extra-templates")
 
     embeddedLens <- getLens
     addRoutes [("aoeuhtns", withSplices
                     [("asplice", embeddedSplice embeddedLens)]
-                    (render "embedded/embeddedpage"))
-              ,("", heistServe)
+                    (render "embeddedpage"))
               ]
     return $ EmbeddedSnaplet hs 42
 

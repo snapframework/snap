@@ -57,6 +57,11 @@ tests = testGroup "non-cabal-tests"
     , requestTest "foo/fooSnapletName" "foosnaplet"
     , requestTest "foo/fooFilePath" "snaplets/foosnaplet"
 
+    -- Test the embedded snaplet
+    , requestTest "embed/heist/embeddedpage" "embedded snaplet page <asplice></asplice>\n"
+    , requestTest "embed/aoeuhtns" "embedded snaplet page splice value42\n"
+    , requestTest "embed/heist/onemoredir/extra" "This is an extra template\n"
+
     -- This set of tests highlights the differences in the behavior of the
     -- get... functions from MonadSnaplet. 
     , requestTest "foo/handlerConfig" "([\"app\"],\"snaplets/foosnaplet\",Just \"foosnaplet\",\"A demonstration snaplet called foo.\",\"foo\")"
@@ -86,12 +91,16 @@ removeDir d = do
     when exists $ removeDirectoryRecursive "non-cabal-appdir/snaplets/foosnaplet"
 
 
+------------------------------------------------------------------------------
+-- | 
 reloadTest :: Test
 reloadTest = testCase "reload test" $ do
     let goodTplOrig = "non-cabal-appdir" </> "good.tpl"
     let badTplOrig = "non-cabal-appdir" </> "bad.tpl"
-    let goodTplNew = "non-cabal-appdir" </> "templates" </> "good.tpl"
-    let badTplNew = "non-cabal-appdir" </> "templates" </> "bad.tpl"
+    let goodTplNew = "non-cabal-appdir" </> "snaplets" </> "heist"
+                                        </> "templates" </> "good.tpl"
+    let badTplNew = "non-cabal-appdir" </> "snaplets" </> "heist"
+                                       </> "templates" </> "bad.tpl"
     goodExists <- doesFileExist goodTplNew
     badExists <- doesFileExist badTplNew
     assertBool "good.tpl exists" (not goodExists)
@@ -100,9 +109,9 @@ reloadTest = testCase "reload test" $ do
     copyFile badTplOrig badTplNew
     requestNoError' "good" "404"
     requestNoError' "bad" "404"
-    requestTest' "admin/reload" "Error reloading site!\n\nInitializer threw an exception...\ntemplates/bad.tpl \"templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n\n\n...but before it died it generated the following output:\nInitializing app @ /\nInitializing heist @ /heist\n\n"
+    requestTest' "admin/reload" "Error reloading site!\n\nInitializer threw an exception...\nsnaplets/heist/templates/bad.tpl \"snaplets/heist/templates/bad.tpl\" (line 2, column 1):\nunexpected end of input\nexpecting \"=\", \"/\" or \">\"\n\n\n...but before it died it generated the following output:\nInitializing app @ /\nInitializing heist @ /heist\n\n"
     remove badTplNew
     copyFile goodTplOrig goodTplNew
-    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\n...loaded 5 templates\nInitializing foosnaplet @ /foo\n...adding 1 templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\n...adding 2 templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /embed\nInitializing heist @ /embed/heist\n...loaded 5 templates\n...adding 1 templates from snaplets/embedded/templates with route prefix embed/embedded/\nSite successfully reloaded.\n"
+    requestTest' "admin/reload" "Initializing app @ /\nInitializing heist @ /heist\n...loaded 5 templates from snaplets/heist/templates\nInitializing foosnaplet @ /foo\n...adding 1 templates from snaplets/foosnaplet/templates with route prefix foo/\nInitializing baz @ /\n...adding 2 templates from snaplets/baz/templates with route prefix /\nInitializing CookieSession @ /session\nInitializing embedded @ /\nInitializing heist @ /heist\n...loaded 1 templates from snaplets/embedded/snaplets/heist/templates\n...adding 1 templates from snaplets/embedded/extra-templates with route prefix onemoredir/\nSite successfully reloaded.\n"
     requestTest' "good" "Good template\n"
 

@@ -254,12 +254,15 @@ heistInitWorker :: FilePath
 heistInitWorker templateDir initialHeistState = do
     (cacheFunc, cts) <- liftIO mkCacheTag
     let origTs = cacheFunc initialHeistState
-    ts <- liftIO $ loadTemplates templateDir origTs >>=
+    snapletPath <- getSnapletFilePath
+    let tDir = snapletPath </> templateDir
+    ts <- liftIO $ loadTemplates tDir origTs >>=
                    either error return
     printInfo $ T.pack $ unwords
         [ "...loaded"
         , (show $ length $ templateNames ts)
-        , "templates"
+        , "templates from"
+        , tDir
         ]
 
     return $ Heist ts cts
