@@ -1,6 +1,6 @@
 module SafeCWD
   ( inDir
-  , removeDirectoryRecursiveSafe 
+  , removeDirectoryRecursiveSafe
   ) where
 
 import Control.Concurrent.QSem
@@ -25,6 +25,6 @@ inDir startClean dir action = bracket before after (const action)
     after cwd = do
         setCurrentDirectory cwd
         signalQSem sem
-    
+
 removeDirectoryRecursiveSafe p =
     doesDirectoryExist p >>= flip when (removeDirectoryRecursive p)

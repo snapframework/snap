@@ -1,44 +1,50 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
+------------------------------------------------------------------------------
 import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Char8 as S
 import qualified Network.HTTP.Enumerator as HTTP
+import           Prelude hiding (catch)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
+import           System.IO
 import           System.Posix.Process
+import           System.Posix.Signals
 import           System.Posix.Types
---import           Test.Framework (defaultMain, Test)
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
-
-import           Snap.Http.Server (simpleHttpServe)
+------------------------------------------------------------------------------
 import           Blackbox.App
 import qualified Blackbox.Tests
+import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
 import qualified Snap.Snaplet.Internal.Tests
 import           Snap.TestCommon
 
-import SafeCWD
+import           SafeCWD
 
 
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
-    Blackbox.Tests.remove "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
-    Blackbox.Tests.remove "non-cabal-appdir/snaplets/heist/templates/good.tpl"
+    Blackbox.Tests.remove
+                "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
+    Blackbox.Tests.remove
+                "non-cabal-appdir/snaplets/heist/templates/good.tpl"
     Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
-    inDir False "non-cabal-appdir" startServer
-    threadDelay $ 2*10^(6::Int)
+    pid <- inDir False "non-cabal-appdir" startServer
     defaultMain tests
+    signalProcess sigTERM pid
 
   where tests = [ internalServerTests
                 , testDefault
@@ -47,6 +53,7 @@ main = do
                 ]
 
 
+------------------------------------------------------------------------------
 internalServerTests :: Test
 internalServerTests =
     testGroup "internal server tests"
@@ -57,17 +64,30 @@ internalServerTests =
         , Snap.Snaplet.Internal.Tests.tests
         ]
 
+
+------------------------------------------------------------------------------
 startServer :: IO ProcessID
-startServer = forkProcess $ serve (setPort 9753 defaultConfig) app
+startServer = do
+    t <- forkProcess $ serve (setPort 9753 defaultConfig) app
+    threadDelay $ 2*10^(6::Int)
+    return t
+
   where
-    serve config initializer = do
+    serve config initializer = handle handleErr $ do
+        hPutStrLn stderr "initializing snaplet"
         (_, handler, doCleanup) <- runSnaplet initializer
-        (conf, site)            <- combineConfig config handler
-        _ <- try $ simpleHttpServe conf $ site
-             :: IO (Either SomeException ())
-        doCleanup
+
+        flip finally doCleanup $ do
+            (conf, site) <- combineConfig config handler
+            hPutStrLn stderr "bringing up server"
+            simpleHttpServe conf site
+            hPutStrLn stderr "server killed"
+
+    handleErr :: SomeException -> IO ()
+    handleErr e = hPutStrLn stderr $ "startServer exception: " ++ show e
 
 
+------------------------------------------------------------------------------
 testBarebones :: Test
 testBarebones = testCase "snap/barebones" go
   where
@@ -76,12 +96,13 @@ testBarebones = testCase "snap/barebones" go
                               ""
                               port
                               testIt
-    port = 9990
+    port = 9990 :: Int
     testIt = do
         body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
         assertEqual "server not up" "hello world" body
 
 
+------------------------------------------------------------------------------
 testDefault :: Test
 testDefault = testCase "snap/default" go
   where
@@ -90,7 +111,7 @@ testDefault = testCase "snap/default" go
                               ""
                               port
                               testIt
-    port = 9991
+    port = 9991 :: Int
     testIt = do
         body <- liftM (S.concat . L.toChunks) $
                 HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
@@ -98,6 +119,7 @@ testDefault = testCase "snap/default" go
                    $ "It works!" `S.isInfixOf` body
 
 
+------------------------------------------------------------------------------
 testTutorial :: Test
 testTutorial = testCase "snap/tutorial" go
   where
@@ -106,7 +128,7 @@ testTutorial = testCase "snap/tutorial" go
                               ""
                               port
                               testIt
-    port = 9992
+    port = 9992 :: Int
     testIt = do
         body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)++"/hello"
         assertEqual "server not up" "hello world" body

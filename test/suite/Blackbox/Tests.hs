@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Blackbox.Tests
   ( tests
@@ -6,29 +7,57 @@ module Blackbox.Tests
   , removeDir
   ) where
 
+------------------------------------------------------------------------------
+import           Control.Exception              (catch, throwIO)
 import           Control.Monad
 import           Control.Monad.Trans
-import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy.Encoding as T
-import qualified Network.HTTP.Enumerator as HTTP
+import           Data.Text.Lazy                 (Text)
+import qualified Data.Text.Lazy.Encoding        as T
+import qualified Network.HTTP.Enumerator        as HTTP
+import           Prelude                        hiding (catch)
 import           System.Directory
 import           System.FilePath
-import           Test.Framework (Test, testGroup)
+import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit
-import           Test.HUnit hiding (Test, path)
+import           Test.HUnit                     hiding (Test, path)
 
 ------------------------------------------------------------------------------
 requestTest :: String -> Text -> Test
 requestTest url desired = testCase ("/"++url) $ requestTest' url desired
 
+
+------------------------------------------------------------------------------
+expect404 :: IO a -> IO ()
+expect404 m = action `catch` h
+  where
+    action = m >> assertFailure "expected 404"
+
+    h e@(HTTP.StatusCodeException c _) | c == 404  = return ()
+                                       | otherwise = throwIO e
+    h e                                            = throwIO e
+
+
+------------------------------------------------------------------------------
+request404Test :: String -> Test
+request404Test url = testCase ("/" ++ url) $
+                     expect404             $
+                     HTTP.simpleHttp       $
+                     "http://127.0.0.1:9753/" ++ url
+
+
+------------------------------------------------------------------------------
 requestTest' :: String -> Text -> IO ()
 requestTest' url desired = do
     actual <- HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
     assertEqual url desired (T.decodeUtf8 actual)
 
+
+------------------------------------------------------------------------------
 requestNoError :: String -> Text -> Test
 requestNoError url desired = testCase ("/"++url) $ requestNoError' url desired
 
+
+------------------------------------------------------------------------------
 requestNoError' :: String -> Text -> IO ()
 requestNoError' url desired = do
     let fullUrl = "http://127.0.0.1:9753/" ++ url
@@ -36,6 +65,8 @@ requestNoError' url desired = do
     HTTP.Response _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbsRedirect url'
     assertEqual fullUrl desired (T.decodeUtf8 b)
 
+
+------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "non-cabal-tests"
     [ requestTest "hello" "hello world"
@@ -63,7 +94,7 @@ tests = testGroup "non-cabal-tests"
     , requestTest "embed/heist/onemoredir/extra" "This is an extra template\n"
 
     -- This set of tests highlights the differences in the behavior of the
-    -- get... functions from MonadSnaplet. 
+    -- get... functions from MonadSnaplet.
     , requestTest "foo/handlerConfig" "([\"app\"],\"snaplets/foosnaplet\",Just \"foosnaplet\",\"A demonstration snaplet called foo.\",\"foo\")"
     , requestTest "bar/handlerConfig" "([\"app\"],\"snaplets/baz\",Just \"baz\",\"An example snaplet called bar.\",\"\")"
 

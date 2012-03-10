@@ -77,7 +77,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
     hs <- nestSnaplet "heist" heist $ heistInit "templates"
     fs <- nestSnaplet "foo" foo fooInit
     bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
-    sm <- nestSnaplet "session" session $ 
+    sm <- nestSnaplet "session" session $
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     ns <- embedSnaplet "embed" embedded embeddedInit
     addSplices
