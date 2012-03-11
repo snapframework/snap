@@ -254,20 +254,26 @@ heistInitWorker :: FilePath
 heistInitWorker templateDir initialHeistState = do
     (cacheFunc, cts) <- liftIO mkCacheTag
     let origTs = cacheFunc initialHeistState
-    ts <- liftIO $ loadTemplates templateDir origTs >>=
+    snapletPath <- getSnapletFilePath
+    let tDir = snapletPath </> templateDir
+    ts <- liftIO $ loadTemplates tDir origTs >>=
                    either error return
     printInfo $ T.pack $ unwords
         [ "...loaded"
         , (show $ length $ templateNames ts)
-        , "templates"
+        , "templates from"
+        , tDir
         ]
 
     return $ Heist ts cts
 
 
 ------------------------------------------------------------------------------
+-- | Adds templates to the Heist HeistState.  Other snaplets should use
+-- this function to add their own templates.  The templates are automatically
+-- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: ByteString
-             -- ^ Path to templates (also the url prefix for their routes)
+             -- ^ The url prefix for the template routes
              -> Initializer b (Heist b) ()
 addTemplates urlPrefix = do
     snapletPath <- getSnapletFilePath
@@ -275,6 +281,12 @@ addTemplates urlPrefix = do
 
 
 ------------------------------------------------------------------------------
+-- | Adds templates to the Heist HeistState, and lets you specify where
+-- they are found in the filesystem.  Note that the path to the template
+-- directory is an absolute path.  This allows you more flexibility in where
+-- your templates are located, but means that you have to explicitly call
+-- getSnapletFilePath if you want your snaplet to use templates within its
+-- normal directory structure.
 addTemplatesAt :: ByteString
                -- ^ URL prefix for template routes
                -> FilePath
@@ -283,16 +295,18 @@ addTemplatesAt :: ByteString
 addTemplatesAt urlPrefix templateDir = do
     ts <- liftIO $ loadTemplates templateDir mempty
                    >>= either error return
+    rootUrl <- getSnapletRootURL
+    let fullPrefix = U.toString rootUrl </> U.toString urlPrefix
     printInfo $ T.pack $ unwords
         [ "...adding"
         , (show $ length $ templateNames ts)
         , "templates from"
         , templateDir
         , "with route prefix"
-        , (U.toString urlPrefix) ++ "/"
+        , fullPrefix ++ "/"
         ]
     addPostInitHook $ return . changeTS
-        (`mappend` addTemplatePathPrefix urlPrefix ts)
+        (`mappend` addTemplatePathPrefix (U.fromString fullPrefix) ts)
 
 
 ------------------------------------------------------------------------------

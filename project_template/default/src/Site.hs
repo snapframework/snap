@@ -75,7 +75,7 @@ routes :: [(ByteString, Handler App App ())]
 routes = [ ("/",            index)
          , ("/echo/:stuff", echo)
          , ("", with heist heistServe)
-         , ("", serveDirectory "resources/static")
+         , ("", serveDirectory "static")
          ]
 
 ------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ routes = [ ("/",            index)
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     sTime <- liftIO getCurrentTime
-    h <- nestSnaplet "heist" heist $ heistInit "resources/templates"
+    h <- nestSnaplet "heist" heist $ heistInit "templates"
     addRoutes routes
     return $ App h sTime
 
