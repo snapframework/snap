@@ -42,20 +42,21 @@ main = do
                 "non-cabal-appdir/snaplets/heist/templates/good.tpl"
     Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
-    pid <- inDir False "non-cabal-appdir" startServer
-    defaultMain tests
-    signalProcess sigTERM pid
+    tid <- inDir False "non-cabal-appdir" startServer
+    defaultMain [tests] `finally` killThread tid
 
-  where tests = [ internalServerTests
-                , testDefault
-                , testBarebones
-                , testTutorial
-                ]
+  where tests = mutuallyExclusive $
+                testGroup "snap" [ internalServerTests
+                                 , testDefault
+                                 , testBarebones
+                                 , testTutorial
+                                 ]
 
 
 ------------------------------------------------------------------------------
 internalServerTests :: Test
 internalServerTests =
+    mutuallyExclusive $
     testGroup "internal server tests"
         [ Blackbox.Tests.tests
         , Snap.Snaplet.Internal.Lensed.Tests.tests
@@ -66,9 +67,9 @@ internalServerTests =
 
 
 ------------------------------------------------------------------------------
-startServer :: IO ProcessID
+startServer :: IO ThreadId
 startServer = do
-    t <- forkProcess $ serve (setPort 9753 defaultConfig) app
+    t <- forkIO $ serve (setPort 9753 defaultConfig) app
     threadDelay $ 2*10^(6::Int)
     return t
 

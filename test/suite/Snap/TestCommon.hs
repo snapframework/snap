@@ -51,7 +51,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         snapRepos    = joinPath $ reverse $ drop 2 segments
         sandbox      = cwd </> "test-cabal-dev"
         cabalDevArgs = "-s " ++ sandbox
-        args         = cabalDevArgs ++ " " ++ cabalInstallArgs
+        args         = cabalDevArgs ++ " --reinstall " ++ cabalInstallArgs
 
         ----------------------------------------------------------------------
         initialize = do

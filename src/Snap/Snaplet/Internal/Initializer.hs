@@ -411,11 +411,12 @@ printInfo msg = do
 
 ------------------------------------------------------------------------------
 -- | Builds an IO reload action for storage in the SnapletState.
-mkReloader :: MVar (Snaplet b)
+mkReloader :: FilePath
+           -> MVar (Snaplet b)
            -> Initializer b b (Snaplet b)
            -> IO (Either Text Text)
-mkReloader mvar i = do
-    !res <- runInitializer mvar i
+mkReloader cwd mvar i = do
+    !res <- runInitializer' mvar i cwd
     either (return . Left) good res
   where
     good (b,is) = do
@@ -444,28 +445,40 @@ runBase (Handler m) mvar = do
 runInitializer :: MVar (Snaplet b)
                -> Initializer b b (Snaplet b)
                -> IO (Either Text (Snaplet b, InitializerState b))
-runInitializer mvar b@(Initializer i) = do
+runInitializer mvar b = getCurrentDirectory >>= runInitializer' mvar b
+
+
+------------------------------------------------------------------------------
+runInitializer' :: MVar (Snaplet b)
+                -> Initializer b b (Snaplet b)
+                -> FilePath
+                -> IO (Either Text (Snaplet b, InitializerState b))
+runInitializer' mvar b@(Initializer i) cwd = do
     userConfig <- load [Optional "snaplet.cfg"]
     let builtinHandlers = [("/admin/reload", reloadSite)]
-    let cfg = SnapletConfig [] "" Nothing "" userConfig [] Nothing
-                            (mkReloader mvar b)
+    let cfg = SnapletConfig [] cwd Nothing "" userConfig [] Nothing
+                            (mkReloader cwd mvar b)
     logRef <- newIORef ""
     cleanupRef <- newIORef (return ())
+
     let body = do
             ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
                 InitializerState True cleanupRef builtinHandlers id cfg logRef
             res' <- hook res
             return $ Right (res', s)
+
         handler e = do
             join $ readIORef cleanupRef
             logMessages <- readIORef logRef
+
             return $ Left $ T.unlines
-                ["Initializer threw an exception..."
-                ,T.pack $ show (e :: SomeException)
-                ,""
-                ,"...but before it died it generated the following output:"
-                ,logMessages
+                [ "Initializer threw an exception..."
+                , T.pack $ show (e :: SomeException)
+                , ""
+                , "...but before it died it generated the following output:"
+                , logMessages
                 ]
+
     catch body handler
 
 

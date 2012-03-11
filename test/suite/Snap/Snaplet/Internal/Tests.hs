@@ -1,11 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Snap.Snaplet.Internal.Tests
   ( tests, initTest ) where
 
+------------------------------------------------------------------------------
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.ByteString (ByteString)
@@ -13,14 +14,21 @@ import           Data.Lens.Template
 import           Data.List
 import           Data.Text
 import           Prelude hiding (catch, (.))
+import           System.Directory
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
+------------------------------------------------------------------------------
+import           Snap.Snaplet.Internal.Initializer
+import           Snap.Snaplet.Internal.Types
 
-import Snap.Snaplet.Internal.Initializer
-import Snap.Snaplet.Internal.Types
+
+                       ---------------------------------
+                       -- TODO: this module is a mess --
+                       ---------------------------------
 
 
+------------------------------------------------------------------------------
 data Foo = Foo Int
 
 data Bar = Bar Int
@@ -43,52 +51,72 @@ makeLens ''App
 --    print $ _scRouteContext c
 --    putStrLn ""
 
-assertGet :: (MonadIO m, Eq a) => String -> m a -> a -> m ()
+
+------------------------------------------------------------------------------
+assertGet :: (MonadIO m, Show a, Eq a) => String -> m a -> a -> m ()
 assertGet name getter val = do
     v <- getter
---  When I add these three lines I get a strange error from GHC:
---      FATAL:Symbol _dmAh_info_dsp already defined.
---    when (v /= val) $ do
---        liftIO $ putStrLn $ "{--- "++(show v)++" ---}"
---        liftIO $ putStrLn $ "{--- "++(show val)++" ---}"
-    liftIO $ assertBool name $ v == val
+    liftIO $ assertEqual name val v
 
+
+------------------------------------------------------------------------------
 configAssertions :: (MonadSnaplet m, MonadIO (m b v))
                  => [Char]
                  -> ([Text], FilePath, Maybe Text, Text, ByteString)
                  -> m b v ()
 configAssertions prefix (a,f,n,d,r) = do
-    assertGet (prefix++"ancestry") getSnapletAncestry a
-    assertGet (prefix++"file path") getSnapletFilePath f
-    assertGet (prefix++"name") getSnapletName n
-    assertGet (prefix++"description") getSnapletDescription d
-    assertGet (prefix++"route context") getSnapletRootURL r
+    assertGet (prefix ++ "ancestry"      ) getSnapletAncestry    a
+    assertGet (prefix ++ "file path"     ) getSnapletFilePath    f
+    assertGet (prefix ++ "name"          ) getSnapletName        n
+    assertGet (prefix ++ "description"   ) getSnapletDescription d
+    assertGet (prefix ++ "route context" ) getSnapletRootURL     r
 
+
+------------------------------------------------------------------------------
 appInit :: SnapletInit App App
 appInit = makeSnaplet "app" "Test application" Nothing $ do
+    cwd <- liftIO getCurrentDirectory
+
     configAssertions "root "
-        ([], "", Just "app", "Test application", "")
+        ([], cwd, Just "app", "Test application", "")
     f <- nestSnaplet "foo" foo $ fooInit
     b <- nestSnaplet "bar" bar $ barInit
     return $ App f b
 
+
+------------------------------------------------------------------------------
 fooInit :: SnapletInit b Foo
 fooInit = makeSnaplet "foo" "Foo Snaplet" Nothing $ do
+    cwd <- liftIO getCurrentDirectory
+    let dir = cwd ++ "/snaplets/foo"
+
     configAssertions "foo "
-        (["app"], "snaplets/foo", Just "foo", "Foo Snaplet", "foo")
+        (["app"], dir, Just "foo", "Foo Snaplet", "foo")
     return $ Foo 42
 
+
+------------------------------------------------------------------------------
 barInit :: SnapletInit b Bar
 barInit = makeSnaplet "bar" "Bar Snaplet" Nothing $ do
+    cwd <- liftIO getCurrentDirectory
+    let dir = cwd ++ "/snaplets/bar"
     configAssertions "bar "
-        (["app"], "snaplets/bar", Just "bar", "Bar Snaplet", "bar")
+        (["app"], dir, Just "bar", "Bar Snaplet", "bar")
     return $ Bar 2
 
+
+------------------------------------------------------------------------------
 initTest :: IO ()
 initTest = do
     (out,_,_) <- runSnaplet appInit
-    if out == "aoeu" then putStrLn "Something really strange" else return ()
 
+    -- note from gdc: wtf?
+    if out == "aoeu"
+      then putStrLn "Something really strange"
+      else return ()
+
+
+------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Snap.Snaplet.Internal"
     [ testCase "initializer tests" initTest

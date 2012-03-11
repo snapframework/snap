@@ -22,8 +22,6 @@ fi
 
 $SUITE $*
 
-killall -HUP snap-testsuite
-
 DIR=dist/hpc
 
 rm -Rf $DIR
