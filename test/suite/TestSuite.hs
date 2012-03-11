@@ -42,8 +42,11 @@ main = do
                 "non-cabal-appdir/snaplets/heist/templates/good.tpl"
     Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
-    tid <- inDir False "non-cabal-appdir" startServer
+    (tid, mvar) <- inDir False "non-cabal-appdir" startServer
     defaultMain [tests] `finally` killThread tid
+
+    putStrLn "waiting for termination mvar"
+    takeMVar mvar
 
   where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
@@ -67,22 +70,25 @@ internalServerTests =
 
 
 ------------------------------------------------------------------------------
-startServer :: IO ThreadId
+startServer :: IO (ThreadId, MVar ())
 startServer = do
-    t <- forkIO $ serve (setPort 9753 defaultConfig) app
+    mvar <- newEmptyMVar
+    t    <- forkIO $ serve mvar (setPort 9753 defaultConfig) app
     threadDelay $ 2*10^(6::Int)
-    return t
+    return (t, mvar)
 
   where
-    serve config initializer = handle handleErr $ do
-        hPutStrLn stderr "initializing snaplet"
-        (_, handler, doCleanup) <- runSnaplet initializer
+    serve mvar config initializer =
+        flip finally (putMVar mvar ()) $
+        handle handleErr $ do
+            hPutStrLn stderr "initializing snaplet"
+            (_, handler, doCleanup) <- runSnaplet initializer
 
-        flip finally doCleanup $ do
-            (conf, site) <- combineConfig config handler
-            hPutStrLn stderr "bringing up server"
-            simpleHttpServe conf site
-            hPutStrLn stderr "server killed"
+            flip finally doCleanup $ do
+                (conf, site) <- combineConfig config handler
+                hPutStrLn stderr "bringing up server"
+                simpleHttpServe conf site
+                hPutStrLn stderr "server killed"
 
     handleErr :: SomeException -> IO ()
     handleErr e = hPutStrLn stderr $ "startServer exception: " ++ show e
