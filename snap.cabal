@@ -129,7 +129,6 @@ Library
       unix                    >= 2.2.0.0 && < 2.6
 
   build-depends:
-    Crypto                    >= 4.2      && < 4.3,
     MonadCatchIO-transformers >= 0.2      && < 0.3,
     aeson                     >= 0.6      && < 0.7,
     attoparsec                >= 0.10     && < 0.11,
