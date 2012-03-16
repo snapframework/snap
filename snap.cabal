@@ -122,7 +122,8 @@ Library
     cpp-options: -DHINT_ENABLED
 
     build-depends:
-      hint                    >= 0.3.3.1 && < 0.4
+      hint                    >= 0.3.3.1 && < 0.4,
+      old-time                >= 1.0     && < 1.2
 
   if !os(windows)
     build-depends:
