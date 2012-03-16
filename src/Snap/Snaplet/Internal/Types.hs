@@ -286,8 +286,7 @@ reloadSite = failIfNotLocal $ do
         writeText msg
         writeText $ "Site successfully reloaded.\n"
     failIfNotLocal m = do
-        -- TODO/FIXME: grave error here; this code needs to check if we're
-        -- behind a proxy.
+        -- FIXME: this moves to auth once control-panel is done
         rip <- liftM rqRemoteAddr getRequest
         if not $ elem rip [ "127.0.0.1"
                           , "localhost"
