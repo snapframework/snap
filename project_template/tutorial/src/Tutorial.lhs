@@ -345,7 +345,7 @@ including a section like the following in snaplet-killerapp.cabal:
     data-files:
       resources/snaplet.cfg,
       resources/public/stylesheets/style.css,
-      resources/templates/page.tpl
+      resources/snaplets/heist/templates/page.tpl
 
 Now whenever your snaplet is used, its filesystem data will be automagically
 copied into the local project that is using it, whenever the application is
