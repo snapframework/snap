@@ -287,9 +287,10 @@ snaplet filesystem layout might look like:
           |-- images/
           |-- js/
       |-- *snaplets/*
+          |-- *heist/*
+              |-- templates/
           |-- subsnaplet1/
           |-- subsnaplet2/
-      |-- templates/
 
 Only the starred items are actually enforced by current code, but we want to
 establish the others as a convention.  The file snaplet.cfg is automatically
