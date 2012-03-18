@@ -22,7 +22,6 @@ import           Data.Monoid
 import           Data.Lens.Lazy
 import           Data.Lens.Template
 import           Data.Text (Text)
-import qualified Data.Text as T
 
 import           Snap.Core
 import qualified Snap.Snaplet.Internal.LensT as LT
