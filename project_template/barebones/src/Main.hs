@@ -7,7 +7,10 @@ import           Snap.Util.FileServe
 import           Snap.Http.Server
 
 main :: IO ()
-main = quickHttpServe $
+main = quickHttpServe site
+
+site :: Snap ()
+site =
     ifTop (writeBS "hello world") <|>
     route [ ("foo", writeBS "bar")
           , ("echo/:echoparam", echoHandler)
