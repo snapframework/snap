@@ -194,10 +194,11 @@ makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
         then setL scId (Just snapletId) c else c
     sid <- iGets (T.unpack . fromJust . _scId . _curConfig)
     topLevel <- iGets _isTopLevel
-    unless topLevel $ modifyCfg $ \c -> setL scFilePath
-        (_scFilePath c </> "snaplets" </> sid) c
+    unless topLevel $ do
+        modifyCfg $ modL scUserConfig (subconfig (T.pack sid))
+        modifyCfg $ \c -> setL scFilePath
+          (_scFilePath c </> "snaplets" </> sid) c
     iModify (setL isTopLevel False)
-    modifyCfg $ modL scUserConfig (subconfig (T.pack sid))
     modifyCfg $ setL scDescription desc
     cfg <- iGets _curConfig
     printInfo $ T.pack $ concat
@@ -211,7 +212,8 @@ makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
     -- up but before snaplet.cfg is read.
     setupFilesystem getSnapletDataDir (_scFilePath cfg)
 
-    liftIO $ addToConfig [Optional (_scFilePath cfg </> "snaplet.cfg")]
+    let configLocation = _scFilePath cfg </> "snaplet.cfg"
+    liftIO $ addToConfig [Optional configLocation]
                          (_scUserConfig cfg)
     mkSnaplet m
 
@@ -454,9 +456,8 @@ runInitializer' :: MVar (Snaplet b)
                 -> FilePath
                 -> IO (Either Text (Snaplet b, InitializerState b))
 runInitializer' mvar b@(Initializer i) cwd = do
-    userConfig <- load [Optional "snaplet.cfg"]
     let builtinHandlers = [("/admin/reload", reloadSite)]
-    let cfg = SnapletConfig [] cwd Nothing "" userConfig [] Nothing
+    let cfg = SnapletConfig [] cwd Nothing "" empty [] Nothing
                             (mkReloader cwd mvar b)
     logRef <- newIORef ""
     cleanupRef <- newIORef (return ())
