@@ -5,6 +5,7 @@
 {-# LANGUAGE ExistentialQuantification  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 module Snap.Snaplet.Auth.AuthManager
   ( -- * AuthManager Datatype
@@ -97,4 +98,11 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
     , randomNumberGenerator :: RNG
         -- ^ Random number generator
     }
+
+instance IAuthBackend (AuthManager b) where
+    save AuthManager{..} u = save backend u
+    lookupByUserId AuthManager{..} u = lookupByUserId backend u
+    lookupByLogin AuthManager{..} u = lookupByLogin backend u
+    lookupByRememberToken AuthManager{..} u = lookupByRememberToken backend u
+    destroy AuthManager{..} u = destroy backend u
 
