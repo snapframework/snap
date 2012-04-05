@@ -28,8 +28,7 @@ import Blackbox.BarSnaplet
 import Blackbox.FooSnaplet
 import Blackbox.EmbeddedSnaplet
 import Blackbox.Types
-import Snap.Snaplet.Session
-import Snap.Snaplet.Session.Backends.CookieSession
+import Snap.Snaplet.Session hiding (lookup)
 
 
 routeWithSplice :: Handler App App ()
