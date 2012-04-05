@@ -1,5 +1,6 @@
 module Snap.Snaplet.Session
-  ( SessionManager
+  ( SessionManager(..)
+  , ISessionManager(..)
   , withSession
   , commitSession
   , setInSession
@@ -9,6 +10,9 @@ module Snap.Snaplet.Session
   , sessionToList
   , resetSession
   , touchSession
+
+  , module Snap.Snaplet.Session.Common
+  , module Snap.Snaplet.Session.SecureCookie
   ) where
 
 ------------------------------------------------------------------------------
@@ -18,6 +22,8 @@ import           Data.Text (Text)
 import           Snap.Core
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
+import           Snap.Snaplet.Session.Common
+import           Snap.Snaplet.Session.SecureCookie
 import           Snap.Snaplet.Session.SessionManager
                    ( SessionManager(..), ISessionManager(..) )
 import qualified Snap.Snaplet.Session.SessionManager as SM

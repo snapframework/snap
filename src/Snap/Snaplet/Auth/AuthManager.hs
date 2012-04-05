@@ -27,7 +27,6 @@ import           Web.ClientSession
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Session
-import           Snap.Snaplet.Session.Common
 import           Snap.Snaplet.Auth.Types
 
 

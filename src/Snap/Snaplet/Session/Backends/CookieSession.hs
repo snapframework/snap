@@ -22,9 +22,7 @@ import           Snap.Core (Snap)
 import           Web.ClientSession
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
-import           Snap.Snaplet.Session.Common
-import           Snap.Snaplet.Session.SessionManager
-import           Snap.Snaplet.Session.SecureCookie
+import           Snap.Snaplet.Session
 
 
 ------------------------------------------------------------------------------

@@ -32,7 +32,6 @@ import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Session
-import           Snap.Snaplet.Session.Common
 
 
 
