@@ -47,6 +47,7 @@ module Snap.Snaplet.Auth
   , Role(..)
 
   -- * Other Utilities
+  , authSettingsFromConfig 
   , withBackend
   , encryptPassword
   , checkPassword

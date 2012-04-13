@@ -198,6 +198,35 @@ defAuthSettings = AuthSettings {
 
 
 ------------------------------------------------------------------------------
+-- | Function to get auth settings from a config file.  This function can be
+-- used by the authors of auth snaplet backends in the initializer to let the
+-- user configure the auth snaplet from a config file.  All options are
+-- optional and default to what's in defAuthSettings if not supplied.
+-- Here's what the default options would look like in the config file:
+--
+-- > minPasswordLen = 8
+-- > rememberCookie = "_remember"
+-- > rememberPeriod = 1209600 # 2 weeks
+-- > lockout = [5, 86400] # 5 attempts locks you out for 86400 seconds
+-- > siteKey = "site_key.txt"
+authSettingsFromConfig :: Initializer b (AuthManager b) AuthSettings
+authSettingsFromConfig = do
+    config <- getSnapletUserConfig
+    minPasswordLen <- liftIO $ C.lookup config "minPasswordLen"
+    let pw = maybe id (\x s -> s { asMinPasswdLen = x }) minPasswordLen
+    rememberCookie <- liftIO $ C.lookup config "rememberCookie"
+    let rc = maybe id (\x s -> s { asRememberCookieName = x }) rememberCookie
+    rememberPeriod <- liftIO $ C.lookup config "rememberPeriod"
+    let rp = maybe id (\x s -> s { asRememberPeriod = Just x }) rememberPeriod
+    lockout <- liftIO $ C.lookup config "lockout"
+    let lo = maybe id (\x s -> s { asLockout = Just (second fromInteger x) })
+                   lockout
+    siteKey <- liftIO $ C.lookup config "siteKey"
+    let sk = maybe id (\x s -> s { asSiteKey = x }) siteKey
+    return $ (pw . rc . rp . lo . sk) defAuthSettings
+
+
+------------------------------------------------------------------------------
 data BackendError = DuplicateLogin
                   | BackendError String
   deriving (Eq,Show,Read,Typeable)
