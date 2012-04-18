@@ -7,17 +7,21 @@ module Snap.Snaplet.Auth.Types where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Arrow
 import           Control.Monad.CatchIO
+import           Control.Monad.Trans
 import           Control.Monad.Trans.Error
 import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)
+import qualified Data.Configurator as C
 import           Data.HashMap.Strict   (HashMap)
 import qualified Data.HashMap.Strict   as HM
 import           Data.Hashable         (Hashable)
 import           Data.Time
 import           Data.Text             (Text)
 import           Data.Typeable
+import           Snap.Snaplet
 
 
 ------------------------------------------------------------------------------
@@ -209,7 +213,7 @@ defAuthSettings = AuthSettings {
 -- > rememberPeriod = 1209600 # 2 weeks
 -- > lockout = [5, 86400] # 5 attempts locks you out for 86400 seconds
 -- > siteKey = "site_key.txt"
-authSettingsFromConfig :: Initializer b (AuthManager b) AuthSettings
+authSettingsFromConfig :: Initializer b v AuthSettings
 authSettingsFromConfig = do
     config <- getSnapletUserConfig
     minPasswordLen <- liftIO $ C.lookup config "minPasswordLen"
