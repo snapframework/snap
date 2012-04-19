@@ -25,24 +25,28 @@ instance Monoid AppConfig where
         ov f x y = getLast $! (mappend `on` (Last . f)) x y
 
 
+------------------------------------------------------------------------------
+-- | Command line options for snaplet applications.
 appOpts :: AppConfig -> [OptDescr (Maybe (Config m AppConfig))]
 appOpts defaults = map (fmapOpt $ fmap (flip setOther mempty))
     [ Option ['e'] ["environment"]
-             (ReqArg (\s -> Just $ mempty { appEnvironment = Just s}) "ENVIRONMENT")
+             (ReqArg setter "ENVIRONMENT")
              $ "runtime environment to use" ++ defaultC appEnvironment
     ]
   where
+    setter s = Just $ mempty { appEnvironment = Just s}
     defaultC f = maybe "" ((", default " ++) . show) $ f defaults
 
 
+------------------------------------------------------------------------------
+-- | Calls snap-server's extendedCommandLineConfig to add snaplet options to
+-- the built-in server command line options.
 commandLineAppConfig :: MonadSnap m
                      => Config m AppConfig
                      -> IO (Config m AppConfig)
 commandLineAppConfig defaults =
     extendedCommandLineConfig (appOpts appDefaults ++ optDescrs defaults)
-                              combine defaults
+                              mappend defaults
   where
-    appDefaults = fromMaybe (AppConfig Nothing) $ getOther defaults
-    combine :: AppConfig -> AppConfig -> AppConfig
-    combine a b = AppConfig $ (mappend `on` appEnvironment) a b
+    appDefaults = fromMaybe mempty $ getOther defaults
 
