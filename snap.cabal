@@ -1,5 +1,5 @@
 name:           snap
-version:        0.8.0.3
+version:        0.8.1
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -130,7 +130,7 @@ Library
       unix                    >= 2.2.0.0 && < 2.6
 
   build-depends:
-    MonadCatchIO-transformers >= 0.2      && < 0.3,
+    MonadCatchIO-transformers >= 0.2      && < 0.4,
     aeson                     >= 0.6      && < 0.7,
     attoparsec                >= 0.10     && < 0.11,
     base                      >= 4        && < 5,
@@ -141,23 +141,23 @@ Library
     containers                >= 0.3      && < 0.5,
     directory                 >= 1.0      && < 1.2,
     directory-tree            >= 0.10     && < 0.11,
-    data-lens                 >= 2.0.1    && < 2.1,
+    data-lens                 >= 2.0.1    && < 2.11,
     data-lens-template        >= 2.1      && < 2.2,
     filepath                  >= 1.1      && < 1.4,
     hashable                  >= 1.1      && < 1.2,
     heist                     >= 0.7      && < 0.9,
     logict                    >= 0.4.2    && < 0.6,
-    mtl                       >  2.0      && < 2.1,
+    mtl                       >  2.0      && < 2.2,
     mwc-random                >= 0.8      && < 0.13,
     pwstore-fast              >= 2.2      && < 2.3,
-    snap-core                 >= 0.8      && < 0.9,
-    snap-server               >= 0.8      && < 0.9,
+    snap-core                 >= 0.8.1    && < 0.9,
+    snap-server               >= 0.8.1    && < 0.9,
     stm                       >= 2.2      && < 2.4,
     syb                       >= 0.1      && < 0.4,
     template-haskell          >= 2.2      && < 2.8,
     text                      >= 0.11     && < 0.12,
     time                      >= 1.1      && < 1.5,
-    transformers              >= 0.2      && < 0.3,
+    transformers              >= 0.2      && < 0.4,
     unordered-containers      >= 0.1.4    && < 0.3,
     utf8-string               >= 0.3      && < 0.4,
     vector                    >= 0.7.1    && < 0.10,
