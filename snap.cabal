@@ -177,6 +177,7 @@ Library
     OverloadedStrings,
     PackageImports,
     Rank2Types,
+    RecordWildCards,
     ScopedTypeVariables,
     TemplateHaskell,
     TypeFamilies,
