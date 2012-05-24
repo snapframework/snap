@@ -1,5 +1,5 @@
 name:           snap
-version:        0.8.1
+version:        0.8.2
 synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
 description:    Snap Framework project starter executable and glue code library
 license:        BSD3
@@ -162,7 +162,7 @@ Library
     utf8-string               >= 0.3      && < 0.4,
     vector                    >= 0.7.1    && < 0.10,
     vector-algorithms         >= 0.4      && < 0.6,
-    xmlhtml                   >= 0.1      && < 0.2
+    xmlhtml                   >= 0.1      && < 0.3
 
   extensions:
     BangPatterns,
