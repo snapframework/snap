@@ -418,9 +418,8 @@ loginUser
   -> Handler b (AuthManager b) ()
   -- ^ Upon success
   -> Handler b (AuthManager b) ()
-loginUser unf pwdf remf loginFail loginSucc = do
+loginUser unf pwdf remf loginFail loginSucc =
     runErrorT go >>= either loginFail (const loginSucc)
-
   where
     go = do
         mbUsername <- getParam unf
@@ -434,7 +433,7 @@ loginUser unf pwdf remf loginFail loginSucc = do
 
         password <- maybe (throwError PasswordMissing) return mbPassword
         username <- maybe (fail "Username is missing") return mbUsername
-        lift $ loginByUsername username (ClearText password) remember
+        ErrorT $ loginByUsername username (ClearText password) remember
 
 
 ------------------------------------------------------------------------------
