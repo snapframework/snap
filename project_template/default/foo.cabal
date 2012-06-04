@@ -19,19 +19,19 @@ Executable projname
   main-is: Main.hs
 
   Build-depends:
-    base                      >= 4     && < 5,
-    bytestring                >= 0.9.1 && < 0.10,
-    data-lens                 >= 2.0.1 && < 2.11,
-    data-lens-template        >= 2.1   && < 2.2,
-    heist                     >= 0.8   && < 0.9,
+    base >= 4 && < 5,
+    bytestring >= 0.9.1 && < 0.10,
+    data-lens >= 2.0.1 && < 2.11,
+    data-lens-template >= 2.1 && < 2.2,
+    heist >= 0.8 && < 0.9,
     MonadCatchIO-transformers >= 0.2.1 && < 0.4,
-    mtl                       >= 2     && < 3,
-    snap                      >= 0.9   && < 0.10,
-    snap-core                 >= 0.9   && < 0.10,
-    snap-server               >= 0.9   && < 0.10,
-    text                      >= 0.11  && < 0.12,
-    time                      >= 1.1   && < 1.5,
-    xmlhtml                   >= 0.1   && < 0.2
+    mtl >= 2 && < 3,
+    snap == 0.8.*,
+    snap-core   == 0.8.*,
+    snap-server == 0.8.*,
+    text >= 0.11 && < 0.12,
+    time >= 1.1 && < 1.5,
+    xmlhtml == 0.1.*
 
   if flag(development)
     cpp-options: -DDEVELOPMENT
@@ -48,4 +48,3 @@ Executable projname
     else
       ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
                    -fno-warn-orphans
-

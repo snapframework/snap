@@ -8,7 +8,6 @@ import           Control.Exception (SomeException, try)
 import qualified Data.Text as T
 import           Snap.Http.Server
 import           Snap.Snaplet
-import           Snap.Snaplet.Config
 import           Snap.Core
 import           System.IO
 import           Site
@@ -78,8 +77,8 @@ main = do
 --
 -- This action is only run once, regardless of whether development or
 -- production mode is in use.
-getConf :: IO (Config Snap AppConfig)
-getConf = commandLineAppConfig defaultConfig
+getConf :: IO (Config Snap ())
+getConf = commandLineConfig defaultConfig
 
 
 ------------------------------------------------------------------------------
@@ -94,9 +93,8 @@ getConf = commandLineAppConfig defaultConfig
 --
 -- This sample doesn't actually use the config passed in, but more
 -- sophisticated code might.
-getActions :: Config Snap AppConfig -> IO (Snap (), IO ())
-getActions conf = do
-    (msgs, site, cleanup) <- runSnaplet
-        (appEnvironment =<< getOther conf) app
+getActions :: Config Snap () -> IO (Snap (), IO ())
+getActions _ = do
+    (msgs, site, cleanup) <- runSnaplet app
     hPutStrLn stderr $ T.unpack msgs
     return (site, cleanup)
