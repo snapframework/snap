@@ -1,13 +1,19 @@
 <apply template="base">
 
-      <p>
-        This is a simple demo page served using
-        <a href="http://snapframework.com/docs/tutorials/heist">Heist</a>
-        and the <a href="http://snapframework.com/">Snap</a> web framework.
-      </p>
+  <ifLoggedIn>
+    <p>
+      This is a simple demo page served using
+      <a href="http://snapframework.com/docs/tutorials/heist">Heist</a>
+      and the <a href="http://snapframework.com/">Snap</a> web framework.
+    </p>
 
-      <ifLoggedIn><p>Congrats!  You're logged in as '<loggedInUser/>'</p></ifLoggedIn>
+    <p>Congrats!  You're logged in as '<loggedInUser/>'</p>
 
-      <p><a href="/logout">Logout</a></p>
+    <p><a href="/logout">Logout</a></p>
+  </ifLoggedIn>
+
+  <ifLoggedOut>
+    <apply template="login"/>
+  </ifLoggedOut>
 
 </apply>

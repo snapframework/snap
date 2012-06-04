@@ -1,5 +1,5 @@
 <apply template="base">
-      <h1>Login</h1>
+      <h1>Snap Example App Login</h1>
 
       <p><loginError/></p>
 
