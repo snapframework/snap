@@ -14,9 +14,9 @@ import           System.IO
 import           Site
 
 #ifdef DEVELOPMENT
-import           Snap.Loader.Devel
+import           Snap.Loader.Dynamic
 #else
-import           Snap.Loader.Prod
+import           Snap.Loader.Static
 #endif
 
 

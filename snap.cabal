@@ -78,7 +78,6 @@ Library
 
   exposed-modules:
     Snap,
-    Snap.Loader.Prod,
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Auth,
