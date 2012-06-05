@@ -29,6 +29,7 @@ Executable projname
     snap == 0.9.*,
     snap-core   == 0.9.*,
     snap-server == 0.9.*,
+    snap-loader-static == 0.9.*,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.5,
     xmlhtml >= 0.1
@@ -44,8 +45,6 @@ Executable projname
     -- warnings allows quicker workflow.
     ghc-options: -threaded -w
   else
-    build-depends:
-      snap-loader-static == 0.9.*
     if impl(ghc >= 6.12.0)
       ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
                    -fno-warn-orphans -fno-warn-unused-do-bind
