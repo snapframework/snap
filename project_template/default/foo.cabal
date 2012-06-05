@@ -31,7 +31,7 @@ Executable projname
     snap-server == 0.9.*,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.5,
-    xmlhtml == 0.1.*
+    xmlhtml >= 0.1
 
   if flag(development)
     build-depends:
