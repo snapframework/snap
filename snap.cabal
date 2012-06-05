@@ -73,10 +73,6 @@ extra-source-files:
   test/foosnaplet/templates/foopage.tpl,
   test/foosnaplet/snaplet.cfg
 
-Flag dynamic
-  Description: Support dynamic project reloading via snap-dynamic
-  Default: False
-
 Library
   hs-source-dirs: src
 
@@ -112,13 +108,6 @@ Library
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session.SecureCookie,
     Snap.Snaplet.Session.SessionManager
-
-  if flag(dynamic)
-    build-depends:
-      snap-dynamic            >= 0.9      && < 0.10
-  else
-    exposed-modules:
-      Snap.Loader.Devel
 
   if !os(windows)
     build-depends:
