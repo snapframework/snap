@@ -34,6 +34,8 @@ Executable projname
     xmlhtml == 0.1.*
 
   if flag(development)
+    build-depends:
+      snap-dynamic == 0.9.*
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags.  Additionally, disable all

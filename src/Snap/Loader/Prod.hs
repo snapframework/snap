@@ -10,8 +10,8 @@ import           Language.Haskell.TH
 
 ------------------------------------------------------------------------------
 -- | This function provides a non-magical type-compatible loader for
--- the one in Snap.Loader.Devel, allowing switching one import to
--- provide production-mode compilation.
+-- the one in snap-dynamic's Snap.Loader.Devel, allowing switching one
+-- import to provide production-mode compilation.
 --
 -- This could be considered a TH wrapper around a function
 --
