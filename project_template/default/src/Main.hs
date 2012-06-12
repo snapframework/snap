@@ -14,9 +14,9 @@ import           System.IO
 import           Site
 
 #ifdef DEVELOPMENT
-import           Snap.Loader.Devel
+import           Snap.Loader.Dynamic
 #else
-import           Snap.Loader.Prod
+import           Snap.Loader.Static
 #endif
 
 
@@ -64,7 +64,7 @@ main = do
                                           'getActions
                                           ["snaplets/heist/templates"])
 
-    _ <- try $ httpServe conf $ site :: IO (Either SomeException ())
+    _ <- try $ httpServe conf site :: IO (Either SomeException ())
     cleanup
 
 
@@ -79,7 +79,7 @@ main = do
 -- This action is only run once, regardless of whether development or
 -- production mode is in use.
 getConf :: IO (Config Snap AppConfig)
-getConf = commandLineAppConfig defaultConfig
+getConf = commandLineConfig defaultConfig
 
 
 ------------------------------------------------------------------------------

@@ -73,17 +73,11 @@ extra-source-files:
   test/foosnaplet/templates/foopage.tpl,
   test/foosnaplet/snaplet.cfg
 
-Flag hint
-  Description: Support dynamic project reloading via hint
-  Default: False
-
 Library
   hs-source-dirs: src
 
   exposed-modules:
     Snap,
-    Snap.Loader.Prod,
-    Snap.Loader.Devel,
     Snap.Snaplet,
     Snap.Snaplet.Heist,
     Snap.Snaplet.Auth,
@@ -114,21 +108,9 @@ Library
     Snap.Snaplet.Session.SecureCookie,
     Snap.Snaplet.Session.SessionManager
 
-  if flag(hint)
-    other-modules:
-      Snap.Loader.Devel.Evaluator,
-      Snap.Loader.Devel.Signal,
-      Snap.Loader.Devel.TreeWatcher
-
-    cpp-options: -DHINT_ENABLED
-
-    build-depends:
-      hint                    >= 0.3.3.1 && < 0.4,
-      old-time                >= 1.0     && < 1.2
-
   if !os(windows)
     build-depends:
-      unix                    >= 2.2.0.0 && < 2.6
+      unix                    >= 2.2.0.0  && < 2.6
 
   build-depends:
     MonadCatchIO-transformers >= 0.2      && < 0.4,
@@ -137,7 +119,7 @@ Library
     base                      >= 4        && < 5,
     bytestring                >= 0.9.1    && < 0.10,
     cereal                    >= 0.3      && < 0.4,
-    clientsession             >= 0.7.3.6  && <0.8,
+    clientsession             >= 0.7.3.6  && < 0.8,
     configurator              >= 0.1      && < 0.3,
     containers                >= 0.3      && < 0.5,
     directory                 >= 1.0      && < 1.2,
