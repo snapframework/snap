@@ -332,6 +332,7 @@ data InitializerState b = InitializerState
     -- ^ This snaplet config is the incrementally built config for whatever
     -- snaplet is currently being constructed.
     , _initMessages    :: IORef Text
+    , _environment     :: String
     }
 
 
