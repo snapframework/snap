@@ -2,9 +2,8 @@
 
 ------------------------------------------------------------------------------
 -- | This module is where all the routes and handlers are defined for your
---   site. The 'app' function is the initializer that combines everything
---   together and is exported by this module.
---
+-- site. The 'app' function is the initializer that combines everything
+-- together and is exported by this module.
 module Site
   ( app
   ) where

@@ -2,8 +2,7 @@
 
 ------------------------------------------------------------------------------
 -- | This module defines our application's state type and an alias for its
---   handler monad.
---
+-- handler monad.
 module Application where
 
 ------------------------------------------------------------------------------
