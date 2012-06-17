@@ -9,7 +9,7 @@ import           Control.Exception
 import           Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Char8 as S
-import qualified Network.HTTP.Enumerator as HTTP
+import qualified Network.HTTP.Conduit    as HTTP
 import           Prelude hiding (catch)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
@@ -82,7 +82,7 @@ startServer = do
         flip finally (putMVar mvar ()) $
         handle handleErr $ do
             hPutStrLn stderr "initializing snaplet"
-            (_, handler, doCleanup) <- runSnaplet initializer
+            (_, handler, doCleanup) <- runSnaplet Nothing initializer
 
             flip finally doCleanup $ do
                 (conf, site) <- combineConfig config handler

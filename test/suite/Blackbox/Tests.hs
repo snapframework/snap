@@ -15,7 +15,8 @@ import qualified Data.ByteString.Char8          as S
 import qualified Data.ByteString.Lazy.Char8     as L
 import           Data.Text.Lazy                 (Text)
 import qualified Data.Text.Lazy.Encoding        as T
-import qualified Network.HTTP.Enumerator        as HTTP
+import qualified Network.HTTP.Conduit           as HTTP
+import           Network.HTTP.Types             (Status(..))
 import           Prelude                        hiding (catch)
 import           System.Directory
 import           System.FilePath
@@ -147,9 +148,10 @@ expect404 url = action `catch` h
         HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
         assertFailure "expected 404"
 
-    h e@(HTTP.StatusCodeException c _) | c == 404  = return ()
-                                       | otherwise = throwIO e
-    h e                                            = throwIO e
+    h e@(HTTP.StatusCodeException (Status c _) _)
+      | c == 404  = return ()
+      | otherwise = throwIO e
+    h e           = throwIO e
 
 
 ------------------------------------------------------------------------------
@@ -175,7 +177,7 @@ requestNoError' :: String -> Text -> IO ()
 requestNoError' url desired = do
     let fullUrl = "http://127.0.0.1:9753/" ++ url
     url' <- HTTP.parseUrl fullUrl
-    HTTP.Response _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbsRedirect url'
+    HTTP.Response _ _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbs url'
     assertEqual fullUrl desired (T.decodeUtf8 b)
 
 

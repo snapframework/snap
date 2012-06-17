@@ -108,7 +108,7 @@ barInit = makeSnaplet "bar" "Bar Snaplet" Nothing $ do
 ------------------------------------------------------------------------------
 initTest :: IO ()
 initTest = do
-    (out,_,_) <- runSnaplet appInit
+    (out,_,_) <- runSnaplet Nothing appInit
 
     -- note from gdc: wtf?
     if out == "aoeu"
