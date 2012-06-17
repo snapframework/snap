@@ -63,7 +63,7 @@ extra-source-files:
   test/non-cabal-appdir/bad.tpl,
   test/non-cabal-appdir/snaplets/baz/templates/bazpage.tpl,
   test/non-cabal-appdir/snaplets/baz/templates/bazconfig.tpl,
-  test/non-cabal-appdir/snaplets/baz/snaplet.cfg,
+  test/non-cabal-appdir/snaplets/baz/devel.cfg,
   test/non-cabal-appdir/snaplets/embedded/extra-templates/extra.tpl,
   test/non-cabal-appdir/snaplets/embedded/snaplets/heist/templates/embeddedpage.tpl,
   test/non-cabal-appdir/snaplets/heist/templates/index.tpl,
@@ -72,9 +72,9 @@ extra-source-files:
   test/non-cabal-appdir/snaplets/heist/templates/page.tpl,
   test/non-cabal-appdir/good.tpl,
   test/non-cabal-appdir/log/placeholder,
-  test/non-cabal-appdir/snaplet.cfg,
+  test/non-cabal-appdir/devel.cfg,
   test/foosnaplet/templates/foopage.tpl,
-  test/foosnaplet/snaplet.cfg
+  test/foosnaplet/devel.cfg
 
 Library
   hs-source-dirs: src

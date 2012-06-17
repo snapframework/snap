@@ -122,8 +122,8 @@ testDefault = testCase "snap/default" go
     testIt = do
         body <- liftM (S.concat . L.toChunks) $
                 HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
-        assertBool "response contains phrase 'it works!'"
-                   $ "It works!" `S.isInfixOf` body
+        assertBool "response contains phrase 'Snap Example App Login'"
+                   $ "Snap Example App Login" `S.isInfixOf` body
 
 
 ------------------------------------------------------------------------------
