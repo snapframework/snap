@@ -167,17 +167,21 @@ requestTest' url desired = do
 
 
 ------------------------------------------------------------------------------
-requestNoError :: String -> Text -> Test
-requestNoError url desired =
-    testCase (testName url) $ requestNoError' url desired
+requestExpectingError :: String -> Int -> Text -> Test
+requestExpectingError url status desired =
+    testCase (testName url) $ requestExpectingError' url status desired
 
 
 ------------------------------------------------------------------------------
-requestNoError' :: String -> Text -> IO ()
-requestNoError' url desired = do
+requestExpectingError' :: String -> Int -> Text -> IO ()
+requestExpectingError' url status desired = do
     let fullUrl = "http://127.0.0.1:9753/" ++ url
-    url' <- HTTP.parseUrl fullUrl
-    HTTP.Response _ _ _ b <- liftIO $ HTTP.withManager $ HTTP.httpLbs url'
+    req <- HTTP.parseUrl fullUrl
+    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
+    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
+    let b = HTTP.responseBody resp
+        s = HTTP.responseStatus resp
+    assertEqual ("Status code: "++fullUrl) status (statusCode s)
     assertEqual fullUrl desired (T.decodeUtf8 b)
 
 
@@ -199,7 +203,7 @@ tests = testGroup "non-cabal-tests"
     , requestTest "bazpage3" "baz template page <barsplice></barsplice>\n"
     , requestTest "bazpage4" "baz template page <barsplice></barsplice>\n"
     , requestTest "barrooturl" "url"
-    , requestNoError "bazbadpage" "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
+    , requestExpectingError "bazbadpage" 500 "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
     , requestTest "foo/fooSnapletName" "foosnaplet"
 
     , fooConfigPathTest

@@ -58,19 +58,24 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
             snapExe <- findSnap
             systemOrDie $ snapExe ++ " init " ++ snapInitArgs
 
-            snapCoreSrc   <- fromEnv "SNAP_CORE_SRC" $
-                             snapRepos </> "snap-core"
-            snapServerSrc <- fromEnv "SNAP_SERVER_SRC" $
-                             snapRepos </> "snap-server"
-            xmlhtmlSrc    <- fromEnv "XMLHTML_SRC" $ snapRepos </> "xmlhtml"
-            heistSrc      <- fromEnv "HEIST_SRC" $ snapRepos </> "heist"
+            snapCoreSrc     <- fromEnv "SNAP_CORE_SRC" $
+                               snapRepos </> "snap-core"
+            snapServerSrc   <- fromEnv "SNAP_SERVER_SRC" $
+                               snapRepos </> "snap-server"
+            xmlhtmlSrc      <- fromEnv "XMLHTML_SRC" $ snapRepos </> "xmlhtml"
+            heistSrc        <- fromEnv "HEIST_SRC" $ snapRepos </> "heist"
+            dynLoaderSrc    <- fromEnv "DYNAMIC_LOADER_SRC" $
+                               snapRepos </> "snap-loader-dynamic"
+            staticLoaderSrc <- fromEnv "STATIC_LOADER_SRC" $
+                               snapRepos </> "snap-loader-static"
             let snapSrc   =  snapRoot
 
-            forM_ [ "snap-core", "snap-server", "xmlhtml", "heist", "snap" ]
+            forM_ [ "snap-core", "snap-server", "xmlhtml", "heist", "snap"
+                  , "snap-loader-static", "snap-loader-dynamic"]
                   (pkgCleanUp sandbox)
 
             forM_ [ snapCoreSrc, snapServerSrc, xmlhtmlSrc, heistSrc
-                  , snapSrc] $ \s ->
+                  , snapSrc, staticLoaderSrc, dynLoaderSrc] $ \s ->
                 systemOrDie $ concat [ "cabal-dev "
                                      , cabalDevArgs
                                      , " add-source "
