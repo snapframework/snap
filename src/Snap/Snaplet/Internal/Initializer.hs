@@ -13,7 +13,7 @@ module Snap.Snaplet.Internal.Initializer
   , nameSnaplet
   , onUnload
   , addRoutes
-  , wrapHandlers
+  , wrapSite
   , runInitializer
   , runSnaplet
   , combineConfig
@@ -366,13 +366,29 @@ addRoutes rs = do
 
 
 ------------------------------------------------------------------------------
--- | Wraps the snaplet's routing.  This can be used to provide a snaplet that
--- does per-request setup and cleanup, but then dispatches to the rest of the
--- application.
-wrapHandlers :: (Handler b v () -> Handler b v ()) -> Initializer b v ()
-wrapHandlers f0 = do
+-- | Wraps the snaplet's routing.  When all is said and done, a snaplet's
+-- routes end up getting combined into a single 'Handler' action.  This
+-- function allows you to modify that Handler before it actually gets served.
+-- This allows you to do things that need to happen for every request handled
+-- by your snaplet.  Here are some examples of things you might do:
+--
+-- @wrapSite (\site -> removePathTrailingSlashes >> site)@
+-- @wrapSite (\site -> logHandlerStart >> site >> logHandlerFinished)@
+-- @wrapSite (\site -> ensureAdminUser >> site)@
+wrapSite :: (Handler b v () -> Handler b v ())
+         -- ^ Handler modifier function
+         -> Initializer b v ()
+wrapSite f0 = do
     f <- mungeFilter f0
     iModify (\v -> modL hFilter (f.) v)
+
+
+------------------------------------------------------------------------------
+-- | This function has been renamed to 'wrapSite' and is deprecated.  It will
+-- be removed in the next major Snap release.  Fix your code now!
+wrapHandlers :: (Handler b v () -> Handler b v ()) -> Initializer b v ()
+wrapHandlers = wrapSite
+{-# DEPRECATED wrapHandlers #-}
 
 
 ------------------------------------------------------------------------------
