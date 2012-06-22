@@ -91,7 +91,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
               , ("/sessionDemo", sessionDemo)
               , ("/sessionTest", sessionTest)
               ]
-    wrapHandlers (<|> heistServe)
+    wrapSite (<|> heistServe)
     return $ App hs (modL snapletValue fooMod fs) bs sm ns
 
 

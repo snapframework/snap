@@ -13,6 +13,7 @@ module Snap.Snaplet.Internal.Initializer
   , nameSnaplet
   , onUnload
   , addRoutes
+  , wrapHandlers
   , wrapSite
   , runInitializer
   , runSnaplet
@@ -388,7 +389,7 @@ wrapSite f0 = do
 -- be removed in the next major Snap release.  Fix your code now!
 wrapHandlers :: (Handler b v () -> Handler b v ()) -> Initializer b v ()
 wrapHandlers = wrapSite
-{-# DEPRECATED wrapHandlers #-}
+{-# DEPRECATED wrapHandlers "wrapHandlers was renamed to wrapSite" #-}
 
 
 ------------------------------------------------------------------------------

@@ -96,6 +96,7 @@ module Snap.Snaplet
   -- $routes
   , addRoutes
   , wrapHandlers
+  , wrapSite
 
   -- * Handlers
   , Handler
