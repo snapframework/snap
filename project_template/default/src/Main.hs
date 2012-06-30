@@ -79,7 +79,7 @@ main = do
 -- This action is only run once, regardless of whether development or
 -- production mode is in use.
 getConf :: IO (Config Snap AppConfig)
-getConf = commandLineConfig defaultConfig
+getConf = commandLineAppConfig defaultConfig
 
 
 ------------------------------------------------------------------------------
