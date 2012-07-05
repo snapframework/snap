@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
 
 module Snap.Snaplet.Session.Backends.CookieSession
   ( initCookieSessionManager
@@ -10,21 +10,19 @@ module Snap.Snaplet.Session.Backends.CookieSession
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Monad.Reader
-import           Data.ByteString                     (ByteString)
+import           Data.ByteString (ByteString)
 import           Data.Generics
-import           Data.HashMap.Strict                 (HashMap)
-import qualified Data.HashMap.Strict                 as HM
-import           Data.Hashable                       (Hashable)
-import           Data.Serialize                      (Serialize)
-import qualified Data.Serialize                      as S
-import           Data.Text                           (Text)
-import           Snap.Core                           (Snap)
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HM
+import           Data.Hashable (Hashable)
+import           Data.Serialize (Serialize)
+import qualified Data.Serialize as S
+import           Data.Text (Text)
+import           Snap.Core (Snap)
 import           Web.ClientSession
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
 import           Snap.Snaplet.Session
-import           Snap.Snaplet.Session.SessionManager
--------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------

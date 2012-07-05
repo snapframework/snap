@@ -81,35 +81,35 @@ Library
 
   exposed-modules:
     Snap,
-    Snap.Snaplet
-    Snap.Snaplet.Heist
-    Snap.Snaplet.Auth
-    Snap.Snaplet.Auth.Backends.JsonFile
-    Snap.Snaplet.Config
-    Snap.Snaplet.Session
-    Snap.Snaplet.Session.Common
-    Snap.Snaplet.Session.SessionManager
+    Snap.Snaplet,
+    Snap.Snaplet.Heist,
+    Snap.Snaplet.Auth,
+    Snap.Snaplet.Auth.Backends.JsonFile,
+    Snap.Snaplet.Config,
+    Snap.Snaplet.Session,
+    Snap.Snaplet.Session.Common,
     Snap.Snaplet.Session.Backends.CookieSession
 
   other-modules:
-    Control.Access.RoleBased.Checker
-    Control.Access.RoleBased.Role
-    Control.Access.RoleBased.Types
-    Control.Access.RoleBased.Internal.Role
-    Control.Access.RoleBased.Internal.RoleMap
-    Control.Access.RoleBased.Internal.Rule
-    Control.Access.RoleBased.Internal.Types
-    Snap.Snaplet.Auth.AuthManager
-    Snap.Snaplet.Auth.Types
-    Snap.Snaplet.Auth.Handlers
-    Snap.Snaplet.Auth.SpliceHelpers
-    Snap.Snaplet.HeistNoClass
-    Snap.Snaplet.Internal.Initializer
-    Snap.Snaplet.Internal.LensT
-    Snap.Snaplet.Internal.Lensed
-    Snap.Snaplet.Internal.RST
+    Control.Access.RoleBased.Checker,
+    Control.Access.RoleBased.Role,
+    Control.Access.RoleBased.Types,
+    Control.Access.RoleBased.Internal.Role,
+    Control.Access.RoleBased.Internal.RoleMap,
+    Control.Access.RoleBased.Internal.Rule,
+    Control.Access.RoleBased.Internal.Types,
+    Snap.Snaplet.Auth.AuthManager,
+    Snap.Snaplet.Auth.Types,
+    Snap.Snaplet.Auth.Handlers,
+    Snap.Snaplet.Auth.SpliceHelpers,
+    Snap.Snaplet.HeistNoClass,
+    Snap.Snaplet.Internal.Initializer,
+    Snap.Snaplet.Internal.LensT,
+    Snap.Snaplet.Internal.Lensed,
+    Snap.Snaplet.Internal.RST,
     Snap.Snaplet.Internal.Types
-    Snap.Snaplet.Session.SecureCookie
+    Snap.Snaplet.Session.SecureCookie,
+    Snap.Snaplet.Session.SessionManager
 
   if !os(windows)
     build-depends:
