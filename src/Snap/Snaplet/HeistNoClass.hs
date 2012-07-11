@@ -217,8 +217,8 @@ bindSnapletSplices l splices =
 
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
--- around `heistInit'` that uses the default `mempty` HeistState and sets up
--- routes for all the templates.
+-- around `heistInit'` that uses defaultHeistState and sets up routes for all
+-- the templates.
 --
 heistInit :: FilePath                 -- ^ Path to templates
           -> SnapletInit b (Heist b)
