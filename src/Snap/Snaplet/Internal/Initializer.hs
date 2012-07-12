@@ -435,9 +435,11 @@ printInfo msg = do
 mkReloader :: FilePath
            -> String
            -> MVar (Snaplet b)
+           -> IORef (IO ())
            -> Initializer b b (Snaplet b)
            -> IO (Either Text Text)
-mkReloader cwd env mvar i = do
+mkReloader cwd env mvar cleanupRef i = do
+    join $ readIORef cleanupRef
     !res <- runInitializer' mvar env i cwd
     either (return . Left) good res
   where
@@ -479,11 +481,11 @@ runInitializer' :: MVar (Snaplet b)
                 -> FilePath
                 -> IO (Either Text (Snaplet b, InitializerState b))
 runInitializer' mvar env b@(Initializer i) cwd = do
+    cleanupRef <- newIORef (return ())
     let builtinHandlers = [("/admin/reload", reloadSite)]
     let cfg = SnapletConfig [] cwd Nothing "" empty [] Nothing
-                            (mkReloader cwd env mvar b)
+                            (mkReloader cwd env mvar cleanupRef b)
     logRef <- newIORef ""
-    cleanupRef <- newIORef (return ())
 
     let body = do
             ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
