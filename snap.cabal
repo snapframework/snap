@@ -126,6 +126,7 @@ Library
     cereal                    >= 0.3      && < 0.4,
     clientsession             >= 0.7.3.6  && < 0.8,
     configurator              >= 0.1      && < 0.3,
+    comonad                   >= 1.1      && < 3.1,
     containers                >= 0.3      && < 0.6,
     directory                 >= 1.0      && < 1.2,
     directory-tree            >= 0.10     && < 0.11,
