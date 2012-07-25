@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -10,6 +11,7 @@ module Snap.Snaplet.Internal.Types where
 import           Prelude hiding ((.), id)
 import           Control.Applicative
 import           Control.Category ((.), id)
+import           Control.Comonad
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
@@ -22,6 +24,8 @@ import           Data.Monoid
 import           Data.Lens.Lazy
 import           Data.Lens.Template
 import           Data.Text (Text)
+import           Data.Foldable (Foldable(..))
+import           Data.Traversable
 
 import           Snap.Core
 import qualified Snap.Snaplet.Internal.LensT as LT
@@ -72,9 +76,24 @@ data Snaplet s = Snaplet
     , _snapletValue  :: s
     }
 
-
 makeLenses [''SnapletConfig, ''Snaplet]
 
+instance Functor Snaplet where
+  fmap f (Snaplet c a) = Snaplet c (f a)
+
+instance Foldable Snaplet where
+  foldMap f (Snaplet _ a) = f a
+
+instance Traversable Snaplet where
+  traverse f (Snaplet c a) = Snaplet c <$> f a
+
+instance Comonad Snaplet where
+  extract (Snaplet _ a) = a
+
+#if !(MIN_VERSION_comonad(3,0,0))
+instance Extend Snaplet where
+#endif
+  extend f w@(Snaplet c _) = Snaplet c (f w)
 
 ------------------------------------------------------------------------------
 -- | A lens referencing the opaque SnapletConfig data type held inside
