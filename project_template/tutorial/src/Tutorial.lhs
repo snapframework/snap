@@ -280,7 +280,7 @@ into the directory of any project that uses it.  Here's an example of what a
 snaplet filesystem layout might look like:
 
     foosnaplet/
-      |-- *snaplet.cfg*
+      |-- *devel.cfg*
       |-- db.cfg
       |-- public/
           |-- stylesheets/
@@ -293,13 +293,13 @@ snaplet filesystem layout might look like:
           |-- subsnaplet2/
 
 Only the starred items are actually enforced by current code, but we want to
-establish the others as a convention.  The file snaplet.cfg is automatically
+establish the others as a convention.  The file devel.cfg is automatically
 read by the snaplet infrastructure.  It is available to you via the
 `getSnapletUserConfig` function.  Config files use the format defined by Bryan
 O'Sullivan's excellent [configurator
 package](http://hackage.haskell.org/package/configurator).  In this example,
 the user has chosen to put db config items in a separate file and use
-configurator's import functionality to include it in snaplet.cfg.  If
+configurator's import functionality to include it in devel.cfg.  If
 foosnaplet uses `nestSnaplet` or `embedSnaplet` to include any other snaplets,
 then filesystem data defined by those snaplets will be included in
 subdirectories under the `snaplets/` directory.
@@ -343,7 +343,7 @@ make everything work, you have to tell Cabal about your data files by
 including a section like the following in snaplet-killerapp.cabal:
 
     data-files:
-      resources/snaplet.cfg,
+      resources/devel.cfg,
       resources/public/stylesheets/style.css,
       resources/snaplets/heist/templates/page.tpl
 
