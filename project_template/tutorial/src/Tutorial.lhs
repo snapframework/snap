@@ -54,8 +54,11 @@ generates a single response.  From now on, when we talk about state this is
 what we are talking about.  If you need global application state, you have to
 use a thread-safe construct such as an MVar or IORef.
 
-This post is written in literate Haskell, so first we need to get imports out
-of the way.
+This post is written in literate Haskell.  It uses a small external module
+called Part2 that is [available
+here](https://github.com/snapframework/snap/blob/master/project_template/tutorial/src/Part2.lhs).
+You can also install the full code in the current directory with the command
+`snap init tutorial`.  First we need to get imports out of the way.
 
 > {-# LANGUAGE TemplateHaskell #-}
 > {-# LANGUAGE OverloadedStrings #-}
@@ -267,10 +270,10 @@ Now all we need is a simple main function to serve our application.
 This completes a full working application.  We did leave out a little dummy
 code for the Foo and Bar snaplets.  This code is included in Part2.hs.  For
 more information look in our [API
-documentation](http://hackage.haskell.org/packages/archive/snap/0.6.0.2/doc/html/Snap-Snaplet.html).
-No really, that wasn't a joke.  The API docs are written as prose.  It is
-written to be very easy to read, while having the benefit of including all the
-actual type signatures.
+documentation](http://hackage.haskell.org/package/snap), specifically the
+Snap.Snaplet module.  No really, that wasn't a joke.  The API docs are written
+as prose.  They should be very easy to read, while having the benefit of
+including all the actual type signatures.
 
 Filesystem Data and Automatic Installation
 ==========================================
