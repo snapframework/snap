@@ -349,5 +349,11 @@ including a section like the following in snaplet-killerapp.cabal:
 
 Now whenever your snaplet is used, its filesystem data will be automagically
 copied into the local project that is using it, whenever the application is
-run and it sees that the files don't already exist.
+run and it sees that the snaplet's directory does not already exist.  If the
+user upgrades to a new version of the snaplet and the new version made changes
+to the filesystem resources, those resources will NOT be automatically copied
+in by default.  Resource installation *only* happens when the `snaplets/foo`
+directory does not exist.  If you want to get the latest version of the
+filesystem resources, remove the `snaplets/foo` directory, and restart your
+app.
 
