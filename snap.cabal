@@ -1,7 +1,27 @@
 name:           snap
 version:        0.9.1.1
-synopsis:       Snap: A Haskell Web Framework: project starter executable and glue code library
-description:    Snap Framework project starter executable and glue code library
+synopsis:       Top-level package for the Snap Web Framework
+description:
+    This is the top-level package for the official Snap Framework libraries.
+    It includes:
+    .
+    * The Snaplets API
+    .
+    * The \"snap\" executable program for generating starter projects
+    .
+    * Snaplets for sessions, authentication, and templates
+    .
+    To get started, issue the following sequence of commands:
+    .
+    @$ cabal install snap
+    $ mkdir myproject
+    $ cd myproject
+    $ snap init@
+    .
+    If you have trouble or any questions, see our FAQ page
+    (<http://snapframework.com/faq>) or the documentation
+    (<http://snapframework.com/docs>).
+    
 license:        BSD3
 license-file:   LICENSE
 author:         Ozgun Ataman, Doug Beardsley, Gregory Collins, Carl Howells, Chris Smith
