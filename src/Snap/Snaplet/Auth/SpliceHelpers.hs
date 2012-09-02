@@ -20,7 +20,8 @@ module Snap.Snaplet.Auth.SpliceHelpers
 
 import           Data.Lens.Lazy
 import qualified Text.XmlHtml as X
-import           Text.Templating.Heist
+import           Heist
+import qualified Heist.Interpreted as I
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
@@ -53,7 +54,7 @@ addAuthSplices auth = addSplices
 -- present, this will run the contents of the node.
 --
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
-ifLoggedIn :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
+ifLoggedIn :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b v
 ifLoggedIn auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
@@ -66,7 +67,7 @@ ifLoggedIn auth = do
 -- not present, this will run the contents of the node.
 --
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
-ifLoggedOut :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
+ifLoggedOut :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b v
 ifLoggedOut auth = do
   chk <- liftHandler $ withTop auth isLoggedIn
   case chk of
@@ -77,7 +78,7 @@ ifLoggedOut auth = do
 -------------------------------------------------------------------------------
 -- | A splice that will simply print the current user's login, if
 -- there is one.
-loggedInUser :: Lens b (Snaplet (AuthManager b)) -> SnapletSplice b v
+loggedInUser :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b v
 loggedInUser auth = do
   u <- liftHandler $ withTop auth currentUser
-  liftHeist $ maybe (return []) (textSplice . userLogin) u 
+  liftHeist $ maybe (return []) (I.textSplice . userLogin) u 

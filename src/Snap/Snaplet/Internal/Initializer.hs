@@ -25,6 +25,7 @@ module Snap.Snaplet.Internal.Initializer
 import           Prelude hiding ((.), id, catch)
 import           Control.Category
 import           Control.Concurrent.MVar
+import           Control.Error
 import           Control.Exception (SomeException)
 import           Control.Monad
 import           Control.Monad.CatchIO hiding (Handler)
@@ -77,7 +78,8 @@ iGets f = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Converts a plain hook into a Snaplet hook.
-toSnapletHook :: (v -> IO v) -> (Snaplet v -> IO (Snaplet v))
+toSnapletHook :: (v -> EitherT Text IO v)
+              -> (Snaplet v -> EitherT Text IO (Snaplet v))
 toSnapletHook f (Snaplet cfg val) = do
     val' <- f val
     return $! Snaplet cfg val'
@@ -91,11 +93,13 @@ toSnapletHook f (Snaplet cfg val) = do
 -- define its views.  The Heist snaplet provides the 'addTemplates' function
 -- which allows other snaplets to set up their own templates.  'addTemplates'
 -- is implemented using this function.
-addPostInitHook :: (v -> IO v) -> Initializer b v ()
+addPostInitHook :: (v -> EitherT Text IO v)
+                -> Initializer b v ()
 addPostInitHook = addPostInitHook' . toSnapletHook
 
 
-addPostInitHook' :: (Snaplet v -> IO (Snaplet v)) -> Initializer b v ()
+addPostInitHook' :: (Snaplet v -> EitherT Text IO (Snaplet v))
+                 -> Initializer b v ()
 addPostInitHook' h = do
     h' <- upHook h
     addPostInitHookBase h'
@@ -103,15 +107,15 @@ addPostInitHook' h = do
 
 ------------------------------------------------------------------------------
 -- | Variant of addPostInitHook for when you have things wrapped in a Snaplet.
-addPostInitHookBase :: (Snaplet b -> IO (Snaplet b))
+addPostInitHookBase :: (Snaplet b -> EitherT Text IO (Snaplet b))
                     -> Initializer b v ()
 addPostInitHookBase = Initializer . lift . tell . Hook
 
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook :: (Snaplet v -> IO (Snaplet v))
-       -> Initializer b v (Snaplet b -> IO (Snaplet b))
+upHook :: (Snaplet v -> EitherT Text IO (Snaplet v))
+       -> Initializer b v (Snaplet b -> EitherT Text IO (Snaplet b))
 upHook h = Initializer $ do
     l <- ask
     return $ upHook' l h
@@ -119,7 +123,7 @@ upHook h = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook' :: (Lens b a) -> (a -> IO a) -> b -> IO b
+upHook' :: Monad m => Lens b a -> (a -> m a) -> b -> m b
 upHook' l h b = do
     v <- h (getL l b)
     return $ setL l v b
@@ -487,12 +491,12 @@ runInitializer' mvar env b@(Initializer i) cwd = do
                             (mkReloader cwd env mvar cleanupRef b)
     logRef <- newIORef ""
 
-    let body = do
-            ((res, s), (Hook hook)) <- runWriterT $ LT.runLensT i id $
+    let body = runEitherT $ do
+            ((res, s), (Hook hook)) <- lift $ runWriterT $ LT.runLensT i id $
                 InitializerState True cleanupRef builtinHandlers id cfg logRef
                                  env
             res' <- hook res
-            return $ Right (res', s)
+            right (res', s)
 
         handler e = do
             join $ readIORef cleanupRef

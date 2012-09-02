@@ -12,6 +12,7 @@ import           Prelude hiding ((.), id)
 import           Control.Applicative
 import           Control.Category ((.), id)
 import           Control.Comonad
+import           Control.Error
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
@@ -358,7 +359,7 @@ data InitializerState b = InitializerState
 ------------------------------------------------------------------------------
 -- | Wrapper around IO actions that modify state elements created during
 -- initialization.
-newtype Hook a = Hook (Snaplet a -> IO (Snaplet a))
+newtype Hook a = Hook (Snaplet a -> EitherT Text IO (Snaplet a))
 
 
 instance Monoid (Hook a) where
