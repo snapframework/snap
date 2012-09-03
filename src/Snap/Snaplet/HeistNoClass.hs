@@ -373,6 +373,10 @@ withHeistState heist f = withHeistState' (subSnaplet heist) f
 
 
 ------------------------------------------------------------------------------
+-- | Adds more HeistConfig data using mappend with whatever is currently
+-- there.  This is the preferred method for adding all four kinds of splices
+-- as well as new
+-- templates.
 addConfig :: Snaplet (Heist b)
           -> HeistConfig (Handler b b)
           -> Initializer b v ()

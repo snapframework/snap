@@ -177,8 +177,8 @@ renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
 
 
 ------------------------------------------------------------------------------
--- | Renders a template as text\/html. If the given template is not found,
--- this returns 'empty'.
+-- | Renders a compiled template as text\/html. If the given template is not
+-- found, this returns 'empty'.
 cRender :: HasHeist b
         => ByteString
         -- ^ Template name
@@ -187,8 +187,8 @@ cRender t = withTop' heistLens (Unclassed.cRender t)
 
 
 ------------------------------------------------------------------------------
--- | Renders a template as the given content type.  If the given template
--- is not found, this returns 'empty'.
+-- | Renders a compiled template as the given content type.  If the given
+-- template is not found, this returns 'empty'.
 cRenderAs :: HasHeist b
           => ByteString
           -- ^ Content type to render with
