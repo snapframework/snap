@@ -95,7 +95,7 @@ class HasHeist b where
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: HasHeist b
-             => Heist b
+             => Snaplet (Heist b)
              -> ByteString
              -- ^ The url prefix for the template routes
              -> Initializer b v ()
@@ -110,7 +110,7 @@ addTemplates h pfx = withTop' heistLens (Unclassed.addTemplates h pfx)
 -- getSnapletFilePath if you want your snaplet to use templates within its
 -- normal directory structure.
 addTemplatesAt :: HasHeist b
-               => Heist b
+               => Snaplet (Heist b)
                -> ByteString
                -- ^ URL prefix for template routes
                -> FilePath

@@ -6,6 +6,10 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
+#ifndef MIN_VERSION_comonad
+#define MIN_VERSION_comonad(x,y,z) 1
+#endif
+
 module Snap.Snaplet.Internal.Types where
 
 import           Prelude hiding ((.), id)

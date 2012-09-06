@@ -21,14 +21,14 @@ import Snap.Util.FileServe
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import qualified Snap.Snaplet.HeistNoClass as HNC
-import Text.Templating.Heist
+import Heist.Interpreted
 
 import Blackbox.Common
 import Blackbox.BarSnaplet
 import Blackbox.FooSnaplet
 import Blackbox.EmbeddedSnaplet
 import Blackbox.Types
-import Snap.Snaplet.Session hiding (lookup)
+import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 
 
@@ -75,8 +75,8 @@ fooMod f = f { fooField = fooField f ++ "z" }
 app :: SnapletInit App App
 app = makeSnaplet "app" "Test application" Nothing $ do
     hs <- nestSnaplet "heist" heist $ heistInit "templates"
-    fs <- nestSnaplet "foo" foo fooInit
-    bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit foo
+    fs <- nestSnaplet "foo" foo $ fooInit hs
+    bs <- nestSnaplet "" bar $ nameSnaplet "baz" $ barInit hs foo
     sm <- nestSnaplet "session" session $
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     ns <- embedSnaplet "embed" embedded embeddedInit

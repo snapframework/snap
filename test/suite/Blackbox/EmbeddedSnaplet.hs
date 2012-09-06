@@ -19,7 +19,8 @@ import System.FilePath.Posix
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Text.Templating.Heist
+import Heist
+import Heist.Interpreted
 
 -- If we universally quantify EmbeddedSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
@@ -40,7 +41,7 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
     -- This is the implementation of addTemplates, but we do it here manually
     -- to test coverage for addTemplatesAt.
     snapletPath <- getSnapletFilePath
-    addTemplatesAt "onemoredir" (snapletPath </> "extra-templates")
+    addTemplatesAt hs "onemoredir" (snapletPath </> "extra-templates")
 
     embeddedLens <- getLens
     addRoutes [("aoeuhtns", withSplices

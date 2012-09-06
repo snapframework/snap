@@ -21,7 +21,8 @@ import Snap.Util.FileServe
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Text.Templating.Heist
+import Heist
+import Heist.Interpreted
 
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
@@ -38,7 +39,7 @@ instance HasHeist FooSnaplet where
 fooInit :: SnapletInit FooSnaplet FooSnaplet
 fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
     hs <- nestSnaplet "heist" fooHeist $ heistInit "templates"
-    addTemplates "foo"
+    addTemplates hs "foo"
     rootUrl <- getSnapletRootURL
     fooLens <- getLens
     addRoutes [("fooRootUrl", writeBS rootUrl)

@@ -4,7 +4,7 @@ import qualified Data.Text as T
 import Snap.Core
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Text.Templating.Heist
+import Heist.Interpreted
 
 genericConfigString :: (MonadSnaplet m, Monad (m b v)) => m b v T.Text
 genericConfigString = do
@@ -18,6 +18,6 @@ genericConfigString = do
 handlerConfig :: Handler b v ()
 handlerConfig = writeText =<< genericConfigString
 
-shConfigSplice :: SnapletSplice b v
+shConfigSplice :: SnapletISplice b v
 shConfigSplice = liftHeist . textSplice =<< genericConfigString
 

@@ -301,7 +301,7 @@ finalLoadHook (Running _ _) = left "finalLoadHook called while running"
 -- | Adds templates to the Heist HeistConfig.  Other snaplets should use
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
-addTemplates :: Heist b
+addTemplates :: Snaplet (Heist b)
              -> ByteString
              -- ^ The url prefix for the template routes
              -> Initializer b (Heist b) ()
@@ -317,7 +317,7 @@ addTemplates h urlPrefix = do
 -- your templates are located, but means that you have to explicitly call
 -- getSnapletFilePath if you want your snaplet to use templates within its
 -- normal directory structure.
-addTemplatesAt :: Heist b
+addTemplatesAt :: Snaplet (Heist b)
                -> ByteString
                -- ^ URL prefix for template routes
                -> FilePath
@@ -337,7 +337,7 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
-    liftIO $ atomicModifyIORef (_heistConfig h)
+    liftIO $ atomicModifyIORef (_heistConfig $ extract h)
         (\hc -> (hc `mappend` mempty { hcTemplates = ts }, ()))
 
 

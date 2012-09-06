@@ -17,7 +17,8 @@ import Data.Text (Text)
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
-import Text.Templating.Heist
+import Heist
+import Heist.Interpreted
 
 import Blackbox.Common
 import Blackbox.FooSnaplet
@@ -33,11 +34,12 @@ barsplice :: [(Text, SnapletHeist b v Template)]
 barsplice = [("barsplice", liftHeist $ textSplice "contents of the bar splice")]
 
 barInit :: HasHeist b
-        => Lens b (Snaplet FooSnaplet)
+        => Snaplet (Heist b)
+        -> Lens b (Snaplet FooSnaplet)
         -> SnapletInit b (BarSnaplet b)
-barInit l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
+barInit h l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
     config <- getSnapletUserConfig
-    addTemplates ""
+    addTemplates h ""
     rootUrl <- getSnapletRootURL
     addRoutes [("barconfig", liftIO (lookup config "barSnapletField") >>= writeLBS . fromJust)
               ,("barrooturl", writeBS $ "url" `B.append` rootUrl)

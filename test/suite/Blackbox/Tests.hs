@@ -14,6 +14,7 @@ import           Control.Monad.Trans
 import qualified Data.ByteString.Char8          as S
 import qualified Data.ByteString.Lazy.Char8     as L
 import           Data.Text.Lazy                 (Text)
+import qualified Data.Text.Lazy                 as T
 import qualified Data.Text.Lazy.Encoding        as T
 import qualified Network.HTTP.Conduit           as HTTP
 import           Network.HTTP.Types             (Status(..))
@@ -259,19 +260,19 @@ reloadTest = testCase "internal/reload-test" $ do
     testWithCwd' "admin/reload" $ \cwd' b -> do
         let cwd = S.pack cwd'
         let response =
-                L.fromChunks [ "Error reloading site!\n\nInitializer "
+                T.concat     [ "Error reloading site!\n\nInitializer "
                              , "threw an exception...\n"
-                             , cwd
+                             , T.pack cwd'
                              , "/non-cabal-appdir/snaplets/heist"
                              , "/templates/bad.tpl \""
-                             , cwd
+                             , T.pack cwd'
                              , "/non-cabal-appdir/snaplets/heist/templates"
                              , "/bad.tpl\" (line 2, column 1):\nunexpected "
                              , "end of input\nexpecting \"=\", \"/\" or "
-                             , "\">\"\n\n\n...but before it died it generated "
+                             , "\">\"\n\n...but before it died it generated "
                              , "the following output:\nInitializing app @ /\n"
                              , "Initializing heist @ /heist\n\n" ]
-        assertEqual "admin/reload" response b
+        assertEqual "admin/reload" response (T.decodeUtf8 b)
 
     remove badTplNew
     copyFile goodTplOrig goodTplNew
