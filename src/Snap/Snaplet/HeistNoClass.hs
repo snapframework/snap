@@ -470,9 +470,18 @@ cRenderAs ct t = cRenderHelper (Just ct) t
 
 
 ------------------------------------------------------------------------------
+serveURI :: Handler b (Heist b) ByteString
+serveURI = do
+    p <- getSafePath
+    -- Allows users to prefix template filenames with an underscore to prevent
+    -- the template from being served.
+    if head p == '_' then pass else return $ B.pack p
+
+
+------------------------------------------------------------------------------
 heistServe :: Handler b (Heist b) ()
 heistServe =
-    ifTop (render "index") <|> (render . B.pack =<< getSafePath)
+    ifTop (render "index") <|> (render =<< serveURI)
 
 
 ------------------------------------------------------------------------------
@@ -485,7 +494,7 @@ heistServeSingle t =
 ------------------------------------------------------------------------------
 cHeistServe :: Handler b (Heist b) ()
 cHeistServe =
-    ifTop (cRender "index") <|> (cRender . B.pack =<< getSafePath)
+    ifTop (cRender "index") <|> (cRender =<< serveURI)
 
 
 ------------------------------------------------------------------------------

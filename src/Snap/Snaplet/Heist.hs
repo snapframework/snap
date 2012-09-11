@@ -200,7 +200,11 @@ cRenderAs ct t = withTop' heistLens (Unclassed.cRenderAs ct t)
 
 ------------------------------------------------------------------------------
 -- | Analogous to 'fileServe'. If the template specified in the request path
--- is not found, it returns 'empty'.
+-- is not found, it returns 'empty'.  Also, this function does not serve any
+-- templates beginning with an underscore.  This gives you a way to prevent
+-- some templates from being served.  For example, you might have a template
+-- that contains only the navbar of your pages, and you wouldn't want that
+-- template to be visible to the user as a standalone template.
 heistServe :: HasHeist b => Handler b v ()
 heistServe = withTop' heistLens Unclassed.heistServe
 
@@ -216,8 +220,7 @@ heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 
 
 ------------------------------------------------------------------------------
--- | Analogous to 'fileServe'. If the template specified in the request path
--- is not found, it returns 'empty'.
+-- | A compiled version of 'heistServe'.
 cHeistServe :: HasHeist b => Handler b v ()
 cHeistServe = withTop' heistLens Unclassed.cHeistServe
 
