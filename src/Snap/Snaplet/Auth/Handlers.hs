@@ -44,6 +44,7 @@ import           Snap.Snaplet.Session
 createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
            -> Handler b (AuthManager b) AuthUser
+createUser "" _ = error "Username cannot be empty"
 createUser unm pwd = withBackend (\r -> liftIO $ buildAuthUser r unm pwd)
 
 
