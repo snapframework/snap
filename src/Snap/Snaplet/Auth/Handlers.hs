@@ -43,8 +43,11 @@ import           Snap.Snaplet.Session
 --
 createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
-           -> Handler b (AuthManager b) AuthUser
-createUser unm pwd = withBackend (\r -> liftIO $ buildAuthUser r unm pwd)
+           -> Handler b (AuthManager b) (Either String AuthUser)
+createUser "" _ = return $ Left "Username cannot be empty"
+createUser unm pwd = withBackend $ \r -> do
+    u <- liftIO $ buildAuthUser r unm pwd
+    return $ Right u
 
 
 ------------------------------------------------------------------------------
@@ -159,8 +162,12 @@ isLoggedIn = isJust <$> currentUser
 --
 -- May throw a 'BackendError' if something goes wrong.
 --
-saveUser :: AuthUser -> Handler b (AuthManager b) AuthUser
-saveUser u = withBackend $ liftIO . flip save u
+saveUser :: AuthUser -> Handler b (AuthManager b) (Either String AuthUser)
+saveUser u
+    | userLogin u == "" = return $ Left "Username cannot be empty"
+    | otherwise = withBackend $ \r -> do
+        savedUser <- liftIO $ save r u
+        return $ Right savedUser
 
 
 ------------------------------------------------------------------------------
@@ -290,7 +297,7 @@ forceLogin :: AuthUser       -- ^ An existing user, somehow looked up from db
            -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 forceLogin u = do
     s <- gets session
-    withSession s $ do
+    withSession s $
         case userId u of
           Just x -> do
             withTop s (setSessionUserId x)
@@ -348,7 +355,7 @@ removeSessionUserId = deleteFromSession "__user_id"
 getSessionUserId :: Handler b SessionManager (Maybe UserId)
 getSessionUserId = do
   uid <- getFromSession "__user_id"
-  return $ uid >>= return . UserId
+  return $ liftM UserId uid
 
 
 ------------------------------------------------------------------------------
@@ -392,7 +399,7 @@ cacheOrLookup f = do
 registerUser
   :: ByteString            -- ^ Login field
   -> ByteString            -- ^ Password field
-  -> Handler b (AuthManager b) AuthUser
+  -> Handler b (AuthManager b) (Either String AuthUser)
 registerUser lf pf = do
     l <- fmap decodeUtf8 <$> getParam lf
     p <- getParam pf
@@ -424,11 +431,11 @@ loginUser unf pwdf remf loginFail loginSucc =
     go = do
         mbUsername <- getParam unf
         mbPassword <- getParam pwdf
-        remember   <- (runMaybeT $ do
-                           field <- MaybeT $ return remf
+        remember   <- liftM (fromMaybe False)
+                        (runMaybeT $
+                        do field <- MaybeT $ return remf
                            value <- MaybeT $ getParam field
-                           return $ value == "1"
-                      ) >>= return . fromMaybe False
+                           return $ value == "1")
 
 
         password <- maybe (throwError PasswordMissing) return mbPassword
