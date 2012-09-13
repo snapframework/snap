@@ -11,7 +11,7 @@
 .DS_Store
 .hpc
 cabal-dev/
-dist/
+dist*/
 docs/templates/out
 sitekey.txt
 test/test-cabal-dev
