@@ -75,7 +75,7 @@ data Snaplet s = Snaplet
 
 makeLenses [''SnapletConfig, ''Snaplet]
 
-
+{-
 ------------------------------------------------------------------------------
 -- | A lens referencing the opaque SnapletConfig data type held inside
 -- Snaplet.
@@ -85,7 +85,7 @@ snapletConfig :: Lens (Snaplet a) SnapletConfig
 ------------------------------------------------------------------------------
 -- | A lens referencing the user-defined state type wrapped by a Snaplet.
 snapletValue :: Lens (Snaplet a) a
-
+-}
 
 ------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
