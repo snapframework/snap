@@ -14,5 +14,6 @@ cabal-dev/
 dist*/
 docs/templates/out
 sitekey.txt
+test/dist*
 test/test-cabal-dev
 test/test-snap-exe
