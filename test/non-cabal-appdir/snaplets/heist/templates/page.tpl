@@ -3,6 +3,6 @@
 <title>Example App</title>
 </head>
 <body>
-<content/>
+<apply-content/>
 </body>
 </html>
