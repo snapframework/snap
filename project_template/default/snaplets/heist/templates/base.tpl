@@ -6,7 +6,7 @@
   <body>
     <div id="content">
 
-      <content/>
+      <apply-content/>
 
     </div>
   </body>
