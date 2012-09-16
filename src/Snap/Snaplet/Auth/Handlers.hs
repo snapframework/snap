@@ -21,7 +21,8 @@ import           Data.Maybe (fromMaybe, isJust)
 import           Data.Serialize hiding (get)
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
-import           Data.Text (Text)
+import           Data.Text (Text, null, strip)
+import           Prelude hiding (null)
 import           Web.ClientSession
 ------------------------------------------------------------------------------
 import           Snap.Core
@@ -44,8 +45,9 @@ import           Snap.Snaplet.Session
 createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
            -> Handler b (AuthManager b) (Either String AuthUser)
-createUser "" _ = return $ Left "Username cannot be empty"
-createUser unm pwd = withBackend $ \r -> do
+createUser unm pwd
+  | null $ strip unm = return $ Left "Username cannot be empty" 
+  | otherwise = withBackend $ \r -> do
     u <- liftIO $ buildAuthUser r unm pwd
     return $ Right u
 
@@ -164,7 +166,7 @@ isLoggedIn = isJust <$> currentUser
 --
 saveUser :: AuthUser -> Handler b (AuthManager b) (Either String AuthUser)
 saveUser u
-    | userLogin u == "" = return $ Left "Username cannot be empty"
+    | null $ userLogin u = return $ Left "Username cannot be empty"
     | otherwise = withBackend $ \r -> do
         savedUser <- liftIO $ save r u
         return $ Right savedUser
