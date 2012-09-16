@@ -46,14 +46,14 @@ module Snap.Snaplet
     Snaplet
   , SnapletConfig
 
+  -- * Lenses
+  -- $lenses
+
   -- * Snaplet Helper Functions
   -- $snapletHelpers
   , snapletConfig
   , snapletValue
   , subSnaplet
-
-  -- * Lenses
-  -- $lenses
 
   -- * MonadSnaplet
   -- $monadSnaplet
@@ -136,7 +136,7 @@ import           Snap.Snaplet.Internal.Types
 -- contains all of the application state; we call this state the \"base\"
 -- state.
 --
--- We provide a couple of helper functions for working with Snaplet types.
+-- We export several helper lenses for working with Snaplet types.
 
 -- $lenses
 -- In the example above, the @Foo@ snaplet has to be written to work with any
