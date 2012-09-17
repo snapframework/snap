@@ -15,18 +15,18 @@ module Snap.Snaplet.Heist
   , heistInit'
   , addTemplates
   , addTemplatesAt
+  , Unclassed.addConfig
   , modifyHeistState
   , withHeistState
   , addSplices
 
-  , Unclassed.addConfig
+  -- * Handler Functions
+  -- $handlerSection
   , cRender
   , cRenderAs
   , cHeistServe
   , cHeistServeSingle
 
-  -- * Handler Functions
-  -- $handlerSection
   , render
   , renderAs
   , heistServe
@@ -121,7 +121,11 @@ addTemplatesAt h pfx p =
 
 
 ------------------------------------------------------------------------------
--- | Allows snaplets to add splices.
+-- | Allows snaplets to add interpreted splices.
+--
+-- NOTE: The splices added with this function will not work if you render your
+-- templates with cRender.  To add splices that work with cRender, you have to
+-- use the addConfig function to add compiled splices or load time splices.
 addSplices :: (HasHeist b)
            => [(Text, Unclassed.SnapletISplice b v)]
            -- ^ Splices to bind
@@ -131,8 +135,6 @@ addSplices = Unclassed.addSplices' heistLens
 
 ------------------------------------------------------------------------------
 -- | More general function allowing arbitrary HeistState modification.
--- Without this function you wouldn't be able to bind more complicated splices
--- like the cache tag.
 modifyHeistState :: (HasHeist b)
                  => (HeistState (Handler b b) -> HeistState (Handler b b))
                  -- ^ HeistState modifying function
@@ -151,7 +153,10 @@ withHeistState = Unclassed.withHeistState' heistLens
 
 -- $handlerSection
 -- This section contains functions in the 'Handler' monad that you'll use in
--- processing requests.
+-- processing requests.  Functions beginning with a 'c' prefix use compiled
+-- template rendering.  The other functions use the older interpreted
+-- rendering.  Splices added with addSplices will only work if you use
+-- interpreted rendering.
 
 
 ------------------------------------------------------------------------------
