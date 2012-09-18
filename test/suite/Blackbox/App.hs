@@ -37,12 +37,10 @@ import Snap.Snaplet.Session
 import Snap.Snaplet.Session.Backends.CookieSession
 
 
-------------------------------------------------------------------------------
---
---                          --------------------
---                          -   THE SNAPLET    -
---                          --------------------
---
+                            --------------------
+                            --  THE SNAPLET   --
+                            --------------------
+  
 ------------------------------------------------------------------------------
 app :: SnapletInit App App
 app = makeSnaplet "app" "Test application" Nothing $ do
@@ -111,5 +109,4 @@ sessionTest = withSession session $ do
 
 fooMod :: FooSnaplet -> FooSnaplet
 fooMod f = f { fooField = fooField f ++ "z" }
-
 
