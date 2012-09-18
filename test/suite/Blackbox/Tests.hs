@@ -26,14 +26,36 @@ import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test, path)
 
 ------------------------------------------------------------------------------
--- TODO: fix all the hardcoded ports and strings in here, order the functions
--- non-randomly
+-- TODO: order the functions non-randomly
 ------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+testServer :: String
+testServer = "http://127.0.0.1"
+
+
+------------------------------------------------------------------------------
+testPort :: String
+testPort = "9753"
+
+
+------------------------------------------------------------------------------
+-- | The server uri, WITHOUT the leading slash.
+testServerUri :: String
+testServerUri = testServer ++ ":" ++ testPort
+
+
+------------------------------------------------------------------------------
+-- | The server url, with the leading slash.
+testServerUrl :: String
+testServerUrl = testServerUri ++ "/"
 
 
 ------------------------------------------------------------------------------
 testName :: String -> String
 testName uri = "internal/" ++ uri
+
 
 ------------------------------------------------------------------------------
 requestTest :: String -> Text -> Test
@@ -45,11 +67,6 @@ assertRelativelyTheSame :: FilePath -> FilePath -> IO ()
 assertRelativelyTheSame p expected = do
     b <- makeRelativeToCurrentDirectory p
     assertEqual ("expected " ++ expected) expected b
-
-
-------------------------------------------------------------------------------
-testServerUri :: String
-testServerUri = "http://127.0.0.1:9753"
 
 
 ------------------------------------------------------------------------------
@@ -83,7 +100,7 @@ testWithCwd' uri f = do
     f cwd b
 
   where
-    slashUri = "/" ++ uri
+    slashUri = '/' : uri
 
 
 ------------------------------------------------------------------------------
@@ -146,7 +163,7 @@ expect404 :: String -> IO ()
 expect404 url = action `catch` h
   where
     action = do
-        HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
+        HTTP.simpleHttp $ testServerUrl ++ url
         assertFailure "expected 404"
 
     h e@(HTTP.StatusCodeException (Status c _) _)
@@ -163,7 +180,7 @@ request404Test url = testCase (testName url) $ expect404 url
 ------------------------------------------------------------------------------
 requestTest' :: String -> Text -> IO ()
 requestTest' url desired = do
-    actual <- HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
+    actual <- HTTP.simpleHttp $ testServerUrl ++ url
     assertEqual url desired (T.decodeUtf8 actual)
 
 
@@ -176,7 +193,7 @@ requestExpectingError url status desired =
 ------------------------------------------------------------------------------
 requestExpectingError' :: String -> Int -> Text -> IO ()
 requestExpectingError' url status desired = do
-    let fullUrl = "http://127.0.0.1:9753/" ++ url
+    let fullUrl = testServerUrl ++ url
     req <- HTTP.parseUrl fullUrl
     let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
     resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
