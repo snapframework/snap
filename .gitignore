@@ -17,3 +17,4 @@ sitekey.txt
 test/dist*
 test/test-cabal-dev
 test/test-snap-exe
+test/dist/snaplets
