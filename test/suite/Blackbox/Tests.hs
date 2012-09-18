@@ -26,8 +26,8 @@ import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test, path)
 
 ------------------------------------------------------------------------------
--- TODO: order the functions non-randomly
-------------------------------------------------------------------------------
+
+
 
 
 ------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ testPort = "9753"
 
 
 ------------------------------------------------------------------------------
--- | The server uri, WITHOUT the leading slash.
+-- | The server uri, without the leading slash.
 testServerUri :: String
 testServerUri = testServer ++ ":" ++ testPort
 
@@ -50,6 +50,51 @@ testServerUri = testServer ++ ":" ++ testPort
 -- | The server url, with the leading slash.
 testServerUrl :: String
 testServerUrl = testServerUri ++ "/"
+
+
+------------------------------------------------------------------------------
+--
+--                          --------------------
+--                          -   TEST LOADER    -
+--                          --------------------
+--
+------------------------------------------------------------------------------
+tests :: Test
+tests = testGroup "non-cabal-tests"
+    [ requestTest "hello" "hello world"
+    , requestTest "index" "index page\n"
+    , requestTest "" "index page\n"
+    , requestTest "splicepage" "splice page contents of the app splice\n"
+    , requestTest "routeWithSplice" "routeWithSplice: foo snaplet data stringz"
+    , requestTest "routeWithConfig" "routeWithConfig: topConfigValue"
+    , requestTest "foo/foopage" "foo template page\n"
+    , requestTest "foo/fooConfig" "fooValue"
+    , requestTest "foo/fooRootUrl" "foo"
+    , requestTest "barconfig" "barValue"
+    , requestTest "bazpage" "baz template page <barsplice></barsplice>\n"
+    , requestTest "bazpage2" "baz template page contents of the bar splice\n"
+    , requestTest "bazpage3" "baz template page <barsplice></barsplice>\n"
+    , requestTest "bazpage4" "baz template page <barsplice></barsplice>\n"
+    , requestTest "barrooturl" "url"
+    , requestExpectingError "bazbadpage" 500 "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
+    , requestTest "foo/fooSnapletName" "foosnaplet"
+
+    , fooConfigPathTest
+
+    -- Test the embedded snaplet
+    , requestTest "embed/heist/embeddedpage" "embedded snaplet page <asplice></asplice>\n"
+    , requestTest "embed/aoeuhtns" "embedded snaplet page splice value42\n"
+    , requestTest "embed/heist/onemoredir/extra" "This is an extra template\n"
+
+    -- This set of tests highlights the differences in the behavior of the
+    -- get... functions from MonadSnaplet.
+    , fooHandlerConfigTest
+    , barHandlerConfigTest
+    , bazpage5Test
+    , bazConfigTest
+    , requestTest "sessionDemo" "[(\"foo\",\"bar\")]\n"
+    , reloadTest
+    ]
 
 
 ------------------------------------------------------------------------------
@@ -63,6 +108,39 @@ requestTest url desired = testCase (testName url) $ requestTest' url desired
 
 
 ------------------------------------------------------------------------------
+requestTest' :: String -> Text -> IO ()
+requestTest' url desired = do
+    actual <- HTTP.simpleHttp $ testServerUrl ++ url
+    assertEqual url desired (T.decodeUtf8 actual)
+
+
+------------------------------------------------------------------------------
+requestExpectingError :: String -> Int -> Text -> Test
+requestExpectingError url status desired =
+    testCase (testName url) $ requestExpectingError' url status desired
+
+
+------------------------------------------------------------------------------
+requestExpectingError' :: String -> Int -> Text -> IO ()
+requestExpectingError' url status desired = do
+    let fullUrl = testServerUrl ++ url
+    req <- HTTP.parseUrl fullUrl
+    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
+    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
+    let b = HTTP.responseBody resp
+        s = HTTP.responseStatus resp
+    assertEqual ("Status code: "++fullUrl) status (statusCode s)
+    assertEqual fullUrl desired (T.decodeUtf8 b)
+
+
+------------------------------------------------------------------------------
+fooConfigPathTest :: Test
+fooConfigPathTest = testCase (testName "foo/fooFilePath") $ do
+    b <- liftM L.unpack $ grab "/foo/fooFilePath"
+    assertRelativelyTheSame b "non-cabal-appdir/snaplets/foosnaplet"
+
+
+------------------------------------------------------------------------------
 assertRelativelyTheSame :: FilePath -> FilePath -> IO ()
 assertRelativelyTheSame p expected = do
     b <- makeRelativeToCurrentDirectory p
@@ -72,13 +150,6 @@ assertRelativelyTheSame p expected = do
 ------------------------------------------------------------------------------
 grab :: MonadIO m => String -> m L.ByteString
 grab path = liftIO $ HTTP.simpleHttp $ testServerUri ++ path
-
-
-------------------------------------------------------------------------------
-fooConfigPathTest :: Test
-fooConfigPathTest = testCase (testName "foo/fooFilePath") $ do
-    b <- liftM L.unpack $ grab "/foo/fooFilePath"
-    assertRelativelyTheSame b "non-cabal-appdir/snaplets/foosnaplet"
 
 
 ------------------------------------------------------------------------------
@@ -176,70 +247,6 @@ expect404 url = action `catch` h
 request404Test :: String -> Test
 request404Test url = testCase (testName url) $ expect404 url
 
-
-------------------------------------------------------------------------------
-requestTest' :: String -> Text -> IO ()
-requestTest' url desired = do
-    actual <- HTTP.simpleHttp $ testServerUrl ++ url
-    assertEqual url desired (T.decodeUtf8 actual)
-
-
-------------------------------------------------------------------------------
-requestExpectingError :: String -> Int -> Text -> Test
-requestExpectingError url status desired =
-    testCase (testName url) $ requestExpectingError' url status desired
-
-
-------------------------------------------------------------------------------
-requestExpectingError' :: String -> Int -> Text -> IO ()
-requestExpectingError' url status desired = do
-    let fullUrl = testServerUrl ++ url
-    req <- HTTP.parseUrl fullUrl
-    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
-    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
-    let b = HTTP.responseBody resp
-        s = HTTP.responseStatus resp
-    assertEqual ("Status code: "++fullUrl) status (statusCode s)
-    assertEqual fullUrl desired (T.decodeUtf8 b)
-
-
-------------------------------------------------------------------------------
-tests :: Test
-tests = testGroup "non-cabal-tests"
-    [ requestTest "hello" "hello world"
-    , requestTest "index" "index page\n"
-    , requestTest "" "index page\n"
-    , requestTest "splicepage" "splice page contents of the app splice\n"
-    , requestTest "routeWithSplice" "routeWithSplice: foo snaplet data stringz"
-    , requestTest "routeWithConfig" "routeWithConfig: topConfigValue"
-    , requestTest "foo/foopage" "foo template page\n"
-    , requestTest "foo/fooConfig" "fooValue"
-    , requestTest "foo/fooRootUrl" "foo"
-    , requestTest "barconfig" "barValue"
-    , requestTest "bazpage" "baz template page <barsplice></barsplice>\n"
-    , requestTest "bazpage2" "baz template page contents of the bar splice\n"
-    , requestTest "bazpage3" "baz template page <barsplice></barsplice>\n"
-    , requestTest "bazpage4" "baz template page <barsplice></barsplice>\n"
-    , requestTest "barrooturl" "url"
-    , requestExpectingError "bazbadpage" 500 "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
-    , requestTest "foo/fooSnapletName" "foosnaplet"
-
-    , fooConfigPathTest
-
-    -- Test the embedded snaplet
-    , requestTest "embed/heist/embeddedpage" "embedded snaplet page <asplice></asplice>\n"
-    , requestTest "embed/aoeuhtns" "embedded snaplet page splice value42\n"
-    , requestTest "embed/heist/onemoredir/extra" "This is an extra template\n"
-
-    -- This set of tests highlights the differences in the behavior of the
-    -- get... functions from MonadSnaplet.
-    , fooHandlerConfigTest
-    , barHandlerConfigTest
-    , bazpage5Test
-    , bazConfigTest
-    , requestTest "sessionDemo" "[(\"foo\",\"bar\")]\n"
-    , reloadTest
-    ]
 
 remove :: FilePath -> IO ()
 remove f = do

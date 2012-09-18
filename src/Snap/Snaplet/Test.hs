@@ -3,13 +3,9 @@
 module Snap.Snaplet.Test
   (
 
-   -- ** Types
-    SnapletEnvironment
-
    -- * HUnit Assertions
-  , assertInitSuccess
+   assertInitSuccess
   )
   where
 
-import           Snap.Snaplet.Internal.Test.Types
 import           Snap.Snaplet.Internal.Test.Assertions
