@@ -338,3 +338,4 @@ reloadTest = testCase "internal/reload-test" $ do
 
     requestTest' "good" "Good template\n"
 
+

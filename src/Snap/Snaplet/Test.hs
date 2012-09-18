@@ -3,8 +3,9 @@
 module Snap.Snaplet.Test
   (
 
-   -- * HUnit Assertions
-   assertInitSuccess
+    -- * HUnit Assertions
+    assertInitSuccess
+  , assertInitContains
   )
   where
 
