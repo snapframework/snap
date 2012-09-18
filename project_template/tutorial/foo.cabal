@@ -19,9 +19,9 @@ Executable projname
     bytestring                >= 0.9.1 && < 0.10,
     MonadCatchIO-transformers >= 0.2.1 && < 0.4,
     mtl                       >= 2     && < 3,
-    snap                      >= 0.9   && < 0.10,
-    snap-core                 >= 0.9   && < 0.10,
-    snap-server               >= 0.9   && < 0.10
+    snap                      >= 0.9.2 && < 0.10,
+    snap-core                 >= 0.9.2 && < 0.10,
+    snap-server               >= 0.9.2 && < 0.10
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2

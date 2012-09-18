@@ -1,5 +1,5 @@
 name:           snap
-version:        0.9.1.1
+version:        0.9.2
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -21,7 +21,7 @@ description:
     If you have trouble or any questions, see our FAQ page
     (<http://snapframework.com/faq>) or the documentation
     (<http://snapframework.com/docs>).
-    
+
 license:        BSD3
 license-file:   LICENSE
 author:         Ozgun Ataman, Doug Beardsley, Gregory Collins, Carl Howells, Chris Smith
@@ -135,7 +135,7 @@ Library
 
   if !os(windows)
     build-depends:
-      unix                    >= 2.2.0.0  && < 2.6
+      unix                    >= 2.2.0.0  && < 2.7
 
   build-depends:
     MonadCatchIO-transformers >= 0.2      && < 0.4,
@@ -157,9 +157,9 @@ Library
     logict                    >= 0.4.2    && < 0.6,
     mtl                       >  2.0      && < 2.2,
     mwc-random                >= 0.8      && < 0.13,
-    pwstore-fast              >= 2.2      && < 2.3,
-    snap-core                 >= 0.9.1    && < 0.10,
-    snap-server               >= 0.9.1    && < 0.10,
+    pwstore-fast              >= 2.3      && < 2.4,
+    snap-core                 >= 0.9.2    && < 0.10,
+    snap-server               >= 0.9.2    && < 0.10,
     stm                       >= 2.2      && < 2.5,
     syb                       >= 0.1      && < 0.4,
     template-haskell          >= 2.2      && < 2.9,
