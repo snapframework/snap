@@ -113,6 +113,7 @@ Library
     Snap.Snaplet.Session.Common
     Snap.Snaplet.Session.SessionManager
     Snap.Snaplet.Session.Backends.CookieSession
+    Snap.Snaplet.Test
 
   other-modules:
     Control.Access.RoleBased.Checker
@@ -126,13 +127,14 @@ Library
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
     Snap.Snaplet.Auth.SpliceHelpers
---    Snap.Snaplet.HeistNoClass
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT
     Snap.Snaplet.Internal.Lensed
     Snap.Snaplet.Internal.RST
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session.SecureCookie
+    Snap.Snaplet.Internal.Test.Assertions
+    Snap.Snaplet.Internal.Test.Types
 
   if !os(windows)
     build-depends:
@@ -158,6 +160,7 @@ Library
     filepath                  >= 1.1      && < 1.4,
     hashable                  >= 1.1      && < 1.2,
     heist                     >= 0.10     && < 0.11,
+    HUnit                     >= 1.2     && < 2,
     logict                    >= 0.4.2    && < 0.6,
     mtl                       >  2.0      && < 2.2,
     mwc-random                >= 0.8      && < 0.13,
