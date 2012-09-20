@@ -13,7 +13,6 @@ module Snap.Snaplet.Internal.Initializer
   , nameSnaplet
   , onUnload
   , addRoutes
-  , wrapHandlers
   , wrapSite
   , runInitializer
   , runSnaplet
