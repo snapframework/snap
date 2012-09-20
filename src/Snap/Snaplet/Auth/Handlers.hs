@@ -415,6 +415,11 @@ registerUser lf pf = do
 --
 -- The request paremeters are passed to 'performLogin'
 --
+-- To make your users stay logged in for longer than the session replay
+-- prevention timeout, you must pass a field name as the third parameter and
+-- that field must be set to a value of \"1\" by the submitting form.  This
+-- lets you use a user selectable check box.  Or if you want user remembering
+-- always turned on, you can use a hidden form field.
 loginUser
   :: ByteString
       -- ^ Username field
