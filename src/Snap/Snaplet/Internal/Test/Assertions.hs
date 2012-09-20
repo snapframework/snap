@@ -26,4 +26,3 @@ assertInitContains needle (m,_,_) = assertEqual failMsg containedInMsg True
       failMsg = T.unpack $ T.concat [needle, " not found in: ", m]
       containedInMsg = needle `elem` T.words m
 
-

@@ -23,12 +23,12 @@ import           Test.HUnit hiding (Test, path)
 ------------------------------------------------------------------------------
 import           Blackbox.App
 import qualified Blackbox.Tests
+import qualified Blackbox.Snaplet.Tests
 import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
 import qualified Snap.Snaplet.Internal.Tests
-import qualified Snap.Snaplet.Auth.Handlers.Tests
 import           Snap.TestCommon
 
 import           SafeCWD
@@ -51,20 +51,10 @@ main = do
 
   where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
-                                 , authTests
                                  , testDefault
                                  , testBarebones
                                  , testTutorial
                                  ]
-
-
-------------------------------------------------------------------------------
-authTests :: Test
-authTests =
-        mutuallyExclusive $
-        testGroup "auth tests"
-        [ Snap.Snaplet.Auth.Handlers.Tests.tests
-        ]
 
 
 ------------------------------------------------------------------------------
@@ -73,6 +63,7 @@ internalServerTests =
     mutuallyExclusive $
     testGroup "internal server tests"
         [ Blackbox.Tests.tests
+        , Blackbox.Snaplet.Tests.tests
         , Snap.Snaplet.Internal.Lensed.Tests.tests
         , Snap.Snaplet.Internal.LensT.Tests.tests
         , Snap.Snaplet.Internal.RST.Tests.tests
