@@ -38,12 +38,8 @@ module Snap.Snaplet.Heist
   -- * Writing Splices
   -- $spliceSection
   , Unclassed.SnapletHeist
+  , Unclassed.SnapletCSplice
   , Unclassed.SnapletISplice
-  , Unclassed.liftHeist
-  , Unclassed.liftHandler
-  , Unclassed.liftAppHandler
-  , Unclassed.liftWith
-  , Unclassed.bindSnapletSplices
 
   , clearHeistCache
   ) where
@@ -127,7 +123,7 @@ addTemplatesAt h pfx p =
 -- templates with cRender.  To add splices that work with cRender, you have to
 -- use the addConfig function to add compiled splices or load time splices.
 addSplices :: (HasHeist b)
-           => [(Text, Unclassed.SnapletISplice b v)]
+           => [(Text, Unclassed.SnapletISplice b)]
            -- ^ Splices to bind
            -> Initializer b v ()
 addSplices = Unclassed.addSplices' heistLens
@@ -246,7 +242,7 @@ cHeistServeSingle t = withTop' heistLens (Unclassed.cHeistServeSingle t)
 renderWithSplices :: HasHeist b
                   => ByteString
                   -- ^ Template name
-                  -> [(Text, Unclassed.SnapletISplice b v)]
+                  -> [(Text, Unclassed.SnapletISplice b)]
                   -- ^ Splices to bind
                   -> Handler b v ()
 renderWithSplices = Unclassed.renderWithSplices' heistLens
@@ -256,7 +252,7 @@ renderWithSplices = Unclassed.renderWithSplices' heistLens
 -- | Runs an action with additional splices bound into the Heist
 -- 'HeistState'.
 withSplices :: HasHeist b
-            => [(Text, Unclassed.SnapletISplice b v)]
+            => [(Text, Unclassed.SnapletISplice b)]
             -- ^ Splices to bind
             -> Handler b v a
             -- ^ Handler to run

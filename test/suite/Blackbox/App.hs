@@ -50,10 +50,11 @@ app = makeSnaplet "app" "Test application" Nothing $ do
     sm <- nestSnaplet "session" session $
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     ns <- embedSnaplet "embed" embedded embeddedInit
+    _lens <- getLens
     addSplices
-        [("appsplice", liftHeist $ textSplice "contents of the app splice")]
+        [("appsplice", textSplice "contents of the app splice")]
     HNC.addSplices heist
-        [("appconfig", shConfigSplice)]
+        [("appconfig", shConfigSplice _lens)]
     addRoutes [ ("/hello", writeText "hello world")
               , ("/routeWithSplice", routeWithSplice)
               , ("/routeWithConfig", routeWithConfig)
@@ -91,8 +92,8 @@ sessionDemo = withSession session $ do
   list <- with session $ (T.pack . show) `fmap` sessionToList
   csrf <- with session $ (T.pack . show) `fmap` csrfToken
   HNC.renderWithSplices heist "session"
-    [ ("session", liftHeist $ textSplice list)
-    , ("csrf", liftHeist $ textSplice csrf) ]
+    [ ("session", textSplice list)
+    , ("csrf", textSplice csrf) ]
 
 
 ------------------------------------------------------------------------------

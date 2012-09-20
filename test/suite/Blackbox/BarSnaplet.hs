@@ -17,7 +17,6 @@ import Data.Text (Text)
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
-import Heist
 import Heist.Interpreted
 
 import Blackbox.Common
@@ -30,8 +29,8 @@ data BarSnaplet b = BarSnaplet
 
 makeLens ''BarSnaplet
 
-barsplice :: [(Text, SnapletHeist b v Template)]
-barsplice = [("barsplice", liftHeist $ textSplice "contents of the bar splice")]
+barsplice :: [(Text, SnapletISplice b)]
+barsplice = [("barsplice", textSplice "contents of the bar splice")]
 
 barInit :: HasHeist b
         => Snaplet (Heist b)
@@ -41,13 +40,14 @@ barInit h l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing 
     config <- getSnapletUserConfig
     addTemplates h ""
     rootUrl <- getSnapletRootURL
+    _lens <- getLens
     addRoutes [("barconfig", liftIO (lookup config "barSnapletField") >>= writeLBS . fromJust)
               ,("barrooturl", writeBS $ "url" `B.append` rootUrl)
               ,("bazpage2",   renderWithSplices "bazpage" barsplice)
               ,("bazpage3",   heistServeSingle "bazpage")
               ,("bazpage4",   renderAs "text/html" "bazpage")
               ,("bazpage5",   renderWithSplices "bazpage"
-                                [("barsplice", shConfigSplice)])
+                                [("barsplice", shConfigSplice _lens)])
               ,("bazbadpage", heistServeSingle "cpyga")
               ,("bar/handlerConfig", handlerConfig)
               ]
