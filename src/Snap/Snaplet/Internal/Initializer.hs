@@ -367,15 +367,19 @@ addRoutes rs = do
 
 
 ------------------------------------------------------------------------------
--- | Wraps the snaplet's routing.  When all is said and done, a snaplet's
--- routes end up getting combined into a single 'Handler' action.  This
--- function allows you to modify that Handler before it actually gets served.
--- This allows you to do things that need to happen for every request handled
--- by your snaplet.  Here are some examples of things you might do:
+-- | Wraps the /base/ snaplet's routing. When all is said and done, a snaplet's
+-- routes end up getting combined into a single 'Handler' action.  This function
+-- allows you to modify that Handler before it actually gets served.  This
+-- allows you to do things that need to happen for every request handled by your
+-- snaplet.
 --
--- @wrapSite (\site -> removePathTrailingSlashes >> site)@
--- @wrapSite (\site -> logHandlerStart >> site >> logHandlerFinished)@
--- @wrapSite (\site -> ensureAdminUser >> site)@
+-- As this wrap's the base snaplet, you are able to wrap all handlers of the
+-- application. Here are some examples of things you might do:
+--
+-- > wrapSite (\site -> removePathTrailingSlashes >> site)
+-- > wrapSite (\site -> logHandlerStart >> site >> logHandlerFinished)
+-- > wrapSite (\site -> ensureAdminUser >> site)
+--
 wrapSite :: (Handler b v () -> Handler b v ())
          -- ^ Handler modifier function
          -> Initializer b v ()
@@ -512,10 +516,10 @@ runInitializer' mvar env b@(Initializer i) cwd = do
 ------------------------------------------------------------------------------
 -- | Given an envirnoment and a Snaplet initializer, produce the set of
 -- messages generated during initialization, a snap handler, and a cleanup
--- action.  The environment is an arbitrary string such as "devel" or
--- "production".  This string is used to determine the name of the config
+-- action.  The environment is an arbitrary string such as \"devel\" or
+-- \"production\".  This string is used to determine the name of the config
 -- files used each snaplet.  If an environment of Nothing is used, then
--- runSnaplet defaults to "devel".
+-- runSnaplet defaults to \"devel\".
 runSnaplet :: Maybe String -> SnapletInit b b -> IO (Text, Snap (), IO ())
 runSnaplet env (SnapletInit b) = do
     snapletMVar <- newEmptyMVar
@@ -546,9 +550,14 @@ combineConfig config handler = do
 
 
 ------------------------------------------------------------------------------
--- | Serves a top-level snaplet as a web application. Reads command-line
--- arguments. FIXME: document this.
-serveSnaplet :: Config Snap AppConfig -> SnapletInit b b -> IO ()
+-- | Serves a top-level snaplet as a web application, reading command-line
+-- arguments before starting a server.
+serveSnaplet :: Config Snap AppConfig
+             -- ^ The configuration of the server - you can usually pass a
+             -- default 'Config' via 'Snap.Http.Server.Config.defaultConfig'.
+             -> SnapletInit b b
+             -- ^ The snaplet initializer function.
+             -> IO ()
 serveSnaplet startConfig initializer = do
     config       <- commandLineAppConfig startConfig
     let env = appEnvironment =<< getOther config
