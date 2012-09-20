@@ -48,7 +48,7 @@ import           Snap.Snaplet.Heist
 addAuthSplices
   :: HasHeist b
   => Lens b (Snaplet (AuthManager b))
-  -- ^ A lens reference to 'AuthManager'
+      -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
 addAuthSplices auth = addSplices
     [ ("ifLoggedIn", ifLoggedIn auth)

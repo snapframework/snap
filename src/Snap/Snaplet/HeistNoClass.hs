@@ -138,7 +138,8 @@ type SnapletISplice b = SnapletHeist b (Handler b b) Template
 -- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
 -- around `heistInit'` that uses defaultHeistState and sets up routes for all
 -- the templates.
-heistInit :: FilePath                 -- ^ Path to templates
+heistInit :: FilePath
+              -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
@@ -154,9 +155,9 @@ heistInit templateDir = do
 -- to specify the initial HeistConfig.  It also does not add any routes for
 -- templates, allowing you complete control over which templates get routed.
 heistInit' :: FilePath
-           -- ^ Path to templates
+               -- ^ Path to templates
            -> HeistConfig (Handler b b)
-           -- ^ Initial HeistConfig
+               -- ^ Initial HeistConfig
            -> SnapletInit b (Heist b)
 heistInit' templateDir initialConfig =
     makeSnaplet "heist" "" Nothing $ heistInitWorker templateDir initialConfig
@@ -204,7 +205,7 @@ finalLoadHook (Running _ _) = left "finalLoadHook called while running"
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: Snaplet (Heist b)
              -> ByteString
-             -- ^ The url prefix for the template routes
+                 -- ^ The url prefix for the template routes
              -> Initializer b (Heist b) ()
 addTemplates h urlPrefix = do
     snapletPath <- getSnapletFilePath
@@ -220,9 +221,9 @@ addTemplates h urlPrefix = do
 -- normal directory structure.
 addTemplatesAt :: Snaplet (Heist b)
                -> ByteString
-               -- ^ URL prefix for template routes
+                   -- ^ URL prefix for template routes
                -> FilePath
-               -- ^ Path to templates
+                   -- ^ Path to templates
                -> Initializer b (Heist b) ()
 addTemplatesAt h urlPrefix templateDir = do
     rootUrl <- getSnapletRootURL
@@ -338,32 +339,32 @@ cRenderHelper c t = do
 
 ------------------------------------------------------------------------------
 render :: ByteString
-       -- ^ Name of the template
+           -- ^ Name of the template
        -> Handler b (Heist b) ()
 render t = iRenderHelper Nothing t
 
 
 ------------------------------------------------------------------------------
 renderAs :: ByteString
-         -- ^ Content type
+             -- ^ Content type
          -> ByteString
-         -- ^ Name of the template
+             -- ^ Name of the template
          -> Handler b (Heist b) ()
 renderAs ct t = iRenderHelper (Just ct) t
 
 
 ------------------------------------------------------------------------------
 cRender :: ByteString
-       -- ^ Name of the template
+           -- ^ Name of the template
        -> Handler b (Heist b) ()
 cRender t = cRenderHelper Nothing t
 
 
 ------------------------------------------------------------------------------
 cRenderAs :: ByteString
-         -- ^ Content type
+             -- ^ Content type
          -> ByteString
-         -- ^ Name of the template
+             -- ^ Name of the template
          -> Handler b (Heist b) ()
 cRenderAs ct t = cRenderHelper (Just ct) t
 

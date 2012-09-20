@@ -80,7 +80,7 @@ hiddenCSRFTag = do
 -- match. The exact name of the parameter is defined by
 -- 'authAuthenticityTokenParam'.
 checkCSRF :: MonadSession m => m ()
-          -- ^ Do this if CSRF token does not match.
+              -- ^ Do this if CSRF token does not match.
           -> m ()
 checkCSRF failAct = method POST doCheck <|> return ()
   where

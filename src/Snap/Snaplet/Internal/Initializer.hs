@@ -139,11 +139,11 @@ modifyCfg f = iModify $ modL curConfig $ \c -> f c
 -- | If a snaplet has a filesystem presence, this function creates and copies
 -- the files if they dont' already exist.
 setupFilesystem :: Maybe (IO FilePath)
-                -- ^ The directory where the snaplet's reference files are
-                -- stored.  Nothing if the snaplet doesn't come with any files
-                -- that need to be installed.
+                    -- ^ The directory where the snaplet's reference files are
+                    -- stored.  Nothing if the snaplet doesn't come with any
+                    -- files that need to be installed.
                 -> FilePath
-                -- ^ Directory where the files should be copied.
+                    -- ^ Directory where the files should be copied.
                 -> Initializer b v ()
 setupFilesystem Nothing _ = return ()
 setupFilesystem (Just getSnapletDataDir) targetDir = do
@@ -180,21 +180,23 @@ setupFilesystem (Just getSnapletDataDir) targetDir = do
 -- and makeSnaplet converts it into an opaque SnapletInit type.  This allows
 -- us to use the type system to ensure that the API is used correctly.
 makeSnaplet :: Text
-       -- ^ A default id for this snaplet.  This is only used when the
-       -- end-user has not already set an id using the nameSnaplet function.
-       -> Text
-       -- ^ A human readable description of this snaplet.
-       -> Maybe (IO FilePath)
-       -- ^ The path to the directory holding the snaplet's reference
-       -- filesystem content.  This will almost always be the directory
-       -- returned by Cabal's getDataDir command, but it has to be passed in
-       -- because it is defined in a package-specific import.  Setting this
-       -- value to Nothing doesn't preclude the snaplet from having files in
-       -- in the filesystem, it just means that they won't be copied there
-       -- automatically.
-       -> Initializer b v v
-       -- ^ Snaplet initializer.
-       -> SnapletInit b v
+                -- ^ A default id for this snaplet.  This is only used when
+                -- the end-user has not already set an id using the
+                -- nameSnaplet function.
+            -> Text
+                -- ^ A human readable description of this snaplet.
+            -> Maybe (IO FilePath)
+                -- ^ The path to the directory holding the snaplet's reference
+                -- filesystem content.  This will almost always be the
+                -- directory returned by Cabal's getDataDir command, but it
+                -- has to be passed in because it is defined in a
+                -- package-specific import.  Setting this value to Nothing
+                -- doesn't preclude the snaplet from having files in in the
+                -- filesystem, it just means that they won't be copied there
+                -- automatically.
+            -> Initializer b v v
+                -- ^ Snaplet initializer.
+            -> SnapletInit b v
 makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
     modifyCfg $ \c -> if isNothing $ _scId c
         then setL scId (Just snapletId) c else c
@@ -264,12 +266,13 @@ setupSnapletCall rte = do
 -- possible for the child snaplet to make use of functionality provided by
 -- sibling snaplets.
 nestSnaplet :: ByteString
-            -- ^ The root url for all the snaplet's routes.  An empty string
-            -- gives the routes the same root as the parent snaplet's routes.
+                -- ^ The root url for all the snaplet's routes.  An empty
+                -- string gives the routes the same root as the parent
+                -- snaplet's routes.
             -> (Lens v (Snaplet v1))
-            -- ^ Lens identifying the snaplet
+                -- ^ Lens identifying the snaplet
             -> SnapletInit b v1
-            -- ^ The initializer function for the subsnaplet.
+                -- ^ The initializer function for the subsnaplet.
             -> Initializer b v (Snaplet v1)
 nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
     setupSnapletCall rte
@@ -286,16 +289,17 @@ nestSnaplet rte l (SnapletInit snaplet) = with l $ bracketInit $ do
 -- type variable.  The embedded snaplet can still get functionality from other
 -- snaplets, but only if it nests or embeds the snaplet itself.
 embedSnaplet :: ByteString
-             -- ^ The root url for all the snaplet's routes.  An empty string
-             -- gives the routes the same root as the parent snaplet's routes.
-             --
-             -- NOTE: Because of the stronger isolation provided by
-             -- embedSnaplet, you should be more careful about using an empty
-             -- string here.
+                 -- ^ The root url for all the snaplet's routes.  An empty
+                 -- string gives the routes the same root as the parent
+                 -- snaplet's routes.
+                 --
+                 -- NOTE: Because of the stronger isolation provided by
+                 -- embedSnaplet, you should be more careful about using an
+                 -- empty string here.
              -> (Lens v (Snaplet v1))
-             -- ^ Lens identifying the snaplet
+                -- ^ Lens identifying the snaplet
              -> SnapletInit v1 v1
-             -- ^ The initializer function for the subsnaplet.
+                -- ^ The initializer function for the subsnaplet.
              -> Initializer b v (Snaplet v1)
 embedSnaplet rte l (SnapletInit snaplet) = bracketInit $ do
     curLens <- getLens
@@ -343,9 +347,9 @@ chrootHandler l (Handler h) = Handler $ do
 --
 -- @fooState <- nestSnaplet \"fooA\" $ nameSnaplet \"myFoo\" $ fooInit@
 nameSnaplet :: Text
-            -- ^ The snaplet name
+                -- ^ The snaplet name
             -> SnapletInit b v
-            -- ^ The snaplet initializer function
+                -- ^ The snaplet initializer function
             -> SnapletInit b v
 nameSnaplet nm (SnapletInit m) = SnapletInit $
     modifyCfg (setL scId (Just nm)) >> m
@@ -380,19 +384,11 @@ addRoutes rs = do
 -- > wrapSite (\site -> ensureAdminUser >> site)
 --
 wrapSite :: (Handler b v () -> Handler b v ())
-         -- ^ Handler modifier function
+             -- ^ Handler modifier function
          -> Initializer b v ()
 wrapSite f0 = do
     f <- mungeFilter f0
     iModify (\v -> modL hFilter (f.) v)
-
-
-------------------------------------------------------------------------------
--- | This function has been renamed to 'wrapSite' and is deprecated.  It will
--- be removed in the next major Snap release.  Fix your code now!
-wrapHandlers :: (Handler b v () -> Handler b v ()) -> Initializer b v ()
-wrapHandlers = wrapSite
-{-# DEPRECATED wrapHandlers "wrapHandlers was renamed to wrapSite" #-}
 
 
 ------------------------------------------------------------------------------
@@ -553,10 +549,11 @@ combineConfig config handler = do
 -- runs the given Snaplet initializer, and starts an HTTP server running the
 -- Snaplet's toplevel 'Handler'.
 serveSnaplet :: Config Snap AppConfig
-             -- ^ The configuration of the server - you can usually pass a
-             -- default 'Config' via 'Snap.Http.Server.Config.defaultConfig'.
+                 -- ^ The configuration of the server - you can usually pass a
+                 -- default 'Config' via
+                 -- 'Snap.Http.Server.Config.defaultConfig'.
              -> SnapletInit b b
-             -- ^ The snaplet initializer function.
+                 -- ^ The snaplet initializer function.
              -> IO ()
 serveSnaplet startConfig initializer = do
     config       <- commandLineAppConfig startConfig

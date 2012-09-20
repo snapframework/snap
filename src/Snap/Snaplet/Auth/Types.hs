@@ -166,20 +166,20 @@ setPassword au pass = do
 -- | Authetication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen       :: Int
-    -- ^ Currently not used/checked
+      -- ^ Currently not used/checked
 
   , asRememberCookieName :: ByteString
-    -- ^ Name of the desired remember cookie
+      -- ^ Name of the desired remember cookie
 
   , asRememberPeriod     :: Maybe Int
-    -- ^ How long to remember when the option is used in rest of the API.
+      -- ^ How long to remember when the option is used in rest of the API.
     -- 'Nothing' means remember until end of session.
 
   , asLockout            :: Maybe (Int, NominalDiffTime)
-    -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
+      -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
 
   , asSiteKey            :: FilePath
-    -- ^ Location of app's encryption key
+      -- ^ Location of app's encryption key
 }
 
 
