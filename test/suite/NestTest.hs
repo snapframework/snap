@@ -21,7 +21,6 @@ import Snap.Util.FileServe
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Heist
 import Heist.Interpreted
 
 -- If we universally quantify FooSnaplet to get rid of the type parameter
@@ -53,10 +52,10 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
 --fooSplice :: (Lens (Snaplet b) (Snaplet (FooSnaplet b)))
 --          -> SnapletSplice (Handler b b)
 fooSplice :: (Lens (Snaplet b) (Snaplet FooSnaplet))
-          -> SnapletHeist b v Template
+          -> SnapletISplice b
 fooSplice fooLens = do
-    val <- liftWith fooLens $ gets _fooVal
-    liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
+    val <- lift $ with' fooLens $ gets _fooVal
+    textSplice $ T.pack $ "splice value" ++ (show val)
 
 ------------------------------------------------------------------------------
 

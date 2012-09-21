@@ -49,8 +49,9 @@ data SnapletConfig = SnapletConfig
     , _scUserConfig      :: Config
     , _scRouteContext    :: [ByteString]
     , _scRoutePattern    :: Maybe ByteString
-    -- ^ Holds the actual route pattern passed to addRoutes for the current
-    -- handler.  Nothing during initialization and before route dispatech.
+        -- ^ Holds the actual route pattern passed to addRoutes for the
+        -- current handler.  Nothing during initialization and before route
+        -- dispatech.
     , _reloader          :: IO (Either Text Text) -- might change
     }
 
@@ -134,9 +135,9 @@ class MonadSnaplet m where
     -- supplied to this snaplet must be a relative path.  In other words, the
     -- lens's base state must be the same as the current snaplet.
     with :: (Lens v (Snaplet v'))
-         -- ^ A relative lens identifying a snaplet
+             -- ^ A relative lens identifying a snaplet
          -> m b v' a
-         -- ^ Action from the lense's snaplet
+             -- ^ Action from the lense's snaplet
          -> m b v a
     with = with' . subSnaplet
 
@@ -145,9 +146,9 @@ class MonadSnaplet m where
     -- metaphor again, the lens for this function must be an absolute
     -- path--it's base must be the same as the current base.
     withTop :: (Lens b (Snaplet v'))
-            -- ^ An \"absolute\" lens identifying a snaplet
+                -- ^ An \"absolute\" lens identifying a snaplet
             -> m b v' a
-            -- ^ Action from the lense's snaplet
+                -- ^ Action from the lense's snaplet
             -> m b v a
     withTop l = withTop' (subSnaplet l)
 
@@ -350,12 +351,12 @@ data InitializerState b = InitializerState
     { _isTopLevel      :: Bool
     , _cleanup         :: IORef (IO ())
     , _handlers        :: [(ByteString, Handler b b ())]
-    -- ^ Handler routes built up and passed to route.
+        -- ^ Handler routes built up and passed to route.
     , _hFilter         :: Handler b b () -> Handler b b ()
-    -- ^ Generic filtering of handlers
+        -- ^ Generic filtering of handlers
     , _curConfig       :: SnapletConfig
-    -- ^ This snaplet config is the incrementally built config for whatever
-    -- snaplet is currently being constructed.
+        -- ^ This snaplet config is the incrementally built config for
+        -- whatever snaplet is currently being constructed.
     , _initMessages    :: IORef Text
     , _environment     :: String
     }

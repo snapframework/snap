@@ -19,7 +19,6 @@ import System.FilePath.Posix
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Heist
 import Heist.Interpreted
 
 -- If we universally quantify EmbeddedSnaplet to get rid of the type parameter
@@ -52,8 +51,8 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
 
 
 embeddedSplice :: (Lens (Snaplet b) (Snaplet EmbeddedSnaplet))
-              -> SnapletHeist b v Template
+               -> SnapletISplice b
 embeddedSplice embeddedLens = do
-    val <- liftWith embeddedLens $ gets _embeddedVal
-    liftHeist $ textSplice $ T.pack $ "splice value" ++ (show val)
+    val <- lift $ with' embeddedLens $ gets _embeddedVal
+    textSplice $ T.pack $ "splice value" ++ (show val)
 

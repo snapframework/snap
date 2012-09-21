@@ -38,12 +38,12 @@ import           Snap.Snaplet.Session
 ------------------------------------------------------------------------------
 -- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager :: AuthSettings
-                           -- ^ Authentication settings for your app
+                            -- ^ Authentication settings for your app
                         -> Lens b (Snaplet SessionManager)
-                           -- ^ Lens into a 'SessionManager' auth snaplet will
+                            -- ^ Lens into a 'SessionManager' auth snaplet will
                            -- use
                         -> FilePath
-                           -- ^ Where to store user data as JSON
+                            -- ^ Where to store user data as JSON
                         -> SnapletInit b (AuthManager b)
 initJsonFileAuthManager s l db = do
     makeSnaplet

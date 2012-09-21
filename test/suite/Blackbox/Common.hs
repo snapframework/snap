@@ -1,5 +1,7 @@
 module Blackbox.Common where
 
+import Control.Monad.Trans
+import Data.Lens.Lazy
 import qualified Data.Text as T
 import Snap.Core
 import Snap.Snaplet
@@ -18,6 +20,6 @@ genericConfigString = do
 handlerConfig :: Handler b v ()
 handlerConfig = writeText =<< genericConfigString
 
-shConfigSplice :: SnapletISplice b v
-shConfigSplice = liftHeist . textSplice =<< genericConfigString
+shConfigSplice :: Lens (Snaplet b) (Snaplet v) -> SnapletISplice b
+shConfigSplice _lens = textSplice =<< lift (with' _lens genericConfigString)
 

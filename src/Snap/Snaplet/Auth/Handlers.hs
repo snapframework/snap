@@ -383,7 +383,7 @@ authenticatePassword u pw = auth
 --
 cacheOrLookup
   :: Handler b (AuthManager b) (Maybe AuthUser)
-  -- ^ Lookup action to perform if request local cache is empty
+      -- ^ Lookup action to perform if request local cache is empty
   -> Handler b (AuthManager b) (Maybe AuthUser)
 cacheOrLookup f = do
     au <- gets activeUser
@@ -415,17 +415,22 @@ registerUser lf pf = do
 --
 -- The request paremeters are passed to 'performLogin'
 --
+-- To make your users stay logged in for longer than the session replay
+-- prevention timeout, you must pass a field name as the third parameter and
+-- that field must be set to a value of \"1\" by the submitting form.  This
+-- lets you use a user selectable check box.  Or if you want user remembering
+-- always turned on, you can use a hidden form field.
 loginUser
   :: ByteString
-  -- ^ Username field
+      -- ^ Username field
   -> ByteString
-  -- ^ Password field
+      -- ^ Password field
   -> Maybe ByteString
-  -- ^ Remember field; Nothing if you want no remember function.
+      -- ^ Remember field; Nothing if you want no remember function.
   -> (AuthFailure -> Handler b (AuthManager b) ())
-  -- ^ Upon failure
+      -- ^ Upon failure
   -> Handler b (AuthManager b) ()
-  -- ^ Upon success
+      -- ^ Upon success
   -> Handler b (AuthManager b) ()
 loginUser unf pwdf remf loginFail loginSucc =
     runErrorT go >>= either loginFail (const loginSucc)
@@ -461,11 +466,11 @@ logoutUser target = logout >> target
 -- in the current session.
 --
 requireUser :: Lens b (Snaplet (AuthManager b))
-               -- ^ Lens reference to an "AuthManager"
+                -- ^ Lens reference to an "AuthManager"
             -> Handler b v a
-               -- ^ Do this if no authenticated user is present.
+                -- ^ Do this if no authenticated user is present.
             -> Handler b v a
-               -- ^ Do this if an authenticated user is present.
+                -- ^ Do this if an authenticated user is present.
             -> Handler b v a
 requireUser auth bad good = do
     loggedIn <- withTop auth isLoggedIn

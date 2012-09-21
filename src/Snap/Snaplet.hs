@@ -95,7 +95,6 @@ module Snap.Snaplet
   -- * Routes
   -- $routes
   , addRoutes
-  , wrapHandlers
   , wrapSite
 
   -- * Handlers
@@ -250,7 +249,7 @@ import           Snap.Snaplet.Internal.Types
 -- $routes
 -- Snaplet initializers are also responsible for setting up any routes defined
 -- by the snaplet.  To do that you'll usually use either 'addRoutes' or
--- 'wrapHandlers'.
+-- 'wrapSite'.
 
 
 {-
@@ -303,7 +302,7 @@ The next thing we need to do is define an initializer.
 >     bs <- nestSnaplet "" $ nameSnaplet "baz" $ barInit heist
 >     addRoutes [ ("/hello", writeText "hello world")
 >               ]
->     wrapHandlers (<|> with heist heistServe)
+>     wrapSite (<|> with heist heistServe)
 >     return $ App hs fs bs "fooCorp"
 
 Then we define a simple main to run the application.

@@ -203,7 +203,7 @@ bazpage5Test = testWithCwd "bazpage5" $ \cwd b -> do
                                 , "/non-cabal-appdir/snaplets/baz\","
                                 , "Just \"baz\",\"An example snaplet called "
                                 , "bar.\",\"\")\n" ]
-    assertEqual "" response b
+    assertEqual "" (T.decodeUtf8 response) (T.decodeUtf8 b)
 
 
 ------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ bazConfigTest = testWithCwd "bazconfig" $ \cwd b -> do
                    , "called foo.\",\"foo\")\n"
                    ]
 
-    assertEqual "" response b
+    assertEqual "" (T.decodeUtf8 response) (T.decodeUtf8 b)
 
 
 ------------------------------------------------------------------------------

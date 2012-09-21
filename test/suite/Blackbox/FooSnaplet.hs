@@ -23,11 +23,12 @@ fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     config <- getSnapletUserConfig
     addTemplates h ""
     addSplices
-        [("foosplice", liftHeist $ textSplice "contents of the foo splice")]
+        [("foosplice", textSplice "contents of the foo splice")]
     rootUrl <- getSnapletRootURL
     fp <- getSnapletFilePath
     name <- getSnapletName
-    addSplices [("fooconfig", shConfigSplice)]
+    _lens <- getLens
+    addSplices [("fooconfig", shConfigSplice _lens)]
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)
               ,("fooSnapletName", writeText $ fromMaybe "empty snaplet name" name)

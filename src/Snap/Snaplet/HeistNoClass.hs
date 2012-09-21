@@ -1,8 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 
 {-|
@@ -47,12 +50,6 @@ module Snap.Snaplet.HeistNoClass
   , SnapletHeist
   , SnapletISplice
   , SnapletCSplice
-  , runSnapletSplice
-  , liftHeist
-  , liftWith
-  , liftHandler
-  , liftAppHandler
-  , bindSnapletSplices
   ) where
 
 import           Prelude hiding ((.), id)
@@ -123,121 +120,26 @@ clearHeistCache = clearCacheTagState . _heistCTS
 ------------------------------------------------------------------------------
 -- | This instance is here because we don't want the heist package to depend
 -- on anything from snap packages.
-instance MonadSnap m => MonadSnap (HeistT m m) where
+instance MonadSnap m => MonadSnap (HeistT n m) where
     liftSnap = lift . liftSnap
 
 
-type HeistHandler b = HeistT (Handler b b) (Handler b b)
-
-------------------------------------------------------------------------------
--- | Monad for working with Heist's API from within a snaplet.
-newtype SnapletHeist b v a = SnapletHeist
-    (ReaderT (Lens (Snaplet b) (Snaplet v)) (HeistHandler b) a)
-  deriving ( Monad
-           , Functor
-           , Applicative
-           , Alternative
-           , MonadIO
-           , MonadPlus
-           , MonadReader (Lens (Snaplet b) (Snaplet v))
-           , MonadCatchIO
-           , MonadSnap
-           )
-
-
-------------------------------------------------------------------------------
--- | Type alias for convenience.
-type SnapletISplice b v = SnapletHeist b v Template
-type SnapletCSplice b v = SnapletHeist b v (DList (Chunk (Handler b b)))
-
-
-------------------------------------------------------------------------------
--- | Runs the SnapletISplice.
-runSnapletSplice :: (Lens (Snaplet b) (Snaplet v))
-                 -> SnapletHeist b v a
-                 -> HeistHandler b a
-runSnapletSplice l (SnapletHeist m) = runReaderT m l
-
-
-------------------------------------------------------------------------------
-withSS :: (Lens (Snaplet b) (Snaplet v) -> Lens (Snaplet b) (Snaplet v'))
-       -> SnapletHeist b v' a
-       -> SnapletHeist b v a
-withSS f (SnapletHeist m) = SnapletHeist $ withReaderT f m
-
-
-------------------------------------------------------------------------------
--- | Lifts a HeistT action into SnapletHeist.  Use this with all the functions
--- from the Heist API.
-liftHeist :: HeistT (Handler b b) (Handler b b) a -> SnapletHeist b v a
-liftHeist = SnapletHeist . lift
-
-
-------------------------------------------------------------------------------
--- | Common idiom for the combination of liftHandler and withTop.
-liftWith :: (Lens (Snaplet b) (Snaplet v'))
-         -> Handler b v' a
-         -> SnapletHeist b v a
-liftWith l = liftHeist . lift . withTop' l
-
-
-------------------------------------------------------------------------------
--- | Lifts a Handler into SnapletHeist.
-liftHandler :: Handler b v a -> SnapletHeist b v a
-liftHandler m = do
-    l <- ask
-    liftWith l m
-
-
-------------------------------------------------------------------------------
--- | Lifts a (Handler b b) into SnapletHeist.
-liftAppHandler :: Handler b b a -> SnapletHeist b v a
-liftAppHandler = liftHeist . lift
-
-
-------------------------------------------------------------------------------
-instance MonadState v (SnapletHeist b v) where
-    get = do
-        l <- ask
-        b <- liftAppHandler getSnapletState
-        return $ getL (snapletValue . l) b
-    put s = do
-        l <- ask
-        b <- liftAppHandler getSnapletState
-        liftAppHandler $ putSnapletState $ setL (snapletValue . l) s b
-
-
-------------------------------------------------------------------------------
--- | MonadSnaplet instance gives us access to the snaplet infrastructure.
-instance MonadSnaplet SnapletHeist where
-    getLens = ask
-    with' l = withSS (l .)
-    withTop' l = withSS (const id) . with' l
-    getOpaqueConfig = do
-        l <- ask
-        b <- liftAppHandler getSnapletState
-        return $ getL (snapletConfig . l) b
-
-
-------------------------------------------------------------------------------
--- | SnapletSplices version of bindSplices.
-bindSnapletSplices :: (Lens (Snaplet b) (Snaplet v))
-                   -> [(Text, SnapletISplice b v)]
-                   -> HeistState (Handler b b)
-                   -> HeistState (Handler b b)
-bindSnapletSplices l splices =
-    I.bindSplices $ map (second $ runSnapletSplice l) splices
+type SnapletHeist b m a = HeistT (Handler b b) m a
+type SnapletCSplice b = SnapletHeist b IO (DList (Chunk (Handler b b)))
+type SnapletISplice b = SnapletHeist b (Handler b b) Template
 
 
                           ---------------------------
                           -- Initializer functions --
                           ---------------------------
 
+
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
 -- around `heistInit'` that uses defaultHeistState and sets up routes for all
 -- the templates.
-heistInit :: FilePath                 -- ^ Path to templates
+heistInit :: FilePath
+              -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
@@ -253,9 +155,9 @@ heistInit templateDir = do
 -- to specify the initial HeistConfig.  It also does not add any routes for
 -- templates, allowing you complete control over which templates get routed.
 heistInit' :: FilePath
-           -- ^ Path to templates
+               -- ^ Path to templates
            -> HeistConfig (Handler b b)
-           -- ^ Initial HeistConfig
+               -- ^ Initial HeistConfig
            -> SnapletInit b (Heist b)
 heistInit' templateDir initialConfig =
     makeSnaplet "heist" "" Nothing $ heistInitWorker templateDir initialConfig
@@ -303,7 +205,7 @@ finalLoadHook (Running _ _) = left "finalLoadHook called while running"
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: Snaplet (Heist b)
              -> ByteString
-             -- ^ The url prefix for the template routes
+                 -- ^ The url prefix for the template routes
              -> Initializer b (Heist b) ()
 addTemplates h urlPrefix = do
     snapletPath <- getSnapletFilePath
@@ -319,9 +221,9 @@ addTemplates h urlPrefix = do
 -- normal directory structure.
 addTemplatesAt :: Snaplet (Heist b)
                -> ByteString
-               -- ^ URL prefix for template routes
+                   -- ^ URL prefix for template routes
                -> FilePath
-               -- ^ Path to templates
+                   -- ^ Path to templates
                -> Initializer b (Heist b) ()
 addTemplatesAt h urlPrefix templateDir = do
     rootUrl <- getSnapletRootURL
@@ -389,17 +291,16 @@ addConfig h hc = case extract h of
 
 ------------------------------------------------------------------------------
 addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
-            -> [(Text, SnapletISplice b v)]
+            -> [(Text, SnapletISplice b)]
             -> Initializer b v ()
 addSplices' heist splices = do
-    _lens <- getLens
     withTop' heist $ addPostInitHook $
-        return . changeState (bindSnapletSplices _lens splices)
+        return . changeState (I.bindSplices splices)
 
 
 ------------------------------------------------------------------------------
 addSplices :: (Lens b (Snaplet (Heist b)))
-           -> [(Text, SnapletISplice b v)]
+           -> [(Text, SnapletISplice b)]
            -> Initializer b v ()
 addSplices heist splices = addSplices' (subSnaplet heist) splices
 
@@ -438,32 +339,32 @@ cRenderHelper c t = do
 
 ------------------------------------------------------------------------------
 render :: ByteString
-       -- ^ Name of the template
+           -- ^ Name of the template
        -> Handler b (Heist b) ()
 render t = iRenderHelper Nothing t
 
 
 ------------------------------------------------------------------------------
 renderAs :: ByteString
-         -- ^ Content type
+             -- ^ Content type
          -> ByteString
-         -- ^ Name of the template
+             -- ^ Name of the template
          -> Handler b (Heist b) ()
 renderAs ct t = iRenderHelper (Just ct) t
 
 
 ------------------------------------------------------------------------------
 cRender :: ByteString
-       -- ^ Name of the template
+           -- ^ Name of the template
        -> Handler b (Heist b) ()
 cRender t = cRenderHelper Nothing t
 
 
 ------------------------------------------------------------------------------
 cRenderAs :: ByteString
-         -- ^ Content type
+             -- ^ Content type
          -> ByteString
-         -- ^ Name of the template
+             -- ^ Name of the template
          -> Handler b (Heist b) ()
 cRenderAs ct t = cRenderHelper (Just ct) t
 
@@ -484,8 +385,7 @@ heistServe =
 
 
 ------------------------------------------------------------------------------
-heistServeSingle :: ByteString
-                 -> Handler b (Heist b) ()
+heistServeSingle :: ByteString -> Handler b (Heist b) ()
 heistServeSingle t =
     render t <|> error ("Template " ++ show t ++ " not found.")
 
@@ -497,8 +397,7 @@ cHeistServe =
 
 
 ------------------------------------------------------------------------------
-cHeistServeSingle :: ByteString
-                 -> Handler b (Heist b) ()
+cHeistServeSingle :: ByteString -> Handler b (Heist b) ()
 cHeistServeSingle t =
     cRender t <|> error ("Template " ++ show t ++ " not found.")
 
@@ -526,17 +425,16 @@ heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 ------------------------------------------------------------------------------
 withSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
-             -> [(Text, SnapletISplice b v)]
+             -> [(Text, SnapletISplice b)]
              -> Handler b v a
              -> Handler b v a
 withSplices' heist splices m = do
-    _lens <- getLens
-    heistLocal' heist (bindSnapletSplices _lens splices) m
+    heistLocal' heist (I.bindSplices splices) m
 
 
 ------------------------------------------------------------------------------
 withSplices :: (Lens b (Snaplet (Heist b)))
-            -> [(Text, SnapletISplice b v)]
+            -> [(Text, SnapletISplice b)]
             -> Handler b v a
             -> Handler b v a
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
@@ -545,7 +443,7 @@ withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 ------------------------------------------------------------------------------
 renderWithSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
                    -> ByteString
-                   -> [(Text, SnapletISplice b v)]
+                   -> [(Text, SnapletISplice b)]
                    -> Handler b v ()
 renderWithSplices' heist t splices =
     withSplices' heist splices $ withTop' heist $ render t
@@ -554,7 +452,7 @@ renderWithSplices' heist t splices =
 ------------------------------------------------------------------------------
 renderWithSplices :: (Lens b (Snaplet (Heist b)))
                   -> ByteString
-                  -> [(Text, SnapletISplice b v)]
+                  -> [(Text, SnapletISplice b)]
                   -> Handler b v ()
 renderWithSplices heist t splices =
     renderWithSplices' (subSnaplet heist) t splices
