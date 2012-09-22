@@ -103,7 +103,7 @@ The next thing we need to do is define an initializer.
 >               , ("/barname", with bar namePage)
 >               , ("/company", companyHandler)
 >               ]
->     wrapHandlers (<|> heistServe)
+>     wrapSite (<|> heistServe)
 >     ref <- liftIO $ newIORef "fooCorp"
 >     return $ App hs fs bs ref
 
@@ -167,10 +167,10 @@ monad.  It has a `MonadState` instance that lets you access and modify the
 current snaplet's state, and a `MonadSnap` instance providing the
 request-processing functions defined in Snap.Types.
 
-wrapHandlers
+wrapSite
 ------------
 
-`wrapHandlers` allows you to apply an arbitrary `Handler` transformation to
+`wrapSite` allows you to apply an arbitrary `Handler` transformation to
 the top-level handler.  This is useful if you want to do some generic
 processing at the beginning or end of every request.  For instance, a session
 snaplet might use it to touch a session activity token before routing happens.
