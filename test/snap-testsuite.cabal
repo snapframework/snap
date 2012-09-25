@@ -36,6 +36,7 @@ Executable snap-testsuite
     mwc-random                 >= 0.8,
     process                    == 1.*,
     pwstore-fast               == 2.*,
+    regex-posix               >= 0.95    && < 1,
     snap-core                  >= 0.9      && < 0.10,
     snap-server                >= 0.9      && < 0.10,
     syb                        >= 0.1,
