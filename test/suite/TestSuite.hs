@@ -23,7 +23,6 @@ import           Test.HUnit hiding (Test, path)
 ------------------------------------------------------------------------------
 import           Blackbox.App
 import qualified Blackbox.Tests
-import qualified Blackbox.Snaplet.Tests
 import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
