@@ -8,11 +8,11 @@ import           Control.Applicative
 import qualified Data.ByteString.Char8 as B
 import           Data.Lens.Lazy
 import           Data.Lens.Template
-import           Snap.Core
 
 ------------------------------------------------------------------------------
 import           Heist
 import           Heist.Interpreted
+import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 

@@ -63,6 +63,7 @@ internalServerTests =
     mutuallyExclusive $
     testGroup "internal server tests"
         [ Blackbox.Tests.tests
+        , Blackbox.Snaplet.Tests.tests
         , Snap.Snaplet.Internal.Lensed.Tests.tests
         , Snap.Snaplet.Internal.LensT.Tests.tests
         , Snap.Snaplet.Internal.RST.Tests.tests
