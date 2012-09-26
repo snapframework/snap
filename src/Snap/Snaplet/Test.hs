@@ -2,11 +2,10 @@
 -- testing Snaplets.
 module Snap.Snaplet.Test
   (
-
-    -- * HUnit Assertions
-    assertInitSuccess
-  , assertInitContains
+    runHandler
   )
   where
 
-import           Snap.Snaplet.Internal.Test.Assertions
+
+------------------------------------------------------------------------------
+runHandler = undefined

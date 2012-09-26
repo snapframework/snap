@@ -133,8 +133,6 @@ Library
     Snap.Snaplet.Internal.RST
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session.SecureCookie
-    Snap.Snaplet.Internal.Test.Assertions
-    Snap.Snaplet.Internal.Test.Types
 
   if !os(windows)
     build-depends:
