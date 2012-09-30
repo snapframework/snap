@@ -13,10 +13,6 @@ import           Test.HUnit hiding (Test, path)
 import           Snap.Snaplet.Auth.Handlers
 
 
-
-
-
-
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.Handlers"

@@ -38,7 +38,7 @@ buildAuthUser :: IAuthBackend r =>
                  r            -- ^ An auth backend
               -> Text         -- ^ Username
               -> ByteString   -- ^ Password
-              -> IO AuthUser
+              -> IO (Either AuthFailure AuthUser)
 buildAuthUser r unm pass = do
   now <- getCurrentTime
   let au = defAuthUser {
@@ -60,7 +60,7 @@ class IAuthBackend r where
   -- 'AuthUser' already exists in the database, then that user's information
   -- should be updated.  If it does not exist, then a new user should be
   -- created.
-  save                  :: r -> AuthUser -> IO AuthUser
+  save                  :: r -> AuthUser -> IO (Either AuthFailure AuthUser)
   lookupByUserId        :: r -> UserId   -> IO (Maybe AuthUser)
   lookupByLogin         :: r -> Text     -> IO (Maybe AuthUser)
   lookupByRememberToken :: r -> Text     -> IO (Maybe AuthUser)
