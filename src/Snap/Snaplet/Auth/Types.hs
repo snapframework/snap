@@ -80,11 +80,11 @@ checkPassword _ _ =
 data AuthFailure = AuthError String
                  | BackendError
                  | DuplicateLogin
-                 | EmptyUsername
                  | EncryptedPassword
                  | IncorrectPassword
                  | LockedOut UTCTime    -- ^ Locked out until given time
                  | PasswordMissing
+                 | UsernameMissing
                  | UserNotFound
   deriving (Read, Ord, Eq, Typeable)
 
@@ -93,11 +93,11 @@ instance Show AuthFailure where
         show (AuthError s) = s
         show (BackendError) = "Failed to store data in the backend."
         show (DuplicateLogin) = "This login already exists in the backend."
-        show (EmptyUsername) = "Username cannot be empty."
         show (EncryptedPassword) = "Cannot login with encrypted password."
         show (IncorrectPassword) = "The password provided was not valid."
         show (LockedOut time) = "The login is locked out until " ++ show time
         show (PasswordMissing) = "No password provided."
+        show (UsernameMissing) = "No username provided."
         show (UserNotFound) = "User not found in the backend."
 
 

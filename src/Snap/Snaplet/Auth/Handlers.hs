@@ -11,11 +11,10 @@ module Snap.Snaplet.Auth.Handlers where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Error
 import           Control.Monad.State
-import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy
-import           Data.Maybe (fromMaybe, isJust)
 import           Data.Serialize hiding (get)
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
@@ -44,10 +43,8 @@ createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
            -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 createUser unm pwd
-  | null $ strip unm = return $ Left EmptyUsername
-  | otherwise = withBackend $ \r -> do
-    u <- liftIO $ buildAuthUser r unm pwd
-    return u
+  | null $ strip unm = return $ Left UsernameMissing
+  | otherwise = withBackend $ \r -> liftIO $ buildAuthUser r unm pwd
 
 
 ------------------------------------------------------------------------------
@@ -163,10 +160,8 @@ isLoggedIn = isJust <$> currentUser
 --
 saveUser :: AuthUser -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 saveUser u
-    | null $ userLogin u = return $ Left EmptyUsername
-    | otherwise = withBackend $ \r -> do
-        savedUser <- liftIO $ save r u
-        return savedUser
+    | null $ userLogin u = return $ Left UsernameMissing
+    | otherwise = withBackend $ \r -> liftIO $ save r u
 
 
 ------------------------------------------------------------------------------
@@ -433,9 +428,7 @@ loginUser
   -> Handler b (AuthManager b) ()
 loginUser unf pwdf remf loginFail loginSucc = do
     res <- go
-    case res of
-        (Left e) -> loginFail e
-        (Right _) -> loginSucc
+    runEitherT res >>= either loginFail (const loginSucc)
   where
     go = do
         mbUsername <- getParam unf
@@ -447,10 +440,10 @@ loginUser unf pwdf remf loginFail loginSucc = do
                            return $ value == "1")
  
  
-        password <- maybe (fail "Password is missing") return mbPassword
-        username <- maybe (fail "Username is missing") return mbUsername
-        loginByUsername username (ClearText password) remember
-
+        password <- maybe (rightZ $ Left PasswordMissing) return mbPassword
+        username <- maybe (rightZ $ Left UsernameMissing) return mbUsername
+        loginStatus <- loginByUsername username (ClearText password) remember
+        return $ hoistEither loginStatus
 
 ------------------------------------------------------------------------------
 -- | Simple handler to log the user out. Deletes user from session.
