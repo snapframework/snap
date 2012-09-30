@@ -43,7 +43,6 @@ module Snap.Snaplet.Auth
   , UserId(..)
   , Password(..)
   , AuthFailure(..)
-  , BackendError(..)
   , Role(..)
 
   -- * Other Utilities

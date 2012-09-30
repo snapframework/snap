@@ -11,9 +11,7 @@ module Snap.Snaplet.Auth.Handlers where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
-import           Control.Monad.Trans.Error
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)
 import           Data.Lens.Lazy
@@ -44,12 +42,12 @@ import           Snap.Snaplet.Session
 --
 createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
-           -> Handler b (AuthManager b) (Either String AuthUser)
+           -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 createUser unm pwd
-  | null $ strip unm = return $ Left "Username cannot be empty" 
+  | null $ strip unm = return $ Left EmptyUsername
   | otherwise = withBackend $ \r -> do
     u <- liftIO $ buildAuthUser r unm pwd
-    return $ Right u
+    return u
 
 
 ------------------------------------------------------------------------------
@@ -164,12 +162,12 @@ isLoggedIn = isJust <$> currentUser
 --
 -- May throw a 'BackendError' if something goes wrong.
 --
-saveUser :: AuthUser -> Handler b (AuthManager b) (Either String AuthUser)
+saveUser :: AuthUser -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 saveUser u
-    | null $ userLogin u = return $ Left "Username cannot be empty"
+    | null $ userLogin u = return $ Left EmptyUsername
     | otherwise = withBackend $ \r -> do
         savedUser <- liftIO $ save r u
-        return $ Right savedUser
+        return savedUser
 
 
 ------------------------------------------------------------------------------
@@ -190,7 +188,8 @@ destroyUser u = withBackend $ liftIO . flip destroy u
 --
 -- This will save the user to the backend.
 --
-markAuthFail :: AuthUser -> Handler b (AuthManager b) AuthUser
+markAuthFail :: AuthUser
+             -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 markAuthFail u = withBackend $ \r -> do
     lo <- gets lockout
     incFailCtr u >>= checkLockout lo >>= liftIO . save r
@@ -219,7 +218,8 @@ markAuthFail u = withBackend $ \r -> do
 --
 -- This will save the user to the backend.
 --
-markAuthSuccess :: AuthUser -> Handler b (AuthManager b) AuthUser
+markAuthSuccess :: AuthUser
+                -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 markAuthSuccess u = withBackend $ \r ->
                         incLoginCtr u     >>=
                         updateIp          >>=
@@ -276,6 +276,7 @@ checkPasswordAndLogin u pw =
       Nothing -> auth u
 
   where
+    auth :: AuthUser -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
     auth user =
       case authenticatePassword user pw of
         Just e -> do
@@ -285,8 +286,7 @@ checkPasswordAndLogin u pw =
         Nothing -> do
           forceLogin user
           modify (\mgr -> mgr { activeUser = Just user })
-          user' <- markAuthSuccess user
-          return $ Right user'
+          markAuthSuccess user
 
 
 ------------------------------------------------------------------------------
@@ -401,12 +401,12 @@ cacheOrLookup f = do
 registerUser
   :: ByteString            -- ^ Login field
   -> ByteString            -- ^ Password field
-  -> Handler b (AuthManager b) (Either String AuthUser)
+  -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 registerUser lf pf = do
     l <- fmap decodeUtf8 <$> getParam lf
     p <- getParam pf
     case liftM2 (,) l p of
-      Nothing         -> throw PasswordMissing
+      Nothing         -> return $ Left PasswordMissing
       Just (lgn, pwd) -> createUser lgn pwd
 
 
@@ -432,8 +432,11 @@ loginUser
   -> Handler b (AuthManager b) ()
       -- ^ Upon success
   -> Handler b (AuthManager b) ()
-loginUser unf pwdf remf loginFail loginSucc =
-    runErrorT go >>= either loginFail (const loginSucc)
+loginUser unf pwdf remf loginFail loginSucc = do
+    res <- go
+    case res of
+        (Left e) -> loginFail e
+        (Right _) -> loginSucc
   where
     go = do
         mbUsername <- getParam unf
@@ -443,11 +446,11 @@ loginUser unf pwdf remf loginFail loginSucc =
                         do field <- MaybeT $ return remf
                            value <- MaybeT $ getParam field
                            return $ value == "1")
-
-
-        password <- maybe (throwError PasswordMissing) return mbPassword
+ 
+ 
+        password <- maybe (fail "Password is missing") return mbPassword
         username <- maybe (fail "Username is missing") return mbUsername
-        ErrorT $ loginByUsername username (ClearText password) remember
+        loginByUsername username (ClearText password) remember
 
 
 ------------------------------------------------------------------------------

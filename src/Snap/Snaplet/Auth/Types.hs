@@ -77,17 +77,27 @@ checkPassword _ _ =
 -- They may provide useful information to the developer, although it is
 -- generally not advisable to show the user the exact details about why login
 -- failed.
-data AuthFailure = UserNotFound
+data AuthFailure = AuthError String
+                 | BackendError
+                 | DuplicateLogin
+                 | EmptyUsername
                  | IncorrectPassword
-                 | PasswordMissing
                  | LockedOut UTCTime    -- ^ Locked out until given time
-                 | AuthError String
-  deriving (Read, Show, Ord, Eq, Typeable)
+                 | PasswordMissing
+                 | UserNotFound
+  deriving (Read, Ord, Eq, Typeable)
 
-instance Exception AuthFailure
 
-instance Error AuthFailure where
-    strMsg = AuthError
+instance Show AuthFailure where
+        show (AuthError s) = s
+        show (BackendError) = "Failed to store data in the backend."
+        show (DuplicateLogin) = "This login already exists in the backend."
+        show (EmptyUsername) = "Username cannot be empty."
+        show (IncorrectPassword) = "The password provided was not valid."
+        show (LockedOut time) = "The login is locked out until " ++ show time
+        show (PasswordMissing) = "No password provided."
+        show (UserNotFound) = "User not found in the backend."
+
 
 ------------------------------------------------------------------------------
 -- | Internal representation of a 'User'. By convention, we demand that the
@@ -228,14 +238,6 @@ authSettingsFromConfig = do
     siteKey <- liftIO $ C.lookup config "siteKey"
     let sk = maybe id (\x s -> s { asSiteKey = x }) siteKey
     return $ (pw . rc . rp . lo . sk) defAuthSettings
-
-
-------------------------------------------------------------------------------
-data BackendError = DuplicateLogin
-                  | BackendError String
-  deriving (Eq,Show,Read,Typeable)
-
-instance Exception BackendError
 
 
                              --------------------
