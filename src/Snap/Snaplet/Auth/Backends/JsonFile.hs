@@ -11,7 +11,6 @@ module Snap.Snaplet.Auth.Backends.JsonFile
 
 
 import           Control.Applicative
-import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
@@ -171,7 +170,7 @@ jsonFileSave mgr u = do
           return $! Right $! (cache', u')
 
     case res of
-      Left e             -> return $! Left BackendError
+      Left _             -> return $! Left BackendError
       Right (cache', u') -> do
         dumpToDisk cache'
         return $! Right u'
