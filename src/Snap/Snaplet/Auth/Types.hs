@@ -8,9 +8,7 @@ module Snap.Snaplet.Auth.Types where
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Monad.CatchIO
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Error
 import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)

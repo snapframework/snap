@@ -53,12 +53,10 @@ module Snap.Snaplet.HeistNoClass
   ) where
 
 import           Prelude hiding ((.), id)
-import           Control.Arrow (second)
 import           Control.Applicative
 import           Control.Category
 import           Control.Comonad
 import           Control.Error
-import           Control.Monad.CatchIO (MonadCatchIO)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
