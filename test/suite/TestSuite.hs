@@ -51,7 +51,6 @@ main = do
 
   where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
-                                 , authTests
                                  , testDefault
                                  , testBarebones
                                  , testTutorial

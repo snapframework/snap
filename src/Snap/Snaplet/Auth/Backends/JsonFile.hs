@@ -149,7 +149,9 @@ data JsonFileAuthManager = JsonFileAuthManager {
 
 
 ------------------------------------------------------------------------------
-jsonFileSave :: JsonFileAuthManager -> AuthUser -> IO AuthUser
+jsonFileSave :: JsonFileAuthManager
+             -> AuthUser
+             -> IO (Either AuthFailure AuthUser)
 jsonFileSave mgr u = do
     now        <- getCurrentTime
     oldByLogin <- lookupByLogin mgr (userLogin u)
@@ -169,17 +171,17 @@ jsonFileSave mgr u = do
           return $! Right $! (cache', u')
 
     case res of
-      Left e             -> throw e
+      Left e             -> return $! Left BackendError
       Right (cache', u') -> do
         dumpToDisk cache'
-        return $! u'
+        return $! Right u'
 
   where
     --------------------------------------------------------------------------
     create :: UserCache
            -> UTCTime
            -> (Maybe AuthUser)
-           -> STM (Either BackendError (UserCache, AuthUser))
+           -> STM (Either AuthFailure (UserCache, AuthUser))
     create cache now old = do
       case old of
         Just _  -> return $! Left DuplicateLogin
@@ -202,11 +204,10 @@ jsonFileSave mgr u = do
     update :: UserCache
            -> UTCTime
            -> (Maybe AuthUser)
-           -> STM (Either BackendError (UserCache, AuthUser))
+           -> STM (Either AuthFailure (UserCache, AuthUser))
     update cache now old =
       case old of
-        Nothing -> return $! Left $
-                     BackendError "User not found; should never happen"
+        Nothing -> return $! Left UserNotFound
         Just x -> do
           let oldLogin = userLogin x
           let oldToken = userRememberToken x
