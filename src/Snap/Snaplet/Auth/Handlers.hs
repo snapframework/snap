@@ -66,8 +66,7 @@ loginByUsername :: ByteString       -- ^ Username/login for user
                 -> Password         -- ^ Should be ClearText
                 -> Bool             -- ^ Set remember token?
                 -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-loginByUsername _ (Encrypted _) _ =
-  error "Cannot login with encrypted password"
+loginByUsername _ (Encrypted _) _ = return $ Left EncryptedPassword
 loginByUsername unm pwd shouldRemember = do
     sk <- gets siteKey
     cn <- gets rememberCookieName
