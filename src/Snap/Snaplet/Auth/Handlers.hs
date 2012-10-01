@@ -426,24 +426,30 @@ loginUser
   -> Handler b (AuthManager b) ()
       -- ^ Upon success
   -> Handler b (AuthManager b) ()
-loginUser unf pwdf remf loginFail loginSucc = do
-    res <- go
-    runEitherT res >>= either loginFail (const loginSucc)
-  where
-    go = do
-        mbUsername <- getParam unf
-        mbPassword <- getParam pwdf
-        remember   <- liftM (fromMaybe False)
-                        (runMaybeT $
-                        do field <- MaybeT $ return remf
-                           value <- MaybeT $ getParam field
-                           return $ value == "1")
- 
- 
-        password <- maybe (rightZ $ Left PasswordMissing) return mbPassword
-        username <- maybe (rightZ $ Left UsernameMissing) return mbUsername
-        loginStatus <- loginByUsername username (ClearText password) remember
-        return $ hoistEither loginStatus
+loginUser unf pwdf remf loginFail loginSucc =
+    runEitherT (loginUser' unf pwdf remf)
+    >>= either loginFail (const loginSucc)
+
+
+------------------------------------------------------------------------------
+loginUser' :: ByteString
+           -> ByteString
+           -> Maybe ByteString
+           -> EitherT AuthFailure (Handler b (AuthManager b)) AuthUser
+loginUser' unf pwdf remf = do
+    mbUsername <- lift $ getParam unf
+    mbPassword <- lift $ getParam pwdf
+    remember   <- lift $ liftM (fromMaybe False)
+                    (runMaybeT $
+                    do field <- MaybeT $ return remf
+                       value <- MaybeT $ getParam field
+                       return $ value == "1")
+
+    password <- noteT PasswordMissing $ hoistMaybe mbPassword
+    username <- noteT UsernameMissing $ hoistMaybe mbUsername
+
+    EitherT $ loginByUsername username (ClearText password) remember
+
 
 ------------------------------------------------------------------------------
 -- | Simple handler to log the user out. Deletes user from session.
