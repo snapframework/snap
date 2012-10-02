@@ -37,8 +37,6 @@ import           Snap.Snaplet.Session
 ------------------------------------------------------------------------------
 -- | Create a new user from just a username and password
 --
--- May throw a "DuplicateLogin" if given username is not unique.
---
 createUser :: Text              -- ^ Username
            -> ByteString        -- ^ Password
            -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
@@ -156,8 +154,6 @@ isLoggedIn = isJust <$> currentUser
 ------------------------------------------------------------------------------
 -- | Create or update a given user
 --
--- May throw a 'BackendError' if something goes wrong.
---
 saveUser :: AuthUser -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 saveUser u
     | null $ userLogin u = return $ Left UsernameMissing
@@ -166,8 +162,6 @@ saveUser u
 
 ------------------------------------------------------------------------------
 -- | Destroy the given user
---
--- May throw a 'BackendError' if something goes wrong.
 --
 destroyUser :: AuthUser -> Handler b (AuthManager b) ()
 destroyUser u = withBackend $ liftIO . flip destroy u
