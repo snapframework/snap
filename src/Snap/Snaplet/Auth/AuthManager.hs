@@ -54,10 +54,9 @@ buildAuthUser r unm pass = do
 -- | All storage backends need to implement this typeclass
 --
 class IAuthBackend r where
-  -- | Create or update the given 'AuthUser' record.  If the 'userId' in the
-  -- 'AuthUser' already exists in the database, then that user's information
-  -- should be updated.  If it does not exist, then a new user should be
-  -- created.
+  -- | Create or update the given 'AuthUser' record.  A 'userId' of Nothing
+  -- indicates that a new user should be created, otherwise the user
+  -- information for that userId should be updated.
   save                  :: r -> AuthUser -> IO (Either AuthFailure AuthUser)
   lookupByUserId        :: r -> UserId   -> IO (Maybe AuthUser)
   lookupByLogin         :: r -> Text     -> IO (Maybe AuthUser)
