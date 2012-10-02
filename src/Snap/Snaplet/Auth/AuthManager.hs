@@ -33,7 +33,6 @@ import           Snap.Snaplet.Auth.Types
 ------------------------------------------------------------------------------
 -- | Creates a new user from a username and password.
 --
--- May throw a "DuplicateLogin" if given username is not unique
 buildAuthUser :: IAuthBackend r =>
                  r            -- ^ An auth backend
               -> Text         -- ^ Username
@@ -54,7 +53,6 @@ buildAuthUser r unm pass = do
 ------------------------------------------------------------------------------
 -- | All storage backends need to implement this typeclass
 --
--- Backend operations may throw 'BackendError's
 class IAuthBackend r where
   -- | Create or update the given 'AuthUser' record.  If the 'userId' in the
   -- 'AuthUser' already exists in the database, then that user's information
