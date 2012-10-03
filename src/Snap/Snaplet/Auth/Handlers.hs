@@ -42,7 +42,10 @@ createUser :: Text              -- ^ Username
            -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 createUser unm pwd
   | null $ strip unm = return $ Left UsernameMissing
-  | otherwise = withBackend $ \r -> liftIO $ buildAuthUser r unm pwd
+  | otherwise = do
+     uExists <- usernameExists unm
+     if uExists then return $ Left DuplicateLogin
+                else withBackend $ \r -> liftIO $ buildAuthUser r unm pwd
 
 
 ------------------------------------------------------------------------------
@@ -393,9 +396,15 @@ registerUser
 registerUser lf pf = do
     l <- fmap decodeUtf8 <$> getParam lf
     p <- getParam pf
-    case liftM2 (,) l p of
-      Nothing         -> return $ Left PasswordMissing
-      Just (lgn, pwd) -> createUser lgn pwd
+
+    let l' = note UsernameMissing l
+    let p' = note PasswordMissing p
+
+    -- In case of multiple AuthFailure, the first one
+    -- will be propagated.
+    case liftM2 (,) l' p' of
+      Left e           -> return $ Left e
+      Right (lgn, pwd) -> createUser lgn pwd
 
 
 ------------------------------------------------------------------------------
