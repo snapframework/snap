@@ -171,7 +171,6 @@ Library
     time                      >= 1.1      && < 1.5,
     transformers              >= 0.2      && < 0.4,
     unordered-containers      >= 0.1.4    && < 0.3,
-    utf8-string               >= 0.3      && < 0.4,
     vector                    >= 0.7.1    && < 0.10,
     vector-algorithms         >= 0.4      && < 0.6,
     xmlhtml                   >= 0.1      && < 0.3
