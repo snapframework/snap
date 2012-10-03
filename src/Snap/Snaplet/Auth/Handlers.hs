@@ -400,7 +400,7 @@ registerUser lf pf = do
     let l' = note UsernameMissing l
     let p' = note PasswordMissing p
 
-    -- In case of multiple AuthFailure, the first one
+    -- In case of multiple AuthFailure, the first available one
     -- will be propagated.
     case liftM2 (,) l' p' of
       Left e           -> return $ Left e
