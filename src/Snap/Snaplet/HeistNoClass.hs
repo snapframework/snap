@@ -48,12 +48,12 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.UTF8 as U
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Text.Encoding
 import           System.FilePath.Posix
 import           Text.Templating.Heist
 import           Text.Templating.Heist.Splices.Cache
@@ -296,7 +296,8 @@ addTemplatesAt urlPrefix templateDir = do
     ts <- liftIO $ loadTemplates templateDir mempty
                    >>= either error return
     rootUrl <- getSnapletRootURL
-    let fullPrefix = U.toString rootUrl </> U.toString urlPrefix
+    let fullPrefix = (T.unpack $ decodeUtf8 rootUrl) </>
+                     (T.unpack $ decodeUtf8 urlPrefix)
     printInfo $ T.pack $ unwords
         [ "...adding"
         , (show $ length $ templateNames ts)
@@ -306,7 +307,7 @@ addTemplatesAt urlPrefix templateDir = do
         , fullPrefix ++ "/"
         ]
     addPostInitHook $ return . changeTS
-        (`mappend` addTemplatePathPrefix (U.fromString fullPrefix) ts)
+        (`mappend` addTemplatePathPrefix (encodeUtf8 $ T.pack fullPrefix) ts)
 
 
 ------------------------------------------------------------------------------

@@ -34,7 +34,6 @@ Executable snap-testsuite
     text                       >= 0.11     && < 0.12,
     transformers               >= 0.2,
     unix                       >= 2.2.0.0  && < 2.7,
-    utf8-string                >= 0.3      && < 0.4,
     template-haskell
 
   extensions:
@@ -90,7 +89,6 @@ Executable app
     text                       >= 0.11    && < 0.12,
     transformers               >= 0.2,
     unordered-containers       >= 0.1.4,
-    utf8-string                >= 0.3     && < 0.4,
     template-haskell
     --FIXME
 
@@ -138,7 +136,6 @@ Executable nesttest
     snap-server                >= 0.9   && < 0.10,
     text                       >= 0.11  && < 0.12,
     transformers               >= 0.2,
-    utf8-string                >= 0.3   && < 0.4,
     template-haskell
 
   extensions:
