@@ -133,8 +133,6 @@ Library
     Snap.Snaplet.Internal.RST
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session.SecureCookie
-    Snap.Snaplet.Internal.Test.Assertions
-    Snap.Snaplet.Internal.Test.Types
 
   build-depends:
     MonadCatchIO-transformers >= 0.2      && < 0.4,
