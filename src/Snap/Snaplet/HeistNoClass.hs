@@ -53,17 +53,14 @@ module Snap.Snaplet.HeistNoClass
   ) where
 
 import           Prelude hiding ((.), id)
-import           Control.Arrow (second)
 import           Control.Applicative
 import           Control.Category
 import           Control.Comonad
 import           Control.Error
-import           Control.Monad.CatchIO (MonadCatchIO)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
-import qualified Data.ByteString.UTF8 as U
 import           Data.DList (DList)
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
@@ -72,6 +69,7 @@ import           Data.Monoid
 import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
+import           Data.Text.Encoding
 import           System.FilePath.Posix
 import           Heist
 import qualified Heist.Compiled as C
@@ -227,8 +225,10 @@ addTemplatesAt :: Snaplet (Heist b)
                -> Initializer b (Heist b) ()
 addTemplatesAt h urlPrefix templateDir = do
     rootUrl <- getSnapletRootURL
-    let fullPrefix = U.toString rootUrl </> U.toString urlPrefix
-        addPrefix = return . addTemplatePathPrefix (U.fromString fullPrefix)
+    let fullPrefix = (T.unpack $ decodeUtf8 rootUrl) </>
+                     (T.unpack $ decodeUtf8 urlPrefix)
+        addPrefix = return . addTemplatePathPrefix
+                               (encodeUtf8 $ T.pack fullPrefix)
     ts <- liftIO $ runEitherT (loadTemplates templateDir) >>=
                    either (error . concat) addPrefix
     printInfo $ T.pack $ unwords
