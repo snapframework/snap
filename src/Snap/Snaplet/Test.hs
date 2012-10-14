@@ -22,5 +22,7 @@ import qualified Snap.Test as ST
 runHandler :: MonadIO m =>
              RequestBuilder m ()
            -> Handler b b a
+           -> b
            -> m Response
-runHandler rq h = ST.runHandler rq $ runPureBase h undefined
+runHandler rq h app = ST.runHandler rq $ runPureBase h app
+

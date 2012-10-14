@@ -282,9 +282,9 @@ instance MonadSnaplet Handler where
 
 ------------------------------------------------------------------------------
 -- | Like 'runBase', but it doesn't require an MVar to be executed.
-runPureBase :: Handler b b a -> Snaplet b -> Snap a
+runPureBase :: Handler b b a -> b -> Snap a
 runPureBase (Handler m) b = do
-        (!a, _) <- L.runLensed m id b
+        (!a, _) <- L.runLensed m id (Snaplet undefined b)
         return $! a
 
 
