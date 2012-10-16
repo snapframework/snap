@@ -29,8 +29,8 @@ runHandler :: RequestBuilder IO ()
            -> Handler b b a
            -> SnapletInit b b
            -> IO (Either Text Response)
-runHandler rq h (SnapletInit initializer) = do
-        app <- getSnaplet initializer
+runHandler rq h s = do
+        app <- getSnaplet s
         case app of
             (Left e) -> return $ Left e
             (Right (a,_)) -> do
@@ -42,9 +42,9 @@ runHandler rq h (SnapletInit initializer) = do
 -- | Run the given initializer, yielding a tuple where the first element is
 -- a @Snaplet b@, or an error message whether the initializer threw an
 -- exception.                                                       
-getSnaplet :: Initializer b b (Snaplet b)
+getSnaplet :: SnapletInit b b
            -> IO (Either Text (Snaplet b, InitializerState b))
-getSnaplet initializer = do
+getSnaplet (SnapletInit initializer) = do
         mvar <- newEmptyMVar
         runInitializer mvar "" initializer
 
