@@ -2,32 +2,35 @@
 -- testing Snaplets.
 module Snap.Snaplet.Test
   (
+    -- ** Testing handlers
     runHandler
   )
   where
 
-import           Control.Category
+
 import           Control.Concurrent.MVar
-import           Control.Monad.IO.Class
 import           Data.Text
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Internal.Types
-import           Snap.Test hiding (get, runHandler)
+import           Snap.Test hiding (runHandler)
 import qualified Snap.Test as ST
 import           Snap.Snaplet.Internal.Initializer
 
 
--- Then what you do is use the initializer (probably a SnapletInit) to construct the b.
--- From there, it should be pretty simple to connect runBase and runHandler from Snap.Test
-
 ------------------------------------------------------------------------------
+-- | Given a Snaplet Handler and a 'RequestBuilder' defining
+-- a test request, runs the Handler, producing an HTTP 'Response'.
+--
+-- Note that the output of this function is slightly different from
+-- 'runHandler' defined in Snap.Test, because due to the fact an
+-- initializer can throw an exception.
 runHandler :: RequestBuilder IO ()
            -> Handler b b a
            -> SnapletInit b b
            -> IO (Either Text Response)
-runHandler rq h (SnapletInit init) = do
-        app <- getSnaplet init
+runHandler rq h (SnapletInit initializer) = do
+        app <- getSnaplet initializer
         case app of
             (Left e) -> return $ Left e
             (Right (a,_)) -> do
@@ -35,9 +38,13 @@ runHandler rq h (SnapletInit init) = do
                 return $ Right res
 
 
+------------------------------------------------------------------------------
+-- | Run the given initializer, yielding a tuple where the first element is
+-- a @Snaplet b@, or an error message whether the initializer threw an
+-- exception.                                                       
 getSnaplet :: Initializer b b (Snaplet b)
            -> IO (Either Text (Snaplet b, InitializerState b))
-getSnaplet init = do
+getSnaplet initializer = do
         mvar <- newEmptyMVar
-        runInitializer mvar "" init
+        runInitializer mvar "" initializer
 
