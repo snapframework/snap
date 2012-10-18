@@ -5,9 +5,7 @@ module Snap.Snaplet.Auth.Handlers.Tests
 
 
 ------------------------------------------------------------------------------
-import           Prelude hiding (id)
-import           Control.Category
-import           Control.Error (isLeft, isRight)
+import           Control.Error
 import qualified Data.Map as Map
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -33,6 +31,10 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testUsernameExists 
         ,testLoginByUsername 
         ,testLoginByUsernameEnc
+        ,testLoginByUsernameNoU 
+        ,testLoginByUsernameInvPwd
+        ,testLoginByRememberTokenKO
+        ,testLoginByRememberTokenOK
         ]
     ]
 
@@ -146,3 +148,70 @@ testLoginByUsernameEnc = testCase "loginByUsername encrypted pwd" assertion
           (Right res') -> assertBool failMsg $ isLeft res'
 
     failMsg = "loginByUsername: Expected to find an Encrypted password, but I haven't."
+
+
+------------------------------------------------------------------------------
+testLoginByUsernameNoU :: Test
+testLoginByUsernameNoU = testCase "loginByUsername invalid user" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let pwd = ClearText "foo"
+        let hdl = with auth $ loginByUsername "doesnotexist" pwd False
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isLeft res'
+
+    failMsg = "loginByUsername: Expected to fail for an invalid user, but I didn't."
+
+
+------------------------------------------------------------------------------
+testLoginByUsernameInvPwd :: Test
+testLoginByUsernameInvPwd = testCase "loginByUsername invalid user" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let pwd = ClearText "invalid"
+        let hdl = with auth $ loginByUsername "foo" pwd False
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isLeft res'
+
+    failMsg = "loginByUsername: Expected to fail for an invalid pwd, but I didn't."
+
+
+------------------------------------------------------------------------------
+testLoginByRememberTokenKO :: Test
+testLoginByRememberTokenKO = testCase "loginByRememberToken no token" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let hdl = with auth loginByRememberToken
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isNothing res'
+
+    failMsg = "loginByRememberToken: Expected to fail for the " ++
+              "absence of a token, but I didn't."
+
+
+------------------------------------------------------------------------------
+testLoginByRememberTokenOK :: Test
+testLoginByRememberTokenOK = testCase "loginByRememberToken token" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isJust res'
+
+    hdl :: Handler App App (Maybe AuthUser)
+    hdl = with auth $ do
+        res <- loginByUsername "foo" (ClearText "foo") True
+        either (return . return Nothing) (\_ -> loginByRememberToken) res
+
+    failMsg = "loginByRememberToken: Expected to succeed but I didn't."
