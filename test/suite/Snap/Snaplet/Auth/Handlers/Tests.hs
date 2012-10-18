@@ -31,6 +31,8 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testCreateEmptyUser
         ,testCreateDupUser
         ,testUsernameExists 
+        ,testLoginByUsername 
+        ,testLoginByUsernameEnc
         ]
     ]
 
@@ -59,7 +61,9 @@ testCreateUserGood = testCase "createUser good params" assertGoodUser
         res <- evalHandler (ST.get "" Map.empty) createGoodUserHdlr appInit
         case res of
           (Left e) -> assertFailure $ show e
-          (Right res') -> assertBool "user successfully created" $ isRight res'
+          (Right res') -> assertBool failMsg $ isRight res'
+
+    failMsg = "createUser failed: Couldn't create a new user."
 
 
 ------------------------------------------------------------------------------
@@ -73,7 +77,9 @@ testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
         res <- evalHandler (ST.get "" Map.empty) createEmptyUserHdlr appInit
         case res of
           (Left e) -> assertFailure $ show e
-          (Right res') -> assertBool "empty username rejected" $ isLeft res'
+          (Right res') -> assertBool failMsg $ isLeft res'
+
+    failMsg = "createUser: Was created an empty username despite they aren't allowed."
 
 
 ------------------------------------------------------------------------------
@@ -87,7 +93,9 @@ testCreateDupUser = testCase "createUser duplicate user" assertDupUser
         res <- evalHandler (ST.get "" Map.empty) createDupUserHdlr appInit
         case res of
           (Left e) -> assertFailure $ show e
-          (Right res') -> assertBool "duplicate user rejected" $ isLeft res'
+          (Right res') -> assertBool failMsg $ isLeft res'
+
+    failMsg = "createUser: Expected to find a duplicate user, but I haven't."
 
 
 ------------------------------------------------------------------------------
@@ -99,10 +107,42 @@ testUsernameExists = testCase "username exists" assertUserExists
   where
     assertUserExists :: Assertion
     assertUserExists = do
-        res <- evalHandler (ST.get "" Map.empty)
-                          (with auth $ usernameExists "foo")
-                          appInit
+        let hdl = with auth $ usernameExists "foo"
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
         case res of
           (Left e) -> assertFailure $ show e
-          (Right res') -> assertBool "username exists" res'
+          (Right res') -> assertBool failMsg res'
 
+    failMsg = "usernameExists: Expected to return True, but it didn't."
+
+
+------------------------------------------------------------------------------
+testLoginByUsername :: Test
+testLoginByUsername = testCase "successful loginByUsername" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let pwd = ClearText "foo"
+        let hdl = with auth $ loginByUsername "foo" pwd False
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isRight res'
+
+    failMsg = "loginByUsername: Failed with ClearText pwd."
+
+
+------------------------------------------------------------------------------
+testLoginByUsernameEnc :: Test
+testLoginByUsernameEnc = testCase "loginByUsername encrypted pwd" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let pwd = Encrypted "foo"
+        let hdl = with auth $ loginByUsername "foo" pwd False
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool failMsg $ isLeft res'
+
+    failMsg = "loginByUsername: Expected to find an Encrypted password, but I haven't."
