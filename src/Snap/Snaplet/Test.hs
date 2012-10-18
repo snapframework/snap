@@ -3,17 +3,19 @@
 module Snap.Snaplet.Test
   (
     -- ** Testing handlers
-    runHandler
+    evalHandler
+  , runHandler
   )
   where
 
 
 import           Control.Concurrent.MVar
+import           Control.Monad.IO.Class
 import           Data.Text
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Internal.Types
-import           Snap.Test hiding (runHandler)
+import           Snap.Test hiding (evalHandler, runHandler)
 import qualified Snap.Test as ST
 import           Snap.Snaplet.Internal.Initializer
 
@@ -23,28 +25,55 @@ import           Snap.Snaplet.Internal.Initializer
 -- a test request, runs the Handler, producing an HTTP 'Response'.
 --
 -- Note that the output of this function is slightly different from
--- 'runHandler' defined in Snap.Test, because due to the fact an
--- initializer can throw an exception.
-runHandler :: RequestBuilder IO ()
+-- 'runHandler' defined in Snap.Test, because due to the fact running
+-- the initializer inside 'SnapletInit' can throw an exception.
+runHandler :: MonadIO m =>
+             RequestBuilder m ()
            -> Handler b b a
            -> SnapletInit b b
-           -> IO (Either Text Response)
+           -> m (Either Text Response)
 runHandler rq h s = do
         app <- getSnaplet s
         case app of
-            (Left e) -> return $ Left e
-            (Right (a,_)) -> do
-                res <- ST.runHandler rq $ runPureBase h a
-                return $ Right res
+          (Left e) -> return $ Left e
+          (Right (a,_)) -> do
+              res <- ST.runHandler rq $ runPureBase h a
+              return $ Right res
+
+
+------------------------------------------------------------------------------
+-- | Given a Snaplet Handler, a 'SnapletInit' specifying the initial state,
+--  and a 'RequestBuilder' defining a test request, runs the handler,
+--  returning the monadic value it produces.
+--
+-- Throws an exception if the 'Snap' handler early-terminates with 'finishWith'
+-- or 'mzero'.
+--
+-- Note that the output of this function is slightly different from
+-- 'evalHandler defined in Snap.Test, because due to the fact running
+-- the initializer inside 'SnapletInit' can throw an exception.
+evalHandler :: MonadIO m =>
+              RequestBuilder m ()
+            -> Handler b b a
+            -> SnapletInit b b
+            -> m (Either Text a)
+evalHandler rq h s = do
+    app <- getSnaplet s
+    case app of
+      (Left e) -> return $ Left e
+      (Right (a,_)) -> do
+          res <- ST.evalHandler rq $ runPureBase h a
+          return $ Right res
 
 
 ------------------------------------------------------------------------------
 -- | Run the given initializer, yielding a tuple where the first element is
 -- a @Snaplet b@, or an error message whether the initializer threw an
 -- exception.                                                       
-getSnaplet :: SnapletInit b b
-           -> IO (Either Text (Snaplet b, InitializerState b))
-getSnaplet (SnapletInit initializer) = do
+getSnaplet :: MonadIO m =>
+             SnapletInit b b
+           -> m (Either Text (Snaplet b, InitializerState b))
+getSnaplet (SnapletInit initializer) = liftIO $ do
         mvar <- newEmptyMVar
         runInitializer mvar "" initializer
 

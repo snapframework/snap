@@ -36,9 +36,10 @@ Executable snap-testsuite
     mwc-random                 >= 0.8,
     process                    == 1.*,
     pwstore-fast               == 2.*,
-    regex-posix               >= 0.95    && < 1,
+    regex-posix                >= 0.95    && < 1,
     snap-core                  >= 0.9      && < 0.10,
     snap-server                >= 0.9      && < 0.10,
+    stm                        >= 2.4,
     syb                        >= 0.1,
     test-framework             >= 0.6      && < 0.7,
     test-framework-hunit       >= 0.2.7    && < 0.3,
@@ -47,6 +48,8 @@ Executable snap-testsuite
     time                       >= 1.1,
     transformers               >= 0.2,
     unix                       >= 2.2.0.0  && < 2.7,
+    unordered-containers       >= 0.1.4,
+    xmlhtml                    >=0.2.0.3,
     template-haskell
 
   extensions:
@@ -170,6 +173,7 @@ Executable nesttest
     text                       >= 0.11    && < 0.12,
     time                       >= 1.1,
     transformers               >= 0.2,
+    unordered-containers       >= 0.1.4,
     template-haskell
 
   extensions:

@@ -28,6 +28,7 @@ import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
 import qualified Snap.Snaplet.Internal.Tests
+import qualified Snap.Snaplet.Auth.Tests
 import           Snap.TestCommon
 
 import           SafeCWD
@@ -50,6 +51,7 @@ main = do
 
   where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
+                                 , Snap.Snaplet.Auth.Tests.tests
                                  , testDefault
                                  , testBarebones
                                  , testTutorial
