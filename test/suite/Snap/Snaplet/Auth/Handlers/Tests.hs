@@ -212,6 +212,6 @@ testLoginByRememberTokenOK = testCase "loginByRememberToken token" assertion
     hdl :: Handler App App (Maybe AuthUser)
     hdl = with auth $ do
         res <- loginByUsername "foo" (ClearText "foo") True
-        either (return . return Nothing) (\_ -> loginByRememberToken) res
+        either (\_ -> return Nothing) (\_ -> loginByRememberToken) res
 
     failMsg = "loginByRememberToken: Expected to succeed but I didn't."
