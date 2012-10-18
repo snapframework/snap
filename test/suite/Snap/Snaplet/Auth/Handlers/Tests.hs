@@ -29,6 +29,8 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
     [mutuallyExclusive $ testGroup "createUser tests"
         [testCreateUserGood
         ,testCreateEmptyUser
+        ,testCreateDupUser
+        ,testUsernameExists 
         ]
     ]
 
@@ -44,6 +46,11 @@ createEmptyUserHdlr = with auth $ createUser "" "foo"
 
 
 ------------------------------------------------------------------------------
+createDupUserHdlr :: Handler App App (Either AuthFailure AuthUser)
+createDupUserHdlr = with auth $ createUser "foo" "foo"
+
+
+------------------------------------------------------------------------------
 testCreateUserGood :: Test
 testCreateUserGood = testCase "createUser good params" assertGoodUser
   where 
@@ -56,6 +63,8 @@ testCreateUserGood = testCase "createUser good params" assertGoodUser
 
 
 ------------------------------------------------------------------------------
+-- Here we are gaining in generality but losing specificity, because we
+-- don't check the specific error raised. This can be cause brittle tests.
 testCreateEmptyUser :: Test
 testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
   where 
@@ -65,3 +74,35 @@ testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
         case res of
           (Left e) -> assertFailure $ show e
           (Right res') -> assertBool "empty username rejected" $ isLeft res'
+
+
+------------------------------------------------------------------------------
+-- Is the tests execution order garanteed? When this runs, the user "foo"
+-- will be already present in the backend.
+testCreateDupUser :: Test
+testCreateDupUser = testCase "createUser duplicate user" assertDupUser
+  where 
+    assertDupUser :: Assertion
+    assertDupUser = do
+        res <- evalHandler (ST.get "" Map.empty) createDupUserHdlr appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool "duplicate user rejected" $ isLeft res'
+
+
+------------------------------------------------------------------------------
+-- A non desirable thing is to be couple by the temporal execution of
+-- tests. The problem has been resolved using fixtures, so something like
+-- that would be beneficial for the next releases.
+testUsernameExists :: Test
+testUsernameExists = testCase "username exists" assertUserExists
+  where
+    assertUserExists :: Assertion
+    assertUserExists = do
+        res <- evalHandler (ST.get "" Map.empty)
+                          (with auth $ usernameExists "foo")
+                          appInit
+        case res of
+          (Left e) -> assertFailure $ show e
+          (Right res') -> assertBool "username exists" res'
+
