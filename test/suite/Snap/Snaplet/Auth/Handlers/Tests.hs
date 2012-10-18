@@ -3,6 +3,7 @@
 module Snap.Snaplet.Auth.Handlers.Tests
   ( tests ) where
 
+
 ------------------------------------------------------------------------------
 import           Prelude hiding (id)
 import           Control.Category
@@ -25,7 +26,7 @@ import           Snap.Snaplet.Test
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.Handlers"
-    [testGroup "createUser tests"
+    [mutuallyExclusive $ testGroup "createUser tests"
         [testCreateUserGood
         ,testCreateEmptyUser
         ]
@@ -47,7 +48,7 @@ testCreateUserGood :: Test
 testCreateUserGood = testCase "createUser good params" assertGoodUser
   where 
     assertGoodUser :: Assertion
-    assertGoodUser = do
+    assertGoodUser = withTemporaryFile "users.json" $ do
         res <- evalHandler (ST.get "" Map.empty) createGoodUserHdlr appInit
         case res of
           (Left e) -> assertFailure $ show e

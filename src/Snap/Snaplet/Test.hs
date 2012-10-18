@@ -5,19 +5,33 @@ module Snap.Snaplet.Test
     -- ** Testing handlers
     evalHandler
   , runHandler
+  , withTemporaryFile
   )
   where
 
 
+------------------------------------------------------------------------------
 import           Control.Concurrent.MVar
+import           Control.Exception.Base (finally)
 import           Control.Monad.IO.Class
 import           Data.Text
+import           System.Directory
+
+
+------------------------------------------------------------------------------
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Internal.Types
 import           Snap.Test hiding (evalHandler, runHandler)
 import qualified Snap.Test as ST
 import           Snap.Snaplet.Internal.Initializer
+
+
+------------------------------------------------------------------------------
+-- | Remove the given file before running an IO computation. Obviously it
+-- can be used with 'Assertion'.
+withTemporaryFile :: FilePath -> IO () -> IO ()
+withTemporaryFile f = finally (removeFile f)
 
 
 ------------------------------------------------------------------------------
