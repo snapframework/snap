@@ -43,6 +43,8 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testIsLoggedInOK
         ,testSaveUserKO
         ,testSaveUserOK
+        ,testMarkAuthFail
+        ,testMarkAuthSuccess
         ]
     ]
 
@@ -317,6 +319,7 @@ testDestroyUser = testCase "destroyUser" assertion
     failMsg = "destroyUser: I've tried to destroy an existing user, " ++
               "but user is still there."
 
+
 ------------------------------------------------------------------------------
 testSaveUserKO :: Test
 testSaveUserKO = testCase "saveUser null username" assertion
@@ -336,11 +339,12 @@ testSaveUserKO = testCase "saveUser null username" assertion
     failMsg = "saveUser: I expected to fail since I'm saving an " ++
               "empty username, but I didn't."
 
+
 ------------------------------------------------------------------------------
 -- Trying to update a Cleartext text pwd result in an error. Feature or
 -- bug? (error: Json can't serialize ClearText pwd)
 testSaveUserOK :: Test
-testSaveUserOK = testCase "saveUser good username" assertion
+testSaveUserOK = testCase "saveUser good update params" assertion
   where
     assertion :: Assertion
     assertion = do
@@ -356,3 +360,59 @@ testSaveUserOK = testCase "saveUser good username" assertion
 
     failMsg = "saveUser: I expected to success since I'm saving a " ++
               "valid user, but I didn't."
+
+
+------------------------------------------------------------------------------
+testMarkAuthFail :: Test
+testMarkAuthFail = testCase "successful markAuthFail call" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg) res
+
+    -- Lot of destructuring here, but the idea is to test if
+    -- failedLoginCount increased by 1.
+    hdl :: Handler App App Bool
+    hdl = with auth $ do
+        user <- loginByUsername "foo" (ClearText "foo") True
+        case user of
+          (Left _) -> return False
+          (Right u) ->
+              let failCount = userFailedLoginCount u
+                  in do
+                      res <- markAuthFail u
+                      either (\_ -> return False)
+                             (\u' -> return $
+                                    userFailedLoginCount u' == failCount + 1)
+                             res
+
+    failMsg = "markAuthFail: I expected to increase the userFailedLoginCount, " ++
+              "but I didn't."
+
+
+------------------------------------------------------------------------------
+testMarkAuthSuccess :: Test
+testMarkAuthSuccess = testCase "successful markAuthSuccess call" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg) res
+
+    hdl :: Handler App App Bool
+    hdl = with auth $ do
+        user <- loginByUsername "foo" (ClearText "foo") True
+        case user of
+          (Left _) -> return False
+          (Right u) ->
+              let count = userLoginCount u
+                  in do
+                      res <- markAuthSuccess u
+                      either (\_ -> return False)
+                             (\u' -> return $
+                                    userLoginCount u' == count + 1)
+                             res
+
+    failMsg = "markAuthSuccess: I expected to increase the userLoginCount, " ++
+              "but I didn't."
