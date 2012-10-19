@@ -15,6 +15,7 @@ dist*/
 docs/templates/out
 sitekey.txt
 test/dist*
+test/*.json
 test/test-cabal-dev
 test/test-snap-exe
 test/dist/snaplets
