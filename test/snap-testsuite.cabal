@@ -46,6 +46,7 @@ Executable snap-testsuite
     time                       >= 1.1,
     transformers               >= 0.2,
     unix                       >= 2.2.0.0  && < 2.7,
+    unordered-containers       >= 0.1.4,
     template-haskell
 
   extensions:
@@ -169,6 +170,7 @@ Executable nesttest
     text                       >= 0.11    && < 0.12,
     time                       >= 1.1,
     transformers               >= 0.2,
+    unordered-containers       >= 0.1.4,
     template-haskell
 
   extensions:
