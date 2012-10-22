@@ -45,8 +45,23 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testSaveUserOK
         ,testMarkAuthFail
         ,testMarkAuthSuccess
+        ,testCheckPasswordAndLoginOK
+        ,testCheckPasswordAndLoginKO
+        ,testAuthenticatePasswordOK
+        ,testAuthenticatePasswordPwdMissing
+        ,testAuthenticatePasswordPwdWrong
         ]
     ]
+
+------------------------------------------------------------------------------
+isJustFailure :: AuthFailure -> Maybe AuthFailure -> Bool
+isJustFailure failure (Just expected) = failure == expected
+
+
+------------------------------------------------------------------------------
+isLeftFailure :: AuthFailure -> Either AuthFailure AuthUser -> Bool
+isLeftFailure failure (Left expected) = failure == expected
+isLeftFailure _ _ = False
 
 
 ------------------------------------------------------------------------------
@@ -63,8 +78,6 @@ testCreateUserGood = testCase "createUser good params" assertGoodUser
 
 
 ------------------------------------------------------------------------------
--- Here we are gaining in generality but losing specificity, because we
--- don't check the specific error raised. This can generate brittle tests.
 testCreateEmptyUser :: Test
 testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
   where 
@@ -72,7 +85,8 @@ testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
     assertEmptyUser = do
         let hdl = with auth $ createUser "" "foo"
         res <- evalHandler (ST.get "" Map.empty) hdl appInit
-        either (assertFailure . show) (assertBool failMsg . isLeft) res
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure UsernameMissing) res
 
     failMsg = "createUser: Was created an empty username despite they aren't allowed."
 
@@ -87,7 +101,8 @@ testCreateDupUser = testCase "createUser duplicate user" assertDupUser
     assertDupUser = do
         let hdl = with auth $ createUser "foo" "foo"
         res <- evalHandler (ST.get "" Map.empty) hdl appInit
-        either (assertFailure . show) (assertBool failMsg . isLeft) res
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure DuplicateLogin) res
 
     failMsg = "createUser: Expected to find a duplicate user, but I haven't."
 
@@ -135,7 +150,8 @@ testLoginByUsernameEnc = testCase "loginByUsername encrypted pwd" assertion
     assertion = do
         let pwd = Encrypted "foo"
         res <- evalHandler (ST.get "" Map.empty) (loginByUnameHdlr pwd) appInit
-        either (assertFailure . show) (assertBool failMsg . isLeft) res
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure EncryptedPassword) res
 
     failMsg = "loginByUsername: Expected to find an Encrypted password, but I haven't."
 
@@ -149,7 +165,8 @@ testLoginByUsernameNoU = testCase "loginByUsername invalid user" assertion
         let pwd = ClearText "foo"
         let hdl = with auth $ loginByUsername "doesnotexist" pwd False
         res <- evalHandler (ST.get "" Map.empty) hdl appInit
-        either (assertFailure . show) (assertBool failMsg . isLeft) res
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure UserNotFound) res
 
     failMsg = "loginByUsername: Expected to fail for an invalid user, but I didn't."
 
@@ -416,3 +433,104 @@ testMarkAuthSuccess = testCase "successful markAuthSuccess call" assertion
 
     failMsg = "markAuthSuccess: I expected to increase the userLoginCount, " ++
               "but I didn't."
+
+
+------------------------------------------------------------------------------
+testCheckPasswordAndLoginOK :: Test
+testCheckPasswordAndLoginOK = testCase "checkPasswordAndLogin OK" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg . isRight) res
+
+    hdl :: Handler App App (Either AuthFailure AuthUser)
+    hdl = with auth $ do
+        let pwd = ClearText "foo"
+        res <- loginByUsername "foo" pwd False
+        either (return . Left) (`checkPasswordAndLogin` pwd) res
+
+    failMsg = "checkPasswordAndLogin: I expected to succeed " ++
+              "but I didn't."
+
+
+------------------------------------------------------------------------------
+testCheckPasswordAndLoginKO :: Test
+testCheckPasswordAndLoginKO = testCase "checkPasswordAndLogin KO" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg . isLeft) res
+
+    hdl :: Handler App App (Either AuthFailure AuthUser)
+    hdl = with auth $ do
+        let pwd = ClearText "wrongpass"
+        res <- loginByUsername "foo" pwd False
+        either (return . Left) (`checkPasswordAndLogin` pwd) res
+
+    failMsg = "checkPasswordAndLogin: I expected to succeed " ++
+              "but I didn't."
+
+
+------------------------------------------------------------------------------
+testAuthenticatePasswordOK :: Test
+testAuthenticatePasswordOK = testCase "authenticatePassword OK" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg . isNothing) res
+
+    hdl :: Handler App App (Maybe AuthFailure)
+    hdl = with auth $ do
+        let pwd = ClearText "foo"
+        res <- loginByUsername "foo" pwd False
+        either (return . Just)
+               (\u -> return $ authenticatePassword u pwd) res
+
+    failMsg = "authenticatePassword: I expected to succeed " ++
+              "but I didn't."
+
+
+------------------------------------------------------------------------------
+testAuthenticatePasswordPwdMissing :: Test
+testAuthenticatePasswordPwdMissing = testCase "authenticatePassword no pwd" a
+  where
+    a :: Assertion
+    a = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show)
+               (assertBool failMsg . isJustFailure PasswordMissing) res
+
+    hdl :: Handler App App (Maybe AuthFailure)
+    hdl = with auth $ do
+        let pwd = ClearText "foo"
+        res <- loginByUsername "foo" pwd False
+        either (return . Just)
+               (\u -> let u' = u { userPassword = Nothing }
+                         in return $ authenticatePassword u' pwd) res
+
+    failMsg = "authenticatePassword: I expected to fail due to " ++
+              " MissingPassword, but I didn't."
+    
+
+------------------------------------------------------------------------------
+testAuthenticatePasswordPwdWrong :: Test
+testAuthenticatePasswordPwdWrong = testCase "authenticatePassword wrong pwd" a
+  where
+    a :: Assertion
+    a = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show)
+               (assertBool failMsg . isJustFailure IncorrectPassword) res
+
+    hdl :: Handler App App (Maybe AuthFailure)
+    hdl = with auth $ do
+        let pwd = ClearText "foo"
+        res <- loginByUsername "foo" pwd False
+        either (return . Just)
+               (\u -> return $ authenticatePassword u (ClearText "bar")) res
+
+    failMsg = "authenticatePassword: I expected to fail due to " ++
+              " IncorrectPassword, but I didn't."

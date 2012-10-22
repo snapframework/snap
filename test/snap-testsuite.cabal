@@ -49,10 +49,7 @@ Executable snap-testsuite
     transformers               >= 0.2,
     unix                       >= 2.2.0.0  && < 2.7,
     unordered-containers       >= 0.1.4,
-<<<<<<< HEAD
     xmlhtml                    >=0.2.0.3,
-=======
->>>>>>> upstream/0.10
     template-haskell
 
   extensions:
