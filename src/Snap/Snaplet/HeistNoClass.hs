@@ -48,6 +48,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
+import           Data.List (isPrefixOf)
 import           Data.Maybe
 import           Data.Monoid
 import           Data.Lens.Lazy
@@ -394,7 +395,9 @@ renderAs ct t = renderHelper (Just ct) t
 ------------------------------------------------------------------------------
 heistServe :: Handler b (Heist b) ()
 heistServe =
-    ifTop (render "index") <|> (render . B.pack =<< getSafePath)
+    ifTop (render "index") <|> do
+        path <- getSafePath
+        if isPrefixOf "_" path then pass else render $ B.pack path
 
 
 ------------------------------------------------------------------------------
