@@ -396,8 +396,8 @@ renderAs ct t = renderHelper (Just ct) t
 heistServe :: Handler b (Heist b) ()
 heistServe =
     ifTop (render "index") <|> do
-		path <- getSafePath
-		if isPrefixOf "_" path then pass else render $ B.pack path
+        path <- getSafePath
+        if isPrefixOf "_" path then pass else render $ B.pack path
 
 
 ------------------------------------------------------------------------------
