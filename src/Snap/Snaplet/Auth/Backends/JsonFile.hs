@@ -13,6 +13,7 @@ module Snap.Snaplet.Auth.Backends.JsonFile
 import           Control.Applicative
 import           Control.Monad.State
 import           Control.Concurrent.STM
+import           Control.Lens
 import           Data.Aeson
 import qualified Data.Attoparsec as Atto
 import qualified Data.ByteString.Lazy as LB
@@ -22,7 +23,6 @@ import           Data.Map (Map)
 import           Data.Maybe (fromJust, isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Lens.Lazy
 import           Data.Time
 import           Web.ClientSession
 import           System.Directory

@@ -22,8 +22,8 @@ module Snap.Snaplet.Auth.SpliceHelpers
   , cLoggedInUser
   ) where
 
+import           Control.Lens
 import           Control.Monad.Trans
-import           Data.Lens.Lazy
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Text.XmlHtml as X

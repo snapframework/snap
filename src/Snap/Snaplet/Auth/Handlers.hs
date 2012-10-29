@@ -12,9 +12,9 @@ module Snap.Snaplet.Auth.Handlers where
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Error
+import           Control.Lens
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
-import           Data.Lens.Lazy
 import           Data.Serialize hiding (get)
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)

@@ -57,6 +57,7 @@ import           Control.Applicative
 import           Control.Category
 import           Control.Comonad
 import           Control.Error
+import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -66,7 +67,6 @@ import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
 import           Data.Monoid
-import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Encoding

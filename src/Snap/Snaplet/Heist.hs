@@ -46,8 +46,8 @@ module Snap.Snaplet.Heist
 
 ------------------------------------------------------------------------------
 import           Prelude hiding (id, (.))
+import           Control.Lens
 import           Data.ByteString (ByteString)
-import           Data.Lens.Lazy
 import           Data.Text (Text)
 import           Heist
 ------------------------------------------------------------------------------

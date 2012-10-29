@@ -19,8 +19,8 @@ module Snap.Snaplet.Auth.AuthManager
   ) where
 
 ------------------------------------------------------------------------------
+import           Control.Lens
 import           Data.ByteString (ByteString)
-import           Data.Lens.Lazy
 import           Data.Text (Text)
 import           Data.Time
 import           Web.ClientSession

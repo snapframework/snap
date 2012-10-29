@@ -16,8 +16,8 @@ module Snap.Snaplet.Session
   ) where
 
 ------------------------------------------------------------------------------
+import           Control.Lens
 import           Control.Monad.State
-import           Data.Lens.Lazy
 import           Data.Text                           (Text)
 import           Snap.Core
 ------------------------------------------------------------------------------
