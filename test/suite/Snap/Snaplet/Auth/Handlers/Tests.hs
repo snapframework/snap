@@ -14,6 +14,7 @@ import           Test.HUnit hiding (Test, path)
 
 
 ------------------------------------------------------------------------------
+import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Auth.App
@@ -44,18 +45,25 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testSaveUserKO
         ,testSaveUserOK
         ,testMarkAuthFail
+        ,testMarkAuthFailLockedOut
         ,testMarkAuthSuccess
         ,testCheckPasswordAndLoginOK
         ,testCheckPasswordAndLoginKO
         ,testAuthenticatePasswordOK
         ,testAuthenticatePasswordPwdMissing
         ,testAuthenticatePasswordPwdWrong
+        ,testRegisterUserOK
+        ,testRegisterUserNoUser
+        ,testRegisterUserNoPwd
+        ,testRequireUserOK
+        ,testRequireUserKO
         ]
     ]
 
 ------------------------------------------------------------------------------
 isJustFailure :: AuthFailure -> Maybe AuthFailure -> Bool
 isJustFailure failure (Just expected) = failure == expected
+isJustFailure _ _ = False
 
 
 ------------------------------------------------------------------------------
@@ -409,6 +417,33 @@ testMarkAuthFail = testCase "successful markAuthFail call" assertion
 
 
 ------------------------------------------------------------------------------
+testMarkAuthFailLockedOut :: Test
+testMarkAuthFailLockedOut = testCase "markAuthFail lockedOut" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- evalHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (assertBool failMsg . isLockedOut) res
+
+    hdl :: Handler App App (Either AuthFailure AuthUser)
+    hdl = with auth $ do
+        user <- loginByUsername "bar" (ClearText "bar") True
+        case user of
+          (Left e) -> return $ Left e
+          (Right u) ->
+              let u' = u {userFailedLoginCount = 99}
+                  in do
+                      modify (\s -> s { lockout = Just (5, 1000000) })
+                      markAuthFail u'
+
+    failMsg = "markAuthFail: I expected the user to be LockedOut, " ++
+              "but he didn't."
+
+    isLockedOut :: Either AuthFailure AuthUser -> Bool
+    isLockedOut (Left _) = False
+    isLockedOut (Right u) = isJust $ userLockedOutUntil u
+
+------------------------------------------------------------------------------
 testMarkAuthSuccess :: Test
 testMarkAuthSuccess = testCase "successful markAuthSuccess call" assertion
   where
@@ -534,3 +569,84 @@ testAuthenticatePasswordPwdWrong = testCase "authenticatePassword wrong pwd" a
 
     failMsg = "authenticatePassword: I expected to fail due to " ++
               " IncorrectPassword, but I didn't."
+
+
+------------------------------------------------------------------------------
+testRegisterUserOK :: Test
+testRegisterUserOK = testCase "registerUser OK" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let hdl = with auth $ registerUser "user" "pwd"
+        let params = [("user", ["fizz"]), ("pwd", ["buzz"])]
+        res <- evalHandler (ST.get "" $ Map.fromList params) hdl appInit
+        either (assertFailure . show) (assertBool failMsg . isRight) res
+
+    failMsg = "registerUser: I expected to succeed " ++
+              ", but I didn't."
+
+
+------------------------------------------------------------------------------
+testRegisterUserNoUser :: Test
+testRegisterUserNoUser = testCase "registerUser no user given" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let hdl = with auth $ registerUser "user" "pwd"
+        let params = [("user", []), ("pwd", ["buzz"])]
+        res <- evalHandler (ST.get "" $ Map.fromList params) hdl appInit
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure UsernameMissing) res
+
+    failMsg = "registerUser: I expected to fail due to UsernameMissing " ++
+              ", but I didn't."
+
+
+------------------------------------------------------------------------------
+testRegisterUserNoPwd :: Test
+testRegisterUserNoPwd = testCase "registerUser no pwd given" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        let hdl = with auth $ registerUser "user" "pwd"
+        let params = [("user", ["fizz"]), ("pwd", [])]
+        res <- evalHandler (ST.get "" $ Map.fromList params) hdl appInit
+        either (assertFailure . show)
+               (assertBool failMsg . isLeftFailure PasswordMissing) res
+
+    failMsg = "registerUser: I expected to fail due to PasswordMissing " ++
+              ", but I didn't."
+
+
+------------------------------------------------------------------------------
+testRequireUserOK :: Test
+testRequireUserOK = testCase "requireUser good handler exec" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- runHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (ST.assertBodyContains "good") res
+
+    hdl :: Handler App App ()
+    hdl = with auth $ do
+        let badHdl = writeText "bad" 
+        let goodHdl = writeText "good" 
+        loginByUsername "foo" (ClearText "foo") True
+        requireUser auth badHdl goodHdl
+
+
+------------------------------------------------------------------------------
+testRequireUserKO :: Test
+testRequireUserKO = testCase "requireUser bad handler exec" assertion
+  where
+    assertion :: Assertion
+    assertion = do
+        res <- runHandler (ST.get "" Map.empty) hdl appInit
+        either (assertFailure . show) (ST.assertBodyContains "bad") res
+
+    hdl :: Handler App App ()
+    hdl = with auth $ do
+        let badHdl = writeText "bad" 
+        let goodHdl = writeText "good" 
+        loginByUsername "doesnotexist" (ClearText "") True
+        requireUser auth badHdl goodHdl
