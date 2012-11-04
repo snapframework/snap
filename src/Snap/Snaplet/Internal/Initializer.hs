@@ -49,6 +49,7 @@ import           System.IO
 import           Snap.Snaplet.Config
 import qualified Snap.Snaplet.Internal.LensT as LT
 import qualified Snap.Snaplet.Internal.Lensed as L
+import           Snap.Snaplet.Internal.Lensed ((^#), storing)
 import           Snap.Snaplet.Internal.Types
 
 
@@ -121,10 +122,10 @@ upHook h = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook' :: Monad m => SimpleLens b a -> (a -> m a) -> b -> m b
+upHook' :: Monad m => L.SimpleLoupe b a -> (a -> m a) -> b -> m b
 upHook' l h b = do
-    v <- h (view (reflectLens l) b)
-    return $ set (reflectLens l) v b
+    v <- h (b ^# l)
+    return $ storing l v b
 
 
 ------------------------------------------------------------------------------
@@ -267,7 +268,7 @@ nestSnaplet :: ByteString
                 -- ^ The root url for all the snaplet's routes.  An empty
                 -- string gives the routes the same root as the parent
                 -- snaplet's routes.
-            -> (SimpleLens v (Snaplet v1))
+            -> SnapletLens v v1
                 -- ^ Lens identifying the snaplet
             -> SnapletInit b v1
                 -- ^ The initializer function for the subsnaplet.
@@ -295,7 +296,7 @@ embedSnaplet :: ByteString
                  -- NOTE: Because of the stronger isolation provided by
                  -- embedSnaplet, you should be more careful about using an
                  -- empty string here.
-             -> (SimpleLens v (Snaplet v1))
+             -> SnapletLens v v1
                 -- ^ Lens identifying the snaplet
              -> SnapletInit v1 v1
                 -- ^ The initializer function for the subsnaplet.
@@ -303,13 +304,13 @@ embedSnaplet :: ByteString
 embedSnaplet rte l (SnapletInit snaplet) = bracketInit $ do
     curLens <- getLens
     setupSnapletCall ""
-    chroot rte (ReifyLens (reflectLens curLens . (reflectLens $ subSnaplet l))) snaplet
+    chroot rte (cloneLens curLens . subSnaplet l) snaplet
 
 
 ------------------------------------------------------------------------------
 -- | Changes the base state of an initializer.
 chroot :: ByteString
-       -> (SimpleLens (Snaplet b) (Snaplet v1))
+       -> SnapletLens (Snaplet b) v1
        -> Initializer v1 v1 a
        -> Initializer b v a
 chroot rte l (Initializer m) = do
@@ -328,12 +329,12 @@ chroot rte l (Initializer m) = do
 
 ------------------------------------------------------------------------------
 -- | Changes the base state of a handler.
-chrootHandler :: (SimpleLens (Snaplet v) (Snaplet b'))
+chrootHandler :: SnapletLens (Snaplet v) b'
               -> Handler b' b' a -> Handler b v a
 chrootHandler l (Handler h) = Handler $ do
     s <- get
-    (a, s') <- liftSnap $ L.runLensed h id (view (reflectLens l) s)
-    modify $ set (reflectLens l) s'
+    (a, s') <- liftSnap $ L.runLensed h id (s ^# l)
+    modify $ storing l s'
     return a
 
 

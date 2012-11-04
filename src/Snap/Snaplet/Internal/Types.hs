@@ -112,12 +112,14 @@ snapletConfig :: SimpleLens (Snaplet a) SnapletConfig
 snapletValue :: SimpleLens (Snaplet a) a
 -}
 
+type SnapletLens s a = L.SimpleLoupe s (Snaplet a)
+
 ------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
 -- that is more suitable for internal use.
-subSnaplet :: (SimpleLens a           (Snaplet b))
-           -> (SimpleLens (Snaplet a) (Snaplet b))
-subSnaplet l = (snapletValue . l)
+subSnaplet :: SnapletLens a b
+           -> SnapletLens (Snaplet a) b
+subSnaplet l = snapletValue . l
 
 
 ------------------------------------------------------------------------------
@@ -134,7 +136,7 @@ class MonadSnaplet m where
     -- think about snaplet lenses using a filesystem path metaphor, the lens
     -- supplied to this snaplet must be a relative path.  In other words, the
     -- lens's base state must be the same as the current snaplet.
-    with :: (SimpleLens v (Snaplet v'))
+    with :: SnapletLens v v'
              -- ^ A relative lens identifying a snaplet
          -> m b v' a
              -- ^ Action from the lense's snaplet
@@ -145,7 +147,7 @@ class MonadSnaplet m where
     -- being run be a descendant of the current snaplet.  Using our filesystem
     -- metaphor again, the lens for this function must be an absolute
     -- path--it's base must be the same as the current base.
-    withTop :: (SimpleLens b (Snaplet v'))
+    withTop :: SnapletLens b v'
                 -- ^ An \"absolute\" lens identifying a snaplet
             -> m b v' a
                 -- ^ Action from the lense's snaplet
@@ -159,7 +161,7 @@ class MonadSnaplet m where
     -- however the lens returned by 'getLens' will.
     --
     -- @with = with' . subSnaplet@
-    with' :: (SimpleLens (Snaplet v) (Snaplet v'))
+    with' :: SnapletLens (Snaplet v) v'
           -> m b v' a -> m b v a
 
     -- Not providing a definition for this function in terms of withTop'
@@ -168,11 +170,11 @@ class MonadSnaplet m where
     -- with' l m = flip withTop m . (l .) =<< getLens
 
     -- | The absolute version of 'with''
-    withTop' :: (SimpleLens (Snaplet b) (Snaplet v'))
+    withTop' :: SnapletLens (Snaplet b) v'
              -> m b v' a -> m b v a
 
     -- | Gets the lens for the current snaplet.
-    getLens :: m b v (SimpleLens (Snaplet b) (Snaplet v))
+    getLens :: m b v (SnapletLens (Snaplet b) v)
 
     -- | Gets the current snaplet's opaque config data type.  You'll only use
     -- this function when writing MonadSnaplet instances.
@@ -276,9 +278,7 @@ instance MonadState v (Handler b v) where
 
 
 instance MonadSnaplet Handler where
-    getLens = Handler $ do
-        l <- L.lensedAsk
-        return $ reflectLens l
+    getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
     withTop' !l (Handler m) = Handler $ L.withTop l m
     getOpaqueConfig = Handler $ gets _snapletConfig
@@ -393,8 +393,8 @@ makeLenses ''InitializerState
 
 instance MonadSnaplet Initializer where
     getLens = Initializer ask
-    with' !l (Initializer !m) = Initializer $ LT.with (reflectLens l) m
-    withTop' !l (Initializer m) = Initializer $ LT.withTop (reflectLens l) m
+    with' !l (Initializer !m) = Initializer $ LT.with l m
+    withTop' !l (Initializer m) = Initializer $ LT.withTop l m
     getOpaqueConfig = Initializer $ liftM _curConfig LT.getBase
 
 

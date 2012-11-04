@@ -16,7 +16,6 @@ module Snap.Snaplet.Session
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.Lens
 import           Control.Monad.State
 import           Data.Text                           (Text)
 import           Snap.Core
@@ -33,7 +32,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 ------------------------------------------------------------------------------
 -- | Wrap around a handler, committing any changes in the session at the end
 --
-withSession :: Lens b (Snaplet SessionManager)
+withSession :: SnapletLens b SessionManager
             -> Handler b v a
             -> Handler b v a
 withSession l h = do

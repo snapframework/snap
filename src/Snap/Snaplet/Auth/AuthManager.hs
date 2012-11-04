@@ -19,7 +19,6 @@ module Snap.Snaplet.Auth.AuthManager
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.Lens
 import           Data.ByteString (ByteString)
 import           Data.Text (Text)
 import           Data.Time
@@ -70,7 +69,7 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
       backend               :: r
         -- ^ Storage back-end
 
-    , session               :: Lens b (Snaplet SessionManager)
+    , session               :: SnapletLens b SessionManager
         -- ^ A lens pointer to a SessionManager
 
     , activeUser            :: Maybe AuthUser

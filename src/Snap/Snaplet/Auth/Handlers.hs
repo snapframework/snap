@@ -12,7 +12,6 @@ module Snap.Snaplet.Auth.Handlers where
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Error
-import           Control.Lens
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import           Data.Serialize hiding (get)
@@ -469,7 +468,7 @@ logoutUser target = logout >> target
 -- This function has no DB cost - only checks to see if a user_id is present
 -- in the current session.
 --
-requireUser :: Lens b (Snaplet (AuthManager b))
+requireUser :: SnapletLens b (AuthManager b)
                 -- ^ Lens reference to an "AuthManager"
             -> Handler b v a
                 -- ^ Do this if no authenticated user is present.

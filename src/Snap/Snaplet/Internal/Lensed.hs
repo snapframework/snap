@@ -6,7 +6,9 @@ module Snap.Snaplet.Internal.Lensed where
 
 import Control.Applicative
 import Control.Lens
+import Control.Lens.Internal
 import Control.Monad
+import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Control.Monad.CatchIO
 import Control.Monad.State.Class
@@ -15,10 +17,29 @@ import Control.Category
 import Prelude hiding (catch, id, (.))
 import Snap.Core
 
+------------------------------------------------------------------------------
+-- | A Loupe is a limited form of a Lens that doesn't use rank 2 types, and therefore
+-- is suitable for packaging in a container.
+--
+-- Every Lens can be used as a Loupe and you can 'cloneLens' to turn a Loupe back
+-- into a Lens. Unlike a ReifiedLens a Loupe can be composed directly with other
+-- lenses.
+type Loupe s t a b = LensLike (Context a b) s t a b
+
+type SimpleLoupe s a = Loupe s s a a
+
+infixl 8 ^#
+(^#) :: s -> Loupe s t a b -> a
+s ^# l = case l (Context id) s of
+  Context _ a -> a
+
+storing :: Loupe s t a b -> b -> s -> t
+storing l b s = case l (Context id) s of
+  Context g _ -> g b
 
 ------------------------------------------------------------------------------
 newtype Lensed b v m a = Lensed
-    { unlensed :: SimpleReifiedLens b v -> v -> b -> m (a, v, b) }
+    { unlensed :: SimpleLoupe b v -> v -> b -> m (a, v, b) }
 
 
 ------------------------------------------------------------------------------
@@ -49,21 +70,21 @@ instance Monad m => MonadState v (Lensed b v m) where
     put v' = Lensed $ \_ _ s -> return ((), v', s)
 
 
-------------------------------------------------------------------------------
-lensedAsk :: Monad m => Lensed b v m (SimpleReifiedLens b v)
-lensedAsk = Lensed $ \l v s -> return (l, v, s)
+instance Monad m => MonadReader (SimpleLoupe b v) (Lensed b v m) where
+  ask = Lensed $ \l v s -> return (l, v, s)
+  local = lensedLocal
 
-lensedLocal :: Monad m => (SimpleReifiedLens b v -> SimpleReifiedLens b v') -> Lensed b v' m a -> Lensed b v m a
+------------------------------------------------------------------------------
+lensedLocal :: Monad m => (SimpleLoupe b v -> SimpleLoupe b v') -> Lensed b v' m a -> Lensed b v m a
 lensedLocal f g = do
-    l <- lensedAsk
-    withTop (reflectLens (f l)) g
+    l <- ask
+    withTop (f l) g
 
 ------------------------------------------------------------------------------
 instance MonadTrans (Lensed b v) where
     lift m = Lensed $ \_ v b -> do
-                 res <- m
-                 return (res, v, b)
-
+      res <- m
+      return (res, v, b)
 
 ------------------------------------------------------------------------------
 instance MonadIO m => MonadIO (Lensed b v m) where
@@ -74,7 +95,7 @@ instance MonadIO m => MonadIO (Lensed b v m) where
 instance MonadCatchIO m => MonadCatchIO (Lensed b v m) where
     catch (Lensed m) f = Lensed $ \l v b -> m l v b `catch` handler l v b
       where
-        handler l v b e = let (Lensed h) = f e
+        handler l v b e = let Lensed h = f e
                           in h l v b
 
     block (Lensed m)   = Lensed $ \l v b -> block (m l v b)
@@ -91,7 +112,7 @@ instance MonadPlus m => MonadPlus (Lensed b v m) where
 ------------------------------------------------------------------------------
 instance (Monad m, Alternative m) => Alternative (Lensed b v m) where
     empty = lift empty
-    (Lensed m) <|> (Lensed n) = Lensed $ \l v b -> m l v b <|> n l v b
+    Lensed m <|> Lensed n = Lensed $ \l v b -> m l v b <|> n l v b
 
 
 ------------------------------------------------------------------------------
@@ -102,14 +123,14 @@ instance MonadSnap m => MonadSnap (Lensed b v m) where
 ------------------------------------------------------------------------------
 globally :: Monad m => StateT b m a -> Lensed b v m a
 globally (StateT f) = Lensed $ \l v s ->
-                      liftM (\(a, s') -> (a, s' ^. reflectLens l, s')) $ f (set (reflectLens l) v s)
+                      liftM (\(a, s') -> (a, s' ^# l, s')) $ f (storing l v s)
 
 
 ------------------------------------------------------------------------------
-lensedAsState :: Monad m => Lensed b v m a -> Simple Lens b v -> StateT b m a
+lensedAsState :: Monad m => Lensed b v m a -> SimpleLoupe b v -> StateT b m a
 lensedAsState (Lensed f) l = StateT $ \s -> do
-    (a, v', s') <- f (ReifyLens l) (s ^. l) s
-    return (a, set l v' s')
+    (a, v', s') <- f l (s ^# l) s
+    return (a, storing l v' s')
 
 
 ------------------------------------------------------------------------------
@@ -118,19 +139,19 @@ getBase = Lensed $ \_ v b -> return (b, v, b)
 
 
 ------------------------------------------------------------------------------
-withTop :: Monad m => Simple Lens b v' -> Lensed b v' m a -> Lensed b v m a
+withTop :: Monad m => SimpleLoupe b v' -> Lensed b v' m a -> Lensed b v m a
 withTop l m = globally $ lensedAsState m l
 
 
 ------------------------------------------------------------------------------
-with :: Monad m => Simple Lens v v' -> Lensed b v' m a -> Lensed b v m a
+with :: Monad m => SimpleLoupe v v' -> Lensed b v' m a -> Lensed b v m a
 with l g = do
-    l' <- lensedAsk
-    withTop (reflectLens l' . l) g
+    l' <- ask
+    withTop (cloneLens l' . l) g
 
 
 ------------------------------------------------------------------------------
-embed :: Monad m => Simple Lens v v' -> Lensed v v' m a -> Lensed b v m a
+embed :: Monad m => SimpleLoupe v v' -> Lensed v v' m a -> Lensed b v m a
 embed l m = locally $ lensedAsState m l
 
 
@@ -143,9 +164,9 @@ locally (StateT f) = Lensed $ \_ v s ->
 ------------------------------------------------------------------------------
 runLensed :: Monad m
           => Lensed t1 b m t
-          -> Simple Lens t1 b
+          -> SimpleLoupe t1 b
           -> t1
           -> m (t, t1)
 runLensed (Lensed f) l s = do
-    (a, v', s') <- f (ReifyLens l) (s ^. l) s
-    return (a, set l v' s')
+    (a, v', s') <- f l (s ^# l) s
+    return (a, storing l v' s')

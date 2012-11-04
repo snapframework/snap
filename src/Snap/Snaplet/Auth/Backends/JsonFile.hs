@@ -13,7 +13,6 @@ module Snap.Snaplet.Auth.Backends.JsonFile
 import           Control.Applicative
 import           Control.Monad.State
 import           Control.Concurrent.STM
-import           Control.Lens
 import           Data.Aeson
 import qualified Data.Attoparsec as Atto
 import qualified Data.ByteString.Lazy as LB
@@ -38,7 +37,7 @@ import           Snap.Snaplet.Session
 -- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager :: AuthSettings
                             -- ^ Authentication settings for your app
-                        -> Lens b (Snaplet SessionManager)
+                        -> SnapletLens b SessionManager
                             -- ^ Lens into a 'SessionManager' auth snaplet will
                            -- use
                         -> FilePath
