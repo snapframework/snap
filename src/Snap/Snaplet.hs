@@ -46,14 +46,14 @@ module Snap.Snaplet
     Snaplet
   , SnapletConfig
 
+  -- * Lenses
+  -- $lenses
+
   -- * Snaplet Helper Functions
   -- $snapletHelpers
   , snapletConfig
   , snapletValue
   , subSnaplet
-
-  -- * Lenses
-  -- $lenses
 
   -- * MonadSnaplet
   -- $monadSnaplet
@@ -95,7 +95,6 @@ module Snap.Snaplet
   -- * Routes
   -- $routes
   , addRoutes
-  , wrapHandlers
   , wrapSite
 
   -- * Handlers
@@ -107,6 +106,9 @@ module Snap.Snaplet
   , runSnaplet
   , combineConfig
   , serveSnaplet
+
+  -- * Snaplet Lenses
+  , SnapletLens
   ) where
 
 
@@ -136,7 +138,7 @@ import           Snap.Snaplet.Internal.Types
 -- contains all of the application state; we call this state the \"base\"
 -- state.
 --
--- We provide a couple of helper functions for working with Snaplet types.
+-- We export several helper lenses for working with Snaplet types.
 
 -- $lenses
 -- In the example above, the @Foo@ snaplet has to be written to work with any
@@ -250,7 +252,7 @@ import           Snap.Snaplet.Internal.Types
 -- $routes
 -- Snaplet initializers are also responsible for setting up any routes defined
 -- by the snaplet.  To do that you'll usually use either 'addRoutes' or
--- 'wrapHandlers'.
+-- 'wrapSite'.
 
 
 {-
@@ -303,7 +305,7 @@ The next thing we need to do is define an initializer.
 >     bs <- nestSnaplet "" $ nameSnaplet "baz" $ barInit heist
 >     addRoutes [ ("/hello", writeText "hello world")
 >               ]
->     wrapHandlers (<|> with heist heistServe)
+>     wrapSite (<|> with heist heistServe)
 >     return $ App hs fs bs "fooCorp"
 
 Then we define a simple main to run the application.

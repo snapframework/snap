@@ -8,9 +8,7 @@ module Snap.Snaplet.Auth.Types where
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Arrow
-import           Control.Monad.CatchIO
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Error
 import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)
@@ -77,17 +75,29 @@ checkPassword _ _ =
 -- They may provide useful information to the developer, although it is
 -- generally not advisable to show the user the exact details about why login
 -- failed.
-data AuthFailure = UserNotFound
+data AuthFailure = AuthError String
+                 | BackendError
+                 | DuplicateLogin
+                 | EncryptedPassword
                  | IncorrectPassword
-                 | PasswordMissing
                  | LockedOut UTCTime    -- ^ Locked out until given time
-                 | AuthError String
-  deriving (Read, Show, Ord, Eq, Typeable)
+                 | PasswordMissing
+                 | UsernameMissing
+                 | UserNotFound
+  deriving (Read, Ord, Eq, Typeable)
 
-instance Exception AuthFailure
 
-instance Error AuthFailure where
-    strMsg = AuthError
+instance Show AuthFailure where
+        show (AuthError s) = s
+        show (BackendError) = "Failed to store data in the backend."
+        show (DuplicateLogin) = "This login already exists in the backend."
+        show (EncryptedPassword) = "Cannot login with encrypted password."
+        show (IncorrectPassword) = "The password provided was not valid."
+        show (LockedOut time) = "The login is locked out until " ++ show time
+        show (PasswordMissing) = "No password provided."
+        show (UsernameMissing) = "No username provided."
+        show (UserNotFound) = "User not found in the backend."
+
 
 ------------------------------------------------------------------------------
 -- | Internal representation of a 'User'. By convention, we demand that the
@@ -166,20 +176,20 @@ setPassword au pass = do
 -- | Authetication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen       :: Int
-    -- ^ Currently not used/checked
+      -- ^ Currently not used/checked
 
   , asRememberCookieName :: ByteString
-    -- ^ Name of the desired remember cookie
+      -- ^ Name of the desired remember cookie
 
   , asRememberPeriod     :: Maybe Int
-    -- ^ How long to remember when the option is used in rest of the API.
+      -- ^ How long to remember when the option is used in rest of the API.
     -- 'Nothing' means remember until end of session.
 
   , asLockout            :: Maybe (Int, NominalDiffTime)
-    -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
+      -- ^ Lockout strategy: ([MaxAttempts], [LockoutDuration])
 
   , asSiteKey            :: FilePath
-    -- ^ Location of app's encryption key
+      -- ^ Location of app's encryption key
 }
 
 
@@ -228,14 +238,6 @@ authSettingsFromConfig = do
     siteKey <- liftIO $ C.lookup config "siteKey"
     let sk = maybe id (\x s -> s { asSiteKey = x }) siteKey
     return $ (pw . rc . rp . lo . sk) defAuthSettings
-
-
-------------------------------------------------------------------------------
-data BackendError = DuplicateLogin
-                  | BackendError String
-  deriving (Eq,Show,Read,Typeable)
-
-instance Exception BackendError
 
 
                              --------------------

@@ -14,6 +14,7 @@ import           Control.Monad.Trans
 import qualified Data.ByteString.Char8          as S
 import qualified Data.ByteString.Lazy.Char8     as L
 import           Data.Text.Lazy                 (Text)
+import qualified Data.Text.Lazy                 as T
 import qualified Data.Text.Lazy.Encoding        as T
 import qualified Network.HTTP.Conduit           as HTTP
 import           Network.HTTP.Types             (Status(..))
@@ -25,166 +26,36 @@ import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test, path)
 
 ------------------------------------------------------------------------------
--- TODO: fix all the hardcoded ports and strings in here, order the functions
--- non-randomly
-------------------------------------------------------------------------------
+
+
 
 
 ------------------------------------------------------------------------------
-testName :: String -> String
-testName uri = "internal/" ++ uri
-
-------------------------------------------------------------------------------
-requestTest :: String -> Text -> Test
-requestTest url desired = testCase (testName url) $ requestTest' url desired
+testServer :: String
+testServer = "http://127.0.0.1"
 
 
 ------------------------------------------------------------------------------
-assertRelativelyTheSame :: FilePath -> FilePath -> IO ()
-assertRelativelyTheSame p expected = do
-    b <- makeRelativeToCurrentDirectory p
-    assertEqual ("expected " ++ expected) expected b
+testPort :: String
+testPort = "9753"
 
 
 ------------------------------------------------------------------------------
+-- | The server uri, without the leading slash.
 testServerUri :: String
-testServerUri = "http://127.0.0.1:9753"
+testServerUri = testServer ++ ":" ++ testPort
 
 
 ------------------------------------------------------------------------------
-grab :: MonadIO m => String -> m L.ByteString
-grab path = liftIO $ HTTP.simpleHttp $ testServerUri ++ path
+-- | The server url, with the leading slash.
+testServerUrl :: String
+testServerUrl = testServerUri ++ "/"
 
 
-------------------------------------------------------------------------------
-fooConfigPathTest :: Test
-fooConfigPathTest = testCase (testName "foo/fooFilePath") $ do
-    b <- liftM L.unpack $ grab "/foo/fooFilePath"
-    assertRelativelyTheSame b "non-cabal-appdir/snaplets/foosnaplet"
-
-
-------------------------------------------------------------------------------
-testWithCwd :: String
-            -> (String -> L.ByteString -> Assertion)
-            -> Test
-testWithCwd uri f = testCase (testName uri) $
-                    testWithCwd' uri f
-
-
-------------------------------------------------------------------------------
-testWithCwd' :: String
-             -> (String -> L.ByteString -> Assertion)
-             -> Assertion
-testWithCwd' uri f = do
-    b   <- grab slashUri
-    cwd <- getCurrentDirectory
-
-    f cwd b
-
-  where
-    slashUri = "/" ++ uri
-
-
-------------------------------------------------------------------------------
-fooHandlerConfigTest :: Test
-fooHandlerConfigTest = testWithCwd "foo/handlerConfig" $ \cwd b -> do
-    let response = L.fromChunks [ "([\"app\"],\""
-                                , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/foosnaplet\","
-                                , "Just \"foosnaplet\",\"A demonstration "
-                                , "snaplet called foo.\",\"foo\")" ]
-    assertEqual "" response b
-
-
-------------------------------------------------------------------------------
-barHandlerConfigTest :: Test
-barHandlerConfigTest = testWithCwd "bar/handlerConfig" $ \cwd b -> do
-    let response = L.fromChunks [ "([\"app\"],\""
-                                , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/baz\","
-                                , "Just \"baz\",\"An example snaplet called "
-                                , "bar.\",\"\")" ]
-    assertEqual "" response b
-
-
-------------------------------------------------------------------------------
--- bazpage5 uses barsplice bound by renderWithSplices at request time
-bazpage5Test :: Test
-bazpage5Test = testWithCwd "bazpage5" $ \cwd b -> do
-    let response = L.fromChunks [ "baz template page ([\"app\"],\""
-                                , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/baz\","
-                                , "Just \"baz\",\"An example snaplet called "
-                                , "bar.\",\"\")\n" ]
-    assertEqual "" response b
-
-
-------------------------------------------------------------------------------
--- bazconfig uses two splices, appconfig and fooconfig. appconfig is bound with
--- the non type class version of addSplices in the main app initializer.
--- fooconfig is bound by addSplices in fooInit.
-bazConfigTest :: Test
-bazConfigTest = testWithCwd "bazconfig" $ \cwd b -> do
-    let response = L.fromChunks [
-                     "baz config page ([],\""
-                   , S.pack cwd
-                   , "/non-cabal-appdir\",Just \"app\","
-                   , "\"Test application\",\"\") "
-                   , "([\"app\"],\""
-                   , S.pack cwd
-                   , "/non-cabal-appdir/snaplets/foosnaplet\","
-                   , "Just \"foosnaplet\",\"A demonstration snaplet "
-                   , "called foo.\",\"foo\")\n"
-                   ]
-
-    assertEqual "" response b
-
-
-------------------------------------------------------------------------------
-expect404 :: String -> IO ()
-expect404 url = action `catch` h
-  where
-    action = do
-        HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
-        assertFailure "expected 404"
-
-    h e@(HTTP.StatusCodeException (Status c _) _)
-      | c == 404  = return ()
-      | otherwise = throwIO e
-    h e           = throwIO e
-
-
-------------------------------------------------------------------------------
-request404Test :: String -> Test
-request404Test url = testCase (testName url) $ expect404 url
-
-
-------------------------------------------------------------------------------
-requestTest' :: String -> Text -> IO ()
-requestTest' url desired = do
-    actual <- HTTP.simpleHttp $ "http://127.0.0.1:9753/" ++ url
-    assertEqual url desired (T.decodeUtf8 actual)
-
-
-------------------------------------------------------------------------------
-requestExpectingError :: String -> Int -> Text -> Test
-requestExpectingError url status desired =
-    testCase (testName url) $ requestExpectingError' url status desired
-
-
-------------------------------------------------------------------------------
-requestExpectingError' :: String -> Int -> Text -> IO ()
-requestExpectingError' url status desired = do
-    let fullUrl = "http://127.0.0.1:9753/" ++ url
-    req <- HTTP.parseUrl fullUrl
-    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
-    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
-    let b = HTTP.responseBody resp
-        s = HTTP.responseStatus resp
-    assertEqual ("Status code: "++fullUrl) status (statusCode s)
-    assertEqual fullUrl desired (T.decodeUtf8 b)
-
-
+                            --------------------
+                            --  TEST LOADER   --
+                            --------------------
+  
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "non-cabal-tests"
@@ -223,6 +94,158 @@ tests = testGroup "non-cabal-tests"
     , reloadTest
     ]
 
+
+------------------------------------------------------------------------------
+testName :: String -> String
+testName uri = "internal/" ++ uri
+
+
+------------------------------------------------------------------------------
+requestTest :: String -> Text -> Test
+requestTest url desired = testCase (testName url) $ requestTest' url desired
+
+
+------------------------------------------------------------------------------
+requestTest' :: String -> Text -> IO ()
+requestTest' url desired = do
+    actual <- HTTP.simpleHttp $ testServerUrl ++ url
+    assertEqual url desired (T.decodeUtf8 actual)
+
+
+------------------------------------------------------------------------------
+requestExpectingError :: String -> Int -> Text -> Test
+requestExpectingError url status desired =
+    testCase (testName url) $ requestExpectingError' url status desired
+
+
+------------------------------------------------------------------------------
+requestExpectingError' :: String -> Int -> Text -> IO ()
+requestExpectingError' url status desired = do
+    let fullUrl = testServerUrl ++ url
+    req <- HTTP.parseUrl fullUrl
+    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
+    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
+    let b = HTTP.responseBody resp
+        s = HTTP.responseStatus resp
+    assertEqual ("Status code: "++fullUrl) status (statusCode s)
+    assertEqual fullUrl desired (T.decodeUtf8 b)
+
+
+------------------------------------------------------------------------------
+fooConfigPathTest :: Test
+fooConfigPathTest = testCase (testName "foo/fooFilePath") $ do
+    b <- liftM L.unpack $ grab "/foo/fooFilePath"
+    assertRelativelyTheSame b "non-cabal-appdir/snaplets/foosnaplet"
+
+
+------------------------------------------------------------------------------
+assertRelativelyTheSame :: FilePath -> FilePath -> IO ()
+assertRelativelyTheSame p expected = do
+    b <- makeRelativeToCurrentDirectory p
+    assertEqual ("expected " ++ expected) expected b
+
+
+------------------------------------------------------------------------------
+grab :: MonadIO m => String -> m L.ByteString
+grab path = liftIO $ HTTP.simpleHttp $ testServerUri ++ path
+
+
+------------------------------------------------------------------------------
+testWithCwd :: String
+            -> (String -> L.ByteString -> Assertion)
+            -> Test
+testWithCwd uri f = testCase (testName uri) $
+                    testWithCwd' uri f
+
+
+------------------------------------------------------------------------------
+testWithCwd' :: String
+             -> (String -> L.ByteString -> Assertion)
+             -> Assertion
+testWithCwd' uri f = do
+    b   <- grab slashUri
+    cwd <- getCurrentDirectory
+
+    f cwd b
+
+  where
+    slashUri = '/' : uri
+
+
+------------------------------------------------------------------------------
+fooHandlerConfigTest :: Test
+fooHandlerConfigTest = testWithCwd "foo/handlerConfig" $ \cwd b -> do
+    let response = L.fromChunks [ "([\"app\"],\""
+                                , S.pack cwd
+                                , "/non-cabal-appdir/snaplets/foosnaplet\","
+                                , "Just \"foosnaplet\",\"A demonstration "
+                                , "snaplet called foo.\",\"foo\")" ]
+    assertEqual "" response b
+
+
+------------------------------------------------------------------------------
+barHandlerConfigTest :: Test
+barHandlerConfigTest = testWithCwd "bar/handlerConfig" $ \cwd b -> do
+    let response = L.fromChunks [ "([\"app\"],\""
+                                , S.pack cwd
+                                , "/non-cabal-appdir/snaplets/baz\","
+                                , "Just \"baz\",\"An example snaplet called "
+                                , "bar.\",\"\")" ]
+    assertEqual "" response b
+
+
+------------------------------------------------------------------------------
+-- bazpage5 uses barsplice bound by renderWithSplices at request time
+bazpage5Test :: Test
+bazpage5Test = testWithCwd "bazpage5" $ \cwd b -> do
+    let response = L.fromChunks [ "baz template page ([\"app\"],\""
+                                , S.pack cwd
+                                , "/non-cabal-appdir/snaplets/baz\","
+                                , "Just \"baz\",\"An example snaplet called "
+                                , "bar.\",\"\")\n" ]
+    assertEqual "" (T.decodeUtf8 response) (T.decodeUtf8 b)
+
+
+------------------------------------------------------------------------------
+-- bazconfig uses two splices, appconfig and fooconfig. appconfig is bound with
+-- the non type class version of addSplices in the main app initializer.
+-- fooconfig is bound by addSplices in fooInit.
+bazConfigTest :: Test
+bazConfigTest = testWithCwd "bazconfig" $ \cwd b -> do
+    let response = L.fromChunks [
+                     "baz config page ([],\""
+                   , S.pack cwd
+                   , "/non-cabal-appdir\",Just \"app\","
+                   , "\"Test application\",\"\") "
+                   , "([\"app\"],\""
+                   , S.pack cwd
+                   , "/non-cabal-appdir/snaplets/foosnaplet\","
+                   , "Just \"foosnaplet\",\"A demonstration snaplet "
+                   , "called foo.\",\"foo\")\n"
+                   ]
+
+    assertEqual "" (T.decodeUtf8 response) (T.decodeUtf8 b)
+
+
+------------------------------------------------------------------------------
+expect404 :: String -> IO ()
+expect404 url = action `catch` h
+  where
+    action = do
+        HTTP.simpleHttp $ testServerUrl ++ url
+        assertFailure "expected 404"
+
+    h e@(HTTP.StatusCodeException (Status c _) _)
+      | c == 404  = return ()
+      | otherwise = throwIO e
+    h e           = throwIO e
+
+
+------------------------------------------------------------------------------
+request404Test :: String -> Test
+request404Test url = testCase (testName url) $ expect404 url
+
+
 remove :: FilePath -> IO ()
 remove f = do
     exists <- doesFileExist f
@@ -259,19 +282,19 @@ reloadTest = testCase "internal/reload-test" $ do
     testWithCwd' "admin/reload" $ \cwd' b -> do
         let cwd = S.pack cwd'
         let response =
-                L.fromChunks [ "Error reloading site!\n\nInitializer "
+                T.concat     [ "Error reloading site!\n\nInitializer "
                              , "threw an exception...\n"
-                             , cwd
+                             , T.pack cwd'
                              , "/non-cabal-appdir/snaplets/heist"
                              , "/templates/bad.tpl \""
-                             , cwd
+                             , T.pack cwd'
                              , "/non-cabal-appdir/snaplets/heist/templates"
                              , "/bad.tpl\" (line 2, column 1):\nunexpected "
                              , "end of input\nexpecting \"=\", \"/\" or "
-                             , "\">\"\n\n\n...but before it died it generated "
+                             , "\">\"\n\n...but before it died it generated "
                              , "the following output:\nInitializing app @ /\n"
                              , "Initializing heist @ /heist\n\n" ]
-        assertEqual "admin/reload" response b
+        assertEqual "admin/reload" response (T.decodeUtf8 b)
 
     remove badTplNew
     copyFile goodTplOrig goodTplNew
@@ -312,4 +335,5 @@ reloadTest = testCase "internal/reload-test" $ do
         assertEqual "admin/reload" response b
 
     requestTest' "good" "Good template\n"
+
 

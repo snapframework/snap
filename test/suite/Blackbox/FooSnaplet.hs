@@ -11,23 +11,24 @@ import qualified Data.Text as T
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
-import Text.Templating.Heist
+import Heist.Interpreted
 
 import Blackbox.Common
 
 data FooSnaplet = FooSnaplet { fooField :: String }
 
-fooInit :: HasHeist b => SnapletInit b FooSnaplet
-fooInit = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
+fooInit :: HasHeist b => Snaplet (Heist b) -> SnapletInit b FooSnaplet
+fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     (Just $ return "../foosnaplet") $ do
     config <- getSnapletUserConfig
-    addTemplates ""
+    addTemplates h ""
     addSplices
-        [("foosplice", liftHeist $ textSplice "contents of the foo splice")]
+        [("foosplice", textSplice "contents of the foo splice")]
     rootUrl <- getSnapletRootURL
     fp <- getSnapletFilePath
     name <- getSnapletName
-    addSplices [("fooconfig", shConfigSplice)]
+    _lens <- getLens
+    addSplices [("fooconfig", shConfigSplice _lens)]
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)
               ,("fooSnapletName", writeText $ fromMaybe "empty snaplet name" name)

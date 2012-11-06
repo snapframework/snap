@@ -19,20 +19,20 @@ Executable projname
   main-is: Main.hs
 
   Build-depends:
-    base >= 4 && < 5,
-    bytestring >= 0.9.1 && < 0.11,
-    data-lens >= 2.0.1 && < 2.11,
-    data-lens-template >= 2.1 && < 2.2,
-    heist >= 0.8 && < 0.9,
+    base                      >= 4     && < 5,
+    bytestring                >= 0.9.1 && < 0.11,
+    data-lens                 >= 2.0.1 && < 2.11,
+    data-lens-template        >= 2.1   && < 2.2,
+    heist                     >= 0.10  && < 0.11,
     MonadCatchIO-transformers >= 0.2.1 && < 0.4,
-    mtl >= 2 && < 3,
-    snap == 0.9.*,
-    snap-core   >= 0.9.2 && <0.10,
-    snap-server >= 0.9.2 && <0.10,
-    snap-loader-static == 0.9.*,
-    text >= 0.11 && < 0.12,
-    time >= 1.1 && < 1.5,
-    xmlhtml >= 0.1
+    mtl                       >= 2 && < 3,
+    snap                      >= 0.10 && < 0.11,
+    snap-core                 == 0.9.*,
+    snap-server               == 0.9.*,
+    snap-loader-static        == 0.9.*,
+    text                      >= 0.11 && < 0.12,
+    time                      >= 1.1 && < 1.5,
+    xmlhtml                   >= 0.1
 
   if flag(development)
     build-depends:

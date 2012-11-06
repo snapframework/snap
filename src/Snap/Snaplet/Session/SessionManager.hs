@@ -1,16 +1,30 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
+{-| This module is meant to be used mainly by Session backend
+developers, who would naturally need access to ISessionManager class
+internals. You can also use it if you need low-level access to the
+backend functionality.-}
+
 module Snap.Snaplet.Session.SessionManager where
 
+-------------------------------------------------------------------------------
 import           Data.Text (Text)
-import           Prelude hiding (lookup)
-
+import           Prelude   hiding (lookup)
+-------------------------------------------------------------------------------
 import           Snap.Core (Snap)
+-------------------------------------------------------------------------------
 
 
--- | Any Haskell record that is a member of the 'ISessionManager' typeclass
--- can be stuffed inside a 'SessionManager' to enable all session-related
--- functionality.
+
+-- | Any Haskell record that is a member of the 'ISessionManager'
+-- typeclass can be stuffed inside a 'SessionManager' to enable all
+-- session-related functionality.
+--
+-- To use sessions in your application, just find a Backend that would
+-- produce one for you inside of your 'Initializer'. See
+-- 'initCookieSessionManager' in
+-- 'Snap.Snaplet.Session.Backends.CookieSession' for a built-in option
+-- that would get you started.
 data SessionManager = forall a. ISessionManager a => SessionManager a
 
 

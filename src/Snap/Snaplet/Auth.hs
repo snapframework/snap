@@ -43,7 +43,6 @@ module Snap.Snaplet.Auth
   , UserId(..)
   , Password(..)
   , AuthFailure(..)
-  , BackendError(..)
   , Role(..)
 
   -- * Other Utilities
@@ -64,6 +63,7 @@ module Snap.Snaplet.Auth
 
   -- * Splice helpers
   , addAuthSplices
+  , compiledAuthSplices
   , ifLoggedIn
   , ifLoggedOut
   , loggedInUser

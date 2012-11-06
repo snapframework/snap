@@ -1,6 +1,5 @@
 module Snap.Snaplet.Session
-  ( SessionManager(..)
-  , ISessionManager(..)
+  ( SessionManager
   , withSession
   , commitSession
   , setInSession
@@ -11,21 +10,21 @@ module Snap.Snaplet.Session
   , resetSession
   , touchSession
 
+  -- * Utilities Exported For Convenience
   , module Snap.Snaplet.Session.Common
   , module Snap.Snaplet.Session.SecureCookie
   ) where
 
 ------------------------------------------------------------------------------
 import           Control.Monad.State
-import           Data.Lens.Lazy
-import           Data.Text (Text)
+import           Data.Text                           (Text)
 import           Snap.Core
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
 import           Snap.Snaplet.Session.Common
 import           Snap.Snaplet.Session.SecureCookie
-import           Snap.Snaplet.Session.SessionManager
-                   ( SessionManager(..), ISessionManager(..) )
+import           Snap.Snaplet.Session.SessionManager 
+                   ( ISessionManager(..), SessionManager(..) )
 import qualified Snap.Snaplet.Session.SessionManager as SM
 ------------------------------------------------------------------------------
 
@@ -33,7 +32,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 ------------------------------------------------------------------------------
 -- | Wrap around a handler, committing any changes in the session at the end
 --
-withSession :: Lens b (Snaplet SessionManager)
+withSession :: SnapletLens b SessionManager
             -> Handler b v a
             -> Handler b v a
 withSession l h = do

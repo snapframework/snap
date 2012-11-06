@@ -15,12 +15,18 @@ module Snap.Snaplet.Heist
   , heistInit'
   , addTemplates
   , addTemplatesAt
-  , modifyHeistTS
-  , withHeistTS
+  , Unclassed.addConfig
+  , modifyHeistState
+  , withHeistState
   , addSplices
 
   -- * Handler Functions
   -- $handlerSection
+  , cRender
+  , cRenderAs
+  , cHeistServe
+  , cHeistServeSingle
+
   , render
   , renderAs
   , heistServe
@@ -32,12 +38,8 @@ module Snap.Snaplet.Heist
   -- * Writing Splices
   -- $spliceSection
   , Unclassed.SnapletHeist
-  , Unclassed.SnapletSplice
-  , Unclassed.liftHeist
-  , Unclassed.liftHandler
-  , Unclassed.liftAppHandler
-  , Unclassed.liftWith
-  , Unclassed.bindSnapletSplices
+  , Unclassed.SnapletCSplice
+  , Unclassed.SnapletISplice
 
   , clearHeistCache
   ) where
@@ -45,9 +47,8 @@ module Snap.Snaplet.Heist
 ------------------------------------------------------------------------------
 import           Prelude hiding (id, (.))
 import           Data.ByteString (ByteString)
-import           Data.Lens.Lazy
 import           Data.Text (Text)
-import           Text.Templating.Heist
+import           Heist
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
 import qualified Snap.Snaplet.HeistNoClass as Unclassed
@@ -76,7 +77,7 @@ import           Snap.Snaplet.HeistNoClass ( Heist
 class HasHeist b where
     -- | A lens to the Heist snaplet.  The b parameter to Heist will
     -- typically be the base state of your application.
-    heistLens :: Lens (Snaplet b) (Snaplet (Heist b))
+    heistLens :: SnapletLens (Snaplet b) (Heist b)
 
 
 -- $initializerSection
@@ -89,10 +90,11 @@ class HasHeist b where
 -- this function to add their own templates.  The templates are automatically
 -- read from the templates directory in the current snaplet's filesystem root.
 addTemplates :: HasHeist b
-             => ByteString
-             -- ^ The url prefix for the template routes
+             => Snaplet (Heist b)
+             -> ByteString
+                 -- ^ The url prefix for the template routes
              -> Initializer b v ()
-addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
+addTemplates h pfx = withTop' heistLens (Unclassed.addTemplates h pfx)
 
 
 ------------------------------------------------------------------------------
@@ -103,46 +105,53 @@ addTemplates pfx = withTop' heistLens (Unclassed.addTemplates pfx)
 -- getSnapletFilePath if you want your snaplet to use templates within its
 -- normal directory structure.
 addTemplatesAt :: HasHeist b
-               => ByteString
-               -- ^ URL prefix for template routes
+               => Snaplet (Heist b)
+               -> ByteString
+                   -- ^ URL prefix for template routes
                -> FilePath
-               -- ^ Path to templates
+                   -- ^ Path to templates
                -> Initializer b v ()
-addTemplatesAt pfx p = withTop' heistLens (Unclassed.addTemplatesAt pfx p)
+addTemplatesAt h pfx p =
+    withTop' heistLens (Unclassed.addTemplatesAt h pfx p)
 
 
 ------------------------------------------------------------------------------
--- | Allows snaplets to add splices.
+-- | Allows snaplets to add interpreted splices.
+--
+-- NOTE: The splices added with this function will not work if you render your
+-- templates with cRender.  To add splices that work with cRender, you have to
+-- use the addConfig function to add compiled splices or load time splices.
 addSplices :: (HasHeist b)
-           => [(Text, Unclassed.SnapletSplice b v)]
-           -- ^ Splices to bind
+           => [(Text, Unclassed.SnapletISplice b)]
+               -- ^ Splices to bind
            -> Initializer b v ()
 addSplices = Unclassed.addSplices' heistLens
 
 
 ------------------------------------------------------------------------------
 -- | More general function allowing arbitrary HeistState modification.
--- Without this function you wouldn't be able to bind more complicated splices
--- like the cache tag.
-modifyHeistTS :: (HasHeist b)
-              => (HeistState (Handler b b) -> HeistState (Handler b b))
-              -- ^ HeistState modifying function
-              -> Initializer b v ()
-modifyHeistTS = Unclassed.modifyHeistTS' heistLens
+modifyHeistState :: (HasHeist b)
+                 => (HeistState (Handler b b) -> HeistState (Handler b b))
+                     -- ^ HeistState modifying function
+                 -> Initializer b v ()
+modifyHeistState = Unclassed.modifyHeistState' heistLens
 
 
 ------------------------------------------------------------------------------
 -- | Runs a function on with the Heist snaplet's 'HeistState'.
-withHeistTS :: (HasHeist b)
-            => (HeistState (Handler b b) -> a)
-            -- ^ HeistState function to run
-            -> Handler b v a
-withHeistTS = Unclassed.withHeistTS' heistLens
+withHeistState :: (HasHeist b)
+               => (HeistState (Handler b b) -> a)
+                   -- ^ HeistState function to run
+               -> Handler b v a
+withHeistState = Unclassed.withHeistState' heistLens
 
 
 -- $handlerSection
 -- This section contains functions in the 'Handler' monad that you'll use in
--- processing requests.
+-- processing requests.  Functions beginning with a 'c' prefix use compiled
+-- template rendering.  The other functions use the older interpreted
+-- rendering.  Splices added with addSplices will only work if you use
+-- interpreted rendering.
 
 
 ------------------------------------------------------------------------------
@@ -150,7 +159,7 @@ withHeistTS = Unclassed.withHeistTS' heistLens
 -- this returns 'empty'.
 render :: HasHeist b
        => ByteString
-       -- ^ Template name
+           -- ^ Template name
        -> Handler b v ()
 render t = withTop' heistLens (Unclassed.render t)
 
@@ -160,16 +169,42 @@ render t = withTop' heistLens (Unclassed.render t)
 -- is not found, this returns 'empty'.
 renderAs :: HasHeist b
          => ByteString
-         -- ^ Content type to render with
+             -- ^ Content type to render with
          -> ByteString
-         -- ^ Template name
+             -- ^ Template name
          -> Handler b v ()
 renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
 
 
 ------------------------------------------------------------------------------
+-- | Renders a compiled template as text\/html. If the given template is not
+-- found, this returns 'empty'.
+cRender :: HasHeist b
+        => ByteString
+            -- ^ Template name
+        -> Handler b v ()
+cRender t = withTop' heistLens (Unclassed.cRender t)
+
+
+------------------------------------------------------------------------------
+-- | Renders a compiled template as the given content type.  If the given
+-- template is not found, this returns 'empty'.
+cRenderAs :: HasHeist b
+          => ByteString
+              -- ^ Content type to render with
+          -> ByteString
+              -- ^ Template name
+          -> Handler b v ()
+cRenderAs ct t = withTop' heistLens (Unclassed.cRenderAs ct t)
+
+
+------------------------------------------------------------------------------
 -- | Analogous to 'fileServe'. If the template specified in the request path
--- is not found, it returns 'empty'.
+-- is not found, it returns 'empty'.  Also, this function does not serve any
+-- templates beginning with an underscore.  This gives you a way to prevent
+-- some templates from being served.  For example, you might have a template
+-- that contains only the navbar of your pages, and you wouldn't want that
+-- template to be visible to the user as a standalone template.
 heistServe :: HasHeist b => Handler b v ()
 heistServe = withTop' heistLens Unclassed.heistServe
 
@@ -179,9 +214,25 @@ heistServe = withTop' heistLens Unclassed.heistServe
 -- this throws an error.
 heistServeSingle :: HasHeist b
                  => ByteString
-                 -- ^ Template name
+                     -- ^ Template name
                  -> Handler b v ()
 heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
+
+
+------------------------------------------------------------------------------
+-- | A compiled version of 'heistServe'.
+cHeistServe :: HasHeist b => Handler b v ()
+cHeistServe = withTop' heistLens Unclassed.cHeistServe
+
+
+------------------------------------------------------------------------------
+-- | Analogous to 'fileServeSingle'. If the given template is not found,
+-- this throws an error.
+cHeistServeSingle :: HasHeist b
+                 => ByteString
+                     -- ^ Template name
+                 -> Handler b v ()
+cHeistServeSingle t = withTop' heistLens (Unclassed.cHeistServeSingle t)
 
 
 ------------------------------------------------------------------------------
@@ -189,9 +240,9 @@ heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 -- a common combination of heistLocal, bindSplices, and render.
 renderWithSplices :: HasHeist b
                   => ByteString
-                  -- ^ Template name
-                  -> [(Text, Unclassed.SnapletSplice b v)]
-                  -- ^ Splices to bind
+                      -- ^ Template name
+                  -> [(Text, Unclassed.SnapletISplice b)]
+                      -- ^ Splices to bind
                   -> Handler b v ()
 renderWithSplices = Unclassed.renderWithSplices' heistLens
 
@@ -200,10 +251,10 @@ renderWithSplices = Unclassed.renderWithSplices' heistLens
 -- | Runs an action with additional splices bound into the Heist
 -- 'HeistState'.
 withSplices :: HasHeist b
-            => [(Text, Unclassed.SnapletSplice b v)]
-            -- ^ Splices to bind
+            => [(Text, Unclassed.SnapletISplice b)]
+                -- ^ Splices to bind
             -> Handler b v a
-            -- ^ Handler to run
+                -- ^ Handler to run
             -> Handler b v a
 withSplices = Unclassed.withSplices' heistLens
 
@@ -216,9 +267,9 @@ withSplices = Unclassed.withSplices' heistLens
 -- > heistLocal (bindSplices mySplices) handlerThatNeedsSplices
 heistLocal :: HasHeist b
            => (HeistState (Handler b b) -> HeistState (Handler b b))
-           -- ^ HeistState modifying function
+               -- ^ HeistState modifying function
            -> Handler b v a
-            -- ^ Handler to run
+               -- ^ Handler to run
            -> Handler b v a
 heistLocal = Unclassed.heistLocal' heistLens
 
@@ -232,6 +283,6 @@ heistLocal = Unclassed.heistLocal' heistLens
 -- work with @Handler b v@ so your local snaplet's state is available.  We
 -- provide the SnapletHeist monad to make this possible.  The general rule is
 -- that when you're using Snaplets and Heist, use SnapletHeist instead of
--- HeistT (previously called TemplateMonad) and use SnapletSplice instead of
+-- HeistT (previously called TemplateMonad) and use SnapletISplice instead of
 -- Splice.
 

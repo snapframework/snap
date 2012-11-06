@@ -11,8 +11,10 @@
 .DS_Store
 .hpc
 cabal-dev/
-dist/
+dist*/
 docs/templates/out
 sitekey.txt
+test/dist*
 test/test-cabal-dev
 test/test-snap-exe
+test/dist/snaplets

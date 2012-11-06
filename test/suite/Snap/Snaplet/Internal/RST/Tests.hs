@@ -16,7 +16,7 @@ import           Test.Framework.Providers.HUnit
 import           Test.Framework.Providers.QuickCheck2
 import           Test.HUnit hiding (Test, path)
 
-import Snap.Snaplet.Internal.RST
+import           Snap.Snaplet.Internal.RST
 
 
 tests :: Test

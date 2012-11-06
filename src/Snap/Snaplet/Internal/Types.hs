@@ -1,15 +1,22 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ImpredicativeTypes         #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
+#ifndef MIN_VERSION_comonad
+#define MIN_VERSION_comonad(x,y,z) 1
+#endif
+
 module Snap.Snaplet.Internal.Types where
 
-import           Prelude hiding ((.), id)
 import           Control.Applicative
-import           Control.Category ((.), id)
+import           Control.Comonad
+import           Control.Error
+import           Control.Lens
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
@@ -19,9 +26,8 @@ import qualified Data.ByteString.Char8 as B
 import           Data.Configurator.Types
 import           Data.IORef
 import           Data.Monoid
-import           Data.Lens.Lazy
-import           Data.Lens.Template
 import           Data.Text (Text)
+import           Data.Foldable (Foldable(..))
 
 import           Snap.Core
 import qualified Snap.Snaplet.Internal.LensT as LT
@@ -40,10 +46,13 @@ data SnapletConfig = SnapletConfig
     , _scUserConfig      :: Config
     , _scRouteContext    :: [ByteString]
     , _scRoutePattern    :: Maybe ByteString
-    -- ^ Holds the actual route pattern passed to addRoutes for the current
-    -- handler.  Nothing during initialization and before route dispatech.
+        -- ^ Holds the actual route pattern passed to addRoutes for the
+        -- current handler.  Nothing during initialization and before route
+        -- dispatech.
     , _reloader          :: IO (Either Text Text) -- might change
     }
+
+makeLenses ''SnapletConfig
 
 
 ------------------------------------------------------------------------------
@@ -72,26 +81,45 @@ data Snaplet s = Snaplet
     , _snapletValue  :: s
     }
 
+makeLenses ''Snaplet
 
-makeLenses [''SnapletConfig, ''Snaplet]
+instance Functor Snaplet where
+  fmap f (Snaplet c a) = Snaplet c (f a)
+
+instance Foldable Snaplet where
+  foldMap f (Snaplet _ a) = f a
+
+instance Traversable Snaplet where
+  traverse f (Snaplet c a) = Snaplet c <$> f a
+
+instance Comonad Snaplet where
+  extract (Snaplet _ a) = a
+
+#if !(MIN_VERSION_comonad(3,0,0))
+instance Extend Snaplet where
+#endif
+  extend f w@(Snaplet c _) = Snaplet c (f w)
 
 {-
 ------------------------------------------------------------------------------
 -- | A lens referencing the opaque SnapletConfig data type held inside
 -- Snaplet.
-snapletConfig :: Lens (Snaplet a) SnapletConfig
+snapletConfig :: SimpleLens (Snaplet a) SnapletConfig
 
 
 ------------------------------------------------------------------------------
 -- | A lens referencing the user-defined state type wrapped by a Snaplet.
-snapletValue :: Lens (Snaplet a) a
+snapletValue :: SimpleLens (Snaplet a) a
 -}
+
+type SnapletLens s a = SimpleLoupe s (Snaplet a)
 
 ------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
 -- that is more suitable for internal use.
-subSnaplet :: (Lens a (Snaplet b)) -> (Lens (Snaplet a) (Snaplet b))
-subSnaplet = (. snapletValue)
+subSnaplet :: SnapletLens a b
+           -> SnapletLens (Snaplet a) b
+subSnaplet l = snapletValue . l
 
 
 ------------------------------------------------------------------------------
@@ -108,21 +136,21 @@ class MonadSnaplet m where
     -- think about snaplet lenses using a filesystem path metaphor, the lens
     -- supplied to this snaplet must be a relative path.  In other words, the
     -- lens's base state must be the same as the current snaplet.
-    with :: (Lens v (Snaplet v'))
-         -- ^ A relative lens identifying a snaplet
+    with :: SnapletLens v v'
+             -- ^ A relative lens identifying a snaplet
          -> m b v' a
-         -- ^ Action from the lense's snaplet
+             -- ^ Action from the lense's snaplet
          -> m b v a
-    with = with' . subSnaplet
+    with l = with' (subSnaplet l)
 
     -- | Like 'with' but doesn't impose the requirement that the action
     -- being run be a descendant of the current snaplet.  Using our filesystem
     -- metaphor again, the lens for this function must be an absolute
     -- path--it's base must be the same as the current base.
-    withTop :: (Lens b (Snaplet v'))
-            -- ^ An \"absolute\" lens identifying a snaplet
+    withTop :: SnapletLens b v'
+                -- ^ An \"absolute\" lens identifying a snaplet
             -> m b v' a
-            -- ^ Action from the lense's snaplet
+                -- ^ Action from the lense's snaplet
             -> m b v a
     withTop l = withTop' (subSnaplet l)
 
@@ -133,7 +161,8 @@ class MonadSnaplet m where
     -- however the lens returned by 'getLens' will.
     --
     -- @with = with' . subSnaplet@
-    with' :: (Lens (Snaplet v) (Snaplet v')) -> m b v' a -> m b v a
+    with' :: SnapletLens (Snaplet v) v'
+          -> m b v' a -> m b v a
 
     -- Not providing a definition for this function in terms of withTop'
     -- allows us to avoid extra Monad type class constraints, making the type
@@ -141,10 +170,11 @@ class MonadSnaplet m where
     -- with' l m = flip withTop m . (l .) =<< getLens
 
     -- | The absolute version of 'with''
-    withTop' :: (Lens (Snaplet b) (Snaplet v')) -> m b v' a -> m b v a
+    withTop' :: SnapletLens (Snaplet b) v'
+             -> m b v' a -> m b v a
 
     -- | Gets the lens for the current snaplet.
-    getLens :: m b v (Lens (Snaplet b) (Snaplet v))
+    getLens :: m b v (SnapletLens (Snaplet b) v)
 
     -- | Gets the current snaplet's opaque config data type.  You'll only use
     -- this function when writing MonadSnaplet instances.
@@ -244,7 +274,7 @@ getsSnapletState f = do
 -- | The MonadState instance gives you access to the current snaplet's state.
 instance MonadState v (Handler b v) where
     get = getsSnapletState _snapletValue
-    put v = modifySnapletState (setL snapletValue v)
+    put v = modifySnapletState (set snapletValue v)
 
 
 instance MonadSnaplet Handler where
@@ -258,7 +288,8 @@ instance MonadSnaplet Handler where
 -- | Gets the route pattern that matched for the handler.  This lets you find
 -- out exactly which of the strings you used in addRoutes matched.
 getRoutePattern :: Handler b v (Maybe ByteString)
-getRoutePattern = withTop' id $ liftM _scRoutePattern getOpaqueConfig
+getRoutePattern =
+    withTop' id $ liftM _scRoutePattern getOpaqueConfig
 
 
 ------------------------------------------------------------------------------
@@ -267,7 +298,7 @@ getRoutePattern = withTop' id $ liftM _scRoutePattern getOpaqueConfig
 -- addRoutes.
 setRoutePattern :: ByteString -> Handler b v ()
 setRoutePattern p = withTop' id $
-    modifySnapletState (setL (scRoutePattern . snapletConfig) (Just p))
+    modifySnapletState (set (snapletConfig . scRoutePattern) (Just p))
 
 
 ------------------------------------------------------------------------------
@@ -325,12 +356,12 @@ data InitializerState b = InitializerState
     { _isTopLevel      :: Bool
     , _cleanup         :: IORef (IO ())
     , _handlers        :: [(ByteString, Handler b b ())]
-    -- ^ Handler routes built up and passed to route.
+        -- ^ Handler routes built up and passed to route.
     , _hFilter         :: Handler b b () -> Handler b b ()
-    -- ^ Generic filtering of handlers
+        -- ^ Generic filtering of handlers
     , _curConfig       :: SnapletConfig
-    -- ^ This snaplet config is the incrementally built config for whatever
-    -- snaplet is currently being constructed.
+        -- ^ This snaplet config is the incrementally built config for
+        -- whatever snaplet is currently being constructed.
     , _initMessages    :: IORef Text
     , _environment     :: String
     }
@@ -339,7 +370,7 @@ data InitializerState b = InitializerState
 ------------------------------------------------------------------------------
 -- | Wrapper around IO actions that modify state elements created during
 -- initialization.
-newtype Hook a = Hook (Snaplet a -> IO (Snaplet a))
+newtype Hook a = Hook (Snaplet a -> EitherT Text IO (Snaplet a))
 
 
 instance Monoid (Hook a) where
@@ -357,7 +388,7 @@ newtype Initializer b v a =
                           a)
   deriving (Applicative, Functor, Monad, MonadIO)
 
-makeLenses [''InitializerState]
+makeLenses ''InitializerState
 
 
 instance MonadSnaplet Initializer where

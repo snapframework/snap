@@ -11,7 +11,6 @@ module Snap.Snaplet.Auth.Backends.JsonFile
 
 
 import           Control.Applicative
-import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
@@ -23,7 +22,6 @@ import           Data.Map (Map)
 import           Data.Maybe (fromJust, isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Lens.Lazy
 import           Data.Time
 import           Web.ClientSession
 import           System.Directory
@@ -38,12 +36,12 @@ import           Snap.Snaplet.Session
 ------------------------------------------------------------------------------
 -- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager :: AuthSettings
-                           -- ^ Authentication settings for your app
-                        -> Lens b (Snaplet SessionManager)
-                           -- ^ Lens into a 'SessionManager' auth snaplet will
+                            -- ^ Authentication settings for your app
+                        -> SnapletLens b SessionManager
+                            -- ^ Lens into a 'SessionManager' auth snaplet will
                            -- use
                         -> FilePath
-                           -- ^ Where to store user data as JSON
+                            -- ^ Where to store user data as JSON
                         -> SnapletInit b (AuthManager b)
 initJsonFileAuthManager s l db = do
     makeSnaplet
@@ -149,7 +147,9 @@ data JsonFileAuthManager = JsonFileAuthManager {
 
 
 ------------------------------------------------------------------------------
-jsonFileSave :: JsonFileAuthManager -> AuthUser -> IO AuthUser
+jsonFileSave :: JsonFileAuthManager
+             -> AuthUser
+             -> IO (Either AuthFailure AuthUser)
 jsonFileSave mgr u = do
     now        <- getCurrentTime
     oldByLogin <- lookupByLogin mgr (userLogin u)
@@ -169,17 +169,17 @@ jsonFileSave mgr u = do
           return $! Right $! (cache', u')
 
     case res of
-      Left e             -> throw e
+      Left _             -> return $! Left BackendError
       Right (cache', u') -> do
         dumpToDisk cache'
-        return $! u'
+        return $! Right u'
 
   where
     --------------------------------------------------------------------------
     create :: UserCache
            -> UTCTime
            -> (Maybe AuthUser)
-           -> STM (Either BackendError (UserCache, AuthUser))
+           -> STM (Either AuthFailure (UserCache, AuthUser))
     create cache now old = do
       case old of
         Just _  -> return $! Left DuplicateLogin
@@ -202,11 +202,10 @@ jsonFileSave mgr u = do
     update :: UserCache
            -> UTCTime
            -> (Maybe AuthUser)
-           -> STM (Either BackendError (UserCache, AuthUser))
+           -> STM (Either AuthFailure (UserCache, AuthUser))
     update cache now old =
       case old of
-        Nothing -> return $! Left $
-                     BackendError "User not found; should never happen"
+        Nothing -> return $! Left UserNotFound
         Just x -> do
           let oldLogin = userLogin x
           let oldToken = userRememberToken x
