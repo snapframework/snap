@@ -49,7 +49,6 @@ import           System.IO
 import           Snap.Snaplet.Config
 import qualified Snap.Snaplet.Internal.LensT as LT
 import qualified Snap.Snaplet.Internal.Lensed as L
-import           Snap.Snaplet.Internal.Lensed ((^#), storing)
 import           Snap.Snaplet.Internal.Types
 
 
@@ -122,7 +121,7 @@ upHook h = Initializer $ do
 
 ------------------------------------------------------------------------------
 -- | Helper function for transforming hooks.
-upHook' :: Monad m => L.SimpleLoupe b a -> (a -> m a) -> b -> m b
+upHook' :: Monad m => SimpleLoupe b a -> (a -> m a) -> b -> m b
 upHook' l h b = do
     v <- h (b ^# l)
     return $ storing l v b

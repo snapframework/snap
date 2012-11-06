@@ -5,8 +5,8 @@
 module Snap.Snaplet.Internal.Lensed where
 
 import Control.Applicative
-import Control.Lens
-import Control.Lens.Internal
+import Control.Lens (cloneLens)
+import Control.Lens.Loupe
 import Control.Monad
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
@@ -16,26 +16,6 @@ import Control.Monad.State.Strict
 import Control.Category
 import Prelude hiding (catch, id, (.))
 import Snap.Core
-
-------------------------------------------------------------------------------
--- | A Loupe is a limited form of a Lens that doesn't use rank 2 types, and therefore
--- is suitable for packaging in a container.
---
--- Every Lens can be used as a Loupe and you can 'cloneLens' to turn a Loupe back
--- into a Lens. Unlike a ReifiedLens a Loupe can be composed directly with other
--- lenses.
-type Loupe s t a b = LensLike (Context a b) s t a b
-
-type SimpleLoupe s a = Loupe s s a a
-
-infixl 8 ^#
-(^#) :: s -> Loupe s t a b -> a
-s ^# l = case l (Context id) s of
-  Context _ a -> a
-
-storing :: Loupe s t a b -> b -> s -> t
-storing l b s = case l (Context id) s of
-  Context g _ -> g b
 
 ------------------------------------------------------------------------------
 newtype Lensed b v m a = Lensed

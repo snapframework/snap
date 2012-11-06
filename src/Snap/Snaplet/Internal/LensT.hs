@@ -7,7 +7,8 @@ module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Lens
+import           Control.Lens (cloneLens)
+import           Control.Lens.Loupe
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
@@ -15,7 +16,6 @@ import           Prelude hiding ((.), id, catch)
 import           Snap.Core
 
 import           Snap.Snaplet.Internal.RST
-import           Snap.Snaplet.Internal.Lensed
 
 
 newtype LensT b v s m a = LensT (RST (SimpleLoupe b v) s m a)
