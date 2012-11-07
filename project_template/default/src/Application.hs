@@ -6,7 +6,7 @@
 module Application where
 
 ------------------------------------------------------------------------------
-import Control.Lens.Template
+import Control.Lens
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth

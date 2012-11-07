@@ -155,10 +155,10 @@ setupFilesystem (Just getSnapletDataDir) targetDir = do
   where
     doCopy srcRoot targetRoot filename = do
         createDirectoryIfMissing True directory
-        copyFile filename to
+        copyFile filename toDir
       where
-        to = targetRoot </> makeRelative srcRoot filename
-        directory = dropFileName to
+        toDir = targetRoot </> makeRelative srcRoot filename
+        directory = dropFileName toDir
 
 
 ------------------------------------------------------------------------------
