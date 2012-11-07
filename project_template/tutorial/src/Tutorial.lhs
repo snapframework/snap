@@ -83,7 +83,7 @@ by our application as well as any other state we might want.
 >     , _companyName :: IORef B.ByteString
 >     }
 >
-> makeLenses [''App]
+> makeLenses ''App
 
 The field names begin with an underscore because of some more complicated
 things going on under the hood.  However, all you need to know right now is

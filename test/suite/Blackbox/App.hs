@@ -12,8 +12,8 @@ import Prelude hiding (lookup)
 
 ------------------------------------------------------------------------------
 import Control.Applicative
+import Control.Lens
 import Control.Monad.Trans
-import Data.Lens.Lazy
 import Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
@@ -63,7 +63,7 @@ app = makeSnaplet "app" "Test application" Nothing $ do
               , ("/sessionTest", sessionTest)
               ]
     wrapSite (<|> heistServe)
-    return $ App hs (modL snapletValue fooMod fs) bs sm ns
+    return $ App hs (over snapletValue fooMod fs) bs sm ns
 
 
 -------------------------------------------------------------------------------

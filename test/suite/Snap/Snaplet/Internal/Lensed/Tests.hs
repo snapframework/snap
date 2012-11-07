@@ -5,8 +5,8 @@ module Snap.Snaplet.Internal.Lensed.Tests (tests) where
 import           Control.Applicative
 import           Control.Category
 import           Control.Exception
+import           Control.Lens
 import           Control.Monad.State.Strict
-import           Data.Lens.Template
 import           Prelude hiding (catch, (.))
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -33,7 +33,9 @@ data TestBotType = TestBotType {
       _bot0 :: Int
 } deriving (Show)
 
-makeLenses [''TestType, ''TestSubType, ''TestBotType]
+makeLenses ''TestType
+makeLenses ''TestSubType
+makeLenses ''TestBotType
 
 
 ------------------------------------------------------------------------------
@@ -52,10 +54,10 @@ tests = testGroup "Snap.Snaplet.Internal.Lensed"
 ------------------------------------------------------------------------------
 testfmap :: Test
 testfmap = testCase "lensed/fmap" $ do
-    x <- evalStateT (lensedAsState (fmap (*2) three) (bot . sub)) defaultState
+    x <- evalStateT (lensedAsState (fmap (*2) three) (sub . bot)) defaultState
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
+    (y,s') <- runStateT (lensedAsState twiddle (sub . bot)) defaultState
 
     assertEqual "fmap2" 12 y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
@@ -73,10 +75,10 @@ testfmap = testCase "lensed/fmap" $ do
 ------------------------------------------------------------------------------
 testApplicative :: Test
 testApplicative = testCase "lensed/applicative" $ do
-    x <- evalStateT (lensedAsState (pure (*2) <*> three) (bot . sub)) defaultState
+    x <- evalStateT (lensedAsState (pure (*2) <*> three) (sub . bot)) defaultState
     assertEqual "fmap" 6 x
 
-    (y,s') <- runStateT (lensedAsState twiddle (bot . sub)) defaultState
+    (y,s') <- runStateT (lensedAsState twiddle (sub . bot)) defaultState
 
     assertEqual "fmap2" (12::Int) y
     assertEqual "lens" 13 $ _bot0 $ _bot $ _sub s'
@@ -94,7 +96,7 @@ testApplicative = testCase "lensed/applicative" $ do
 ------------------------------------------------------------------------------
 testMonadState :: Test
 testMonadState = testCase "lens/MonadState" $ do
-    s <- execStateT (lensedAsState go (bot0 . bot . sub)) defaultState
+    s <- execStateT (lensedAsState go (sub . bot . bot0)) defaultState
 
     assertEqual "bot0" 9 $ _bot0 $ _bot $ _sub s
     assertEqual "sub0" 3 $ _sub0 $ _sub s
