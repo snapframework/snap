@@ -7,7 +7,7 @@
 module Blackbox.Types where
 
 
-import Data.Lens.Template
+import Control.Lens
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
@@ -26,7 +26,7 @@ data App = App
     , _embedded :: Snaplet EmbeddedSnaplet
     }
 
-makeLenses [''App]
+makeLenses ''App
 
 instance HasHeist App where heistLens = subSnaplet heist
 

@@ -66,7 +66,6 @@ import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
 import           Data.Monoid
-import           Data.Lens.Lazy
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Encoding
@@ -244,7 +243,7 @@ addTemplatesAt h urlPrefix templateDir = do
 
 
 ------------------------------------------------------------------------------
-modifyHeistState' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+modifyHeistState' :: SnapletLens (Snaplet b) (Heist b)
                   -> (HeistState (Handler b b) -> HeistState (Handler b b))
                   -> Initializer b v ()
 modifyHeistState' heist f = do
@@ -252,14 +251,14 @@ modifyHeistState' heist f = do
 
 
 ------------------------------------------------------------------------------
-modifyHeistState :: (Lens b (Snaplet (Heist b)))
+modifyHeistState :: SnapletLens b (Heist b)
                  -> (HeistState (Handler b b) -> HeistState (Handler b b))
                  -> Initializer b v ()
 modifyHeistState heist f = modifyHeistState' (subSnaplet heist) f
 
 
 ------------------------------------------------------------------------------
-withHeistState' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+withHeistState' :: SnapletLens (Snaplet b) (Heist b)
                 -> (HeistState (Handler b b) -> a)
                 -> Handler b v a
 withHeistState' heist f = do
@@ -268,7 +267,7 @@ withHeistState' heist f = do
 
 
 ------------------------------------------------------------------------------
-withHeistState :: (Lens b (Snaplet (Heist b)))
+withHeistState :: SnapletLens b (Heist b)
                -> (HeistState (Handler b b) -> a)
                -> Handler b v a
 withHeistState heist f = withHeistState' (subSnaplet heist) f
@@ -290,7 +289,7 @@ addConfig h hc = case extract h of
 
 
 ------------------------------------------------------------------------------
-addSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+addSplices' :: SnapletLens (Snaplet b) (Heist b)
             -> [(Text, SnapletISplice b)]
             -> Initializer b v ()
 addSplices' heist splices = do
@@ -299,7 +298,7 @@ addSplices' heist splices = do
 
 
 ------------------------------------------------------------------------------
-addSplices :: (Lens b (Snaplet (Heist b)))
+addSplices :: SnapletLens b (Heist b)
            -> [(Text, SnapletISplice b)]
            -> Initializer b v ()
 addSplices heist splices = addSplices' (subSnaplet heist) splices
@@ -403,7 +402,7 @@ cHeistServeSingle t =
 
 
 ------------------------------------------------------------------------------
-heistLocal' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+heistLocal' :: SnapletLens (Snaplet b) (Heist b)
             -> (HeistState (Handler b b) -> HeistState (Handler b b))
             -> Handler b v a
             -> Handler b v a
@@ -416,7 +415,7 @@ heistLocal' heist f m = do
 
 
 ------------------------------------------------------------------------------
-heistLocal :: (Lens b (Snaplet (Heist b)))
+heistLocal :: SnapletLens b (Heist b)
            -> (HeistState (Handler b b) -> HeistState (Handler b b))
            -> Handler b v a
            -> Handler b v a
@@ -424,7 +423,7 @@ heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 
 ------------------------------------------------------------------------------
-withSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+withSplices' :: SnapletLens (Snaplet b) (Heist b)
              -> [(Text, SnapletISplice b)]
              -> Handler b v a
              -> Handler b v a
@@ -433,7 +432,7 @@ withSplices' heist splices m = do
 
 
 ------------------------------------------------------------------------------
-withSplices :: (Lens b (Snaplet (Heist b)))
+withSplices :: SnapletLens b (Heist b)
             -> [(Text, SnapletISplice b)]
             -> Handler b v a
             -> Handler b v a
@@ -441,7 +440,7 @@ withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 
 
 ------------------------------------------------------------------------------
-renderWithSplices' :: (Lens (Snaplet b) (Snaplet (Heist b)))
+renderWithSplices' :: SnapletLens (Snaplet b) (Heist b)
                    -> ByteString
                    -> [(Text, SnapletISplice b)]
                    -> Handler b v ()
@@ -450,7 +449,7 @@ renderWithSplices' heist t splices =
 
 
 ------------------------------------------------------------------------------
-renderWithSplices :: (Lens b (Snaplet (Heist b)))
+renderWithSplices :: SnapletLens b (Heist b)
                   -> ByteString
                   -> [(Text, SnapletISplice b)]
                   -> Handler b v ()

@@ -11,9 +11,8 @@
 module Main where
 
 import Prelude hiding ((.))
+import Control.Lens
 import Control.Monad.State
-import Data.Lens.Lazy
-import Data.Lens.Template
 import qualified Data.Text as T
 import           Snap.Http.Server.Config
 import Snap.Core
@@ -30,7 +29,7 @@ data FooSnaplet = FooSnaplet
     , _fooVal :: Int
     }
 
-makeLenses [''FooSnaplet]
+makeLenses ''FooSnaplet
 
 instance HasHeist FooSnaplet where
     heistLens = subSnaplet fooHeist
@@ -51,7 +50,7 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
 
 --fooSplice :: (Lens (Snaplet b) (Snaplet (FooSnaplet b)))
 --          -> SnapletSplice (Handler b b)
-fooSplice :: (Lens (Snaplet b) (Snaplet FooSnaplet))
+fooSplice :: (SnapletLens (Snaplet b) FooSnaplet)
           -> SnapletISplice b
 fooSplice fooLens = do
     val <- lift $ with' fooLens $ gets _fooVal
@@ -63,7 +62,7 @@ data App = App
     { _foo :: Snaplet (FooSnaplet)
     }
 
-makeLenses [''App]
+makeLenses ''App
 
 app :: SnapletInit App App
 app = makeSnaplet "app" "nested snaplet application" Nothing $ do

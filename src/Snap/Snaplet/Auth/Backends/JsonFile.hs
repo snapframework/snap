@@ -22,7 +22,6 @@ import           Data.Map (Map)
 import           Data.Maybe (fromJust, isJust)
 import           Data.Text (Text)
 import qualified Data.Text as T
-import           Data.Lens.Lazy
 import           Data.Time
 import           Web.ClientSession
 import           System.Directory
@@ -38,7 +37,7 @@ import           Snap.Snaplet.Session
 -- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager :: AuthSettings
                             -- ^ Authentication settings for your app
-                        -> Lens b (Snaplet SessionManager)
+                        -> SnapletLens b SessionManager
                             -- ^ Lens into a 'SessionManager' auth snaplet will
                            -- use
                         -> FilePath

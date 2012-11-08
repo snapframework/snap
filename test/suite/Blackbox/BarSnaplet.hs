@@ -7,11 +7,10 @@ module Blackbox.BarSnaplet where
 
 import Prelude hiding (lookup)
 
+import Control.Lens
 import Control.Monad.State
 import qualified Data.ByteString as B
 import Data.Configurator
-import Data.Lens.Lazy
-import Data.Lens.Template
 import Data.Maybe
 import Data.Text (Text)
 import Snap.Snaplet
@@ -24,17 +23,17 @@ import Blackbox.FooSnaplet
 
 data BarSnaplet b = BarSnaplet
     { _barField :: String
-    , fooLens  :: Lens b (Snaplet FooSnaplet)
+    , fooLens  :: SnapletLens b FooSnaplet
     }
 
-makeLens ''BarSnaplet
+makeLenses ''BarSnaplet
 
 barsplice :: [(Text, SnapletISplice b)]
 barsplice = [("barsplice", textSplice "contents of the bar splice")]
 
 barInit :: HasHeist b
         => Snaplet (Heist b)
-        -> Lens b (Snaplet FooSnaplet)
+        -> SnapletLens b FooSnaplet
         -> SnapletInit b (BarSnaplet b)
 barInit h l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing $ do
     config <- getSnapletUserConfig

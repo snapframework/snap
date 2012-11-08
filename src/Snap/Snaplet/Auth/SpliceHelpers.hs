@@ -23,7 +23,6 @@ module Snap.Snaplet.Auth.SpliceHelpers
   ) where
 
 import           Control.Monad.Trans
-import           Data.Lens.Lazy
 import           Data.Monoid
 import           Data.Text (Text)
 import qualified Text.XmlHtml as X
@@ -47,7 +46,7 @@ import           Snap.Snaplet.Heist
 -- \<loggedInUser\>
 addAuthSplices
   :: HasHeist b
-  => Lens b (Snaplet (AuthManager b))
+  => SnapletLens b (AuthManager b)
       -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
 addAuthSplices auth = addSplices
@@ -57,7 +56,7 @@ addAuthSplices auth = addSplices
     ]
 
 
-compiledAuthSplices :: Lens b (Snaplet (AuthManager b))
+compiledAuthSplices :: SnapletLens b (AuthManager b)
                     -> [(Text, SnapletCSplice b)]
 compiledAuthSplices auth =
     [ ("ifLoggedIn", cIfLoggedIn auth)
@@ -71,7 +70,7 @@ compiledAuthSplices auth =
 -- present, this will run the contents of the node.
 --
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
-ifLoggedIn :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b
+ifLoggedIn :: SnapletLens b (AuthManager b) -> SnapletISplice b
 ifLoggedIn auth = do
     chk <- lift $ withTop auth isLoggedIn
     case chk of
@@ -84,7 +83,7 @@ ifLoggedIn auth = do
 -- present, this will run the contents of the node.
 --
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
-cIfLoggedIn :: Lens b (Snaplet (AuthManager b)) -> SnapletCSplice b
+cIfLoggedIn :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedIn auth = do
     children <- C.promiseChildren
     return $ C.yieldRuntime $ do
@@ -99,7 +98,7 @@ cIfLoggedIn auth = do
 -- not present, this will run the contents of the node.
 --
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
-ifLoggedOut :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b
+ifLoggedOut :: SnapletLens b (AuthManager b) -> SnapletISplice b
 ifLoggedOut auth = do
     chk <- lift $ withTop auth isLoggedIn
     case chk of
@@ -112,7 +111,7 @@ ifLoggedOut auth = do
 -- not present, this will run the contents of the node.
 --
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
-cIfLoggedOut :: Lens b (Snaplet (AuthManager b)) -> SnapletCSplice b
+cIfLoggedOut :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedOut auth = do
     children <- C.promiseChildren
     return $ C.yieldRuntime $ do
@@ -125,7 +124,7 @@ cIfLoggedOut auth = do
 -------------------------------------------------------------------------------
 -- | A splice that will simply print the current user's login, if
 -- there is one.
-loggedInUser :: Lens b (Snaplet (AuthManager b)) -> SnapletISplice b
+loggedInUser :: SnapletLens b (AuthManager b) -> SnapletISplice b
 loggedInUser auth = do
     u <- lift $ withTop auth currentUser
     maybe (return []) (I.textSplice . userLogin) u 
@@ -134,7 +133,7 @@ loggedInUser auth = do
 -------------------------------------------------------------------------------
 -- | A splice that will simply print the current user's login, if
 -- there is one.
-cLoggedInUser :: Lens b (Snaplet (AuthManager b)) -> SnapletCSplice b
+cLoggedInUser :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cLoggedInUser auth =
     return $ C.yieldRuntimeText $ do
         u <- lift $ withTop auth currentUser

@@ -47,7 +47,6 @@ module Snap.Snaplet.Heist
 ------------------------------------------------------------------------------
 import           Prelude hiding (id, (.))
 import           Data.ByteString (ByteString)
-import           Data.Lens.Lazy
 import           Data.Text (Text)
 import           Heist
 ------------------------------------------------------------------------------
@@ -78,7 +77,7 @@ import           Snap.Snaplet.HeistNoClass ( Heist
 class HasHeist b where
     -- | A lens to the Heist snaplet.  The b parameter to Heist will
     -- typically be the base state of your application.
-    heistLens :: Lens (Snaplet b) (Snaplet (Heist b))
+    heistLens :: SnapletLens (Snaplet b) (Heist b)
 
 
 -- $initializerSection
