@@ -11,9 +11,8 @@
 module Blackbox.EmbeddedSnaplet where
 
 import Prelude hiding ((.))
+import Control.Lens
 import Control.Monad.State
-import Data.Lens.Lazy
-import Data.Lens.Template
 import qualified Data.Text as T
 import System.FilePath.Posix
 
@@ -28,7 +27,7 @@ data EmbeddedSnaplet = EmbeddedSnaplet
     , _embeddedVal :: Int
     }
 
-makeLenses [''EmbeddedSnaplet]
+makeLenses ''EmbeddedSnaplet
 
 instance HasHeist EmbeddedSnaplet where
     heistLens = subSnaplet embeddedHeist
@@ -50,7 +49,7 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
     return $ EmbeddedSnaplet hs 42
 
 
-embeddedSplice :: (Lens (Snaplet b) (Snaplet EmbeddedSnaplet))
+embeddedSplice :: (SnapletLens (Snaplet b) EmbeddedSnaplet)
                -> SnapletISplice b
 embeddedSplice embeddedLens = do
     val <- lift $ with' embeddedLens $ gets _embeddedVal

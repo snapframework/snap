@@ -106,6 +106,9 @@ module Snap.Snaplet
   , runSnaplet
   , combineConfig
   , serveSnaplet
+
+  -- * Snaplet Lenses
+  , SnapletLens
   ) where
 
 

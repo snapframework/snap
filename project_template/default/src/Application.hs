@@ -6,7 +6,7 @@
 module Application where
 
 ------------------------------------------------------------------------------
-import Data.Lens.Template
+import Control.Lens
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth
@@ -19,7 +19,7 @@ data App = App
     , _auth :: Snaplet (AuthManager App)
     }
 
-makeLens ''App
+makeLenses ''App
 
 instance HasHeist App where
     heistLens = subSnaplet heist

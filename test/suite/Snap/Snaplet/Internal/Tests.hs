@@ -7,10 +7,10 @@ module Snap.Snaplet.Internal.Tests
   ( tests, initTest ) where
 
 ------------------------------------------------------------------------------
+import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.ByteString (ByteString)
-import           Data.Lens.Template
 import           Data.List
 import           Data.Text
 import           Prelude hiding (catch, (.))
@@ -39,7 +39,7 @@ data App = App
     , _bar :: Snaplet Bar
     }
 
-makeLens ''App
+makeLenses ''App
 
 --showConfig :: SnapletConfig -> IO ()
 --showConfig c = do
