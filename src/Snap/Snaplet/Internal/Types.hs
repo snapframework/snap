@@ -285,6 +285,14 @@ instance MonadSnaplet Handler where
 
 
 ------------------------------------------------------------------------------
+-- | Like 'runBase', but it doesn't require an MVar to be executed.
+runPureBase :: Handler b b a -> Snaplet b -> Snap a
+runPureBase (Handler m) b = do
+        (!a, _) <- L.runLensed m id b
+        return $! a
+
+
+------------------------------------------------------------------------------
 -- | Gets the route pattern that matched for the handler.  This lets you find
 -- out exactly which of the strings you used in addRoutes matched.
 getRoutePattern :: Handler b v (Maybe ByteString)
