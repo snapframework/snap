@@ -152,11 +152,8 @@ Library
     filepath                  >= 1.1      && < 1.4,
     hashable                  >= 1.1      && < 1.2,
     heist                     >= 0.10     && < 0.11,
-<<<<<<< HEAD
     HUnit                     >= 1.2     && < 2,
-=======
     lens                      >= 3.2      && < 3.3,
->>>>>>> upstream/0.10
     logict                    >= 0.4.2    && < 0.6,
     mtl                       >  2.0      && < 2.2,
     mwc-random                >= 0.8      && < 0.13,

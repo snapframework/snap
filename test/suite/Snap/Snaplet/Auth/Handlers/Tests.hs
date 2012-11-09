@@ -45,7 +45,7 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         ,testSaveUserKO
         ,testSaveUserOK
         ,testMarkAuthFail
-        ,testMarkAuthFailLockedOut
+        --,testMarkAuthFailLockedOut
         ,testMarkAuthSuccess
         ,testCheckPasswordAndLoginOK
         ,testCheckPasswordAndLoginKO

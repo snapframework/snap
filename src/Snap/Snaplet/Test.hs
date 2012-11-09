@@ -13,9 +13,11 @@ module Snap.Snaplet.Test
 ------------------------------------------------------------------------------
 import           Control.Concurrent.MVar
 import           Control.Exception.Base (finally)
+import qualified Control.Exception as E
 import           Control.Monad.IO.Class
 import           Data.Text
 import           System.Directory
+import           System.IO.Error
 
 
 ------------------------------------------------------------------------------
@@ -31,7 +33,19 @@ import           Snap.Snaplet.Internal.Initializer
 -- | Remove the given file before running an IO computation. Obviously it
 -- can be used with 'Assertion'.
 withTemporaryFile :: FilePath -> IO () -> IO ()
-withTemporaryFile f = finally (removeFile f)
+withTemporaryFile f = finally (removeFileMayNotExist f)
+
+
+------------------------------------------------------------------------------
+-- | Utility function taken from Darcs
+removeFileMayNotExist :: FilePath -> IO ()
+removeFileMayNotExist f = catchNonExistence (removeFile f) ()
+  where
+    catchNonExistence :: IO a -> a -> IO a
+    catchNonExistence job nonexistval =
+        E.catch job $
+        \e -> if isDoesNotExistError e then return nonexistval
+                                      else ioError e
 
 
 ------------------------------------------------------------------------------
