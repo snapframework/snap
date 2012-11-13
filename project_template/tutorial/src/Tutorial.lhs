@@ -65,6 +65,7 @@ You can also install the full code in the current directory with the command
 > 
 > module Main where
 > 
+> import           Control.Lens.TH
 > import           Data.IORef
 > import qualified Data.ByteString.Char8 as B
 > import           Data.Maybe

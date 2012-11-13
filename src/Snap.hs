@@ -8,7 +8,7 @@ see "Snap.Snaplet".  For the core web server API, see "Snap.Core".
 
 module Snap
   ( module Control.Applicative
-  , module Control.Lens
+  , module Control.Lens.Loupe
   , module Control.Monad.State
   , module Snap.Core
   , module Snap.Http.Server
@@ -16,7 +16,7 @@ module Snap
   ) where
 
 import Control.Applicative
-import Control.Lens
+import Control.Lens.Loupe
 import Control.Monad.State
 import Snap.Core
 import Snap.Http.Server
