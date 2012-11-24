@@ -14,6 +14,7 @@ cabal-dev/
 dist*/
 docs/templates/out
 sitekey.txt
+site_key.txt
 test/dist*
 test/*.json
 test/test-cabal-dev
