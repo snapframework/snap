@@ -35,6 +35,9 @@ Blackbox.EmbeddedSnaplet
 Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types
+Snap.Snaplet.Auth.App
+Snap.Snaplet.Auth.Handlers.Tests
+Snap.Snaplet.Auth.Tests
 Snap.Snaplet.Internal.Lensed.Tests
 Snap.Snaplet.Internal.LensT.Tests
 Snap.Snaplet.Internal.RST.Tests
