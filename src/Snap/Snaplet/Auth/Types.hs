@@ -9,7 +9,6 @@ module Snap.Snaplet.Auth.Types where
 import           Control.Applicative
 import           Control.Arrow
 import           Control.Monad.Trans
-import           Control.Monad.Trans.Maybe
 import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)
@@ -21,7 +20,6 @@ import           Data.Time
 import           Data.Text             (Text)
 import           Data.Typeable
 import           Snap.Snaplet
-import           Snap.Snaplet.Session.Common
 
 
 ------------------------------------------------------------------------------
