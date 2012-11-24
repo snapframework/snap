@@ -496,3 +496,45 @@ withBackend ::
 withBackend f = join $ do
   (AuthManager backend_ _ _ _ _ _ _ _ _) <- get
   return $ f backend_
+
+
+------------------------------------------------------------------------------
+-- | This function generates a random password reset token and stores it in
+-- the database for the user.  Call this function when a user forgets their
+-- password.  Then use the token to autogenerate a link that the user can
+-- visit to reset their password.  This function also sets a timestamp so the
+-- reset token can be expired.
+setPasswordResetToken :: Text -> Handler b (AuthManager b) Bool
+setPasswordResetToken login = do
+  token <- liftIO . randomToken 40 =<< gets randomNumberGenerator
+  now <- liftIO getCurrentTime
+  modPasswordResetToken login (Just $ decodeUtf8 token) (Just now)
+
+
+------------------------------------------------------------------------------
+-- | Clears a user's password reset token.  Call this when the user
+-- successfully changes their password to ensure that the password reset link
+-- cannot be used again.
+clearPasswordResetToken :: Text -> Handler b (AuthManager b) Bool
+clearPasswordResetToken login = modPasswordResetToken login Nothing Nothing
+
+
+------------------------------------------------------------------------------
+-- | Helper function used for setting and clearing the password reset token
+-- and associated timestamp.
+modPasswordResetToken :: Text
+                      -> Maybe Text
+                      -> Maybe UTCTime
+                      -> Handler v (AuthManager v) Bool
+modPasswordResetToken login token timestamp = do
+  res <- runMaybeT $ do
+      u <- MaybeT $ withBackend $ \b -> liftIO $ lookupByLogin b login
+      lift $ saveUser $ u
+        { userResetToken = token
+        , userResetRequestedAt = timestamp
+        }
+      return ()
+  return $ maybe False (\_ -> True) res
+
+
+

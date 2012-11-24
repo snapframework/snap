@@ -60,6 +60,8 @@ module Snap.Snaplet.Auth
   , loginUser
   , logoutUser
   , requireUser
+  , setPasswordResetToken
+  , clearPasswordResetToken
 
   -- * Splice helpers
   , addAuthSplices

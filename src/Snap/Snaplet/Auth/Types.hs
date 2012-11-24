@@ -9,6 +9,7 @@ module Snap.Snaplet.Auth.Types where
 import           Control.Applicative
 import           Control.Arrow
 import           Control.Monad.Trans
+import           Control.Monad.Trans.Maybe
 import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)
@@ -20,6 +21,7 @@ import           Data.Time
 import           Data.Text             (Text)
 import           Data.Typeable
 import           Snap.Snaplet
+import           Snap.Snaplet.Session.Common
 
 
 ------------------------------------------------------------------------------
@@ -120,6 +122,10 @@ data Role = Role ByteString
 data AuthUser = AuthUser
     { userId               :: Maybe UserId
     , userLogin            :: Text
+
+    -- We have to have an email field for password reset functionality, but we
+    -- don't want to force users to log in with their email address.
+    , userEmail            :: Maybe Text
     , userPassword         :: Maybe Password
     , userActivatedAt      :: Maybe UTCTime
     , userSuspendedAt      :: Maybe UTCTime
@@ -133,6 +139,8 @@ data AuthUser = AuthUser
     , userLastLoginIp      :: Maybe ByteString
     , userCreatedAt        :: Maybe UTCTime
     , userUpdatedAt        :: Maybe UTCTime
+    , userResetToken       :: Maybe Text
+    , userResetRequestedAt :: Maybe UTCTime
     , userRoles            :: [Role]
     , userMeta             :: HashMap Text Value
     }
@@ -145,6 +153,7 @@ defAuthUser :: AuthUser
 defAuthUser = AuthUser
     { userId               = Nothing
     , userLogin            = ""
+    , userEmail            = Nothing
     , userPassword         = Nothing
     , userActivatedAt      = Nothing
     , userSuspendedAt      = Nothing
@@ -158,6 +167,8 @@ defAuthUser = AuthUser
     , userLastLoginIp      = Nothing
     , userCreatedAt        = Nothing
     , userUpdatedAt        = Nothing
+    , userResetToken       = Nothing
+    , userResetRequestedAt = Nothing
     , userRoles            = []
     , userMeta             = HM.empty
     }
@@ -249,6 +260,7 @@ instance ToJSON AuthUser where
   toJSON u = object
     [ "uid"                .= userId                u
     , "login"              .= userLogin             u
+    , "email"              .= userEmail             u
     , "pw"                 .= userPassword          u
     , "activated_at"       .= userActivatedAt       u
     , "suspended_at"       .= userSuspendedAt       u
@@ -262,6 +274,8 @@ instance ToJSON AuthUser where
     , "last_ip"            .= userLastLoginIp       u
     , "created_at"         .= userCreatedAt         u
     , "updated_at"         .= userUpdatedAt         u
+    , "reset_token"        .= userResetToken        u
+    , "reset_requested_at" .= userResetRequestedAt  u
     , "roles"              .= userRoles             u
     , "meta"               .= userMeta              u
     ]
@@ -272,6 +286,7 @@ instance FromJSON AuthUser where
   parseJSON (Object v) = AuthUser
     <$> v .: "uid"
     <*> v .: "login"
+    <*> v .: "email"
     <*> v .: "pw"
     <*> v .: "activated_at"
     <*> v .: "suspended_at"
@@ -285,6 +300,8 @@ instance FromJSON AuthUser where
     <*> v .: "last_ip"
     <*> v .: "created_at"
     <*> v .: "updated_at"
+    <*> v .: "reset_token"
+    <*> v .: "reset_requested_at"
     <*> v .:? "roles" .!= []
     <*> v .: "meta"
   parseJSON _ = error "Unexpected JSON input"
