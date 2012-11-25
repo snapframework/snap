@@ -26,37 +26,37 @@ import           Snap.Snaplet.Test
 tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.Handlers"
     [mutuallyExclusive $ testGroup "createUser tests"
-        [testCreateUserGood
-        ,testCreateEmptyUser
-        ,testCreateDupUser
-        ,testUsernameExists 
-        ,testLoginByUsername 
-        ,testLoginByUsernameEnc
-        ,testLoginByUsernameNoU 
-        ,testLoginByUsernameInvPwd
-        ,testLoginByRememberTokenKO
-        ,testLoginByRememberTokenOK
-        ,testLogoutKO
-        ,testLogoutOK
-        ,testCurrentUserKO
-        ,testCurrentUserOK
-        ,testIsLoggedInKO
-        ,testIsLoggedInOK
-        ,testSaveUserKO
-        ,testSaveUserOK
-        ,testMarkAuthFail
-        --,testMarkAuthFailLockedOut
-        ,testMarkAuthSuccess
-        ,testCheckPasswordAndLoginOK
-        ,testCheckPasswordAndLoginKO
-        ,testAuthenticatePasswordOK
-        ,testAuthenticatePasswordPwdMissing
-        ,testAuthenticatePasswordPwdWrong
-        ,testRegisterUserOK
-        ,testRegisterUserNoUser
-        ,testRegisterUserNoPwd
-        ,testRequireUserOK
-        ,testRequireUserKO
+        [ testCreateUserGood
+        , testCreateEmptyUser
+        , testCreateDupUser
+        , testUsernameExists 
+        , testLoginByUsername 
+        , testLoginByUsernameEnc
+        , testLoginByUsernameNoU 
+        , testLoginByUsernameInvPwd
+        , testLoginByRememberTokenKO
+        , testLoginByRememberTokenOK
+        , testLogoutKO
+        , testLogoutOK
+        , testCurrentUserKO
+        , testCurrentUserOK
+        , testIsLoggedInKO
+        , testIsLoggedInOK
+        , testSaveUserKO
+        , testSaveUserOK
+        , testMarkAuthFail
+        --, testMarkAuthFailLockedOut
+        , testMarkAuthSuccess
+        , testCheckPasswordAndLoginOK
+        , testCheckPasswordAndLoginKO
+        , testAuthenticatePasswordOK
+        , testAuthenticatePasswordPwdMissing
+        , testAuthenticatePasswordPwdWrong
+        , testRegisterUserOK
+        , testRegisterUserNoUser
+        , testRegisterUserNoPwd
+        , testRequireUserOK
+        , testRequireUserKO
         ]
     ]
 

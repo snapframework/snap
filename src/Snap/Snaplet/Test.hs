@@ -55,8 +55,8 @@ removeFileMayNotExist f = catchNonExistence (removeFile f) ()
 -- Note that the output of this function is slightly different from
 -- 'runHandler' defined in Snap.Test, because due to the fact running
 -- the initializer inside 'SnapletInit' can throw an exception.
-runHandler :: MonadIO m =>
-             RequestBuilder m ()
+runHandler :: MonadIO m
+           => RequestBuilder m ()
            -> Handler b b a
            -> SnapletInit b b
            -> m (Either Text Response)
@@ -80,8 +80,8 @@ runHandler rq h s = do
 -- Note that the output of this function is slightly different from
 -- 'evalHandler defined in Snap.Test, because due to the fact running
 -- the initializer inside 'SnapletInit' can throw an exception.
-evalHandler :: MonadIO m =>
-              RequestBuilder m ()
+evalHandler :: MonadIO m
+            => RequestBuilder m ()
             -> Handler b b a
             -> SnapletInit b b
             -> m (Either Text a)
@@ -98,8 +98,8 @@ evalHandler rq h s = do
 -- | Run the given initializer, yielding a tuple where the first element is
 -- a @Snaplet b@, or an error message whether the initializer threw an
 -- exception.                                                       
-getSnaplet :: MonadIO m =>
-             SnapletInit b b
+getSnaplet :: MonadIO m
+           => SnapletInit b b
            -> m (Either Text (Snaplet b, InitializerState b))
 getSnaplet (SnapletInit initializer) = liftIO $ do
         mvar <- newEmptyMVar
