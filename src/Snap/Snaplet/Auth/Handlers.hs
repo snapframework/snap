@@ -504,11 +504,13 @@ withBackend f = join $ do
 -- password.  Then use the token to autogenerate a link that the user can
 -- visit to reset their password.  This function also sets a timestamp so the
 -- reset token can be expired.
-setPasswordResetToken :: Text -> Handler b (AuthManager b) Bool
+setPasswordResetToken :: Text -> Handler b (AuthManager b) (Maybe Text)
 setPasswordResetToken login = do
-  token <- liftIO . randomToken 40 =<< gets randomNumberGenerator
+  tokBS <- liftIO . randomToken 40 =<< gets randomNumberGenerator
+  let token = decodeUtf8 tokBS
   now <- liftIO getCurrentTime
-  modPasswordResetToken login (Just $ decodeUtf8 token) (Just now)
+  success <- modPasswordResetToken login (Just token) (Just now)
+  return $ if success then Just token else Nothing
 
 
 ------------------------------------------------------------------------------
