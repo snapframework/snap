@@ -147,37 +147,37 @@ import           Snap.Snaplet.Internal.Types
 -- /within the context/ of the base state. Given that Haskell datatypes are
 -- pure, how do you allow for this?
 --
--- Our solution is to use /lenses/, as defined in the @data-lens@ library
--- (<http://hackage.haskell.org/package/data-lens>). A lens, notated as
--- follows:
+-- Our solution is to use /lenses/, as defined in Edward Kmett's @lens@
+-- library (<http://hackage.haskell.org/package/lens>). A lens, notated
+-- as follows:
 --
--- > Lens a b
+-- > SimpleLens a b
 --
--- is a \"getter\" and a \"setter\" rolled up into one. The @data-lens@
--- library provides the following functions:
+-- is conceptually a \"getter\" and a \"setter\" rolled up into one. The
+-- @lens@ library provides the following functions:
 --
--- > getL :: (Lens a b) -> a -> b
--- > setL :: (Lens a b) -> b -> a -> a
--- > modL :: (Lens a b) -> (b -> b) -> a -> a
+-- > view :: (SimpleLens a b) -> a -> b
+-- > set  :: (SimpleLens a b) -> b -> a -> a
+-- > over :: (SimpleLens a b) -> (b -> b) -> a -> a
 --
 -- which allow you to get, set, and modify a value of type @b@ within the
--- context of type of type @a@. The @data-lens@ package comes with a Template
--- Haskell function called 'makeLenses', which auto-magically defines a lens
--- for every record field having a name beginning with an underscore. In the
--- @App@ example above, adding the declaration:
+-- context of type @a@. The @lens@ package comes with a Template Haskell
+-- function called 'makeLenses', which auto-magically defines a lens for every
+-- record field having a name beginning with an underscore. In the @App@
+-- example above, adding the declaration:
 --
--- > makeLenses [''App]
+-- > makeLenses ''App
 --
 -- would define lenses:
 --
--- > foo                :: Lens App (Snaplet Foo)
--- > bar                :: Lens App (Snaplet Bar)
--- > someNonSnapletData :: Lens App String
+-- > foo                :: SimpleLens App (Snaplet Foo)
+-- > bar                :: SimpleLens App (Snaplet Bar)
+-- > someNonSnapletData :: SimpleLens App String
 --
--- The coolest thing about @data-lens@ lenses is that they /compose/, using
--- the "Control.Category"'s generalization of the @(.)@ operator. If the @Foo@
--- type had a field of type @Quux@ within it with a lens @quux :: Lens Foo
--- Quux@, then you could create a lens of type @Lens App Quux@ by composition:
+-- The coolest thing about @lens@ lenses is that they /compose/ using the
+-- @(.)@ operator. If the @Foo@ type had a field of type @Quux@ within it with
+-- a lens @quux :: SimpleLens Foo Quux@, then you could create a lens of type
+-- @SimpleLens App Quux@ by composition:
 --
 -- > import Control.Category
 -- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude
@@ -187,13 +187,14 @@ import           Snap.Snaplet.Internal.Types
 -- > makeLenses [''Foo]
 -- >
 -- > -- snapletValue is defined in the framework:
--- > snapletValue :: Lens (Snaplet a) a
+-- > snapletValue :: SimpleLens (Snaplet a) a
 -- >
--- > appQuuxLens :: Lens App Quux
--- > appQuuxLens = quux . snapletValue . foo
+-- > appQuuxLens :: SimpleLens App Quux
+-- > appQuuxLens = foo . snapletValue . quux
 --
--- Lens composition is very similar to function composition, but it gives you
--- a composed getter and setter at the same time.
+-- Lens composition is very similar to function composition except it works in
+-- the opposite direction (think Java-style System.out.println ordering) and
+-- it gives you a composed getter and setter at the same time.
 
 -- $monadSnaplet
 -- The primary abstraction in the snaplet infrastructure is a combination of
@@ -203,7 +204,7 @@ import           Snap.Snaplet.Internal.Types
 -- state.  This allows quux snaplet functions to access and modify the Quux
 -- data structure without knowing anything about the App or Foo data
 -- structures. It also lets other snaplets call functions from the quux
--- snaplet if they have the quux snaplet's lens @Lens App (Snaplet Quux)@.
+-- snaplet if they have the quux snaplet's lens @SimpleLens App (Snaplet Quux)@.
 -- We can view our application as a tree of snaplets and other pieces of data.
 -- The lenses are like pointers to nodes of the tree. If you have a pointer to
 -- a node, you can access the node and all of its children without knowing
