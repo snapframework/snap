@@ -35,7 +35,7 @@ Executable projname
 
   if flag(development)
     build-depends:
-      snap-loader-dynamic == 0.9.*
+      snap-loader-dynamic == 0.10.*
     cpp-options: -DDEVELOPMENT
     -- In development mode, speed is already going to suffer, so skip
     -- the fancy optimization flags.  Additionally, disable all
