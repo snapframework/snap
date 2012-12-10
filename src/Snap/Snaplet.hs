@@ -179,12 +179,10 @@ import           Snap.Snaplet.Internal.Types
 -- a lens @quux :: SimpleLens Foo Quux@, then you could create a lens of type
 -- @SimpleLens App Quux@ by composition:
 --
--- > import Control.Category
--- > import Prelude hiding ((.))    -- you have to hide (.) from the Prelude
--- >                                -- to use Control.Category.(.)
+-- > import Control.Lens
 -- >
 -- > data Foo = Foo { _quux :: Quux }
--- > makeLenses [''Foo]
+-- > makeLenses ''Foo
 -- >
 -- > -- snapletValue is defined in the framework:
 -- > snapletValue :: SimpleLens (Snaplet a) a
@@ -285,6 +283,7 @@ This data structure includes the state of any snaplets (wrapped in a
 Snaplet) we want to use as well as any other state we might want.}
 
 > module MyApp where
+> import Control.Lens
 > import Snap.Snaplet
 > import Snap.Snaplet.Heist
 >
@@ -295,7 +294,7 @@ Snaplet) we want to use as well as any other state we might want.}
 >     , _companyName :: String
 >     }
 >
-> makeLenses [''App]
+> makeLenses ''App
 
 The next thing we need to do is define an initializer.
 
