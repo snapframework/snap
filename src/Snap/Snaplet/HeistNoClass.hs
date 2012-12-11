@@ -374,7 +374,7 @@ serveURI = do
     p <- getSafePath
     -- Allows users to prefix template filenames with an underscore to prevent
     -- the template from being served.
-    if head p == '_' then pass else return $ B.pack p
+    if take 1 p == "_" then pass else return $ B.pack p
 
 
 ------------------------------------------------------------------------------
