@@ -66,7 +66,7 @@ import           Snap.Snaplet.HeistNoClass ( Heist
 -- how the heist snaplet might be declared:
 --
 -- > data App = App { _heist :: Snaplet (Heist App) }
--- > mkLabels [''App]
+-- > makeLenses ''App
 -- >
 -- > instance HasHeist App where heistLens = subSnaplet heist
 -- >
