@@ -288,14 +288,14 @@ checkPasswordAndLogin u pw =
 -- who she says she is.
 --
 forceLogin :: AuthUser       -- ^ An existing user, somehow looked up from db
-           -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+           -> Handler b (AuthManager b) (Either AuthFailure ())
 forceLogin u = do
     s <- gets session
     withSession s $
         case userId u of
           Just x -> do
             withTop s (setSessionUserId x)
-            return $ Right u
+            return $ Right ()
           Nothing -> return . Left $
                      AuthError $ "forceLogin: Can't force the login of a user "
                                    ++ "without userId"
