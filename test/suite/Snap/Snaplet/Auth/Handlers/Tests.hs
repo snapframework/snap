@@ -201,7 +201,7 @@ testLoginByRememberTokenKO = testCase "loginByRememberToken no token" assertion
     assertion = do
         let hdl = with auth loginByRememberToken
         res <- evalHandler (ST.get "" Map.empty) hdl appInit
-        either (assertFailure . show) (assertBool failMsg . isNothing) res
+        either (assertFailure . show) (assertBool failMsg . isLeft) res
 
     failMsg = "loginByRememberToken: Expected to fail for the " ++
               "absence of a token, but I didn't."
@@ -216,12 +216,12 @@ testLoginByRememberTokenOK = testCase "loginByRememberToken token" assertion
         res <- evalHandler (ST.get "" Map.empty) hdl appInit
         case res of
           (Left e) -> assertFailure $ show e
-          (Right res') -> assertBool failMsg $ isJust res'
+          (Right res') -> assertBool failMsg $ isRight res'
 
-    hdl :: Handler App App (Maybe AuthUser)
+    hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
         res <- loginByUsername "foo" (ClearText "foo") True
-        either (\_ -> return Nothing) (\_ -> loginByRememberToken) res
+        either (\e -> return (Left e)) (\_ -> loginByRememberToken) res
 
     failMsg = "loginByRememberToken: Expected to succeed but I didn't."
 
