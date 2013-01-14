@@ -270,6 +270,13 @@ instance IAuthBackend JsonFileAuthManager where
       f cache = getUid >>= getUser cache
         where
           getUid = HM.lookup token (tokenCache cache)
+          
+  authenticate mgr usr pwd = case userPassword usr of                            
+    Just pwd' -> if checkPassword pwd pwd' then       
+                   return $ Nothing                  
+                 else                                  
+                   return $ Just IncorrectPassword   
+    Nothing -> return $ Just IncorrectPassword           
 
 
 ------------------------------------------------------------------------------
