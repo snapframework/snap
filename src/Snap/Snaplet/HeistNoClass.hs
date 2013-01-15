@@ -325,8 +325,8 @@ iRenderHelper c t = do
 ------------------------------------------------------------------------------
 -- | Internal helper function for rendering.
 cRenderHelper :: Maybe MIMEType
-             -> ByteString
-             -> Handler b (Heist b) ()
+              -> ByteString
+              -> Handler b (Heist b) ()
 cRenderHelper c t = do
     (Running hs _) <- get
     withTop' id $ maybe pass serve $ C.renderTemplate hs t
@@ -355,16 +355,16 @@ renderAs ct t = iRenderHelper (Just ct) t
 ------------------------------------------------------------------------------
 cRender :: ByteString
            -- ^ Name of the template
-       -> Handler b (Heist b) ()
+        -> Handler b (Heist b) ()
 cRender t = cRenderHelper Nothing t
 
 
 ------------------------------------------------------------------------------
 cRenderAs :: ByteString
              -- ^ Content type
-         -> ByteString
+          -> ByteString
              -- ^ Name of the template
-         -> Handler b (Heist b) ()
+          -> Handler b (Heist b) ()
 cRenderAs ct t = cRenderHelper (Just ct) t
 
 
