@@ -14,6 +14,7 @@ module Snap.Snaplet.Auth.SpliceHelpers
   (
     addAuthSplices
   , compiledAuthSplices
+  , userCSplices
   , ifLoggedIn
   , ifLoggedOut
   , loggedInUser
@@ -23,12 +24,16 @@ module Snap.Snaplet.Auth.SpliceHelpers
   ) where
 
 import           Control.Monad.Trans
+import           Data.Maybe
 import           Data.Monoid
 import           Data.Text (Text)
+import qualified Data.Text as T
+import           Data.Text.Encoding
 import qualified Text.XmlHtml as X
 import           Heist
 import qualified Heist.Interpreted as I
 import qualified Heist.Compiled as C
+import           Heist.Splices
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
@@ -62,6 +67,24 @@ compiledAuthSplices auth =
     [ ("ifLoggedIn", cIfLoggedIn auth)
     , ("ifLoggedOut", cIfLoggedOut auth)
     , ("loggedInUser", cLoggedInUser auth)
+    ]
+
+
+userCSplices :: Monad m => [(Text, C.Promise AuthUser -> C.Splice m)]
+userCSplices = (C.pureSplices $ C.textSplices
+    [ ("login", userLogin)
+    , ("email", maybe "-" id . userEmail)
+    , ("active", T.pack . show . isNothing . userSuspendedAt)
+    , ("loginCount", T.pack . show . userLoginCount)
+    , ("failedCount", T.pack . show . userFailedLoginCount)
+    , ("loginAt", maybe "-" (T.pack . show) . userCurrentLoginAt)
+    , ("lastLoginAt", maybe "-" (T.pack . show) . userLastLoginAt)
+    , ("suspendedAt", maybe "-" (T.pack . show) . userSuspendedAt)
+    , ("loginIP", maybe "-" decodeUtf8 . userCurrentLoginIp)
+    , ("lastLoginIP", maybe "-" decodeUtf8 . userLastLoginIp)
+    ]) ++
+    [ ("ifActive", ifCSplice (isNothing . userSuspendedAt))
+    , ("ifSuspended", ifCSplice (isJust . userSuspendedAt))
     ]
 
 
