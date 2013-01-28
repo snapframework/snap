@@ -192,7 +192,7 @@ finalLoadHook (Configuring ref) = do
     (hs,cts) <- toTextErrors $ initHeistWithCacheTag hc
     return $ Running hs cts
   where
-    toTextErrors = mapEitherT (T.pack . intercalate "\n") id
+    toTextErrors = bimapEitherT (T.pack . intercalate "\n") id
 finalLoadHook (Running _ _) = left "finalLoadHook called while running"
 
 
