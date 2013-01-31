@@ -112,7 +112,7 @@ snapletConfig :: SimpleLens (Snaplet a) SnapletConfig
 snapletValue :: SimpleLens (Snaplet a) a
 -}
 
-type SnapletLens s a = SimpleLoupe s (Snaplet a)
+type SnapletLens s a = ALens' s (Snaplet a)
 
 ------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
