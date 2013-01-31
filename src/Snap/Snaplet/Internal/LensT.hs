@@ -7,7 +7,6 @@ module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Lens (cloneLens)
 import           Control.Lens.Loupe
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
@@ -18,7 +17,7 @@ import           Snap.Core
 import           Snap.Snaplet.Internal.RST
 
 
-newtype LensT b v s m a = LensT (RST (SimpleLoupe b v) s m a)
+newtype LensT b v s m a = LensT (RST (ALens' b v) s m a)
   deriving ( Monad
            , MonadTrans
            , Functor
@@ -27,7 +26,7 @@ newtype LensT b v s m a = LensT (RST (SimpleLoupe b v) s m a)
            , MonadPlus
            , MonadCatchIO
            , Alternative
-           , MonadReader (SimpleLoupe b v)
+           , MonadReader (ALens' b v)
            , MonadSnap )
 
 
@@ -68,14 +67,14 @@ lPut v = LensT $ do
 
 
 ------------------------------------------------------------------------------
-runLensT :: Monad m => LensT b v s m a -> SimpleLoupe b v -> s -> m (a, s)
+runLensT :: Monad m => LensT b v s m a -> ALens' b v -> s -> m (a, s)
 runLensT (LensT m) l = runRST m l
 {-# INLINE runLensT #-}
 
 
 ------------------------------------------------------------------------------
 withLensT :: Monad m
-          => (SimpleLoupe b' v' -> SimpleLoupe b v)
+          => (ALens' b' v' -> ALens' b v)
           -> LensT b v s m a
           -> LensT b' v' s m a
 withLensT f (LensT m) = LensT $ withRST f m
@@ -84,7 +83,7 @@ withLensT f (LensT m) = LensT $ withRST f m
 
 ------------------------------------------------------------------------------
 withTop :: Monad m
-        => SimpleLoupe b v'
+        => ALens' b v'
         -> LensT b v' s m a
         -> LensT b v  s m a
 withTop subLens = withLensT (const subLens)
@@ -92,6 +91,6 @@ withTop subLens = withLensT (const subLens)
 
 
 ------------------------------------------------------------------------------
-with :: Monad m => SimpleLoupe v v' -> LensT b v' s m a -> LensT b v s m a
+with :: Monad m => ALens' v v' -> LensT b v' s m a -> LensT b v s m a
 with subLens = withLensT (\l -> cloneLens l . subLens)
 

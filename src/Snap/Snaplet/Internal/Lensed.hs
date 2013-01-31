@@ -5,7 +5,6 @@
 module Snap.Snaplet.Internal.Lensed where
 
 import Control.Applicative
-import Control.Lens (cloneLens)
 import Control.Lens.Loupe
 import Control.Monad
 import Control.Monad.Reader.Class
@@ -19,7 +18,7 @@ import Snap.Core
 
 ------------------------------------------------------------------------------
 newtype Lensed b v m a = Lensed
-    { unlensed :: SimpleLoupe b v -> v -> b -> m (a, v, b) }
+    { unlensed :: ALens' b v -> v -> b -> m (a, v, b) }
 
 
 ------------------------------------------------------------------------------
@@ -50,12 +49,12 @@ instance Monad m => MonadState v (Lensed b v m) where
     put v' = Lensed $ \_ _ s -> return ((), v', s)
 
 
-instance Monad m => MonadReader (SimpleLoupe b v) (Lensed b v m) where
+instance Monad m => MonadReader (ALens' b v) (Lensed b v m) where
   ask = Lensed $ \l v s -> return (l, v, s)
   local = lensedLocal
 
 ------------------------------------------------------------------------------
-lensedLocal :: Monad m => (SimpleLoupe b v -> SimpleLoupe b v') -> Lensed b v' m a -> Lensed b v m a
+lensedLocal :: Monad m => (ALens' b v -> ALens' b v') -> Lensed b v' m a -> Lensed b v m a
 lensedLocal f g = do
     l <- ask
     withTop (f l) g
@@ -107,7 +106,7 @@ globally (StateT f) = Lensed $ \l v s ->
 
 
 ------------------------------------------------------------------------------
-lensedAsState :: Monad m => Lensed b v m a -> SimpleLoupe b v -> StateT b m a
+lensedAsState :: Monad m => Lensed b v m a -> ALens' b v -> StateT b m a
 lensedAsState (Lensed f) l = StateT $ \s -> do
     (a, v', s') <- f l (s ^# l) s
     return (a, storing l v' s')
@@ -119,19 +118,19 @@ getBase = Lensed $ \_ v b -> return (b, v, b)
 
 
 ------------------------------------------------------------------------------
-withTop :: Monad m => SimpleLoupe b v' -> Lensed b v' m a -> Lensed b v m a
+withTop :: Monad m => ALens' b v' -> Lensed b v' m a -> Lensed b v m a
 withTop l m = globally $ lensedAsState m l
 
 
 ------------------------------------------------------------------------------
-with :: Monad m => SimpleLoupe v v' -> Lensed b v' m a -> Lensed b v m a
+with :: Monad m => ALens' v v' -> Lensed b v' m a -> Lensed b v m a
 with l g = do
     l' <- ask
     withTop (cloneLens l' . l) g
 
 
 ------------------------------------------------------------------------------
-embed :: Monad m => SimpleLoupe v v' -> Lensed v v' m a -> Lensed b v m a
+embed :: Monad m => ALens' v v' -> Lensed v v' m a -> Lensed b v m a
 embed l m = locally $ lensedAsState m l
 
 
@@ -144,7 +143,7 @@ locally (StateT f) = Lensed $ \_ v s ->
 ------------------------------------------------------------------------------
 runLensed :: Monad m
           => Lensed t1 b m t
-          -> SimpleLoupe t1 b
+          -> ALens' t1 b
           -> t1
           -> m (t, t1)
 runLensed (Lensed f) l s = do
