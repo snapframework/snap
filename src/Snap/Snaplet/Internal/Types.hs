@@ -277,6 +277,18 @@ instance MonadState v (Handler b v) where
     put v = modifySnapletState (set snapletValue v)
 
 
+------------------------------------------------------------------------------
+-- | The MonadState instance gives you access to the current snaplet's state.
+instance MonadReader v (Handler b v) where
+    ask = getsSnapletState _snapletValue
+    local f m = do
+        cur <- ask
+        put (f cur)
+        res <- m
+        put cur
+        return res
+
+
 instance MonadSnaplet Handler where
     getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
