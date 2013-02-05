@@ -1,5 +1,6 @@
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TupleSections              #-}
 
 module Snap.Snaplet.Internal.Initializer
   ( addPostInitHook
@@ -18,6 +19,7 @@ module Snap.Snaplet.Internal.Initializer
   , runSnaplet
   , combineConfig
   , serveSnaplet
+  , loadAppConfig
   , printInfo
   ) where
 
@@ -34,6 +36,7 @@ import           Control.Monad.Trans.Writer hiding (pass)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.Configurator
+import qualified Data.Configurator.Types as C
 import           Data.IORef
 import           Data.Maybe
 import           Data.Text (Text)
@@ -568,4 +571,54 @@ serveSnaplet startConfig initializer = do
          :: IO (Either SomeException ())
     doCleanup
 
+
+------------------------------------------------------------------------------
+-- | Allows you to get all of your app's config data in the IO monad without
+-- the web server infrastructure.
+loadAppConfig :: FileName
+              -- ^ The name of the config file to look for.  In snap
+              -- applications, this is something based on the
+              -- environment...i.e. @devel.cfg@.
+              -> FilePath
+              -- ^ Path to the root directory of your project.
+              -> IO C.Config
+loadAppConfig cfg root = do
+    tree <- buildL root
+    let groups = loadAppConfig' cfg "" $ dirTree tree
+    loadGroups groups
+
+
+------------------------------------------------------------------------------
+-- | Recursive worker for loadAppConfig.
+loadAppConfig' :: FileName -> Text -> DirTree a -> [(Text, Worth a)]
+loadAppConfig' cfg _prefix d@(Dir _ c) =
+    (map ((_prefix,) . Required) $ getCfg cfg d) ++
+    concatMap (\a -> loadAppConfig' cfg (nextPrefix $ name a) a) snaplets
+  where
+    nextPrefix p = T.concat [_prefix, T.pack p, "."]
+    snapletsDirs = filter isSnapletsDir c
+    snaplets = concatMap (filter isDir . contents) snapletsDirs
+loadAppConfig' _ _ _ = []
+
+
+isSnapletsDir :: DirTree t -> Bool
+isSnapletsDir (Dir "snaplets" _) = True
+isSnapletsDir _ = False
+
+
+isDir :: DirTree t -> Bool
+isDir (Dir _ _) = True
+isDir _ = False
+
+
+isCfg :: FileName -> DirTree t -> Bool
+isCfg cfg (File n _) = cfg == n
+isCfg _ _ = False
+
+
+getCfg :: FileName -> DirTree b -> [b]
+getCfg cfg (Dir _ c) = map file $ filter (isCfg cfg) c
+getCfg _ _ = []
+
+    
 
