@@ -3,6 +3,10 @@ version:        0.0.1
 build-type:     Simple
 cabal-version:  >= 1.8
 
+Flag old-base
+  default: False
+  manual: False
+
 Executable snap-testsuite
   hs-source-dirs:  ../src suite
   main-is:         TestSuite.hs
@@ -22,7 +26,6 @@ Executable snap-testsuite
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
     aeson                      >= 0.6      && < 0.7,
     attoparsec                 >= 0.10     && < 0.11,
-    base                       >= 4        && < 5,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.4,
     clientsession              >= 0.8      && < 0.9,
@@ -36,7 +39,6 @@ Executable snap-testsuite
     filepath                   >= 1.1      && < 1.4,
     hashable                   >= 1.1      && < 1.2,
     heist                      >= 0.10     && < 0.12,
-    lens                       >= 3.7.6    && < 3.9,
     logict                     >= 0.4.2    && < 0.6,
     mtl                        >  2.0      && < 2.2,
     mwc-random                 >= 0.8      && < 0.13,
@@ -53,6 +55,16 @@ Executable snap-testsuite
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.6,
     xmlhtml                    >= 0.1      && < 0.3
+
+  if flag(old-base)
+    build-depends:
+      base                      >= 4        && < 4.4,
+      lens                      >= 3.7      && < 3.8
+  else
+    build-depends:
+      base                      >= 4.4      && < 5,
+      lens                      >= 3.7      && < 3.9
+
 
   extensions:
     BangPatterns,
@@ -85,7 +97,6 @@ Executable app
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
     aeson                      >= 0.6      && < 0.7,
     attoparsec                 >= 0.10     && < 0.11,
-    base                       >= 4        && < 5,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.4,
     clientsession              >= 0.8      && < 0.9,
@@ -99,7 +110,6 @@ Executable app
     filepath                   >= 1.1      && < 1.4,
     hashable                   >= 1.1      && < 1.2,
     heist                      >= 0.10     && < 0.12,
-    lens                       >= 3.7.6    && < 3.9,
     logict                     >= 0.4.2    && < 0.6,
     mtl                        >  2.0      && < 2.2,
     mwc-random                 >= 0.8      && < 0.13,
@@ -116,6 +126,15 @@ Executable app
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.6,
     xmlhtml                    >= 0.1      && < 0.3
+
+  if flag(old-base)
+    build-depends:
+      base                      >= 4        && < 4.4,
+      lens                      >= 3.7      && < 3.8
+  else
+    build-depends:
+      base                      >= 4.4      && < 5,
+      lens                      >= 3.7      && < 3.9
 
   extensions:
     BangPatterns,
@@ -158,7 +177,6 @@ Executable nesttest
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
     aeson                      >= 0.6      && < 0.7,
     attoparsec                 >= 0.10     && < 0.11,
-    base                       >= 4        && < 5,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.4,
     clientsession              >= 0.8      && < 0.9,
@@ -172,7 +190,6 @@ Executable nesttest
     filepath                   >= 1.1      && < 1.4,
     hashable                   >= 1.1      && < 1.2,
     heist                      >= 0.10     && < 0.12,
-    lens                       >= 3.7.6    && < 3.9,
     logict                     >= 0.4.2    && < 0.6,
     mtl                        >  2.0      && < 2.2,
     mwc-random                 >= 0.8      && < 0.13,
@@ -189,6 +206,15 @@ Executable nesttest
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.6,
     xmlhtml                    >= 0.1      && < 0.3
+
+  if flag(old-base)
+    build-depends:
+      base                      >= 4        && < 4.4,
+      lens                      >= 3.7      && < 3.8
+  else
+    build-depends:
+      base                      >= 4.4      && < 5,
+      lens                      >= 3.7      && < 3.9
 
 
   extensions:
