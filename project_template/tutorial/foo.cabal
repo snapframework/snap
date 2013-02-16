@@ -10,19 +10,30 @@ Category:            Web
 Build-type:          Simple
 Cabal-version:       >=1.2
 
+Flag old-base
+  default: False
+  manual: False
+
 Executable projname
   hs-source-dirs: src
   main-is: Tutorial.lhs
 
   Build-depends:
-    base                      >= 4       && < 5,
     bytestring                >= 0.9.1   && < 0.11,
-    lens                      >= 3.7.0.1 && < 3.9,
     MonadCatchIO-transformers >= 0.2.1   && < 0.4,
     mtl                       >= 2       && < 3,
     snap                      >= 0.11    && < 0.12,
     snap-core                 >= 0.9     && < 0.10,
     snap-server               >= 0.9     && < 0.10
+
+  if flag(old-base)
+    build-depends:
+      base                      >= 4        && < 4.4,
+      lens                      >= 3.7      && < 3.8
+  else
+    build-depends:
+      base                      >= 4.4      && < 5,
+      lens                      >= 3.7      && < 3.9
 
   if impl(ghc >= 6.12.0)
     ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
