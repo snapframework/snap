@@ -178,11 +178,11 @@ Library
   if flag(old-base)
     build-depends:
       base                      >= 4        && < 4.4,
-      lens                      >= 3.7      && < 3.8
+      lens                      >= 3.7.6    && < 3.8
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7      && < 3.9
+      lens                      >= 3.7.6    && < 3.9
 
   extensions:
     BangPatterns,
