@@ -15,7 +15,20 @@ import System.Console.GetOpt
 -- | AppConfig contains the config options for command line arguments in
 -- snaplet-based apps.
 newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
-  deriving (Typeable)
+
+
+------------------------------------------------------------------------------
+-- | AppConfig has a manual instance of Typeable due to limitations in the
+-- tools available before GHC 7.4, and the need to make dynamic loading
+-- tractable.  When support for earlier versions of GHC is dropped, the
+-- dynamic loader package can be updated so that manual Typeable instances
+-- are no longer needed.
+appConfigTyCon :: TyCon
+appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
+{-# NOINLINE appConfigTyCon #-}
+
+instance Typeable AppConfig where
+    typeOf _ = mkTyConApp appConfigTyCon []
 
 
 ------------------------------------------------------------------------------
