@@ -21,6 +21,7 @@ module Snap.Snaplet.Internal.Initializer
   , serveSnaplet
   , loadAppConfig
   , printInfo
+  , getRoutes
   ) where
 
 import           Prelude hiding (catch)
@@ -75,6 +76,13 @@ iGets :: (InitializerState b -> a) -> Initializer b v a
 iGets f = Initializer $ do
     b <- LT.getBase
     return $ f b
+
+
+------------------------------------------------------------------------------
+-- | Lets you retrieve the list of routes currently set up by an Initializer.
+-- This can be useful in debugging.
+getRoutes :: Initializer b v [ByteString]
+getRoutes = liftM (map fst) $ iGets _handlers
 
 
 ------------------------------------------------------------------------------

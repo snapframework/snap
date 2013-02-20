@@ -91,6 +91,7 @@ module Snap.Snaplet
   , addPostInitHook
   , addPostInitHookBase
   , printInfo
+  , getRoutes
 
   -- * Routes
   -- $routes

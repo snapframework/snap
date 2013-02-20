@@ -11,10 +11,10 @@
 -}
 
 module Snap.Snaplet.Auth.SpliceHelpers
-  (
-    addAuthSplices
+  ( addAuthSplices
   , compiledAuthSplices
   , userCSplices
+  , userISplices
   , ifLoggedIn
   , ifLoggedOut
   , loggedInUser
@@ -61,6 +61,9 @@ addAuthSplices auth = addSplices
     ]
 
 
+------------------------------------------------------------------------------
+-- | List containing compiled splices for ifLoggedIn, ifLoggedOut, and
+-- loggedInUser.
 compiledAuthSplices :: SnapletLens b (AuthManager b)
                     -> [(Text, SnapletCSplice b)]
 compiledAuthSplices auth =
@@ -70,21 +73,44 @@ compiledAuthSplices auth =
     ]
 
 
+------------------------------------------------------------------------------
+-- | Function to generate interpreted splices from an AuthUser.
+userISplices :: Monad m => AuthUser -> [(Text, I.Splice m)]
+userISplices AuthUser{..} =
+    [ ("userId", I.textSplice $ maybe "-" unUid userId)
+    , ("userLogin", I.textSplice userLogin)
+    , ("userEmail", I.textSplice $ fromMaybe "-" userEmail)
+    , ("userActive", I.textSplice $ T.pack $ show $ isNothing userSuspendedAt)
+    , ("userLoginCount", I.textSplice $ T.pack $ show userLoginCount)
+    , ("userFailedCount", I.textSplice $ T.pack $ show userFailedLoginCount)
+    , ("userLoginAt", I.textSplice $ maybe "-" (T.pack . show) userCurrentLoginAt)
+    , ("userLastLoginAt", I.textSplice $ maybe "-" (T.pack . show) userLastLoginAt)
+    , ("userSuspendedAt", I.textSplice $ maybe "-" (T.pack . show) userSuspendedAt)
+    , ("userLoginIP", I.textSplice $ maybe "-" decodeUtf8 userCurrentLoginIp)
+    , ("userLastLoginIP", I.textSplice $ maybe "-" decodeUtf8 userLastLoginIp)
+    , ("userIfActive", ifISplice (isNothing userSuspendedAt))
+    , ("userIfSuspended", ifISplice (isJust userSuspendedAt))
+    ]
+
+
+------------------------------------------------------------------------------
+-- | Compiled splices for AuthUser.
 userCSplices :: Monad m => [(Text, C.Promise AuthUser -> C.Splice m)]
 userCSplices = (C.pureSplices $ C.textSplices
-    [ ("login", userLogin)
-    , ("email", maybe "-" id . userEmail)
-    , ("active", T.pack . show . isNothing . userSuspendedAt)
-    , ("loginCount", T.pack . show . userLoginCount)
-    , ("failedCount", T.pack . show . userFailedLoginCount)
-    , ("loginAt", maybe "-" (T.pack . show) . userCurrentLoginAt)
-    , ("lastLoginAt", maybe "-" (T.pack . show) . userLastLoginAt)
-    , ("suspendedAt", maybe "-" (T.pack . show) . userSuspendedAt)
-    , ("loginIP", maybe "-" decodeUtf8 . userCurrentLoginIp)
-    , ("lastLoginIP", maybe "-" decodeUtf8 . userLastLoginIp)
+    [ ("userId", maybe "-" unUid . userId)
+    , ("userLogin", userLogin)
+    , ("userEmail", fromMaybe "-" . userEmail)
+    , ("userActive", T.pack . show . isNothing . userSuspendedAt)
+    , ("userLoginCount", T.pack . show . userLoginCount)
+    , ("userFailedCount", T.pack . show . userFailedLoginCount)
+    , ("userLoginAt", maybe "-" (T.pack . show) . userCurrentLoginAt)
+    , ("userLastLoginAt", maybe "-" (T.pack . show) . userLastLoginAt)
+    , ("userSuspendedAt", maybe "-" (T.pack . show) . userSuspendedAt)
+    , ("userLoginIP", maybe "-" decodeUtf8 . userCurrentLoginIp)
+    , ("userLastLoginIP", maybe "-" decodeUtf8 . userLastLoginIp)
     ]) ++
-    [ ("ifActive", ifCSplice (isNothing . userSuspendedAt))
-    , ("ifSuspended", ifCSplice (isJust . userSuspendedAt))
+    [ ("userIfActive", ifCSplice (isNothing . userSuspendedAt))
+    , ("userIfSuspended", ifCSplice (isJust . userSuspendedAt))
     ]
 
 
