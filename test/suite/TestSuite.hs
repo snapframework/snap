@@ -102,7 +102,7 @@ testBarebones = testCase "snap/barebones" go
   where
     go = testGeneratedProject "barebonesTest"
                               "barebones"
-                              ""
+                              "--force-reinstalls"
                               port
                               testIt
     port = 9990 :: Int
@@ -117,7 +117,7 @@ testDefault = testCase "snap/default" go
   where
     go = testGeneratedProject "defaultTest"
                               ""
-                              ""
+                              "--force-reinstalls"
                               port
                               testIt
     port = 9991 :: Int
@@ -134,7 +134,7 @@ testTutorial = testCase "snap/tutorial" go
   where
     go = testGeneratedProject "tutorialTest"
                               "tutorial"
-                              ""
+                              "--force-reinstalls"
                               port
                               testIt
     port = 9992 :: Int
