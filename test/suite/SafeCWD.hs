@@ -11,6 +11,8 @@ import System.IO.Unsafe
 
 sem :: QSem
 sem = unsafePerformIO $ newQSem 1
+{-# NOINLINE sem #-}
+
 
 inDir :: Bool -> FilePath -> IO a -> IO a
 inDir startClean dir action = bracket before after (const action)
@@ -25,6 +27,7 @@ inDir startClean dir action = bracket before after (const action)
     after cwd = do
         setCurrentDirectory cwd
         signalQSem sem
+
 
 removeDirectoryRecursiveSafe p =
     doesDirectoryExist p >>= flip when (removeDirectoryRecursive p)
