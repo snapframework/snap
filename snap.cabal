@@ -1,5 +1,5 @@
 name:           snap
-version:        0.11.2
+version:        0.11.3
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -111,6 +111,7 @@ Library
     Snap.Snaplet.Heist
     Snap.Snaplet.HeistNoClass
     Snap.Snaplet.Heist.Compiled
+    Snap.Snaplet.Heist.Generic
     Snap.Snaplet.Heist.Interpreted
     Snap.Snaplet.Auth
     Snap.Snaplet.Auth.Backends.JsonFile
@@ -133,6 +134,7 @@ Library
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
     Snap.Snaplet.Auth.SpliceHelpers
+    Snap.Snaplet.Heist.Internal
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT
     Snap.Snaplet.Internal.Lensed

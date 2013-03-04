@@ -13,6 +13,7 @@ module Snap.Snaplet.Heist
   -- $initializerSection
   , heistInit
   , heistInit'
+  , Unclassed.setInterpreted
   , addTemplates
   , addTemplatesAt
   , Unclassed.addConfig
@@ -22,6 +23,12 @@ module Snap.Snaplet.Heist
 
   -- * Handler Functions
   -- $handlerSection
+  , gRender
+  , gRenderAs
+  , gHeistServe
+  , gHeistServeSingle
+  , chooseMode
+
   , cRender
   , cRenderAs
   , cHeistServe
@@ -46,14 +53,15 @@ module Snap.Snaplet.Heist
 
 ------------------------------------------------------------------------------
 import           Prelude hiding (id, (.))
+import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import           Data.Text (Text)
 import           Heist
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
+import           Snap.Snaplet.Heist.Internal
 import qualified Snap.Snaplet.HeistNoClass as Unclassed
-import           Snap.Snaplet.HeistNoClass ( Heist
-                                           , heistInit
+import           Snap.Snaplet.HeistNoClass ( heistInit
                                            , heistInit'
                                            , clearHeistCache
                                            )
@@ -148,32 +156,67 @@ withHeistState = Unclassed.withHeistState' heistLens
 
 -- $handlerSection
 -- This section contains functions in the 'Handler' monad that you'll use in
--- processing requests.  Functions beginning with a 'c' prefix use compiled
--- template rendering.  The other functions use the older interpreted
--- rendering.  Splices added with addSplices will only work if you use
--- interpreted rendering.
+-- processing requests.  Functions beginning with a 'g' prefix use generic
+-- rendering that checks the preferred rendering mode and chooses
+-- appropriately.  Functions beginning with a 'c' prefix use compiled template
+-- rendering.  The other functions use the older interpreted rendering.
+-- Splices added with addSplices will only work if you use interpreted
+-- rendering.
+--
+-- The generic functions are useful if you are writing general snaplets that
+-- use heist, but need to work for applications that use either interpreted
+-- or compiled mode.
 
 
 ------------------------------------------------------------------------------
--- | Renders a template as text\/html. If the given template is not found,
--- this returns 'empty'.
-render :: HasHeist b
-       => ByteString
-           -- ^ Template name
-       -> Handler b v ()
-render t = withTop' heistLens (Unclassed.render t)
+-- | Generic version of 'render'/'cRender'.
+gRender :: HasHeist b
+        => ByteString
+            -- ^ Template name
+        -> Handler b v ()
+gRender t = withTop' heistLens (Unclassed.gRender t)
 
 
 ------------------------------------------------------------------------------
--- | Renders a template as the given content type.  If the given template
--- is not found, this returns 'empty'.
-renderAs :: HasHeist b
-         => ByteString
-             -- ^ Content type to render with
-         -> ByteString
-             -- ^ Template name
-         -> Handler b v ()
-renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
+-- | Generic version of 'renderAs'/'cRenderAs'.
+gRenderAs :: HasHeist b
+          => ByteString
+              -- ^ Content type to render with
+          -> ByteString
+              -- ^ Template name
+          -> Handler b v ()
+gRenderAs ct t = withTop' heistLens (Unclassed.gRenderAs ct t)
+
+
+------------------------------------------------------------------------------
+-- | Generic version of 'heistServe'/'cHeistServe'.
+gHeistServe :: HasHeist b => Handler b v ()
+gHeistServe = withTop' heistLens Unclassed.gHeistServe
+
+
+------------------------------------------------------------------------------
+-- | Generic version of 'heistServeSingle'/'cHeistServeSingle'.
+gHeistServeSingle :: HasHeist b
+                  => ByteString
+                      -- ^ Template name
+                  -> Handler b v ()
+gHeistServeSingle t = withTop' heistLens (Unclassed.gHeistServeSingle t)
+
+
+------------------------------------------------------------------------------
+-- | Chooses between a compiled action and an interpreted action based on the
+-- configured default.
+chooseMode :: HasHeist b
+           => Handler b v a
+               -- ^ A compiled action
+           -> Handler b v a
+               -- ^ An interpreted action
+           -> Handler b v a
+chooseMode cAction iAction = do
+    mode <- withTop' heistLens $ gets _defMode
+    case mode of
+      Unclassed.Compiled -> cAction
+      Unclassed.Interpreted -> iAction
 
 
 ------------------------------------------------------------------------------
@@ -199,6 +242,44 @@ cRenderAs ct t = withTop' heistLens (Unclassed.cRenderAs ct t)
 
 
 ------------------------------------------------------------------------------
+-- | A compiled version of 'heistServe'.
+cHeistServe :: HasHeist b => Handler b v ()
+cHeistServe = withTop' heistLens Unclassed.cHeistServe
+
+
+------------------------------------------------------------------------------
+-- | Analogous to 'fileServeSingle'. If the given template is not found,
+-- this throws an error.
+cHeistServeSingle :: HasHeist b
+                 => ByteString
+                     -- ^ Template name
+                 -> Handler b v ()
+cHeistServeSingle t = withTop' heistLens (Unclassed.cHeistServeSingle t)
+
+
+------------------------------------------------------------------------------
+-- | Renders a template as text\/html. If the given template is not found,
+-- this returns 'empty'.
+render :: HasHeist b
+       => ByteString
+           -- ^ Template name
+       -> Handler b v ()
+render t = withTop' heistLens (Unclassed.render t)
+
+
+------------------------------------------------------------------------------
+-- | Renders a template as the given content type.  If the given template
+-- is not found, this returns 'empty'.
+renderAs :: HasHeist b
+         => ByteString
+             -- ^ Content type to render with
+         -> ByteString
+             -- ^ Template name
+         -> Handler b v ()
+renderAs ct t = withTop' heistLens (Unclassed.renderAs ct t)
+
+
+------------------------------------------------------------------------------
 -- | A handler that serves all the templates (similar to 'serveDirectory').
 -- If the template specified in the request path is not found, it returns
 -- 'empty'.  Also, this function does not serve any templates beginning with
@@ -219,22 +300,6 @@ heistServeSingle :: HasHeist b
                      -- ^ Template name
                  -> Handler b v ()
 heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
-
-
-------------------------------------------------------------------------------
--- | A compiled version of 'heistServe'.
-cHeistServe :: HasHeist b => Handler b v ()
-cHeistServe = withTop' heistLens Unclassed.cHeistServe
-
-
-------------------------------------------------------------------------------
--- | Analogous to 'fileServeSingle'. If the given template is not found,
--- this throws an error.
-cHeistServeSingle :: HasHeist b
-                 => ByteString
-                     -- ^ Template name
-                 -> Handler b v ()
-cHeistServeSingle t = withTop' heistLens (Unclassed.cHeistServeSingle t)
 
 
 ------------------------------------------------------------------------------

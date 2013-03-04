@@ -17,8 +17,10 @@ a type class for convenience.
 -}
 module Snap.Snaplet.HeistNoClass
   ( Heist
+  , DefaultMode(..)
   , heistInit
   , heistInit'
+  , setInterpreted
   , clearHeistCache
 
   , addTemplates
@@ -29,6 +31,12 @@ module Snap.Snaplet.HeistNoClass
   , withHeistState'
   , addSplices
   , addSplices'
+
+  , gRender
+  , gRenderAs
+  , gHeistServe
+  , gHeistServeSingle
+  , chooseMode
 
   , addConfig
   , cRender
@@ -76,21 +84,9 @@ import qualified Heist.Interpreted as I
 import           Heist.Splices.Cache
 
 import           Snap.Snaplet
+import           Snap.Snaplet.Heist.Internal
 import           Snap.Core
 import           Snap.Util.FileServe
-
-
-------------------------------------------------------------------------------
--- | The state for the Heist snaplet.  To use the Heist snaplet in your app
--- include this in your application state and use 'heistInit' to initialize
--- it.  The type parameter b will typically be the base state type for your
--- application.
-data Heist b = Configuring
-                 { _heistConfig :: IORef (HeistConfig (Handler b b)) }
-             | Running
-                 { _heistState    :: HeistState (Handler b b)
-                 , _heistCTS      :: CacheTagState
-                 }
 
 
 ------------------------------------------------------------------------------
@@ -99,7 +95,7 @@ changeState :: (HeistState (Handler a a) -> HeistState (Handler a a))
             -> Heist a
 changeState _ (Configuring _)  =
     error "changeState: HeistState has not been initialized"
-changeState f (Running hs cts) = Running (f hs) cts
+changeState f (Running hs cts dm) = Running (f hs) cts dm
 
 
 ------------------------------------------------------------------------------
@@ -178,9 +174,23 @@ heistInitWorker templateDir initialConfig = do
         , "templates from"
         , tDir
         ]
-    ref <- liftIO $ newIORef config
+    ref <- liftIO $ newIORef (config, Compiled)
     addPostInitHook finalLoadHook
     return $ Configuring ref
+
+
+------------------------------------------------------------------------------
+-- | Sets the snaplet to default to interpreted mode.  Initially, the
+-- initializer sets the value to compiled mode.  This function allows you to
+-- override that setting.  Note that this is just a default.  It only has an
+-- effect if you use one of the generic functions: 'gRender', 'gRenderAs',
+-- 'gHeistServe', or 'gHeistServeSingle'.  If you call the non-generic
+-- versions directly, then this value will not be checked and you will get the
+-- mode implemented by the function you called.
+setInterpreted :: Snaplet (Heist b) -> Initializer b v ()
+setInterpreted h = 
+    liftIO $ atomicModifyIORef (_heistConfig $ extract h)
+        (\(hc,_) -> ((hc,Interpreted),()))
 
 
 ------------------------------------------------------------------------------
@@ -188,12 +198,12 @@ heistInitWorker templateDir initialConfig = do
 -- of initialization.
 finalLoadHook :: Heist b -> EitherT Text IO (Heist b)
 finalLoadHook (Configuring ref) = do
-    hc <- lift $ readIORef ref
+    (hc,dm) <- lift $ readIORef ref
     (hs,cts) <- toTextErrors $ initHeistWithCacheTag hc
-    return $ Running hs cts
+    return $ Running hs cts dm
   where
     toTextErrors = bimapEitherT (T.pack . intercalate "\n") id
-finalLoadHook (Running _ _) = left "finalLoadHook called while running"
+finalLoadHook (Running _ _ _) = left "finalLoadHook called while running"
 
 
 ------------------------------------------------------------------------------
@@ -239,7 +249,7 @@ addTemplatesAt h urlPrefix templateDir = do
         , fullPrefix ++ "/"
         ]
     liftIO $ atomicModifyIORef (_heistConfig $ extract h)
-        (\hc -> (hc `mappend` mempty { hcTemplates = ts }, ()))
+        (\(hc,dm) -> ((hc `mappend` mempty { hcTemplates = ts }, dm), ()))
 
 
 ------------------------------------------------------------------------------
@@ -282,8 +292,9 @@ addConfig :: Snaplet (Heist b)
           -> Initializer b v ()
 addConfig h hc = case extract h of
     Configuring ref ->
-        liftIO $ atomicModifyIORef ref (\hc1 -> (hc1 `mappend` hc, ()))
-    Running _ _ -> do
+        liftIO $ atomicModifyIORef ref
+                   (\(hc1,dm) -> ((hc1 `mappend` hc, dm), ()))
+    Running _ _ _ -> do
         printInfo "finalLoadHook called while running"
         error "this shouldn't happen"
 
@@ -314,7 +325,7 @@ iRenderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 iRenderHelper c t = do
-    (Running hs _) <- get
+    (Running hs _ _) <- get
     withTop' id $ I.renderTemplate hs t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -328,12 +339,21 @@ cRenderHelper :: Maybe MIMEType
               -> ByteString
               -> Handler b (Heist b) ()
 cRenderHelper c t = do
-    (Running hs _) <- get
+    (Running hs _ _) <- get
     withTop' id $ maybe pass serve $ C.renderTemplate hs t
   where
     serve (b, mime) = do
         modifyResponse $ setContentType $ fromMaybe mime c
         writeBuilder =<< b
+
+
+------------------------------------------------------------------------------
+serveURI :: Handler b (Heist b) ByteString
+serveURI = do
+    p <- getSafePath
+    -- Allows users to prefix template filenames with an underscore to prevent
+    -- the template from being served.
+    if take 1 p == "_" then pass else return $ B.pack p
 
 
 ------------------------------------------------------------------------------
@@ -353,6 +373,18 @@ renderAs ct t = iRenderHelper (Just ct) t
 
 
 ------------------------------------------------------------------------------
+heistServe :: Handler b (Heist b) ()
+heistServe =
+    ifTop (render "index") <|> (render =<< serveURI)
+
+
+------------------------------------------------------------------------------
+heistServeSingle :: ByteString -> Handler b (Heist b) ()
+heistServeSingle t =
+    render t <|> error ("Template " ++ show t ++ " not found.")
+
+
+------------------------------------------------------------------------------
 cRender :: ByteString
            -- ^ Name of the template
         -> Handler b (Heist b) ()
@@ -369,27 +401,6 @@ cRenderAs ct t = cRenderHelper (Just ct) t
 
 
 ------------------------------------------------------------------------------
-serveURI :: Handler b (Heist b) ByteString
-serveURI = do
-    p <- getSafePath
-    -- Allows users to prefix template filenames with an underscore to prevent
-    -- the template from being served.
-    if take 1 p == "_" then pass else return $ B.pack p
-
-
-------------------------------------------------------------------------------
-heistServe :: Handler b (Heist b) ()
-heistServe =
-    ifTop (render "index") <|> (render =<< serveURI)
-
-
-------------------------------------------------------------------------------
-heistServeSingle :: ByteString -> Handler b (Heist b) ()
-heistServeSingle t =
-    render t <|> error ("Template " ++ show t ++ " not found.")
-
-
-------------------------------------------------------------------------------
 cHeistServe :: Handler b (Heist b) ()
 cHeistServe =
     ifTop (cRender "index") <|> (cRender =<< serveURI)
@@ -399,6 +410,56 @@ cHeistServe =
 cHeistServeSingle :: ByteString -> Handler b (Heist b) ()
 cHeistServeSingle t =
     cRender t <|> error ("Template " ++ show t ++ " not found.")
+
+
+------------------------------------------------------------------------------
+-- | Chooses between a compiled action and an interpreted action based on the
+-- configured default.
+chooseMode :: MonadState (Heist b1) m
+           => m b
+               -- ^ A compiled action
+           -> m b
+               -- ^ An interpreted action
+           -> m b
+chooseMode cAction iAction = do
+    mode <- gets _defMode
+    case mode of
+      Compiled -> cAction
+      Interpreted -> iAction
+
+
+------------------------------------------------------------------------------
+-- | Like render/cRender, but chooses between the two appropriately based on
+-- the default mode.
+gRender :: ByteString
+           -- ^ Name of the template
+        -> Handler b (Heist b) ()
+gRender t = chooseMode (cRender t) (render t)
+
+
+------------------------------------------------------------------------------
+-- | Like renderAs/cRenderAs, but chooses between the two appropriately based
+-- on the default mode.
+gRenderAs :: ByteString
+             -- ^ Content type
+          -> ByteString
+             -- ^ Name of the template
+          -> Handler b (Heist b) ()
+gRenderAs ct t = chooseMode (cRenderAs ct t) (renderAs ct t)
+
+
+------------------------------------------------------------------------------
+-- | Like heistServe/cHeistServe, but chooses between the two appropriately
+-- based on the default mode.
+gHeistServe :: Handler b (Heist b) ()
+gHeistServe = chooseMode cHeistServe heistServe
+
+
+------------------------------------------------------------------------------
+-- | Like heistServeSingle/cHeistServeSingle, but chooses between the two
+-- appropriately based on the default mode.
+gHeistServeSingle :: ByteString -> Handler b (Heist b) ()
+gHeistServeSingle t = chooseMode (cHeistServeSingle t) (heistServeSingle t)
 
 
 ------------------------------------------------------------------------------
