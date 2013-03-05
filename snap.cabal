@@ -231,6 +231,9 @@ Executable snap
     template-haskell    >= 2.2     && < 2.9,
     text                >= 0.11    && < 0.12
 
+  extensions:
+    OverloadedStrings
+
   ghc-prof-options: -prof -auto-all
 
   if impl(ghc >= 6.12.0)
