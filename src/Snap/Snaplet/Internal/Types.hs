@@ -58,7 +58,7 @@ makeLenses ''SnapletConfig
 ------------------------------------------------------------------------------
 -- | Joins a reversed list of directories into a path.
 buildPath :: [ByteString] -> ByteString
-buildPath ps = B.intercalate "/" $ reverse ps
+buildPath ps = B.intercalate "/" $ filter (not . B.null) $ reverse ps
 
 
 ------------------------------------------------------------------------------
