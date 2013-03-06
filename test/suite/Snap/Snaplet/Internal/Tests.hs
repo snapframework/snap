@@ -11,13 +11,16 @@ import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as B
 import           Data.List
-import           Data.Text
+import           Data.Text (Text)
 import           Prelude hiding (catch, (.))
 import           System.Directory
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
+import           Test.Framework.Providers.SmallCheck
 import           Test.HUnit hiding (Test, path)
+import           Test.SmallCheck
 ------------------------------------------------------------------------------
 import           Snap.Snaplet.Internal.Initializer
 import           Snap.Snaplet.Internal.Types
@@ -120,5 +123,13 @@ initTest = do
 tests :: Test
 tests = testGroup "Snap.Snaplet.Internal"
     [ testCase "initializer tests" initTest
+    , testProperty "buildPath generates no double slashes" doubleSlashes
     ]
+
+doubleSlashes :: Monad m => [String] -> Property m
+doubleSlashes arrStr = noSlashes ==> not (B.isInfixOf "//" $ buildPath arr)
+  where
+    arr = map B.pack arrStr
+    noSlashes = not $ or $ map (B.elem '/') arr
+
 
