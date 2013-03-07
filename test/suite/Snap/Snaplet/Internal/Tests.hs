@@ -126,7 +126,7 @@ tests = testGroup "Snap.Snaplet.Internal"
     , testProperty "buildPath generates no double slashes" doubleSlashes
     ]
 
-doubleSlashes :: Monad m => [String] -> Property m
+--doubleSlashes :: Monad m => [String] -> Property m
 doubleSlashes arrStr = noSlashes ==> not (B.isInfixOf "//" $ buildPath arr)
   where
     arr = map B.pack arrStr

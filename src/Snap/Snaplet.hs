@@ -64,6 +64,7 @@ module Snap.Snaplet
   , getSnapletDescription
   , getSnapletUserConfig
   , getSnapletRootURL
+  , snapletURL
   , getRoutePattern
   , setRoutePattern
 

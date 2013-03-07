@@ -222,6 +222,15 @@ getSnapletRootURL = liftM getRootURL getOpaqueConfig
 
 
 ------------------------------------------------------------------------------
+-- | Constructs a url relative to the current snaplet.
+snapletURL :: (Monad (m b v), MonadSnaplet m)
+           => ByteString -> m b v ByteString
+snapletURL suffix = do
+    cfg <- getOpaqueConfig
+    return $ buildPath (B.dropWhile (=='/') suffix : _scRouteContext cfg)
+
+
+------------------------------------------------------------------------------
 -- | Snaplet infrastructure is available during runtime request processing
 -- through the Handler monad.  There aren't very many standalone functions to
 -- read about here, but this is deceptive.  The key is in the type class
