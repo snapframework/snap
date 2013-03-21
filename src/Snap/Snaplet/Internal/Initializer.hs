@@ -89,9 +89,9 @@ getRoutes = liftM (map fst) $ iGets _handlers
 -- | Converts a plain hook into a Snaplet hook.
 toSnapletHook :: (v -> EitherT Text IO v)
               -> (Snaplet v -> EitherT Text IO (Snaplet v))
-toSnapletHook f (Snaplet cfg val) = do
+toSnapletHook f (Snaplet cfg reset val) = do
     val' <- f val
-    return $! Snaplet cfg val'
+    return $! Snaplet cfg reset val'
 
 
 ------------------------------------------------------------------------------
@@ -239,11 +239,15 @@ makeSnaplet snapletId desc getSnapletDataDir m = SnapletInit $ do
 ------------------------------------------------------------------------------
 -- | Internal function that gets the SnapletConfig out of the initializer
 -- state and uses it to create a (Snaplet a).
-mkSnaplet :: Initializer b v a -> Initializer b v (Snaplet a)
+mkSnaplet :: Initializer b v v -> Initializer b v (Snaplet v)
 mkSnaplet m = do
     res <- m
     cfg <- iGets _curConfig
-    return $ Snaplet cfg res
+    setInTop <- iGets masterSetter
+    l <- getLens
+    let f val = setInTop (over (discardSnaplet l) (const val))
+    return $ Snaplet cfg f res
+    
 
 
 ------------------------------------------------------------------------------
@@ -325,10 +329,12 @@ chroot :: ByteString
        -> Initializer b v a
 chroot rte l (Initializer m) = do
     curState <- iGet
+    let newSetter f = masterSetter curState (over (cloneLens l) f)
     ((a,s), (Hook hook)) <- liftIO $ runWriterT $ LT.runLensT m id $
         curState {
           _handlers = [],
-          _hFilter = id
+          _hFilter = id,
+          masterSetter = newSetter
         }
     let handler = chrootHandler l $ _hFilter s $ route $ _handlers s
     iModify $ over handlers (++[(rte,handler)])
@@ -491,6 +497,7 @@ runInitializer' :: MVar (Snaplet b)
                 -> IO (Either Text (Snaplet b, InitializerState b))
 runInitializer' mvar env b@(Initializer i) cwd = do
     cleanupRef <- newIORef (return ())
+    let foo f = modifyMVar_ mvar (return . over id f)
     let builtinHandlers = [("/admin/reload", reloadSite)]
     let cfg = SnapletConfig [] cwd Nothing "" empty [] Nothing
                             (mkReloader cwd env mvar cleanupRef b)
@@ -499,7 +506,7 @@ runInitializer' mvar env b@(Initializer i) cwd = do
     let body = runEitherT $ do
             ((res, s), (Hook hook)) <- lift $ runWriterT $ LT.runLensT i id $
                 InitializerState True cleanupRef builtinHandlers id cfg logRef
-                                 env
+                                 env foo
             res' <- hook res
             right (res', s)
 

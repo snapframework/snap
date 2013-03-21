@@ -14,6 +14,7 @@ module Snap.Snaplet.Heist
   , heistInit
   , heistInit'
   , Unclassed.setInterpreted
+  , Unclassed.getCurHeistConfig 
   , addTemplates
   , addTemplatesAt
   , Unclassed.addConfig

@@ -5,7 +5,6 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FunctionalDependencies     #-}
-{-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 
 {-|
@@ -21,6 +20,7 @@ module Snap.Snaplet.HeistNoClass
   , heistInit
   , heistInit'
   , setInterpreted
+  , getCurHeistConfig 
   , clearHeistCache
 
   , addTemplates
@@ -63,8 +63,8 @@ module Snap.Snaplet.HeistNoClass
 import           Prelude hiding ((.), id)
 import           Control.Applicative
 import           Control.Category
-import           Control.Comonad
 import           Control.Error
+import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
@@ -189,7 +189,7 @@ heistInitWorker templateDir initialConfig = do
 -- mode implemented by the function you called.
 setInterpreted :: Snaplet (Heist b) -> Initializer b v ()
 setInterpreted h = 
-    liftIO $ atomicModifyIORef (_heistConfig $ extract h)
+    liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
         (\(hc,_) -> ((hc,Interpreted),()))
 
 
@@ -248,9 +248,19 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
-    liftIO $ atomicModifyIORef (_heistConfig $ extract h)
+    liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
         (\(hc,dm) -> ((hc `mappend` mempty { hcTemplates = ts }, dm), ()))
 
+
+getCurHeistConfig :: Snaplet (Heist b)
+                  -> Initializer b v (HeistConfig (Handler b b))
+getCurHeistConfig h = case view snapletValue h of
+    Configuring ref -> do
+        (hc, _) <- liftIO $ readIORef ref
+        return hc
+    Running _ _ _ ->
+        error "Can't get HeistConfig after heist is initialized."
+    
 
 ------------------------------------------------------------------------------
 modifyHeistState' :: SnapletLens (Snaplet b) (Heist b)
@@ -290,7 +300,7 @@ withHeistState heist f = withHeistState' (subSnaplet heist) f
 addConfig :: Snaplet (Heist b)
           -> HeistConfig (Handler b b)
           -> Initializer b v ()
-addConfig h hc = case extract h of
+addConfig h hc = case view snapletValue h of
     Configuring ref ->
         liftIO $ atomicModifyIORef ref
                    (\(hc1,dm) -> ((hc1 `mappend` hc, dm), ()))

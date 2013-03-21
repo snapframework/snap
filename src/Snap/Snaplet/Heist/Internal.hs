@@ -25,5 +25,3 @@ data Heist b = Configuring
                  , _defMode       :: DefaultMode
                  }
 
-
-

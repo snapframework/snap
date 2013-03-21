@@ -14,7 +14,6 @@
 module Snap.Snaplet.Internal.Types where
 
 import           Control.Applicative
-import           Control.Comonad
 import           Control.Error
 import           Control.Lens
 import           Control.Monad.CatchIO hiding (Handler)
@@ -27,7 +26,6 @@ import           Data.Configurator.Types
 import           Data.IORef
 import           Data.Monoid
 import           Data.Text (Text)
-import           Data.Foldable (Foldable(..))
 
 import           Snap.Core
 import qualified Snap.Snaplet.Internal.LensT as LT
@@ -78,27 +76,28 @@ getRootURL sc = buildPath $ _scRouteContext sc
 --   filesystem, the snaplet's root URL, and so on.
 data Snaplet s = Snaplet
     { _snapletConfig :: SnapletConfig
+    , _snapletReset  :: s -> IO ()
     , _snapletValue  :: s
     }
 
 makeLenses ''Snaplet
 
-instance Functor Snaplet where
-  fmap f (Snaplet c a) = Snaplet c (f a)
-
-instance Foldable Snaplet where
-  foldMap f (Snaplet _ a) = f a
-
-instance Traversable Snaplet where
-  traverse f (Snaplet c a) = Snaplet c <$> f a
-
-instance Comonad Snaplet where
-  extract (Snaplet _ a) = a
-
-#if !(MIN_VERSION_comonad(3,0,0))
-instance Extend Snaplet where
-#endif
-  extend f w@(Snaplet c _) = Snaplet c (f w)
+--instance Functor Snaplet where
+--  fmap f (Snaplet c r a) = Snaplet c r (f a)
+--
+--instance Foldable Snaplet where
+--  foldMap f (Snaplet _ _ a) = f a
+--
+--instance Traversable Snaplet where
+--  traverse f (Snaplet c r a) = Snaplet c r <$> f a
+--
+--instance Comonad Snaplet where
+--  extract (Snaplet _ _ a) = a
+--
+-- #if !(MIN_VERSION_comonad(3,0,0))
+-- instance Extend Snaplet where
+-- #endif
+--   extend f w@(Snaplet c r _) = Snaplet c r (f w)
 
 {-
 ------------------------------------------------------------------------------
@@ -120,6 +119,10 @@ type SnapletLens s a = ALens' s (Snaplet a)
 subSnaplet :: SnapletLens a b
            -> SnapletLens (Snaplet a) b
 subSnaplet l = snapletValue . l
+
+
+discardSnaplet :: ALens' a (Snaplet b) -> Lens' a b
+discardSnaplet l = cloneLens l . snapletValue
 
 
 ------------------------------------------------------------------------------
@@ -227,7 +230,10 @@ snapletURL :: (Monad (m b v), MonadSnaplet m)
            => ByteString -> m b v ByteString
 snapletURL suffix = do
     cfg <- getOpaqueConfig
-    return $ buildPath (B.dropWhile (=='/') suffix : _scRouteContext cfg)
+    return $ buildPath (cleanSuffix : _scRouteContext cfg)
+  where
+    dropSlash = B.dropWhile (=='/')
+    cleanSuffix = B.reverse $ dropSlash $ B.reverse $ dropSlash suffix
 
 
 ------------------------------------------------------------------------------
@@ -393,6 +399,9 @@ data InitializerState b = InitializerState
         -- whatever snaplet is currently being constructed.
     , _initMessages    :: IORef Text
     , _environment     :: String
+    , masterSetter     :: (Snaplet b -> Snaplet b) -> IO ()
+        -- ^ We can't just hae a simple MVar here because MVars can't be
+        -- chrooted.
     }
 
 
