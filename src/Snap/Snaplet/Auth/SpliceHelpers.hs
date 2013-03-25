@@ -52,14 +52,17 @@ import           Snap.Snaplet.Heist
 -- \<loggedInUser\>
 addAuthSplices
   :: HasHeist b
-  => SnapletLens b (AuthManager b)
+  => Snaplet (Heist b)
+  -> SnapletLens b (AuthManager b)
       -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
-addAuthSplices auth = addSplices
-    [ ("ifLoggedIn", ifLoggedIn auth)
-    , ("ifLoggedOut", ifLoggedOut auth)
-    , ("loggedInUser", loggedInUser auth)
-    ]
+addAuthSplices h auth = addConfig h $ mempty
+    { hcInterpretedSplices = [ ("ifLoggedIn", ifLoggedIn auth)
+                             , ("ifLoggedOut", ifLoggedOut auth)
+                             , ("loggedInUser", loggedInUser auth)
+                             ]
+    , hcCompiledSplices = compiledAuthSplices auth
+    }
 
 
 ------------------------------------------------------------------------------

@@ -13,6 +13,7 @@ module Snap.Snaplet.Heist
   -- $initializerSection
   , heistInit
   , heistInit'
+  , Unclassed.heistReloader
   , Unclassed.setInterpreted
   , Unclassed.getCurHeistConfig 
   , addTemplates
@@ -20,7 +21,6 @@ module Snap.Snaplet.Heist
   , Unclassed.addConfig
   , modifyHeistState
   , withHeistState
-  , addSplices
 
   -- * Handler Functions
   -- $handlerSection
@@ -81,7 +81,7 @@ import           Snap.Snaplet.HeistNoClass ( heistInit
 -- >
 -- > appInit = makeSnaplet "app" "" Nothing $ do
 -- >     h <- nestSnaplet "heist" heist $ heistInit "templates"
--- >     addSplices myAppSplices
+-- >     addConfig h heistConfigWithMyAppSplices
 -- >     return $ App h
 class HasHeist b where
     -- | A lens to the Heist snaplet.  The b parameter to Heist will
@@ -125,19 +125,6 @@ addTemplatesAt h pfx p =
 
 
 ------------------------------------------------------------------------------
--- | Allows snaplets to add interpreted splices.
---
--- NOTE: The splices added with this function will not work if you render your
--- templates with cRender.  To add splices that work with cRender, you have to
--- use the addConfig function to add compiled splices or load time splices.
-addSplices :: (HasHeist b)
-           => [(Text, Unclassed.SnapletISplice b)]
-               -- ^ Splices to bind
-           -> Initializer b v ()
-addSplices = Unclassed.addSplices' heistLens
-
-
-------------------------------------------------------------------------------
 -- | More general function allowing arbitrary HeistState modification.
 modifyHeistState :: (HasHeist b)
                  => (HeistState (Handler b b) -> HeistState (Handler b b))
@@ -161,8 +148,8 @@ withHeistState = Unclassed.withHeistState' heistLens
 -- rendering that checks the preferred rendering mode and chooses
 -- appropriately.  Functions beginning with a 'c' prefix use compiled template
 -- rendering.  The other functions use the older interpreted rendering.
--- Splices added with addSplices will only work if you use interpreted
--- rendering.
+-- Interpreted splices added with addConfig will only work if you use
+-- interpreted rendering.
 --
 -- The generic functions are useful if you are writing general snaplets that
 -- use heist, but need to work for applications that use either interpreted

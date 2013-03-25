@@ -21,7 +21,6 @@ module Snap.Snaplet.Heist.Interpreted
   , addConfig
   , modifyHeistState
   , withHeistState
-  , addSplices
 
   -- * Handler Functions
   -- $handlerSection

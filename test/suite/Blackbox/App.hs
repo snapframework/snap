@@ -15,6 +15,7 @@ import Control.Applicative
 import Control.Lens
 import Control.Monad.Trans
 import Data.Maybe
+import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Data.Configurator
@@ -25,6 +26,7 @@ import Snap.Util.FileServe
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import qualified Snap.Snaplet.HeistNoClass as HNC
+import Heist
 import Heist.Interpreted
 
 ------------------------------------------------------------------------------
@@ -51,10 +53,9 @@ app = makeSnaplet "app" "Test application" Nothing $ do
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     ns <- embedSnaplet "embed" embedded embeddedInit
     _lens <- getLens
-    addSplices
-        [("appsplice", textSplice "contents of the app splice")]
-    HNC.addSplices heist
-        [("appconfig", shConfigSplice _lens)]
+    addConfig hs $ mempty
+        { hcInterpretedSplices = [("appsplice", textSplice "contents of the app splice")
+                                 ,("appconfig", shConfigSplice _lens)] }
     addRoutes [ ("/hello", writeText "hello world")
               , ("/routeWithSplice", routeWithSplice)
               , ("/routeWithConfig", routeWithConfig)

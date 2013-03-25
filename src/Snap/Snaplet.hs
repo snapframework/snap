@@ -101,7 +101,9 @@ module Snap.Snaplet
 
   -- * Handlers
   , Handler
+  , failIfNotLocal
   , reloadSite
+  , modifyMaster
   , bracketHandler
 
   -- * Serving Applications

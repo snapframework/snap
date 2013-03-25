@@ -19,6 +19,7 @@ module Snap.Snaplet.HeistNoClass
   , DefaultMode(..)
   , heistInit
   , heistInit'
+  , heistReloader
   , setInterpreted
   , getCurHeistConfig 
   , clearHeistCache
@@ -29,8 +30,6 @@ module Snap.Snaplet.HeistNoClass
   , modifyHeistState'
   , withHeistState
   , withHeistState'
-  , addSplices
-  , addSplices'
 
   , gRender
   , gRenderAs
@@ -95,7 +94,7 @@ changeState :: (HeistState (Handler a a) -> HeistState (Handler a a))
             -> Heist a
 changeState _ (Configuring _)  =
     error "changeState: HeistState has not been initialized"
-changeState f (Running hs cts dm) = Running (f hs) cts dm
+changeState f (Running hc hs cts dm) = Running hc (f hs) cts dm
 
 
 ------------------------------------------------------------------------------
@@ -104,6 +103,22 @@ changeState f (Running hs cts dm) = Running (f hs) cts dm
 -- trigger a manual reload.  This function lets you do that.
 clearHeistCache :: Heist b -> IO ()
 clearHeistCache = clearCacheTagState . _heistCTS
+
+
+------------------------------------------------------------------------------
+-- | Handler that triggers a template reload.  For large sites, this can be
+-- desireable because it may be much quicker than the full site reload
+-- provided at the /admin/reload route.  This allows you to reload only the
+-- heist templates  This handler is automatically set up by heistInit, but if
+-- you use heistInit', then you can create your own route with it.
+heistReloader :: Handler b (Heist b) ()
+heistReloader = do
+    h <- get
+    ehs <- liftIO $ runEitherT $ initHeist $ _masterConfig h
+    either (writeText . T.pack . unlines)
+           (\hs -> do writeText "Heist reloaded."
+                      modifyMaster $ set heistState hs h)
+           ehs
 
 
                          -----------------------------
@@ -130,14 +145,17 @@ type SnapletISplice b = SnapletHeist b (Handler b b) Template
 ------------------------------------------------------------------------------
 -- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
 -- around `heistInit'` that uses defaultHeistState and sets up routes for all
--- the templates.
+-- the templates.  It sets up a \"heistReload\" route that reloads the heist
+-- templates when you request it from localhost.
 heistInit :: FilePath
               -- ^ Path to templates
           -> SnapletInit b (Heist b)
 heistInit templateDir = do
     makeSnaplet "heist" "" Nothing $ do
         hs <- heistInitWorker templateDir defaultConfig
-        addRoutes [ ("", heistServe) ]
+        addRoutes [ ("", heistServe)
+                  , ("heistReload", failIfNotLocal heistReloader)
+                  ]
         return hs
   where
     defaultConfig = mempty { hcLoadTimeSplices = defaultLoadTimeSplices }
@@ -157,8 +175,8 @@ heistInit' templateDir initialConfig =
 
 
 ------------------------------------------------------------------------------
--- | Internal worker function used by variantsof heistInit.  This is necessary
--- because of the divide between SnapletInit and Initializer.
+-- | Internal worker function used by variants of heistInit.  This is
+-- necessary because of the divide between SnapletInit and Initializer.
 heistInitWorker :: FilePath
                 -> HeistConfig (Handler b b)
                 -> Initializer b (Heist b) (Heist b)
@@ -167,14 +185,18 @@ heistInitWorker templateDir initialConfig = do
     let tDir = snapletPath </> templateDir
     templates <- liftIO $ runEitherT (loadTemplates tDir) >>=
                           either (error . concat) return
-    let config = initialConfig `mappend` mempty { hcTemplates = templates }
     printInfo $ T.pack $ unwords
         [ "...loaded"
         , (show $ Map.size templates)
         , "templates from"
         , tDir
         ]
+    let config = initialConfig `mappend`
+                 mempty { hcTemplateLocations = [loadTemplates tDir] }
     ref <- liftIO $ newIORef (config, Compiled)
+
+    -- FIXME This runs after all the initializers, but before post init
+    -- hooks registered by other snaplets.
     addPostInitHook finalLoadHook
     return $ Configuring ref
 
@@ -200,10 +222,10 @@ finalLoadHook :: Heist b -> EitherT Text IO (Heist b)
 finalLoadHook (Configuring ref) = do
     (hc,dm) <- lift $ readIORef ref
     (hs,cts) <- toTextErrors $ initHeistWithCacheTag hc
-    return $ Running hs cts dm
+    return $ Running hc hs cts dm
   where
     toTextErrors = bimapEitherT (T.pack . intercalate "\n") id
-finalLoadHook (Running _ _ _) = left "finalLoadHook called while running"
+finalLoadHook (Running _ _ _ _) = left "finalLoadHook called while running"
 
 
 ------------------------------------------------------------------------------
@@ -236,10 +258,10 @@ addTemplatesAt h urlPrefix templateDir = do
     rootUrl <- getSnapletRootURL
     let fullPrefix = (T.unpack $ decodeUtf8 rootUrl) </>
                      (T.unpack $ decodeUtf8 urlPrefix)
-        addPrefix = return . addTemplatePathPrefix
-                               (encodeUtf8 $ T.pack fullPrefix)
+        addPrefix = addTemplatePathPrefix
+                      (encodeUtf8 $ T.pack fullPrefix)
     ts <- liftIO $ runEitherT (loadTemplates templateDir) >>=
-                   either (error . concat) addPrefix
+                   either (error . concat) return
     printInfo $ T.pack $ unwords
         [ "...adding"
         , (show $ Map.size ts)
@@ -248,8 +270,10 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
+    let locations = [liftM addPrefix $ loadTemplates templateDir]
+        hc' = mempty { hcTemplateLocations = locations }
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
-        (\(hc,dm) -> ((hc `mappend` mempty { hcTemplates = ts }, dm), ()))
+        (\(hc,dm) -> ((hc `mappend` hc', dm), ()))
 
 
 getCurHeistConfig :: Snaplet (Heist b)
@@ -258,7 +282,7 @@ getCurHeistConfig h = case view snapletValue h of
     Configuring ref -> do
         (hc, _) <- liftIO $ readIORef ref
         return hc
-    Running _ _ _ ->
+    Running _ _ _ _ ->
         error "Can't get HeistConfig after heist is initialized."
     
 
@@ -304,25 +328,9 @@ addConfig h hc = case view snapletValue h of
     Configuring ref ->
         liftIO $ atomicModifyIORef ref
                    (\(hc1,dm) -> ((hc1 `mappend` hc, dm), ()))
-    Running _ _ _ -> do
+    Running _ _ _ _ -> do
         printInfo "finalLoadHook called while running"
         error "this shouldn't happen"
-
-
-------------------------------------------------------------------------------
-addSplices' :: SnapletLens (Snaplet b) (Heist b)
-            -> [(Text, SnapletISplice b)]
-            -> Initializer b v ()
-addSplices' heist splices = do
-    withTop' heist $ addPostInitHook $
-        return . changeState (I.bindSplices splices)
-
-
-------------------------------------------------------------------------------
-addSplices :: SnapletLens b (Heist b)
-           -> [(Text, SnapletISplice b)]
-           -> Initializer b v ()
-addSplices heist splices = addSplices' (subSnaplet heist) splices
 
 
                             -----------------------
@@ -335,7 +343,7 @@ iRenderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 iRenderHelper c t = do
-    (Running hs _ _) <- get
+    (Running _ hs _ _) <- get
     withTop' id $ I.renderTemplate hs t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -349,7 +357,7 @@ cRenderHelper :: Maybe MIMEType
               -> ByteString
               -> Handler b (Heist b) ()
 cRenderHelper c t = do
-    (Running hs _ _) <- get
+    (Running _ hs _ _) <- get
     withTop' id $ maybe pass serve $ C.renderTemplate hs t
   where
     serve (b, mime) = do

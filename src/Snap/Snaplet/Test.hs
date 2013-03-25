@@ -102,6 +102,7 @@ getSnaplet :: MonadIO m
            => SnapletInit b b
            -> m (Either Text (Snaplet b, InitializerState b))
 getSnaplet (SnapletInit initializer) = liftIO $ do
-        mvar <- newEmptyMVar
-        runInitializer mvar "" initializer
+    mvar <- newEmptyMVar
+    let resetter f = modifyMVar_ mvar (return . f)
+    runInitializer resetter "" initializer
 

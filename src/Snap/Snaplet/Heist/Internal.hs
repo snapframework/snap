@@ -1,6 +1,7 @@
 module Snap.Snaplet.Heist.Internal where
 
 import           Prelude hiding ((.), id)
+import           Control.Lens
 import           Data.IORef
 import           Heist
 import           Heist.Splices.Cache
@@ -20,8 +21,10 @@ data Heist b = Configuring
                  { _heistConfig :: IORef (HeistConfig (Handler b b), DefaultMode)
                  }
              | Running
-                 { _heistState    :: HeistState (Handler b b)
-                 , _heistCTS      :: CacheTagState
-                 , _defMode       :: DefaultMode
+                 { _masterConfig :: HeistConfig (Handler b b)
+                 , _heistState   :: HeistState (Handler b b)
+                 , _heistCTS     :: CacheTagState
+                 , _defMode      :: DefaultMode
                  }
 
+makeLenses ''Heist

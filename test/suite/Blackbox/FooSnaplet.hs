@@ -7,10 +7,12 @@ import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Configurator
 import Data.Maybe
+import Data.Monoid
 import qualified Data.Text as T
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
+import Heist
 import Heist.Interpreted
 
 import Blackbox.Common
@@ -22,13 +24,14 @@ fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     (Just $ return "../foosnaplet") $ do
     config <- getSnapletUserConfig
     addTemplates h ""
-    addSplices
-        [("foosplice", textSplice "contents of the foo splice")]
     rootUrl <- getSnapletRootURL
     fp <- getSnapletFilePath
     name <- getSnapletName
     _lens <- getLens
-    addSplices [("fooconfig", shConfigSplice _lens)]
+    addConfig h $ mempty
+        { hcInterpretedSplices = [("foosplice", textSplice "contents of the foo splice")
+                                 ,("fooconfig", shConfigSplice _lens)]
+        }
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)
               ,("fooSnapletName", writeText $ fromMaybe "empty snaplet name" name)

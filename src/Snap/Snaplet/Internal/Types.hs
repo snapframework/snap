@@ -48,6 +48,10 @@ data SnapletConfig = SnapletConfig
         -- current handler.  Nothing during initialization and before route
         -- dispatech.
     , _reloader          :: IO (Either Text Text) -- might change
+        -- ^ This is the universal reload action for the top-level site.  We
+        -- can't update this in place to be a reloader for each individual
+        -- snaplet because individual snaplets can't be reloaded in isolation
+        -- without losing effects that subsequent hooks may have had.
     }
 
 makeLenses ''SnapletConfig
@@ -75,9 +79,15 @@ getRootURL sc = buildPath $ _scRouteContext sc
 --   the snaplet's configuration, the snaplet's root directory on the
 --   filesystem, the snaplet's root URL, and so on.
 data Snaplet s = Snaplet
-    { _snapletConfig :: SnapletConfig
-    , _snapletReset  :: s -> IO ()
-    , _snapletValue  :: s
+    { _snapletConfig   :: SnapletConfig
+    , _snapletModifier :: s -> IO ()
+        -- ^ See the _reloader comment for why we have to use this to reload
+        -- single snaplets in isolation.  This action won't actually run the
+        -- initializer at all.  It will only modify the existing state.  It is
+        -- the responsibility of the snaplet author to avoid using this in
+        -- situations where it will destroy data in its state that was created
+        -- by subsequent hook actions.
+    , _snapletValue    :: s
     }
 
 makeLenses ''Snaplet
@@ -119,10 +129,6 @@ type SnapletLens s a = ALens' s (Snaplet a)
 subSnaplet :: SnapletLens a b
            -> SnapletLens (Snaplet a) b
 subSnaplet l = snapletValue . l
-
-
-discardSnaplet :: ALens' a (Snaplet b) -> Lens' a b
-discardSnaplet l = cloneLens l . snapletValue
 
 
 ------------------------------------------------------------------------------
@@ -337,6 +343,19 @@ setRoutePattern p = withTop' id $
 
 
 ------------------------------------------------------------------------------
+-- | Pass if the request is not coming from localhost.
+failIfNotLocal :: MonadSnap m => m b -> m b
+failIfNotLocal m = do
+    -- FIXME: this moves to auth once control-panel is done
+    rip <- liftM rqRemoteAddr getRequest
+    if not $ elem rip [ "127.0.0.1"
+                      , "localhost"
+                      , "::1" ]
+      then pass
+      else m
+
+
+------------------------------------------------------------------------------
 -- | Handler that reloads the site.
 reloadSite :: Handler b v ()
 reloadSite = failIfNotLocal $ do
@@ -350,14 +369,6 @@ reloadSite = failIfNotLocal $ do
     good msg = do
         writeText msg
         writeText $ "Site successfully reloaded.\n"
-    failIfNotLocal m = do
-        -- FIXME: this moves to auth once control-panel is done
-        rip <- liftM rqRemoteAddr getRequest
-        if not $ elem rip [ "127.0.0.1"
-                          , "localhost"
-                          , "::1" ]
-          then pass
-          else m
 
 
 ------------------------------------------------------------------------------
@@ -399,7 +410,7 @@ data InitializerState b = InitializerState
         -- whatever snaplet is currently being constructed.
     , _initMessages    :: IORef Text
     , _environment     :: String
-    , masterSetter     :: (Snaplet b -> Snaplet b) -> IO ()
+    , masterReloader   :: (Snaplet b -> Snaplet b) -> IO ()
         -- ^ We can't just hae a simple MVar here because MVars can't be
         -- chrooted.
     }
@@ -440,15 +451,5 @@ instance MonadSnaplet Initializer where
 -- | Opaque newtype which gives us compile-time guarantees that the user is
 -- using makeSnaplet and either nestSnaplet or embedSnaplet correctly.
 newtype SnapletInit b v = SnapletInit (Initializer b v (Snaplet v))
-
-
-------------------------------------------------------------------------------
--- | Information needed to reload a site.  Instead of having snaplets define
--- their own reload actions, we store the original site initializer and use it
--- instead.
-data ReloadInfo b = ReloadInfo
-    { riRef     :: IORef (Snaplet b)
-    , riAction  :: Initializer b b b
-    }
 
 

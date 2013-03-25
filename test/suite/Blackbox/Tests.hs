@@ -123,7 +123,7 @@ requestExpectingError' :: String -> Int -> Text -> IO ()
 requestExpectingError' url status desired = do
     let fullUrl = testServerUrl ++ url
     req <- HTTP.parseUrl fullUrl
-    let req' = req { HTTP.checkStatus = \_ _ -> Nothing }
+    let req' = req { HTTP.checkStatus = \_ _ _ -> Nothing }
     resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
     let b = HTTP.responseBody resp
         s = HTTP.responseStatus resp
@@ -235,7 +235,7 @@ expect404 url = action `catch` h
         HTTP.simpleHttp $ testServerUrl ++ url
         assertFailure "expected 404"
 
-    h e@(HTTP.StatusCodeException (Status c _) _)
+    h e@(HTTP.StatusCodeException (Status c _) _ _)
       | c == 404  = return ()
       | otherwise = throwIO e
     h e           = throwIO e
