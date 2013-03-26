@@ -9,7 +9,7 @@ import           Control.Exception
 import           Control.Monad
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString.Char8 as S
-import qualified Network.HTTP.Conduit    as HTTP
+import           Network.Http.Client
 import           Prelude hiding (catch)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
@@ -107,7 +107,7 @@ testBarebones = testCase "snap/barebones" go
                               testIt
     port = 9990 :: Int
     testIt = do
-        body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
+        body <- get (S.pack $ "http://127.0.0.1:"++(show port)) concatHandler
         assertEqual "server not up" "hello world" body
 
 
@@ -122,8 +122,7 @@ testDefault = testCase "snap/default" go
                               testIt
     port = 9991 :: Int
     testIt = do
-        body <- liftM (S.concat . L.toChunks) $
-                HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)
+        body <- get (S.pack $ "http://127.0.0.1:"++(show port)) concatHandler
         assertBool "response contains phrase 'Snap Example App Login'"
                    $ "Snap Example App Login" `S.isInfixOf` body
 
@@ -139,7 +138,7 @@ testTutorial = testCase "snap/tutorial" go
                               testIt
     port = 9992 :: Int
     testIt = do
-        body <- HTTP.simpleHttp $ "http://127.0.0.1:"++(show port)++"/hello"
+        body <- get (S.pack $ "http://127.0.0.1:"++(show port)++"/hello") concatHandler
         assertEqual "server not up" "hello world" body
 
 

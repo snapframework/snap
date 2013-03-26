@@ -8,16 +8,18 @@ module Blackbox.Tests
   ) where
 
 ------------------------------------------------------------------------------
+import           Blaze.ByteString.Builder       (Builder)
+import qualified Blaze.ByteString.Builder       as Builder
 import           Control.Exception              (catch, throwIO)
 import           Control.Monad
 import           Control.Monad.Trans
 import qualified Data.ByteString.Char8          as S
 import qualified Data.ByteString.Lazy.Char8     as L
+import           Data.Monoid
 import           Data.Text.Lazy                 (Text)
 import qualified Data.Text.Lazy                 as T
 import qualified Data.Text.Lazy.Encoding        as T
-import qualified Network.HTTP.Conduit           as HTTP
-import           Network.HTTP.Types             (Status(..))
+import           Network.Http.Client
 import           Prelude                        hiding (catch)
 import           System.Directory
 import           System.FilePath
@@ -108,8 +110,8 @@ requestTest url desired = testCase (testName url) $ requestTest' url desired
 ------------------------------------------------------------------------------
 requestTest' :: String -> Text -> IO ()
 requestTest' url desired = do
-    actual <- HTTP.simpleHttp $ testServerUrl ++ url
-    assertEqual url desired (T.decodeUtf8 actual)
+    actual <- get (S.pack $ testServerUrl ++ url) concatHandler
+    assertEqual url desired (T.decodeUtf8 $ L.fromStrict actual)
 
 
 ------------------------------------------------------------------------------
@@ -122,13 +124,11 @@ requestExpectingError url status desired =
 requestExpectingError' :: String -> Int -> Text -> IO ()
 requestExpectingError' url status desired = do
     let fullUrl = testServerUrl ++ url
-    req <- HTTP.parseUrl fullUrl
-    let req' = req { HTTP.checkStatus = \_ _ _ -> Nothing }
-    resp <- liftIO $ HTTP.withManager $ HTTP.httpLbs req'
-    let b = HTTP.responseBody resp
-        s = HTTP.responseStatus resp
-    assertEqual ("Status code: "++fullUrl) status (statusCode s)
-    assertEqual fullUrl desired (T.decodeUtf8 b)
+    get (S.pack fullUrl) $ \resp is -> do
+      assertEqual ("Status code: "++fullUrl) status
+                  (getStatusCode resp)
+      res <- concatHandler resp is
+      assertEqual fullUrl desired (T.decodeUtf8 $ L.fromStrict res)
 
 
 ------------------------------------------------------------------------------
@@ -147,7 +147,8 @@ assertRelativelyTheSame p expected = do
 
 ------------------------------------------------------------------------------
 grab :: MonadIO m => String -> m L.ByteString
-grab path = liftIO $ HTTP.simpleHttp $ testServerUri ++ path
+grab path = liftIO $ liftM L.fromStrict $
+  get (S.pack $ testServerUri ++ path) concatHandler
 
 
 ------------------------------------------------------------------------------
@@ -229,16 +230,11 @@ bazConfigTest = testWithCwd "bazconfig" $ \cwd b -> do
 
 ------------------------------------------------------------------------------
 expect404 :: String -> IO ()
-expect404 url = action `catch` h
-  where
-    action = do
-        HTTP.simpleHttp $ testServerUrl ++ url
-        assertFailure "expected 404"
-
-    h e@(HTTP.StatusCodeException (Status c _) _ _)
-      | c == 404  = return ()
-      | otherwise = throwIO e
-    h e           = throwIO e
+expect404 url = do
+    get (S.pack $ testServerUrl ++ url) $ \resp i -> do
+        case getStatusCode resp of
+          404 -> return ()
+          _   -> assertFailure "expected 404"
 
 
 ------------------------------------------------------------------------------
