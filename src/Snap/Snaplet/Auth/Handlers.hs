@@ -108,16 +108,18 @@ loginByUsername unm pwd shouldRemember = do
 ------------------------------------------------------------------------------
 -- | Remember user from the remember token if possible and perform login
 --
-loginByRememberToken :: Handler b (AuthManager b) (Maybe AuthUser)
+loginByRememberToken :: Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginByRememberToken = withBackend $ \impl -> do
     key         <- gets siteKey
     cookieName_ <- gets rememberCookieName
     period      <- gets rememberPeriod
 
-    runMaybeT $ do
-        token <- MaybeT $ getRememberToken key cookieName_ period
-        user  <- MaybeT $ liftIO $ lookupByRememberToken impl
-                                 $ decodeUtf8 token
+    runEitherT $ do
+        token <- noteT (AuthError "loginByRememberToken: no remember token") $
+                   MaybeT $ getRememberToken key cookieName_ period
+        user  <- noteT (AuthError "loginByRememberToken: no remember token") $
+                   MaybeT $ liftIO $ lookupByRememberToken impl
+                                   $ decodeUtf8 token
         lift $ forceLogin user
         return user
 
@@ -142,7 +144,7 @@ currentUser = cacheOrLookup $ withBackend $ \r -> do
     s   <- gets session
     uid <- withTop s getSessionUserId
     case uid of
-      Nothing -> loginByRememberToken
+      Nothing -> hush <$> loginByRememberToken
       Just uid' -> liftIO $ lookupByUserId r uid'
 
 
@@ -286,14 +288,14 @@ checkPasswordAndLogin u pw =
 -- who she says she is.
 --
 forceLogin :: AuthUser       -- ^ An existing user, somehow looked up from db
-           -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+           -> Handler b (AuthManager b) (Either AuthFailure ())
 forceLogin u = do
     s <- gets session
     withSession s $
         case userId u of
           Just x -> do
             withTop s (setSessionUserId x)
-            return $ Right u
+            return $ Right ()
           Nothing -> return . Left $
                      AuthError $ "forceLogin: Can't force the login of a user "
                                    ++ "without userId"
