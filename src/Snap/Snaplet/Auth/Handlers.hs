@@ -59,7 +59,7 @@ usernameExists username =
 ------------------------------------------------------------------------------
 -- | Lookup a user by her username, check given password and perform login
 --
-loginByUsername :: ByteString       -- ^ Username/login for user
+loginByUsername :: Text             -- ^ Username/login for user
                 -> Password         -- ^ Should be ClearText
                 -> Bool             -- ^ Set remember token?
                 -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
@@ -79,7 +79,7 @@ loginByUsername unm pwd shouldRemember = do
                      -> t
                      -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
     loginByUsername' sk cn rp r =
-        liftIO (lookupByLogin r $ decodeUtf8 unm) >>=
+        liftIO (lookupByLogin r unm) >>=
         maybe (return $! Left UserNotFound) found
 
       where
@@ -450,7 +450,8 @@ loginUser' unf pwdf remf = do
     password <- noteT PasswordMissing $ hoistMaybe mbPassword
     username <- noteT UsernameMissing $ hoistMaybe mbUsername
 
-    EitherT $ loginByUsername username (ClearText password) remember
+    EitherT $ loginByUsername (decodeUtf8 username)
+                              (ClearText password) remember
 
 
 ------------------------------------------------------------------------------
