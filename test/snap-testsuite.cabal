@@ -65,7 +65,7 @@ Executable snap-testsuite
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
 
   extensions:
@@ -136,7 +136,7 @@ Executable app
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
   extensions:
     BangPatterns,
@@ -218,7 +218,7 @@ Executable nesttest
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
 
   extensions:
