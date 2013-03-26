@@ -83,6 +83,6 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
     addRoutes routes
-    addAuthSplices auth
+    addAuthSplices h auth
     return $ App h s a
 
