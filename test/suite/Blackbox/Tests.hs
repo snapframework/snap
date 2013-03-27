@@ -111,7 +111,7 @@ requestTest url desired = testCase (testName url) $ requestTest' url desired
 requestTest' :: String -> Text -> IO ()
 requestTest' url desired = do
     actual <- get (S.pack $ testServerUrl ++ url) concatHandler
-    assertEqual url desired (T.decodeUtf8 $ L.fromStrict actual)
+    assertEqual url desired (T.decodeUtf8 $ L.fromChunks [actual])
 
 
 ------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ requestExpectingError' url status desired = do
       assertEqual ("Status code: "++fullUrl) status
                   (getStatusCode resp)
       res <- concatHandler resp is
-      assertEqual fullUrl desired (T.decodeUtf8 $ L.fromStrict res)
+      assertEqual fullUrl desired (T.decodeUtf8 $ L.fromChunks [res])
 
 
 ------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ assertRelativelyTheSame p expected = do
 
 ------------------------------------------------------------------------------
 grab :: MonadIO m => String -> m L.ByteString
-grab path = liftIO $ liftM L.fromStrict $
+grab path = liftIO $ liftM (L.fromChunks . (:[])) $
   get (S.pack $ testServerUri ++ path) concatHandler
 
 
