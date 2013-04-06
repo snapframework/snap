@@ -4,17 +4,17 @@
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Snap.Snaplet.Session.Backends.CookieSession
-  ( initCookieSessionManager
-  ) where
+    ( initCookieSessionManager
+    ) where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Arrow
 import           Control.Monad.Reader
 import           Data.ByteString                     (ByteString)
 import           Data.Generics
 import           Data.HashMap.Strict                 (HashMap)
 import qualified Data.HashMap.Strict                 as HM
-import           Data.Hashable                       (Hashable)
 import           Data.Serialize                      (Serialize)
 import qualified Data.Serialize                      as S
 import           Data.Text                           (Text)
@@ -45,13 +45,10 @@ data CookieSession = CookieSession
 
 ------------------------------------------------------------------------------
 instance Serialize CookieSession where
-    put (CookieSession a b) = S.put (a,b)
-    get                     = uncurry CookieSession <$> S.get
-
-instance (Serialize k, Serialize v, Hashable k,
-          Eq k) => Serialize (HashMap k v) where
-    put = S.put . HM.toList
-    get = HM.fromList <$> S.get
+    put (CookieSession a b) = S.put (a, HM.toList b)
+    get                     =
+        let unpack = uncurry CookieSession . second (HM.fromList)
+        in  unpack <$> S.get
 
 
 ------------------------------------------------------------------------------
