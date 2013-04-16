@@ -47,7 +47,7 @@ Executable snap-testsuite
     snap-core                  >= 0.9      && < 0.10,
     snap-server                >= 0.9      && < 0.10,
     stm                        >= 2.2      && < 2.5,
-    syb                        >= 0.1      && < 0.4,
+    syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 0.12,
     time                       >= 1.1      && < 1.5,
     transformers               >= 0.2      && < 0.4,
@@ -63,7 +63,7 @@ Executable snap-testsuite
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
 
   extensions:
@@ -118,7 +118,7 @@ Executable app
     snap-core                  >= 0.9      && < 0.10,
     snap-server                >= 0.9      && < 0.10,
     stm                        >= 2.2      && < 2.5,
-    syb                        >= 0.1      && < 0.4,
+    syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 0.12,
     time                       >= 1.1      && < 1.5,
     transformers               >= 0.2      && < 0.4,
@@ -134,7 +134,7 @@ Executable app
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
   extensions:
     BangPatterns,
@@ -198,7 +198,7 @@ Executable nesttest
     snap-core                  >= 0.9      && < 0.10,
     snap-server                >= 0.9      && < 0.10,
     stm                        >= 2.2      && < 2.5,
-    syb                        >= 0.1      && < 0.4,
+    syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 0.12,
     time                       >= 1.1      && < 1.5,
     transformers               >= 0.2      && < 0.4,
@@ -214,7 +214,7 @@ Executable nesttest
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.9
+      lens                      >= 3.7.6    && < 3.10
 
 
   extensions:
