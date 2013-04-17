@@ -157,7 +157,9 @@ Library
     dlist                     >= 0.5      && < 0.6,
     errors                    >= 1.4      && < 1.5,
     filepath                  >= 1.1      && < 1.4,
-    hashable                  >= 1.2      && < 1.3,
+    -- note: freeze hashable at 1.1, 1.2 is broken (segfaults) consider
+    -- changing once https://github.com/tibbe/hashable/issues/60 is fixed.
+    hashable                  >= 1.1      && < 1.2,
     heist                     >= 0.12     && < 0.13,
     logict                    >= 0.4.2    && < 0.7,
     mtl                       >  2.0      && < 2.2,
@@ -226,6 +228,9 @@ Executable snap
     directory           >= 1.0     && < 1.3,
     directory-tree      >= 0.10    && < 0.12,
     filepath            >= 1.1     && < 1.4,
+    -- note: freeze hashable at 1.1, 1.2 is broken (segfaults) consider
+    -- changing once https://github.com/tibbe/hashable/issues/60 is fixed.
+    hashable            >= 1.1     && < 1.2,
     old-time            >= 1.0     && < 1.2,
     snap-server         >= 0.9     && < 0.11,
     template-haskell    >= 2.2     && < 2.9,
