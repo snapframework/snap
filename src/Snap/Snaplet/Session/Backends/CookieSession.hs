@@ -9,7 +9,6 @@ module Snap.Snaplet.Session.Backends.CookieSession
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Arrow
 import           Control.Monad.Reader
 import           Data.ByteString                     (ByteString)
 import           Data.Generics
@@ -18,6 +17,7 @@ import qualified Data.HashMap.Strict                 as HM
 import           Data.Serialize                      (Serialize)
 import qualified Data.Serialize                      as S
 import           Data.Text                           (Text)
+import           Data.Text.Encoding
 import           Snap.Core                           (Snap)
 import           Web.ClientSession
 ------------------------------------------------------------------------------
@@ -45,10 +45,20 @@ data CookieSession = CookieSession
 
 ------------------------------------------------------------------------------
 instance Serialize CookieSession where
-    put (CookieSession a b) = S.put (a, HM.toList b)
+    put (CookieSession a b) =
+        S.put (encodeUtf8 a, map encodeTuple $ HM.toList b)
     get                     =
-        let unpack = uncurry CookieSession . second (HM.fromList)
+        let unpack (a,b) = CookieSession (decodeUtf8 a)
+                                         (HM.fromList $ map decodeTuple b)
         in  unpack <$> S.get
+
+
+encodeTuple :: (Text, Text) -> (ByteString, ByteString)
+encodeTuple (a,b) = (encodeUtf8 a, encodeUtf8 b)
+
+
+decodeTuple :: (ByteString, ByteString) -> (Text, Text)
+decodeTuple (a,b) = (decodeUtf8 a, decodeUtf8 b)
 
 
 ------------------------------------------------------------------------------

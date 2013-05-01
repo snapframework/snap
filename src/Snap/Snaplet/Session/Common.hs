@@ -14,8 +14,6 @@ module Snap.Snaplet.Session.Common
 import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
-import           Data.Serialize
-import qualified Data.Serialize as S
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text.Encoding as T
@@ -58,9 +56,4 @@ randomToken n rng = do
 mkCSRFToken :: RNG -> IO Text
 mkCSRFToken rng = T.decodeUtf8 <$> randomToken 40 rng
 
-
-------------------------------------------------------------------------------
-instance Serialize Text where
-    put = S.put . T.encodeUtf8
-    get = T.decodeUtf8 <$> S.get
 

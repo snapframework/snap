@@ -28,9 +28,9 @@ import Web.ClientSession
 
 ------------------------------------------------------------------------------
 -- | Serialize UTCTime
-instance Serialize UTCTime where
-    put t = put (round (utcTimeToPOSIXSeconds t) :: Integer)
-    get   = posixSecondsToUTCTime . fromInteger <$> get
+--instance Serialize UTCTime where
+--    put t = put (round (utcTimeToPOSIXSeconds t) :: Integer)
+--    get   = posixSecondsToUTCTime . fromInteger <$> get
 
 
 ------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ getSecureCookie name key timeout = do
     case val' of
       Nothing -> return Nothing
       Just (ts, t) -> do
-          to <- checkTimeout timeout ts
+          to <- checkTimeout timeout $ posixSecondsToUTCTime $ fromInteger ts
           return $ case to of
             True -> Nothing
             False -> Just t
@@ -70,8 +70,9 @@ setSecureCookie :: (MonadSnap m, Serialize t)
                 -> m ()
 setSecureCookie name key to val = do
     t <- liftIO getCurrentTime
+    let seconds = round (utcTimeToPOSIXSeconds t) :: Integer
     let expire = to >>= Just . flip addUTCTime t . fromIntegral
-    val' <- liftIO . encryptIO key . encode $ (t, val)
+    val' <- liftIO . encryptIO key . encode $ (seconds, val)
     let nc = Cookie name val' expire Nothing (Just "/") False True
     modifyResponse $ addResponseCookie nc
 
