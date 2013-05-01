@@ -168,8 +168,6 @@ Library
     snap-server               >= 0.9      && < 0.10,
     stm                       >= 2.2      && < 2.5,
     syb                       >= 0.1      && < 0.5,
-    -- Without the tagged dependency we reach backtrack limits
-    tagged                    < 0.5,
     text                      >= 0.11     && < 0.12,
     time                      >= 1.1      && < 1.5,
     transformers              >= 0.2      && < 0.4,
