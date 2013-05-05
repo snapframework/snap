@@ -597,7 +597,8 @@ serveSnaplet startConfig initializer = do
     _ <- try $ serve $ site
          :: IO (Either SomeException ())
     doCleanup
-    where loggingEnabled = not . (== Just False) . getVerbose
+  where
+    loggingEnabled = not . (== Just False) . getVerbose
 
 
 ------------------------------------------------------------------------------
