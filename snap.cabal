@@ -175,7 +175,8 @@ Library
     unordered-containers      >= 0.1.4    && < 0.3,
     vector                    >= 0.7.1    && < 0.11,
     vector-algorithms         >= 0.4      && < 0.6,
-    xmlhtml                   >= 0.1      && < 0.3
+    xmlhtml                   >= 0.1      && < 0.3,
+    LDAP                      >= 0.6.8    && < 0.6.9
 
 
   if flag(old-base)

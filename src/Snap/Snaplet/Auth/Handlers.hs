@@ -269,8 +269,9 @@ checkPasswordAndLogin u pw =
 
   where
     auth :: AuthUser -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-    auth user =
-      case authenticatePassword user pw of
+    auth user =  do 
+      x <- authenticatePassword user pw
+      case x of
         Just e -> do
           markAuthFail user
           return $ Left e
@@ -360,14 +361,8 @@ getSessionUserId = do
 --
 authenticatePassword :: AuthUser        -- ^ Looked up from the back-end
                      -> Password        -- ^ Check against this password
-                     -> Maybe AuthFailure
-authenticatePassword u pw = auth
-  where
-    auth    = case userPassword u of
-                Nothing -> Just PasswordMissing
-                Just upw -> check $ checkPassword pw upw
-
-    check b = if b then Nothing else Just IncorrectPassword
+                     -> Handler b (AuthManager b) (Maybe AuthFailure)
+authenticatePassword u pw = withBackend (\r -> liftIO $ authenticate r u pw)
 
 
 ------------------------------------------------------------------------------
