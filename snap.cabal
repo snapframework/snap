@@ -1,5 +1,5 @@
 name:           snap
-version:        0.12.1
+version:        0.13.0
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -159,7 +159,7 @@ Library
     filepath                  >= 1.1      && < 1.4,
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
-    heist                     >= 0.12     && < 0.13,
+    heist                     >= 0.13     && < 0.14,
     logict                    >= 0.4.2    && < 0.7,
     mtl                       >  2.0      && < 2.2,
     mwc-random                >= 0.8      && < 0.13,

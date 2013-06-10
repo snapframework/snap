@@ -503,7 +503,7 @@ heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 ------------------------------------------------------------------------------
 withSplices' :: SnapletLens (Snaplet b) (Heist b)
-             -> [(Text, SnapletISplice b)]
+             -> Splices (SnapletISplice b)
              -> Handler b v a
              -> Handler b v a
 withSplices' heist splices m = do
@@ -512,7 +512,7 @@ withSplices' heist splices m = do
 
 ------------------------------------------------------------------------------
 withSplices :: SnapletLens b (Heist b)
-            -> [(Text, SnapletISplice b)]
+            -> Splices (SnapletISplice b)
             -> Handler b v a
             -> Handler b v a
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
@@ -521,7 +521,7 @@ withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 ------------------------------------------------------------------------------
 renderWithSplices' :: SnapletLens (Snaplet b) (Heist b)
                    -> ByteString
-                   -> [(Text, SnapletISplice b)]
+                   -> Splices (SnapletISplice b)
                    -> Handler b v ()
 renderWithSplices' heist t splices =
     withSplices' heist splices $ withTop' heist $ render t
@@ -530,7 +530,7 @@ renderWithSplices' heist t splices =
 ------------------------------------------------------------------------------
 renderWithSplices :: SnapletLens b (Heist b)
                   -> ByteString
-                  -> [(Text, SnapletISplice b)]
+                  -> Splices (SnapletISplice b)
                   -> Handler b v ()
 renderWithSplices heist t splices =
     renderWithSplices' (subSnaplet heist) t splices

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Snap.Snaplet.Heist.Internal where
 
 import           Prelude hiding ((.), id)
