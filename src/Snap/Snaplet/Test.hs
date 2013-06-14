@@ -15,6 +15,7 @@ import           Control.Concurrent.MVar
 import           Control.Exception.Base (finally)
 import qualified Control.Exception as E
 import           Control.Monad.IO.Class
+import           Data.Maybe (fromMaybe) 
 import           Data.Text
 import           System.Directory
 import           System.IO.Error
@@ -56,12 +57,13 @@ removeFileMayNotExist f = catchNonExistence (removeFile f) ()
 -- 'runHandler' defined in Snap.Test, because due to the fact running
 -- the initializer inside 'SnapletInit' can throw an exception.
 runHandler :: MonadIO m
-           => RequestBuilder m ()
+           => Maybe String
+           -> RequestBuilder m ()
            -> Handler b b a
            -> SnapletInit b b
            -> m (Either Text Response)
-runHandler rq h s = do
-        app <- getSnaplet s
+runHandler env rq h s = do
+        app <- getSnaplet env s
         case app of
           (Left e) -> return $ Left e
           (Right (a,_)) -> do
@@ -81,12 +83,13 @@ runHandler rq h s = do
 -- 'evalHandler defined in Snap.Test, because due to the fact running
 -- the initializer inside 'SnapletInit' can throw an exception.
 evalHandler :: MonadIO m
-            => RequestBuilder m ()
+            => Maybe String 
+            -> RequestBuilder m ()
             -> Handler b b a
             -> SnapletInit b b
             -> m (Either Text a)
-evalHandler rq h s = do
-    app <- getSnaplet s
+evalHandler env rq h s = do
+    app <- getSnaplet env s
     case app of
       (Left e) -> return $ Left e
       (Right (a,_)) -> do
@@ -99,10 +102,11 @@ evalHandler rq h s = do
 -- a @Snaplet b@, or an error message whether the initializer threw an
 -- exception.                                                       
 getSnaplet :: MonadIO m
-           => SnapletInit b b
+           => Maybe String  
+           -> SnapletInit b b
            -> m (Either Text (Snaplet b, InitializerState b))
-getSnaplet (SnapletInit initializer) = liftIO $ do
+getSnaplet env (SnapletInit initializer) = liftIO $ do
     mvar <- newEmptyMVar
     let resetter f = modifyMVar_ mvar (return . f)
-    runInitializer resetter "" initializer
+    runInitializer resetter (fromMaybe "devel" env) initializer
 
