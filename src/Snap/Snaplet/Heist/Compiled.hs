@@ -14,8 +14,9 @@ module Snap.Snaplet.Heist.Compiled
 
   -- * Initializer Functions
   -- $initializerSection
-  , H.heistInit
+  , heistInit
   , H.heistInit'
+  , H.heistReloader
   , H.addTemplates
   , H.addTemplatesAt
   , H.addConfig
@@ -34,7 +35,20 @@ module Snap.Snaplet.Heist.Compiled
 
 import           Data.ByteString (ByteString)
 import           Snap.Snaplet
+import           Snap.Snaplet.Heist.Internal
 import qualified Snap.Snaplet.Heist as H
+import qualified Snap.Snaplet.HeistNoClass as HNC
+
+
+------------------------------------------------------------------------------
+-- | The 'Initializer' for 'Heist'. This function is a convenience wrapper
+-- around `heistInit'` that uses defaultHeistState and sets up routes for all
+-- the templates.  It sets up a \"heistReload\" route that reloads the heist
+-- templates when you request it from localhost.
+heistInit :: FilePath
+             -- ^ Path to templates
+          -> SnapletInit b (Heist b)
+heistInit = gHeistInit HNC.cHeistServe
 
 
 ------------------------------------------------------------------------------
