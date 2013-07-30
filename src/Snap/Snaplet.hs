@@ -93,6 +93,7 @@ module Snap.Snaplet
   , addPostInitHookBase
   , printInfo
   , getRoutes
+  , getEnvironment
 
   -- * Routes
   -- $routes
