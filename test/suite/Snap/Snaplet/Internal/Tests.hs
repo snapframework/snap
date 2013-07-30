@@ -82,6 +82,9 @@ appInit = makeSnaplet "app" "Test application" Nothing $ do
 
     configAssertions "root "
         ([], cwd, Just "app", "Test application", "")
+
+    assertGet "environment" getEnvironment "devel"
+
     f <- nestSnaplet "foo" foo $ fooInit
     b <- nestSnaplet "bar" bar $ barInit
     return $ App f b
