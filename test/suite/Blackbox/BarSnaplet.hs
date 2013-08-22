@@ -12,10 +12,10 @@ import Control.Monad.State
 import qualified Data.ByteString as B
 import Data.Configurator
 import Data.Maybe
-import Data.Text (Text)
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Core
+import Heist
 import Heist.Interpreted
 
 import Blackbox.Common
@@ -28,8 +28,8 @@ data BarSnaplet b = BarSnaplet
 
 makeLenses ''BarSnaplet
 
-barsplice :: [(Text, SnapletISplice b)]
-barsplice = [("barsplice", textSplice "contents of the bar splice")]
+barsplice :: Splices (SnapletISplice b)
+barsplice = "barsplice" ## textSplice "contents of the bar splice"
 
 barInit :: HasHeist b
         => Snaplet (Heist b)
@@ -46,7 +46,7 @@ barInit h l = makeSnaplet "barsnaplet" "An example snaplet called bar." Nothing 
               ,("bazpage3",   heistServeSingle "bazpage")
               ,("bazpage4",   renderAs "text/html" "bazpage")
               ,("bazpage5",   renderWithSplices "bazpage"
-                                [("barsplice", shConfigSplice _lens)])
+                                ("barsplice" ## shConfigSplice _lens))
               ,("bazbadpage", heistServeSingle "cpyga")
               ,("bar/handlerConfig", handlerConfig)
               ]

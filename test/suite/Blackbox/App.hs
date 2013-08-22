@@ -54,8 +54,9 @@ app = makeSnaplet "app" "Test application" Nothing $ do
     ns <- embedSnaplet "embed" embedded embeddedInit
     _lens <- getLens
     addConfig hs $ mempty
-        { hcInterpretedSplices = [("appsplice", textSplice "contents of the app splice")
-                                 ,("appconfig", shConfigSplice _lens)] }
+        { hcInterpretedSplices = do
+            "appsplice" ## textSplice "contents of the app splice"
+            "appconfig" ## shConfigSplice _lens }
     addRoutes [ ("/hello", writeText "hello world")
               , ("/routeWithSplice", routeWithSplice)
               , ("/routeWithConfig", routeWithConfig)
@@ -92,9 +93,9 @@ sessionDemo = withSession session $ do
       Just _ -> return ()
   list <- with session $ (T.pack . show) `fmap` sessionToList
   csrf <- with session $ (T.pack . show) `fmap` csrfToken
-  HNC.renderWithSplices heist "session"
-    [ ("session", textSplice list)
-    , ("csrf", textSplice csrf) ]
+  HNC.renderWithSplices heist "session" $ do
+    "session" ## textSplice list
+    "csrf" ## textSplice csrf
 
 
 ------------------------------------------------------------------------------

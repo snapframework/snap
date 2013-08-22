@@ -20,6 +20,7 @@ import Snap.Util.FileServe
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
+import Heist
 import Heist.Interpreted
 
 -- If we universally quantify FooSnaplet to get rid of the type parameter
@@ -42,7 +43,7 @@ fooInit = makeSnaplet "foosnaplet" "foo snaplet" Nothing $ do
     fooLens <- getLens
     addRoutes [("fooRootUrl", writeBS rootUrl)
               ,("aoeuhtns", renderWithSplices "foo/foopage"
-                    [("asplice", fooSplice fooLens)])
+                    ("asplice" ## fooSplice fooLens))
               ,("", heistServe)
               ]
     return $ FooSnaplet hs 42

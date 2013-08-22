@@ -29,8 +29,9 @@ fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     name <- getSnapletName
     _lens <- getLens
     addConfig h $ mempty
-        { hcInterpretedSplices = [("foosplice", textSplice "contents of the foo splice")
-                                 ,("fooconfig", shConfigSplice _lens)]
+        { hcInterpretedSplices = do
+            "foosplice" ## textSplice "contents of the foo splice"
+            "fooconfig" ## shConfigSplice _lens
         }
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)

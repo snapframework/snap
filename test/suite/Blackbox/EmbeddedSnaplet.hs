@@ -18,6 +18,7 @@ import System.FilePath.Posix
 
 import Snap.Snaplet
 import Snap.Snaplet.Heist
+import Heist
 import Heist.Interpreted
 
 -- If we universally quantify EmbeddedSnaplet to get rid of the type parameter
@@ -43,7 +44,7 @@ embeddedInit = makeSnaplet "embedded" "embedded snaplet" Nothing $ do
 
     embeddedLens <- getLens
     addRoutes [("aoeuhtns", withSplices
-                    [("asplice", embeddedSplice embeddedLens)]
+                    ("asplice" ## embeddedSplice embeddedLens)
                     (render "embeddedpage"))
               ]
     return $ EmbeddedSnaplet hs 42
