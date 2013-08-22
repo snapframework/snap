@@ -71,9 +71,7 @@ import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
-import           Data.List
 import           Data.Monoid
-import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Text.Encoding
 import           System.FilePath.Posix
@@ -105,22 +103,6 @@ clearHeistCache :: Heist b -> IO ()
 clearHeistCache = clearCacheTagState . _heistCTS
 
 
-------------------------------------------------------------------------------
--- | Handler that triggers a template reload.  For large sites, this can be
--- desireable because it may be much quicker than the full site reload
--- provided at the /admin/reload route.  This allows you to reload only the
--- heist templates  This handler is automatically set up by heistInit, but if
--- you use heistInit', then you can create your own route with it.
-heistReloader :: Handler b (Heist b) ()
-heistReloader = do
-    h <- get
-    ehs <- liftIO $ runEitherT $ initHeist $ _masterConfig h
-    either (writeText . T.pack . unlines)
-           (\hs -> do writeText "Heist reloaded."
-                      modifyMaster $ set heistState hs h)
-           ehs
-
-
                          -----------------------------
                          -- SnapletSplice functions --
                          -----------------------------
@@ -150,15 +132,7 @@ type SnapletISplice b = SnapletHeist b (Handler b b) Template
 heistInit :: FilePath
               -- ^ Path to templates
           -> SnapletInit b (Heist b)
-heistInit templateDir = do
-    makeSnaplet "heist" "" Nothing $ do
-        hs <- heistInitWorker templateDir defaultConfig
-        addRoutes [ ("", heistServe)
-                  , ("heistReload", failIfNotLocal heistReloader)
-                  ]
-        return hs
-  where
-    defaultConfig = mempty { hcLoadTimeSplices = defaultLoadTimeSplices }
+heistInit = gHeistInit heistServe
 
 
 ------------------------------------------------------------------------------
@@ -175,33 +149,6 @@ heistInit' templateDir initialConfig =
 
 
 ------------------------------------------------------------------------------
--- | Internal worker function used by variants of heistInit.  This is
--- necessary because of the divide between SnapletInit and Initializer.
-heistInitWorker :: FilePath
-                -> HeistConfig (Handler b b)
-                -> Initializer b (Heist b) (Heist b)
-heistInitWorker templateDir initialConfig = do
-    snapletPath <- getSnapletFilePath
-    let tDir = snapletPath </> templateDir
-    templates <- liftIO $ runEitherT (loadTemplates tDir) >>=
-                          either (error . concat) return
-    printInfo $ T.pack $ unwords
-        [ "...loaded"
-        , (show $ Map.size templates)
-        , "templates from"
-        , tDir
-        ]
-    let config = initialConfig `mappend`
-                 mempty { hcTemplateLocations = [loadTemplates tDir] }
-    ref <- liftIO $ newIORef (config, Compiled)
-
-    -- FIXME This runs after all the initializers, but before post init
-    -- hooks registered by other snaplets.
-    addPostInitHook finalLoadHook
-    return $ Configuring ref
-
-
-------------------------------------------------------------------------------
 -- | Sets the snaplet to default to interpreted mode.  Initially, the
 -- initializer sets the value to compiled mode.  This function allows you to
 -- override that setting.  Note that this is just a default.  It only has an
@@ -213,19 +160,6 @@ setInterpreted :: Snaplet (Heist b) -> Initializer b v ()
 setInterpreted h = 
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
         (\(hc,_) -> ((hc,Interpreted),()))
-
-
-------------------------------------------------------------------------------
--- | Hook that converts the Heist type from Configuring to Running at the end
--- of initialization.
-finalLoadHook :: Heist b -> EitherT Text IO (Heist b)
-finalLoadHook (Configuring ref) = do
-    (hc,dm) <- lift $ readIORef ref
-    (hs,cts) <- toTextErrors $ initHeistWithCacheTag hc
-    return $ Running hc hs cts dm
-  where
-    toTextErrors = bimapEitherT (T.pack . intercalate "\n") id
-finalLoadHook (Running _ _ _ _) = left "finalLoadHook called while running"
 
 
 ------------------------------------------------------------------------------
@@ -503,7 +437,7 @@ heistLocal heist f m = heistLocal' (subSnaplet heist) f m
 
 ------------------------------------------------------------------------------
 withSplices' :: SnapletLens (Snaplet b) (Heist b)
-             -> [(Text, SnapletISplice b)]
+             -> Splices (SnapletISplice b)
              -> Handler b v a
              -> Handler b v a
 withSplices' heist splices m = do
@@ -512,7 +446,7 @@ withSplices' heist splices m = do
 
 ------------------------------------------------------------------------------
 withSplices :: SnapletLens b (Heist b)
-            -> [(Text, SnapletISplice b)]
+            -> Splices (SnapletISplice b)
             -> Handler b v a
             -> Handler b v a
 withSplices heist splices m = withSplices' (subSnaplet heist) splices m
@@ -521,7 +455,7 @@ withSplices heist splices m = withSplices' (subSnaplet heist) splices m
 ------------------------------------------------------------------------------
 renderWithSplices' :: SnapletLens (Snaplet b) (Heist b)
                    -> ByteString
-                   -> [(Text, SnapletISplice b)]
+                   -> Splices (SnapletISplice b)
                    -> Handler b v ()
 renderWithSplices' heist t splices =
     withSplices' heist splices $ withTop' heist $ render t
@@ -530,7 +464,7 @@ renderWithSplices' heist t splices =
 ------------------------------------------------------------------------------
 renderWithSplices :: SnapletLens b (Heist b)
                   -> ByteString
-                  -> [(Text, SnapletISplice b)]
+                  -> Splices (SnapletISplice b)
                   -> Handler b v ()
 renderWithSplices heist t splices =
     renderWithSplices' (subSnaplet heist) t splices

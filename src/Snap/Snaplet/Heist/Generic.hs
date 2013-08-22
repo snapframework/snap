@@ -15,8 +15,6 @@ module Snap.Snaplet.Heist.Generic
 
   -- * Initializer Functions
   -- $initializerSection
-  , heistInit
-  , heistInit'
   , addTemplates
   , addTemplatesAt
   , addConfig

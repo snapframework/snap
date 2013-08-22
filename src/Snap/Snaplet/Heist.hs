@@ -56,7 +56,6 @@ module Snap.Snaplet.Heist
 import           Prelude hiding (id, (.))
 import           Control.Monad.State
 import           Data.ByteString (ByteString)
-import           Data.Text (Text)
 import           Heist
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
@@ -296,7 +295,7 @@ heistServeSingle t = withTop' heistLens (Unclassed.heistServeSingle t)
 renderWithSplices :: HasHeist b
                   => ByteString
                       -- ^ Template name
-                  -> [(Text, Unclassed.SnapletISplice b)]
+                  -> Splices (Unclassed.SnapletISplice b)
                       -- ^ Splices to bind
                   -> Handler b v ()
 renderWithSplices = Unclassed.renderWithSplices' heistLens
@@ -306,7 +305,7 @@ renderWithSplices = Unclassed.renderWithSplices' heistLens
 -- | Runs an action with additional splices bound into the Heist
 -- 'HeistState'.
 withSplices :: HasHeist b
-            => [(Text, Unclassed.SnapletISplice b)]
+            => Splices (Unclassed.SnapletISplice b)
                 -- ^ Splices to bind
             -> Handler b v a
                 -- ^ Handler to run
