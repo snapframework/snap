@@ -24,10 +24,10 @@ Executable projname
 
   Build-depends:
     bytestring                >= 0.9.1   && < 0.11,
-    heist                     >= 0.12    && < 0.13,
+    heist                     >= 0.13    && < 0.14,
     MonadCatchIO-transformers >= 0.2.1   && < 0.4,
     mtl                       >= 2       && < 3,
-    snap                      >= 0.11    && < 0.13,
+    snap                      >= 0.13    && < 0.14,
     snap-core                 >= 0.9     && < 0.11,
     snap-server               >= 0.9     && < 0.11,
     snap-loader-static        >= 0.9     && < 0.10,

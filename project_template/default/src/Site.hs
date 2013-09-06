@@ -11,7 +11,6 @@ module Site
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Data.ByteString (ByteString)
-import           Data.Maybe
 import qualified Data.Text as T
 import           Snap.Core
 import           Snap.Snaplet
@@ -31,7 +30,8 @@ import           Application
 handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
 handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
   where
-    errs = [("loginError", I.textSplice c) | c <- maybeToList authError]
+    errs = maybe noSplices splice authError
+    splice err = "loginError" ## I.textSplice err
 
 
 ------------------------------------------------------------------------------
