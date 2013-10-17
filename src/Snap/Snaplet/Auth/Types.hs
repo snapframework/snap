@@ -182,7 +182,7 @@ setPassword au pass = do
 
 
 ------------------------------------------------------------------------------
--- | Authetication settings defined at initialization time
+-- | Authentication settings defined at initialization time
 data AuthSettings = AuthSettings {
     asMinPasswdLen       :: Int
       -- ^ Currently not used/checked
