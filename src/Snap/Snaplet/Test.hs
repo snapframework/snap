@@ -16,6 +16,7 @@ import           Control.Exception.Base (finally)
 import qualified Control.Exception as E
 import           Control.Monad.IO.Class
 import           Data.Maybe (fromMaybe) 
+import           Data.IORef
 import           Data.Text
 import           System.Directory
 import           System.IO.Error
@@ -50,6 +51,27 @@ removeFileMayNotExist f = catchNonExistence (removeFile f) ()
 
 
 ------------------------------------------------------------------------------
+-- | Helper to keep "runHandler" and "evalHandler" DRY.
+execHandlerComputation :: MonadIO m 
+                       => (RequestBuilder m () -> Snap v -> m a)
+                       -> Maybe String
+                       -> RequestBuilder m ()
+                       -> Handler b b v
+                       -> SnapletInit b b
+                       -> m (Either Text a)
+execHandlerComputation f env rq h s = do
+    app <- getSnaplet env s
+    case app of
+      (Left e) -> return $ Left e
+      (Right (a, is)) -> do
+          res <- f rq $ runPureBase h a
+          -- Run the cleanup action
+          liftIO $ do
+              cleanupAction <- readIORef $ _cleanup is
+              cleanupAction
+          return $ Right res
+
+------------------------------------------------------------------------------
 -- | Given a Snaplet Handler and a 'RequestBuilder' defining
 -- a test request, runs the Handler, producing an HTTP 'Response'.
 --
@@ -59,16 +81,10 @@ removeFileMayNotExist f = catchNonExistence (removeFile f) ()
 runHandler :: MonadIO m
            => Maybe String
            -> RequestBuilder m ()
-           -> Handler b b a
+           -> Handler b b v
            -> SnapletInit b b
            -> m (Either Text Response)
-runHandler env rq h s = do
-        app <- getSnaplet env s
-        case app of
-          (Left e) -> return $ Left e
-          (Right (a,_)) -> do
-              res <- ST.runHandler rq $ runPureBase h a
-              return $ Right res
+runHandler = execHandlerComputation ST.runHandler
 
 
 ------------------------------------------------------------------------------
@@ -88,13 +104,7 @@ evalHandler :: MonadIO m
             -> Handler b b a
             -> SnapletInit b b
             -> m (Either Text a)
-evalHandler env rq h s = do
-    app <- getSnaplet env s
-    case app of
-      (Left e) -> return $ Left e
-      (Right (a,_)) -> do
-          res <- ST.evalHandler rq $ runPureBase h a
-          return $ Right res
+evalHandler = execHandlerComputation ST.evalHandler
 
 
 ------------------------------------------------------------------------------
