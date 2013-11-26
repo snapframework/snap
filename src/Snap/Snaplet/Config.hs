@@ -30,7 +30,11 @@ newtype AppConfig = AppConfig { appEnvironment :: Maybe String } deriving (Typea
 -- dynamic loader package can be updated so that manual Typeable instances
 -- are no longer needed.
 appConfigTyCon :: TyCon
+#if MIN_VERSION_base(4,7,0)
 appConfigTyCon = mkTyCon3 "snap" "Snap.Snaplet.Config" "AppConfig"
+#else
+appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
+#endif
 {-# NOINLINE appConfigTyCon #-}
 
 #if !MIN_VERSION_base(4,7,0)
