@@ -20,6 +20,7 @@ module Snap.Snaplet.Heist.Compiled
   , H.addTemplates
   , H.addTemplatesAt
   , H.addConfig
+  , H.getHeistState
   , H.modifyHeistState
   , H.withHeistState
 

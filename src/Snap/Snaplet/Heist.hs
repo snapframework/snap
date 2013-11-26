@@ -19,6 +19,7 @@ module Snap.Snaplet.Heist
   , addTemplates
   , addTemplatesAt
   , Unclassed.addConfig
+  , getHeistState
   , modifyHeistState
   , withHeistState
 
@@ -121,6 +122,13 @@ addTemplatesAt :: HasHeist b
                -> Initializer b v ()
 addTemplatesAt h pfx p =
     withTop' heistLens (Unclassed.addTemplatesAt h pfx p)
+
+
+------------------------------------------------------------------------------
+-- | More general function allowing arbitrary HeistState modification.
+getHeistState :: (HasHeist b)
+              => Handler b v (HeistState (Handler b b))
+getHeistState = Unclassed.getHeistState heistLens
 
 
 ------------------------------------------------------------------------------

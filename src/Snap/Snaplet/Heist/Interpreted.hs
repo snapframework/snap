@@ -19,6 +19,7 @@ module Snap.Snaplet.Heist.Interpreted
   , addTemplates
   , addTemplatesAt
   , addConfig
+  , getHeistState
   , modifyHeistState
   , withHeistState
 

@@ -26,6 +26,7 @@ module Snap.Snaplet.HeistNoClass
 
   , addTemplates
   , addTemplatesAt
+  , getHeistState
   , modifyHeistState
   , modifyHeistState'
   , withHeistState
@@ -219,6 +220,12 @@ getCurHeistConfig h = case view snapletValue h of
     Running _ _ _ _ ->
         error "Can't get HeistConfig after heist is initialized."
     
+
+------------------------------------------------------------------------------
+getHeistState :: SnapletLens (Snaplet b) (Heist b)
+              -> Handler b v (HeistState (Handler b b))
+getHeistState heist = withTop' heist $ gets _heistState
+
 
 ------------------------------------------------------------------------------
 modifyHeistState' :: SnapletLens (Snaplet b) (Heist b)
