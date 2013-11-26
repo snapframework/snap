@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE CPP #-}
 
 module Snap.Snaplet.Config where
 
@@ -14,7 +15,12 @@ import System.Console.GetOpt
 ------------------------------------------------------------------------------
 -- | AppConfig contains the config options for command line arguments in
 -- snaplet-based apps.
+#if MIN_VERSION_base(4,7,0)
 newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
+#else
+newtype AppConfig = AppConfig { appEnvironment :: Maybe String } deriving (Typeable)
+#endif
+
 
 
 ------------------------------------------------------------------------------
@@ -24,11 +30,13 @@ newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
 -- dynamic loader package can be updated so that manual Typeable instances
 -- are no longer needed.
 appConfigTyCon :: TyCon
-appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
+appConfigTyCon = mkTyCon3 "snap" "Snap.Snaplet.Config" "AppConfig"
 {-# NOINLINE appConfigTyCon #-}
 
+#if !MIN_VERSION_base(4,7,0)
 instance Typeable AppConfig where
     typeOf _ = mkTyConApp appConfigTyCon []
+#endif
 
 
 ------------------------------------------------------------------------------
@@ -44,8 +52,8 @@ instance Monoid AppConfig where
 ------------------------------------------------------------------------------
 -- | Command line options for snaplet applications.
 appOpts :: AppConfig -> [OptDescr (Maybe (Config m AppConfig))]
-appOpts defaults = map (fmapOpt $ fmap (flip setOther mempty))
-    [ Option ['e'] ["environment"]
+appOpts defaults = map (fmapOpt $ fmap (`setOther` mempty))
+    [ Option "e" ["environment"]
              (ReqArg setter "ENVIRONMENT")
              $ "runtime environment to use" ++ defaultC appEnvironment
     ]

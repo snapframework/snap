@@ -15,7 +15,7 @@ import           Control.Concurrent.MVar
 import           Control.Exception.Base (finally)
 import qualified Control.Exception as E
 import           Control.Monad.IO.Class
-import           Data.Maybe (fromMaybe) 
+import           Data.Maybe (fromMaybe)
 import           Data.IORef
 import           Data.Text
 import           System.Directory
@@ -52,7 +52,7 @@ removeFileMayNotExist f = catchNonExistence (removeFile f) ()
 
 ------------------------------------------------------------------------------
 -- | Helper to keep "runHandler" and "evalHandler" DRY.
-execHandlerComputation :: MonadIO m 
+execHandlerComputation :: MonadIO m
                        => (RequestBuilder m () -> Snap v -> m a)
                        -> Maybe String
                        -> RequestBuilder m ()
@@ -99,7 +99,7 @@ runHandler = execHandlerComputation ST.runHandler
 -- 'evalHandler defined in Snap.Test, because due to the fact running
 -- the initializer inside 'SnapletInit' can throw an exception.
 evalHandler :: MonadIO m
-            => Maybe String 
+            => Maybe String
             -> RequestBuilder m ()
             -> Handler b b a
             -> SnapletInit b b
@@ -110,9 +110,9 @@ evalHandler = execHandlerComputation ST.evalHandler
 ------------------------------------------------------------------------------
 -- | Run the given initializer, yielding a tuple where the first element is
 -- a @Snaplet b@, or an error message whether the initializer threw an
--- exception.                                                       
+-- exception.
 getSnaplet :: MonadIO m
-           => Maybe String  
+           => Maybe String
            -> SnapletInit b b
            -> m (Either Text (Snaplet b, InitializerState b))
 getSnaplet env (SnapletInit initializer) = liftIO $ do
