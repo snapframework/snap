@@ -256,7 +256,7 @@ mkSnaplet m = do
     l <- getLens
     let modifier = setInTop  . set (cloneLens l . snapletValue)
     return $ Snaplet cfg modifier res
-    
+
 
 
 ------------------------------------------------------------------------------
@@ -657,5 +657,5 @@ getCfg :: FileName -> DirTree b -> [b]
 getCfg cfg (Dir _ c) = map file $ filter (isCfg cfg) c
 getCfg _ _ = []
 
-    
+
 
