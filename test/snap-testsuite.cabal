@@ -56,7 +56,7 @@ Executable snap-testsuite
     transformers               >= 0.2      && < 0.4,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
-    vector-algorithms          >= 0.4      && < 0.6,
+    vector-algorithms          >= 0.4      && < 0.7,
     xmlhtml                    >= 0.1      && < 0.3
 
   if flag(old-base)
@@ -128,7 +128,7 @@ Executable app
     transformers               >= 0.2      && < 0.4,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
-    vector-algorithms          >= 0.4      && < 0.6,
+    vector-algorithms          >= 0.4      && < 0.7,
     xmlhtml                    >= 0.1      && < 0.3
 
   if flag(old-base)
@@ -210,7 +210,7 @@ Executable nesttest
     transformers               >= 0.2      && < 0.4,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
-    vector-algorithms          >= 0.4      && < 0.6,
+    vector-algorithms          >= 0.4      && < 0.7,
     xmlhtml                    >= 0.1      && < 0.3
 
   if flag(old-base)
