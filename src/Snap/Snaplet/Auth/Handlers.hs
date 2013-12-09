@@ -447,7 +447,7 @@ loginUser' unf pwdf remf = do
                     (runMaybeT $
                     do field <- MaybeT $ return remf
                        value <- MaybeT $ getParam field
-                       return $ value == "1")
+                       return $ value == "1" || value == "on")
 
     password <- noteT PasswordMissing $ hoistMaybe mbPassword
     username <- noteT UsernameMissing $ hoistMaybe mbUsername
