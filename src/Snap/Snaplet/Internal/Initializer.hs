@@ -304,13 +304,21 @@ nestSnaplet rte l (SnapletInit snaplet) =
 
 ------------------------------------------------------------------------------
 -- | Runs another snaplet's initializer and returns the initialized Snaplet
--- value.  The difference between this and nestSnaplet is the first type
+-- value.  The difference between this and 'nestSnaplet' is the first type
 -- parameter in the third argument.  The \"v1 v1\" makes the child snaplet
--- think that it is top-level, which means that it will not be able to use
--- functionality provided by snaplets included above it in the snaplet tree.
--- This strongly isolates the child snaplet, and allows you to eliminate the b
--- type variable.  The embedded snaplet can still get functionality from other
--- snaplets, but only if it nests or embeds the snaplet itself.
+-- think that it is the top-level state, which means that it will not be able
+-- to use functionality provided by snaplets included above it in the snaplet
+-- tree. This strongly isolates the child snaplet, and allows you to eliminate
+-- the b type variable.  The embedded snaplet can still get functionality
+-- from other snaplets, but only if it nests or embeds the snaplet itself.
+--
+-- Note that this function does not change where this snaplet is located in
+-- the filesystem.  The snaplet directory structure convention stays the same.
+-- Also, embedSnaplet limits the ways that snaplets can interact, so we
+-- usually recommend using nestSnaplet instead.  However, we provide this
+-- function because sometimes reduced flexibility is useful.  In short, if
+-- you don't understand what this function does for you from looking at its
+-- type, you probably don't want to use it.
 embedSnaplet :: ByteString
                  -- ^ The root url for all the snaplet's routes.  An empty
                  -- string gives the routes the same root as the parent
