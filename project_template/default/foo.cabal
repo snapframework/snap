@@ -31,7 +31,7 @@ Executable projname
     snap-core                 >= 0.9     && < 0.11,
     snap-server               >= 0.9     && < 0.11,
     snap-loader-static        >= 0.9     && < 0.10,
-    text                      >= 0.11    && < 0.12,
+    text                      >= 0.11    && < 1.2,
     time                      >= 1.1     && < 1.5,
     xmlhtml                   >= 0.1
 

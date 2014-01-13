@@ -1,5 +1,5 @@
 name:           snap
-version:        0.13.1.2
+version:        0.13.2.0
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -145,7 +145,7 @@ Library
   build-depends:
     MonadCatchIO-transformers >= 0.2      && < 0.4,
     aeson                     >= 0.6      && < 0.7,
-    attoparsec                >= 0.10     && < 0.11,
+    attoparsec                >= 0.10     && < 0.12,
     bytestring                >= 0.9.1    && < 0.11,
     cereal                    >= 0.3      && < 0.5,
     clientsession             >= 0.8      && < 0.10,
@@ -169,7 +169,7 @@ Library
     snap-server               >= 0.9      && < 0.11,
     stm                       >= 2.2      && < 2.5,
     syb                       >= 0.1      && < 0.5,
-    text                      >= 0.11     && < 0.12,
+    text                      >= 0.11     && < 1.2,
     time                      >= 1.1      && < 1.5,
     transformers              >= 0.2      && < 0.4,
     unordered-containers      >= 0.1.4    && < 0.3,
@@ -232,7 +232,7 @@ Executable snap
     old-time            >= 1.0     && < 1.2,
     snap-server         >= 0.9     && < 0.11,
     template-haskell    >= 2.2     && < 2.9,
-    text                >= 0.11    && < 0.12
+    text                >= 0.11    && < 1.2
 
   extensions:
     OverloadedStrings
