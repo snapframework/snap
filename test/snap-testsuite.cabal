@@ -26,7 +26,7 @@ Executable snap-testsuite
     unix                       >= 2.2.0.0  && < 2.7,
 
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.7,
+    aeson                      >= 0.6      && < 0.8,
     attoparsec                 >= 0.10     && < 0.12,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,
@@ -98,7 +98,7 @@ Executable app
 
   build-depends:
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.7,
+    aeson                      >= 0.6      && < 0.8,
     attoparsec                 >= 0.10     && < 0.12,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,
@@ -180,7 +180,7 @@ Executable nesttest
     unix                       >= 2.2.0.0  && < 2.7,
 
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.7,
+    aeson                      >= 0.6      && < 0.8,
     attoparsec                 >= 0.10     && < 0.12,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,

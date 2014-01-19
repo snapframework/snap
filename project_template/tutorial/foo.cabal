@@ -22,7 +22,7 @@ Executable projname
     bytestring                >= 0.9.1   && < 0.11,
     MonadCatchIO-transformers >= 0.2.1   && < 0.4,
     mtl                       >= 2       && < 3,
-    snap                      >= 0.11    && < 0.13,
+    snap                      >= 0.11    && < 0.14,
     snap-core                 >= 0.9     && < 0.11,
     snap-server               >= 0.9     && < 0.11
 
