@@ -1,5 +1,5 @@
 name:           snap
-version:        0.13.2.0
+version:        0.13.2.1
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
