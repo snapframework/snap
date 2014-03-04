@@ -74,7 +74,7 @@ execHandlerComputation f env rq h s = do
 
 ------------------------------------------------------------------------------
 -- | Helper to allow multiple calls to "runHandler" or "evalHandler" without
--- multiple initializations
+-- multiple initializations.
 execHandlerSnaplet :: MonadIO m
                    => Snaplet b
                    -> InitializerState b
@@ -163,7 +163,7 @@ getSnaplet env (SnapletInit initializer) = liftIO $ do
 ------------------------------------------------------------------------------
 -- | Run cleanup for an initializer. Should be run after finished using the
 -- state that getSnaplet returned. Only needed if using getSnaplet and
--- evalHandler'/runHandler'
+-- evalHandler'/runHandler'.
 closeSnaplet :: MonadIO m
              => InitializerState b
              -> m ()
