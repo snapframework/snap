@@ -1,5 +1,5 @@
 name:           snap
-version:        0.13.2.3
+version:        0.13.2.4
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -185,7 +185,7 @@ Library
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.1
+      lens                      >= 3.7.6    && < 4.2
 
   extensions:
     BangPatterns,
