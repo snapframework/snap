@@ -15,7 +15,9 @@ import System.Console.GetOpt
 -- | AppConfig contains the config options for command line arguments in
 -- snaplet-based apps.
 newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
-
+#if MIN_VERSION_base(4,7,0)
+                  deriving Typeable
+#else
 
 ------------------------------------------------------------------------------
 -- | AppConfig has a manual instance of Typeable due to limitations in the
@@ -29,7 +31,7 @@ appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
 
 instance Typeable AppConfig where
     typeOf _ = mkTyConApp appConfigTyCon []
-
+#endif
 
 ------------------------------------------------------------------------------
 instance Monoid AppConfig where
