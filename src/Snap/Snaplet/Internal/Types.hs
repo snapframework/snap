@@ -1,11 +1,13 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE BangPatterns               #-}
+{-# LANGUAGE CPP                        #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ImpredicativeTypes         #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 #ifndef MIN_VERSION_comonad
 #define MIN_VERSION_comonad(x,y,z) 1
@@ -13,24 +15,25 @@
 
 module Snap.Snaplet.Internal.Types where
 
-import           Control.Applicative
-import           Control.Error
-import           Control.Lens
-import           Control.Monad.Base
-import           Control.Monad.Reader
-import           Control.Monad.State.Class
-import           Control.Monad.Trans.Control
-import           Control.Monad.Trans.Writer hiding (pass)
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
-import           Data.Configurator.Types
-import           Data.IORef
-import           Data.Monoid
-import           Data.Text (Text)
-
-import           Snap.Core
-import qualified Snap.Snaplet.Internal.LensT as LT
-import qualified Snap.Snaplet.Internal.Lensed as L
+------------------------------------------------------------------------------
+import           Control.Applicative          (Alternative, Applicative)
+import           Control.Error                (EitherT)
+import           Control.Lens                 (ALens', makeLenses, set)
+import           Control.Monad.Base           (MonadBase (..))
+import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local), liftM, (>=>))
+import           Control.Monad.State.Class    (MonadState (get, put), gets)
+import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Trans.Writer   (WriterT)
+import           Data.ByteString              (ByteString)
+import qualified Data.ByteString.Char8        as B (dropWhile, intercalate, null, reverse)
+import           Data.Configurator.Types      (Config)
+import           Data.IORef                   (IORef)
+import           Data.Monoid                  (Monoid (mappend, mempty))
+import           Data.Text                    (Text)
+import           Snap.Core                    (MonadSnap, Request (rqClientAddr), Snap, bracketSnap, getRequest, pass, writeText)
+import qualified Snap.Snaplet.Internal.Lensed as L (Lensed (..), runLensed, with, withTop)
+import qualified Snap.Snaplet.Internal.LensT  as LT (LensT, getBase, with, withTop)
+------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------
@@ -122,7 +125,10 @@ snapletConfig :: SimpleLens (Snaplet a) SnapletConfig
 snapletValue :: SimpleLens (Snaplet a) a
 -}
 
+
+------------------------------------------------------------------------------
 type SnapletLens s a = ALens' s (Snaplet a)
+
 
 ------------------------------------------------------------------------------
 -- | Transforms a lens of the type you get from makeLenses to an similar lens
@@ -262,10 +268,12 @@ newtype Handler b v a =
            , MonadSnap)
 
 
+------------------------------------------------------------------------------
 instance MonadBase IO (Handler b v) where
     liftBase = liftIO
 
 
+------------------------------------------------------------------------------
 instance MonadBaseControl IO (Handler b v) where
     newtype StM (Handler b v) a = StMHandler {unStMHandler :: StM (Handler b v) a}
     liftBaseWith f = liftBaseWith $ \g' -> f $ \m -> liftM StMHandler $ g' m
@@ -320,6 +328,7 @@ instance MonadReader v (Handler b v) where
         return res
 
 
+------------------------------------------------------------------------------
 instance MonadSnaplet Handler where
     getLens = Handler ask
     with' !l (Handler !m) = Handler $ L.with l m
@@ -432,6 +441,7 @@ data InitializerState b = InitializerState
 newtype Hook a = Hook (Snaplet a -> EitherT Text IO (Snaplet a))
 
 
+------------------------------------------------------------------------------
 instance Monoid (Hook a) where
     mempty = Hook return
     (Hook a) `mappend` (Hook b) = Hook (a >=> b)
@@ -450,6 +460,7 @@ newtype Initializer b v a =
 makeLenses ''InitializerState
 
 
+------------------------------------------------------------------------------
 instance MonadSnaplet Initializer where
     getLens = Initializer ask
     with' !l (Initializer !m) = Initializer $ LT.with l m
