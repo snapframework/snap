@@ -95,11 +95,13 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
             home <- fromEnv "HOME" "."
             p1   <- gimmeIfExists $ snapRoot </> "dist" </> "build"
                                              </> "snap" </> "snap"
-            p2   <- gimmeIfExists $ home </> ".cabal" </> "bin" </> "snap"
-            p3   <- findExecutable "snap"
+            p2   <- gimmeIfExists $ cwd </> ".cabal-sandbox" </> "bin" </> "snap"
+            p3   <- gimmeIfExists $ snapRoot </> ".cabal-sandbox" </> "bin" </> "snap"
+            p4   <- gimmeIfExists $ home </> ".cabal" </> "bin" </> "snap"
+            p5   <- findExecutable "snap"
 
             return $ fromMaybe (error "couldn't find snap executable")
-                               (getFirst $ mconcat $ map First [p1,p2,p3])
+                               (getFirst $ mconcat $ map First [p1,p2,p3,p4,p5])
 
     --------------------------------------------------------------------------
     putStrLn $ "Changing directory to " ++ projectPath
