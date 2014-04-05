@@ -1,14 +1,18 @@
 {-# LANGUAGE BangPatterns               #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Snap.Snaplet.Internal.RST where
 
 import           Control.Applicative
 import           Control.Category
+import           Control.Monad.Base
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
+import           Control.Monad.Trans.Control
 import           Prelude hiding ((.), id, catch)
 import           Snap.Core
 
@@ -97,13 +101,34 @@ instance (MonadPlus m) => MonadPlus (RST r s m) where
     m `mplus` n = RST $ \r s -> runRST m r s `mplus` runRST n r s
 
 
+instance (MonadIO m) => MonadIO (RST r s m) where
+    liftIO = lift . liftIO
+
+
 instance MonadTrans (RST r s) where
     lift m = RST $ \_ s -> do
         a <- m
         return $ s `seq` (a, s)
 
-instance (MonadIO m) => MonadIO (RST r s m) where
-    liftIO = lift . liftIO
+
+instance MonadBase b m => MonadBase b (RST r s m) where
+    liftBase = lift . liftBase
 
 
+instance MonadBaseControl b m => MonadBaseControl b (RST r s m) where
+     newtype StM (RST r s m) a = StMRS {unStMRS :: ComposeSt (RST r s) m a}
+     liftBaseWith = defaultLiftBaseWith StMRS
+     restoreM = defaultRestoreM unStMRS
+     {-# INLINE liftBaseWith #-}
+     {-# INLINE restoreM #-}
+
+
+instance MonadTransControl (RST r s) where
+    newtype StT (RST r s) a = StRST {unStRST :: (a, s)}
+    liftWith f = RST $ \r s -> do
+        res <- f $ \(RST g) -> liftM StRST $ g r s
+        return (res, s)
+    restoreT k = RST $ \_ _ -> liftM unStRST k
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
 

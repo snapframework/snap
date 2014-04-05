@@ -1,17 +1,21 @@
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Snap.Snaplet.Internal.Lensed where
 
 import Control.Applicative
 import Control.Lens.Loupe
 import Control.Monad
+import Control.Monad.Base
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Control.Monad.CatchIO
 import Control.Monad.State.Class
 import Control.Monad.State.Strict
+import Control.Monad.Trans.Control
 import Control.Category
 import Prelude hiding (catch, id, (.))
 import Snap.Core
@@ -97,6 +101,31 @@ instance (Monad m, Alternative m) => Alternative (Lensed b v m) where
 ------------------------------------------------------------------------------
 instance MonadSnap m => MonadSnap (Lensed b v m) where
     liftSnap = lift . liftSnap
+
+
+------------------------------------------------------------------------------
+instance MonadBase base m => MonadBase base (Lensed b v m) where
+    liftBase = lift . liftBase
+
+
+------------------------------------------------------------------------------
+instance MonadBaseControl base m => MonadBaseControl base (Lensed b v m) where
+     newtype StM (Lensed b v m) a = StMRS {unStMRS :: ComposeSt (Lensed b v) m a}
+     liftBaseWith = defaultLiftBaseWith StMRS
+     restoreM = defaultRestoreM unStMRS
+     {-# INLINE liftBaseWith #-}
+     {-# INLINE restoreM #-}
+
+
+------------------------------------------------------------------------------
+instance MonadTransControl (Lensed b v) where
+    newtype StT (Lensed b v) a = StLensed {unStLensed :: (a, v, b)}
+    liftWith f = Lensed $ \l v b -> do
+        res <- f $ \(Lensed g) -> liftM StLensed $ g l v b
+        return (res, v, b)
+    restoreT k = Lensed $ \_ _ _ -> liftM unStLensed k
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
 
 
 ------------------------------------------------------------------------------

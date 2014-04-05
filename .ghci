@@ -1,4 +1,5 @@
 :set -isrc
 :set -hide-package MonadCatchIO-mtl
 :set -hide-package monads-fd
+:set -hide-package monads-tf
 :set -XOverloadedStrings

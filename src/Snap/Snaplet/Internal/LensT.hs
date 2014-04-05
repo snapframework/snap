@@ -2,15 +2,19 @@
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category
 import           Control.Lens.Loupe
+import           Control.Monad.Base
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
+import           Control.Monad.Trans.Control
 import           Prelude hiding ((.), id, catch)
 import           Snap.Core
 
@@ -24,10 +28,21 @@ newtype LensT b v s m a = LensT (RST (ALens' b v) s m a)
            , Applicative
            , MonadIO
            , MonadPlus
-           , MonadCatchIO
            , Alternative
            , MonadReader (ALens' b v)
-           , MonadSnap )
+           , MonadSnap)
+
+
+instance MonadBase bs m => MonadBase bs (LensT b v s m) where
+    liftBase = lift . liftBase
+
+
+instance MonadBaseControl bs m => MonadBaseControl bs (LensT b v s m) where
+     newtype StM (LensT b v s m) a = StMLens {unStMLens :: ComposeSt (LensT b v s) m a}
+     liftBaseWith = defaultLiftBaseWith StMLens
+     restoreM = defaultRestoreM unStMLens
+     {-# INLINE liftBaseWith #-}
+     {-# INLINE restoreM #-}
 
 
 ------------------------------------------------------------------------------
