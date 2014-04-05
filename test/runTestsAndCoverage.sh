@@ -43,6 +43,8 @@ Snap.Snaplet.Internal.LensT.Tests
 Snap.Snaplet.Internal.RST.Tests
 Snap.Snaplet.Internal.Tests
 Snap.TestCommon
+Snap.Snaplet.Test.App
+Snap.Snaplet.Test.Tests
 '
 
 EXCL=""
