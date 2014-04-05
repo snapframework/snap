@@ -11,7 +11,6 @@ import           Control.Applicative
 import           Control.Category
 import           Control.Lens.Loupe
 import           Control.Monad.Base
-import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.Control
@@ -29,8 +28,13 @@ newtype LensT b v s m a = LensT (RST (ALens' b v) s m a)
            , MonadIO
            , MonadPlus
            , Alternative
-           , MonadReader (ALens' b v)
-           , MonadSnap)
+           , MonadReader (ALens' b v))
+
+
+------------------------------------------------------------------------------
+instance Monad m => MonadState v (LensT b v b m) where
+    get = lGet
+    put = lPut
 
 
 instance MonadBase bs m => MonadBase bs (LensT b v s m) where
@@ -45,10 +49,16 @@ instance MonadBaseControl bs m => MonadBaseControl bs (LensT b v s m) where
      {-# INLINE restoreM #-}
 
 
-------------------------------------------------------------------------------
-instance Monad m => MonadState v (LensT b v b m) where
-    get = lGet
-    put = lPut
+instance MonadTransControl (LensT b v s) where
+    newtype StT (LensT b v s) a = StLensT {unStLensT :: StT (RST (ALens' b v) s) a}
+    liftWith = defaultLiftWith LensT (\(LensT rst) -> rst) StLensT
+    restoreT = defaultRestoreT LensT unStLensT
+    {-# INLINE liftWith #-}
+    {-# INLINE restoreT #-}
+
+
+instance MonadSnap m => MonadSnap (LensT b v s m) where
+    liftSnap m = LensT $ liftSnap m
 
 
 ------------------------------------------------------------------------------
