@@ -143,7 +143,6 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    MonadCatchIO-transformers >= 0.2      && < 0.4,
     aeson                     >= 0.6      && < 0.8,
     attoparsec                >= 0.10     && < 0.12,
     bytestring                >= 0.9.1    && < 0.11,
