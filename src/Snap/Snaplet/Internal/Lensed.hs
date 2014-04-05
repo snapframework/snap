@@ -6,18 +6,27 @@
 
 module Snap.Snaplet.Internal.Lensed where
 
-import Control.Applicative
-import Control.Lens.Loupe
-import Control.Monad
-import Control.Monad.Base
-import Control.Monad.Reader.Class
-import Control.Monad.Trans
-import Control.Monad.State.Class
-import Control.Monad.State.Strict
-import Control.Monad.Trans.Control
-import Control.Category
-import Prelude hiding (catch, id, (.))
-import Snap.Core
+
+------------------------------------------------------------------------------
+import           Control.Applicative         (Alternative (..),
+                                              Applicative (..), (<$>))
+import           Control.Category            ((.))
+import           Control.Lens.Loupe          (ALens', cloneLens, storing, (^#))
+import           Control.Monad               (MonadPlus (..), liftM)
+import           Control.Monad.Base          (MonadBase (..))
+import           Control.Monad.Reader        (MonadReader (..))
+import           Control.Monad.State.Class   (MonadState (..))
+import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
+import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
+                                              MonadTransControl (..),
+                                              defaultLiftBaseWith,
+                                              defaultRestoreM)
+import           Control.Monad.Trans.State   (StateT(..))
+import           Prelude                     (Functor (..), Monad (..), const,
+                                              seq, ($), ($!))
+import           Snap.Core                   (MonadSnap (..))
+------------------------------------------------------------------------------
+
 
 ------------------------------------------------------------------------------
 newtype Lensed b v m a = Lensed

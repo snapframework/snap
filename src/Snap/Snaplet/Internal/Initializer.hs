@@ -1,6 +1,6 @@
-{-# LANGUAGE BangPatterns               #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE BangPatterns      #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Snap.Snaplet.Internal.Initializer
   ( addPostInitHook
@@ -26,36 +26,58 @@ module Snap.Snaplet.Internal.Initializer
   , modifyMaster
   ) where
 
-import           Prelude hiding (catch)
-import           Control.Concurrent.MVar
-import           Control.Error
-import           Control.Exception (SomeException)
-import           Control.Exception.Lifted hiding (Handler)
-import           Control.Lens
-import           Control.Monad
-import           Control.Monad.Reader
-import           Control.Monad.State
-import           Control.Monad.Trans.Writer hiding (pass)
-import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as B
-import           Data.Configurator
-import qualified Data.Configurator.Types as C
-import           Data.IORef
-import           Data.Maybe
-import           Data.Text (Text)
-import qualified Data.Text as T
-import           Snap.Http.Server
-import           Snap.Core
-import           Snap.Util.GZip
-import           System.Directory
-import           System.Directory.Tree
-import           System.FilePath.Posix
-import           System.IO
-
-import           Snap.Snaplet.Config
-import qualified Snap.Snaplet.Internal.LensT as LT
+------------------------------------------------------------------------------
+import           Control.Concurrent.MVar      (MVar, modifyMVar_, newEmptyMVar,
+                                               putMVar, readMVar)
+import           Control.Error                (EitherT, either, right,
+                                               runEitherT)
+import           Control.Exception.Lifted     (SomeException, catch, try)
+import           Control.Lens                 (ALens', cloneLens, over, set,
+                                               storing, (^#))
+import           Control.Monad                (Monad (..), join, liftM, unless,
+                                               when, (=<<))
+import           Control.Monad.Reader         (ask)
+import           Control.Monad.State          (get, modify)
+import           Control.Monad.Trans          (lift, liftIO)
+import           Control.Monad.Trans.Writer   hiding (pass)
+import           Data.ByteString.Char8        (ByteString)
+import qualified Data.ByteString.Char8        as B
+import           Data.Configurator            (Worth (..), addToConfig, empty,
+                                               loadGroups, subconfig)
+import qualified Data.Configurator.Types      as C
+import           Data.IORef                   (IORef, atomicModifyIORef,
+                                               newIORef, readIORef)
+import           Data.Maybe                   (Maybe (..), fromJust, fromMaybe,
+                                               isNothing)
+import           Data.Text                    (Text)
+import qualified Data.Text                    as T
+import           Prelude                      (Bool (..), Either (..), Eq (..),
+                                               String, concat, concatMap, const,
+                                               error, filter, flip, fst, id,
+                                               map, not, show, ($), ($!), (++),
+                                               (.))
+import           Snap.Core                    (Snap, liftSnap, route)
+import           Snap.Http.Server             (Config, completeConfig,
+                                               getCompression, getErrorHandler,
+                                               getOther, getVerbose,
+                                               simpleHttpServe)
+import           Snap.Util.GZip               (withCompression)
+import           System.Directory             (copyFile,
+                                               createDirectoryIfMissing,
+                                               doesDirectoryExist,
+                                               getCurrentDirectory)
+import           System.Directory.Tree        (DirTree (..), FileName, buildL,
+                                               dirTree, readDirectoryWith)
+import           System.FilePath.Posix        (dropFileName, makeRelative,
+                                               (</>))
+import           System.IO                    (FilePath, IO, hPutStrLn, stderr)
+------------------------------------------------------------------------------
+import           Snap.Snaplet.Config          (AppConfig, appEnvironment,
+                                               commandLineAppConfig)
 import qualified Snap.Snaplet.Internal.Lensed as L
+import qualified Snap.Snaplet.Internal.LensT  as LT
 import           Snap.Snaplet.Internal.Types
+------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------
@@ -256,7 +278,7 @@ mkSnaplet m = do
     l <- getLens
     let modifier = setInTop  . set (cloneLens l . snapletValue)
     return $ Snaplet cfg modifier res
-    
+
 
 
 ------------------------------------------------------------------------------
@@ -565,11 +587,11 @@ runSnaplet env (SnapletInit b) = do
     let resetter f = modifyMVar_ snapletMVar (return . f)
     eRes <- runInitializer resetter (fromMaybe "devel" env) b
     let go (siteSnaplet,is) = do
-        putMVar snapletMVar siteSnaplet
-        msgs <- liftIO $ readIORef $ _initMessages is
-        let handler = runBase (_hFilter is $ route $ _handlers is) snapletMVar
-        cleanupAction <- readIORef $ _cleanup is
-        return (msgs, handler, cleanupAction)
+            putMVar snapletMVar siteSnaplet
+            msgs <- liftIO $ readIORef $ _initMessages is
+            let handler = runBase (_hFilter is $ route $ _handlers is) snapletMVar
+            cleanupAction <- readIORef $ _cleanup is
+            return (msgs, handler, cleanupAction)
     either (error . ('\n':) . T.unpack) go eRes
 
 
@@ -665,5 +687,5 @@ getCfg :: FileName -> DirTree b -> [b]
 getCfg cfg (Dir _ c) = map file $ filter (isCfg cfg) c
 getCfg _ _ = []
 
-    
+
 

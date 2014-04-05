@@ -7,17 +7,27 @@
 
 module Snap.Snaplet.Internal.LensT where
 
-import           Control.Applicative
-import           Control.Category
-import           Control.Lens.Loupe
-import           Control.Monad.Base
-import           Control.Monad.Reader
-import           Control.Monad.State.Class
-import           Control.Monad.Trans.Control
-import           Prelude hiding ((.), id, catch)
-import           Snap.Core
 
-import           Snap.Snaplet.Internal.RST
+------------------------------------------------------------------------------
+import           Control.Applicative         (Alternative (..),
+                                              Applicative (..))
+import           Control.Category            ((.))
+import           Control.Lens.Loupe          (ALens', cloneLens, storing, (^#))
+import           Control.Monad               (MonadPlus (..))
+import           Control.Monad.Base          (MonadBase (..))
+import           Control.Monad.Reader        (MonadReader (..))
+import           Control.Monad.State.Class   (MonadState (..))
+import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
+import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
+                                              MonadTransControl (..),
+                                              defaultLiftBaseWith,
+                                              defaultLiftWith, defaultRestoreM,
+                                              defaultRestoreT)
+import           Prelude                     (Functor (..), Monad (..), const,
+                                              seq, ($), ($!))
+import           Snap.Core                   (MonadSnap (..))
+import           Snap.Snaplet.Internal.RST   (RST (..), runRST, withRST)
+------------------------------------------------------------------------------
 
 
 newtype LensT b v s m a = LensT (RST (ALens' b v) s m a)

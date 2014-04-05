@@ -1,19 +1,26 @@
-{-# LANGUAGE BangPatterns               #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE BangPatterns          #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module Snap.Snaplet.Internal.RST where
 
-import           Control.Applicative
-import           Control.Category
-import           Control.Monad.Base
-import           Control.Monad.Reader
-import           Control.Monad.State.Class
-import           Control.Monad.Trans.Control
-import           Prelude hiding ((.), id, catch)
-import           Snap.Core
+import           Control.Applicative         (Alternative (..),
+                                              Applicative (..))
+import           Control.Category            ((.))
+import           Control.Monad               (MonadPlus (..), ap, liftM)
+import           Control.Monad.Base          (MonadBase (..))
+import           Control.Monad.Reader        (MonadReader (..))
+import           Control.Monad.State.Class   (MonadState (..))
+import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
+import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
+                                              MonadTransControl (..),
+                                              defaultLiftBaseWith,
+                                              defaultRestoreM)
+import           Prelude                     (Functor (..), Monad (..), seq,
+                                              ($))
+import           Snap.Core                   (MonadSnap (..))
 
 
 ------------------------------------------------------------------------------
