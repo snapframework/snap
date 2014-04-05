@@ -20,11 +20,11 @@ Executable projname
 
   Build-depends:
     bytestring                >= 0.9.1   && < 0.11,
-    MonadCatchIO-transformers >= 0.2.1   && < 0.4,
+    monad-control             >= 0.3     && < 0.4,
     mtl                       >= 2       && < 3,
-    snap                      >= 0.11    && < 0.14,
-    snap-core                 >= 0.9     && < 0.11,
-    snap-server               >= 0.9     && < 0.11
+    snap                      >= 1.0     && < 1.1,
+    snap-core                 >= 1.0     && < 1.1,
+    snap-server               >= 1.0     && < 1.1
 
   if flag(old-base)
     build-depends:
