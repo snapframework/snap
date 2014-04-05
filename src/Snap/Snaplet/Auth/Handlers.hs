@@ -224,7 +224,7 @@ markAuthSuccess u = withBackend $ \r ->
 
     --------------------------------------------------------------------------
     updateIp u' = do
-        ip <- rqRemoteAddr <$> getRequest
+        ip <- rqClientAddr <$> getRequest
         return $ u' { userLastLoginIp = userCurrentLoginIp u'
                     , userCurrentLoginIp = Just ip }
 

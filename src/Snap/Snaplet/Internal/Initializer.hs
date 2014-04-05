@@ -30,9 +30,9 @@ import           Prelude hiding (catch)
 import           Control.Concurrent.MVar
 import           Control.Error
 import           Control.Exception (SomeException)
+import           Control.Exception.Lifted hiding (Handler)
 import           Control.Lens
 import           Control.Monad
-import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Writer hiding (pass)

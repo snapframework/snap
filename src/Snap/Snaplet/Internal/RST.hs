@@ -9,7 +9,6 @@ module Snap.Snaplet.Internal.RST where
 import           Control.Applicative
 import           Control.Category
 import           Control.Monad.Base
-import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
 import           Control.Monad.Trans.Control
@@ -69,12 +68,6 @@ instance (Monad m) => MonadState s (RST r s m) where
 mapRST :: (m (a, s) -> n (b, s)) -> RST r s m a -> RST r s n b
 mapRST f m = RST $ \r s -> f (runRST m r s)
 
-
-instance (MonadCatchIO m) => MonadCatchIO (RST r s m) where
-    m `catch` f = RST $ \r s -> runRST m r s
-                           `catch` \e -> runRST (f e) r s
-    block       = mapRST block
-    unblock     = mapRST unblock
 
 instance (MonadSnap m) => MonadSnap (RST r s m) where
     liftSnap s = lift $ liftSnap s

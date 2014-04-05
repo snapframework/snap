@@ -16,9 +16,10 @@ module Snap.Snaplet.Internal.Types where
 import           Control.Applicative
 import           Control.Error
 import           Control.Lens
-import           Control.Monad.CatchIO hiding (Handler)
+import           Control.Monad.Base
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
+import           Control.Monad.Trans.Control
 import           Control.Monad.Trans.Writer hiding (pass)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
@@ -257,9 +258,18 @@ newtype Handler b v a =
            , Applicative
            , MonadIO
            , MonadPlus
-           , MonadCatchIO
            , Alternative
            , MonadSnap)
+
+
+instance MonadBase IO (Handler b v) where
+    liftBase = liftIO
+
+
+instance MonadBaseControl IO (Handler b v) where
+    newtype StM (Handler b v) a = StMHandler {unStMHandler :: StM (Handler b v) a}
+    liftBaseWith f = liftBaseWith $ \g' -> f $ \m -> liftM StMHandler $ g' m
+    restoreM = restoreM . unStMHandler
 
 
 ------------------------------------------------------------------------------
@@ -347,7 +357,7 @@ setRoutePattern p = withTop' id $
 failIfNotLocal :: MonadSnap m => m b -> m b
 failIfNotLocal m = do
     -- FIXME: this moves to auth once control-panel is done
-    rip <- liftM rqRemoteAddr getRequest
+    rip <- liftM rqClientAddr getRequest
     if not $ elem rip [ "127.0.0.1"
                       , "localhost"
                       , "::1" ]

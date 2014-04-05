@@ -12,7 +12,6 @@ import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
-import Control.Monad.CatchIO
 import Control.Monad.State.Class
 import Control.Monad.State.Strict
 import Control.Monad.Trans.Control
@@ -72,17 +71,6 @@ instance MonadTrans (Lensed b v) where
 ------------------------------------------------------------------------------
 instance MonadIO m => MonadIO (Lensed b v m) where
   liftIO = lift . liftIO
-
-
-------------------------------------------------------------------------------
-instance MonadCatchIO m => MonadCatchIO (Lensed b v m) where
-    catch (Lensed m) f = Lensed $ \l v b -> m l v b `catch` handler l v b
-      where
-        handler l v b e = let Lensed h = f e
-                          in h l v b
-
-    block (Lensed m)   = Lensed $ \l v b -> block (m l v b)
-    unblock (Lensed m) = Lensed $ \l v b -> unblock (m l v b)
 
 
 ------------------------------------------------------------------------------
