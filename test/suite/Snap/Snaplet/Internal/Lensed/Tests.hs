@@ -6,7 +6,7 @@ import           Control.Applicative
 import           Control.Category
 import           Control.Exception
 import           Control.Lens
-import           Control.Monad.State.Strict
+import           Control.Monad.State.Lazy
 import           Prelude hiding (catch, (.))
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
