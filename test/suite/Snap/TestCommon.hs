@@ -58,6 +58,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         ----------------------------------------------------------------------
         initialize = do
             snapExe <- findSnap
+            print snapExe
             systemOrDie $ snapExe ++ " init " ++ snapInitArgs
 
             snapCoreSrc          <- fromEnv "SNAP_CORE_SRC" $
@@ -84,7 +85,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
 --                  (pkgCleanUp sandbox)
 
             systemOrDie $ "cd " ++ projectPath
-            systemOrDie $ "echo TEST_B"
+            systemOrDie $ "echo TEST_C"
             systemOrDie $ "cabal sandbox init --sandbox " ++ sandboxPath
     
             forM_ [ snapCoreSrc, snapServerSrc, xmlhtmlSrc, heistSrc
@@ -95,7 +96,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
                                      , " add-source "
                                      , s
                                      ]
-            systemOrDie $ "cabal install --only-dependencies --reorder-goals"
+            systemOrDie $ "cabal install --only-dependencies --reorder-goals --constraint \"snap >= 1.0\""
             systemOrDie $ "cabal install " ++ args
 --            let cmd = ("." </> "dist" </> "build" </> projName </> projName)
 --                      ++ " -p " ++ show httpPort
@@ -116,7 +117,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
             p5   <- findExecutable "snap"
 
             return $ fromMaybe (error "couldn't find snap executable")
-                               (getFirst $ mconcat $ map First [p1,p2,p3,p4,p5])
+                               (getFirst $ mconcat $ map First [p3])
 
     --------------------------------------------------------------------------
     putStrLn $ "Changing directory to " ++ projectPath

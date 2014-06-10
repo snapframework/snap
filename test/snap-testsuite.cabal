@@ -51,6 +51,7 @@ Executable snap-testsuite
     regex-posix                >= 0.95     && < 1,
     snap-core                  >= 1.0      && < 1.1,
     snap-server                >= 1.0      && < 1.1,
+    snap                       >= 1.0      && < 1.1,
     stm                        >= 2.2      && < 2.5,
     syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 1.2,
