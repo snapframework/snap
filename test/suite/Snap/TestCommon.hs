@@ -49,7 +49,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         projectPath  = cwd </> "test-snap-exe" </> projName
         snapRoot     = joinPath $ reverse $ drop 1 segments
         snapRepos    = joinPath $ reverse $ drop 2 segments
-        sandbox      = cwd </> "test-cabal-dev"
+        sandboxPath  = snapRoot </> ".cabal-sandbox"
 --        cabalArgs    = sandbox
         cabalArgs    = ""
         args         = cabalArgs ++ " --reinstall " ++ cabalInstallArgs
@@ -85,7 +85,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
 
             systemOrDie $ "cd " ++ projectPath
             systemOrDie $ "echo TEST_B"
-            systemOrDie "cabal sandbox init"
+            systemOrDie $ "cabal sandbox init --sandbox " ++ sandboxPath
     
             forM_ [ snapCoreSrc, snapServerSrc, xmlhtmlSrc, heistSrc
                   , snapSrc, staticLoaderSrc, dynLoaderSrc, ioStreamsSrc
@@ -99,7 +99,7 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
             systemOrDie $ "cabal install " ++ args
 --            let cmd = ("." </> "dist" </> "build" </> projName </> projName)
 --                      ++ " -p " ++ show httpPort
-            let cmd = (".cabal-sandbox" </> "bin" </> projName) ++ " -p " ++ show httpPort
+            let cmd = (sandboxPath </> "bin" </> projName) ++ " -p " ++ show httpPort
             putStrLn $ "Running \"" ++ cmd ++ "\""
             pHandle <- runCommand cmd
             waitABit

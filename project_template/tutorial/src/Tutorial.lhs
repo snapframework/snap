@@ -68,6 +68,7 @@ You can also install the full code in the current directory with the command
 > import           Control.Lens.TH
 > import           Data.IORef
 > import qualified Data.ByteString.Char8 as B
+> import           Data.Map.Syntax
 > import           Data.Maybe
 > import           Snap
 > import           Snap.Snaplet.Heist
