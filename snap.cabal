@@ -159,6 +159,7 @@ Library
     lens                      >= 3.7.6    && < 4.2,
     lifted-base               >= 0.2      && < 0.3,
     logict                    >= 0.4.2    && < 0.7,
+    map-syntax                >= 0.1      && < 0.2,
     monad-control             >= 0.3      && < 0.4,
     mtl                       >= 2.0      && < 2.3,
     mwc-random                >= 0.8      && < 0.14,

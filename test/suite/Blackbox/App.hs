@@ -23,6 +23,7 @@ import Snap.Core
 import Snap.Util.FileServe
 
 ------------------------------------------------------------------------------
+import Data.Map.Syntax ((##))
 import Snap.Snaplet
 import Snap.Snaplet.Heist
 import qualified Snap.Snaplet.HeistNoClass as HNC

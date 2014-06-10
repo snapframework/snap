@@ -25,6 +25,7 @@ module Snap.Snaplet.Auth.SpliceHelpers
   ) where
 
 import           Control.Monad.Trans
+import           Data.Map.Syntax ((##), mapV)
 import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text as T
@@ -99,7 +100,7 @@ userISplices AuthUser{..} = do
 userCSplices :: Monad m => Splices (RuntimeSplice m AuthUser -> C.Splice m)
 userCSplices = fields `mappend` ifs
   where
-    fields = mapS (C.pureSplice . C.textSplice) $ do
+    fields = mapV (C.pureSplice . C.textSplice) $ do
         "userId"          ## maybe "-" unUid . userId
         "userLogin"       ## userLogin
         "userEmail"       ## fromMaybe "-" . userEmail
