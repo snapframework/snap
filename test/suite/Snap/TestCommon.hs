@@ -50,41 +50,56 @@ testGeneratedProject projName snapInitArgs cabalInstallArgs httpPort
         snapRoot     = joinPath $ reverse $ drop 1 segments
         snapRepos    = joinPath $ reverse $ drop 2 segments
         sandbox      = cwd </> "test-cabal-dev"
-        cabalDevArgs = "-s " ++ sandbox
-        args         = cabalDevArgs ++ " --reinstall " ++ cabalInstallArgs
+--        cabalArgs    = sandbox
+        cabalArgs    = ""
+        args         = cabalArgs ++ " --reinstall " ++ cabalInstallArgs
+
 
         ----------------------------------------------------------------------
         initialize = do
             snapExe <- findSnap
             systemOrDie $ snapExe ++ " init " ++ snapInitArgs
 
-            snapCoreSrc     <- fromEnv "SNAP_CORE_SRC" $
-                               snapRepos </> "snap-core"
-            snapServerSrc   <- fromEnv "SNAP_SERVER_SRC" $
-                               snapRepos </> "snap-server"
-            xmlhtmlSrc      <- fromEnv "XMLHTML_SRC" $ snapRepos </> "xmlhtml"
-            heistSrc        <- fromEnv "HEIST_SRC" $ snapRepos </> "heist"
-            dynLoaderSrc    <- fromEnv "DYNAMIC_LOADER_SRC" $
-                               snapRepos </> "snap-loader-dynamic"
-            staticLoaderSrc <- fromEnv "STATIC_LOADER_SRC" $
-                               snapRepos </> "snap-loader-static"
+            snapCoreSrc          <- fromEnv "SNAP_CORE_SRC" $
+                                    snapRepos </> "snap-core"
+            snapServerSrc        <- fromEnv "SNAP_SERVER_SRC" $
+                                    snapRepos </> "snap-server"
+            xmlhtmlSrc           <- fromEnv "XMLHTML_SRC" $ snapRepos </> "xmlhtml"
+            heistSrc             <- fromEnv "HEIST_SRC" $ snapRepos </> "heist"
+            dynLoaderSrc         <- fromEnv "DYNAMIC_LOADER_SRC" $
+                                    snapRepos </> "snap-loader-dynamic"
+            staticLoaderSrc      <- fromEnv "STATIC_LOADER_SRC" $
+                                    snapRepos </> "snap-loader-static"
+            ioStreamsSrc         <- fromEnv "IO_STREAMS_SRC" $
+                                    snapRepos </> "io-streams"
+            ioStreamsHaproxySrc  <- fromEnv "IO_STREAMS_HAPROXY_SRC" $
+                                    snapRepos </> "io-streams-haproxy"
+            mapSyntaxSrc         <- fromEnv "MAP_SYNTAX_SRC" $
+                                    snapRepos </> "map-syntax"
             let snapSrc   =  snapRoot
 
-            forM_ [ "snap-core", "snap-server", "xmlhtml", "heist", "snap"
-                  , "snap-loader-static", "snap-loader-dynamic"]
-                  (pkgCleanUp sandbox)
+--            forM_ [ "snap-core", "snap-server", "xmlhtml", "heist", "snap"
+--                  , "snap-loader-static", "snap-loader-dynamic", "map-syntax"
+--                  , "io-streams", "io-streams-hproxy"]
+--                  (pkgCleanUp sandbox)
 
+            systemOrDie $ "cd " ++ projectPath
+            systemOrDie $ "echo TEST_B"
+            systemOrDie "cabal sandbox init"
+    
             forM_ [ snapCoreSrc, snapServerSrc, xmlhtmlSrc, heistSrc
-                  , snapSrc, staticLoaderSrc, dynLoaderSrc] $ \s ->
-                systemOrDie $ concat [ "cabal-dev "
-                                     , cabalDevArgs
+                  , snapSrc, staticLoaderSrc, dynLoaderSrc, ioStreamsSrc
+                  , ioStreamsHaproxySrc, mapSyntaxSrc] $ \s ->
+                systemOrDie $ concat [ "cabal sandbox "
+                                     , cabalArgs
                                      , " add-source "
                                      , s
                                      ]
-
-            systemOrDie $ "cabal-dev install " ++ args
-            let cmd = ("." </> "dist" </> "build" </> projName </> projName)
-                      ++ " -p " ++ show httpPort
+            systemOrDie $ "cabal install --only-dependencies --reorder-goals"
+            systemOrDie $ "cabal install " ++ args
+--            let cmd = ("." </> "dist" </> "build" </> projName </> projName)
+--                      ++ " -p " ++ show httpPort
+            let cmd = (".cabal-sandbox" </> "bin" </> projName) ++ " -p " ++ show httpPort
             putStrLn $ "Running \"" ++ cmd ++ "\""
             pHandle <- runCommand cmd
             waitABit
