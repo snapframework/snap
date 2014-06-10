@@ -10,6 +10,7 @@
 
 module Main where
 
+------------------------------------------------------------------------------
 import Prelude hiding ((.))
 import Control.Lens
 import Control.Monad.State
@@ -18,11 +19,13 @@ import           Snap.Http.Server.Config
 import Snap.Core
 import Snap.Util.FileServe
 
+import Data.Map.Syntax ((##))
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Heist
 import Heist.Interpreted
 
+
+------------------------------------------------------------------------------
 -- If we universally quantify FooSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
 data FooSnaplet = FooSnaplet

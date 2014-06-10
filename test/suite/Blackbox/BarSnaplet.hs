@@ -5,6 +5,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module Blackbox.BarSnaplet where
 
+------------------------------------------------------------------------------
 import Prelude hiding (lookup)
 
 import Control.Lens
@@ -20,7 +21,10 @@ import Heist.Interpreted
 
 import Blackbox.Common
 import Blackbox.FooSnaplet
+import Data.Map.Syntax ((##))
 
+
+------------------------------------------------------------------------------
 data BarSnaplet b = BarSnaplet
     { _barField :: String
     , fooLens  :: SnapletLens b FooSnaplet
