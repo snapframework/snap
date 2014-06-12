@@ -6,7 +6,7 @@ if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
 
-SUITE=./dist/build/snap-testsuite/snap-testsuite
+SUITE=./dist/build/testsuite/testsuite
 
 rm -f snap-testsuite.tix
 

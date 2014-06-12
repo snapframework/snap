@@ -140,7 +140,7 @@ Library
 
   build-depends:
     aeson                     >= 0.6      && < 0.8,
-    attoparsec                >= 0.10     && < 0.12,
+    attoparsec                >= 0.10     && < 0.13,
     base                      >= 4.4      && < 5,
     bytestring                >= 0.9.1    && < 0.11,
     cereal                    >= 0.3      && < 0.5,
@@ -200,46 +200,111 @@ Library
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans -fno-warn-unused-do-bind
+                 -fno-warn-orphans -fno-warn-unused-do-bind -fhpc
   else
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans
+                 -fno-warn-orphans -fhpc
 
 Test-suite testsuite
-  hs-source-dirs: test/suite
+  hs-source-dirs: src test/suite
   type: exitcode-stdio-1.0
   main-is: TestSuite.hs
-  ghc-options: -fhpc
 
 --  other-modules: Snap.Snaplet.Internal.Types
+  other-modules:
+    Control.Access.RoleBased.Checker
+    Control.Access.RoleBased.Role
+    Control.Access.RoleBased.Types
+    Control.Access.RoleBased.Internal.Role
+    Control.Access.RoleBased.Internal.RoleMap
+    Control.Access.RoleBased.Internal.Rule
+    Control.Access.RoleBased.Internal.Types
+    Snap.Snaplet.Auth.AuthManager
+    Snap.Snaplet.Auth.Types
+    Snap.Snaplet.Auth.Handlers
+    Snap.Snaplet.Auth.SpliceHelpers
+    Snap.Snaplet.Heist.Internal
+    Snap.Snaplet.Internal.Initializer
+    Snap.Snaplet.Internal.LensT
+    Snap.Snaplet.Internal.Lensed
+    Snap.Snaplet.Internal.RST
+    Snap.Snaplet.Internal.Types
+    Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    base                       >= 4        &&  < 5,
-    bytestring,
-    containers,
-    directory,
-    errors,
-    filepath,
+    aeson                     >= 0.6      && < 0.8,
+    attoparsec                >= 0.10     && < 0.13,
+    base                      >= 4.4      && < 5,
+    blaze-builder,
+    bytestring                >= 0.9.1    && < 0.11,
+    cereal                    >= 0.3      && < 0.5,
+    clientsession             >= 0.8      && < 0.10,
+    comonad                   >= 1.1      && < 4.3,
+    configurator              >= 0.1      && < 0.3,
+    containers                >= 0.3      && < 0.6,
+    directory                 >= 1.0      && < 1.3,
+    directory-tree            >= 0.11     && < 0.13,
+    dlist                     >= 0.5      && < 0.8,
+    errors                    >= 1.4      && < 1.5,
+    filepath                  >= 1.1      && < 1.4,
     Glob,
-    heist                      >= 1.0      && < 1.1,
-    HUnit                      >= 1.2      && < 2,
-    lens,
-    monad-control,
-    mtl,
+    -- Blacklist bad versions of hashable
+    hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
+    heist                     >= 1.0      && < 1.1,
+    http-streams,
+    HUnit,
+    lens                      >= 3.7.6    && < 4.2,
+    lifted-base               >= 0.2      && < 0.3,
+    logict                    >= 0.4.2    && < 0.7,
+    map-syntax                >= 0.1      && < 0.2,
+    monad-control             >= 0.3      && < 0.4,
+    mtl                       >= 2.0      && < 2.3,
+    mwc-random                >= 0.8      && < 0.14,
     network,
     process,
+    pwstore-fast              >= 2.2      && < 2.5,
     QuickCheck,
-    snap                       >= 1.0      && < 1.1,
-    snap-server                >= 1.0      && < 1.1,
-    snap-core                  >= 1.0      && < 1.1,
+    regex-posix               >= 0.95     && < 1,
+    smallcheck,
+    snap-core                 >= 1.0      && < 1.1,
+    snap-server               >= 1.0      && < 1.1,
+    snap,
+    stm                       >= 2.2      && < 2.5,
+    syb                       >= 0.1      && < 0.5,
     test-framework,
     test-framework-hunit,
     test-framework-quickcheck2,
-    text,
-    transformers,
-    transformers-base
-  extensions: OverloadedStrings
-  ghc-prof-options: -prof -auto-all
+    test-framework-smallcheck,
+    text                      >= 0.11     && < 1.2,
+    time                      >= 1.1      && < 1.5,
+    transformers              >= 0.2      && < 0.5,
+    transformers-base         >= 0.4      && < 0.5,
+    unix,
+    unordered-containers      >= 0.1.4    && < 0.3,
+    vector                    >= 0.7.1    && < 0.11,
+    vector-algorithms         >= 0.4      && < 0.7,
+    xmlhtml                   >= 0.1      && < 0.3
+
+  extensions:
+    BangPatterns,
+    CPP,
+    DeriveDataTypeable,
+    ExistentialQuantification,
+    FlexibleContexts,
+    FlexibleInstances,
+    GeneralizedNewtypeDeriving,
+    MultiParamTypeClasses,
+    NoMonomorphismRestriction,
+    OverloadedStrings,
+    PackageImports,
+    Rank2Types,
+    RecordWildCards,
+    ScopedTypeVariables,
+    TemplateHaskell,
+    TypeFamilies,
+    TypeOperators,
+    TypeSynonymInstances
+
 
 source-repository head
   type:     git
