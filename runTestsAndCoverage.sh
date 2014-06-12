@@ -57,7 +57,7 @@ rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
 rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl
 rm -fr non-cabal-appdir/snaplets/foosnaplet
 
-hpc markup $EXCL --destdir=$DIR snap-testsuite >/dev/null 2>&1
+hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
 
 cat <<EOF
 
