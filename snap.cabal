@@ -36,30 +36,6 @@ extra-source-files:
   LICENSE,
   README.md,
   README.SNAP.md,
-  project_template/barebones/.ghci,
-  project_template/barebones/foo.cabal,
-  project_template/barebones/log/access.log,
-  project_template/barebones/src/Main.hs,
-  project_template/default/.ghci,
-  project_template/default/foo.cabal,
-  project_template/default/log/access.log,
-  project_template/default/log/error.log,
-  project_template/default/static/screen.css,
-  project_template/default/snaplets/heist/templates/base.tpl,
-  project_template/default/snaplets/heist/templates/index.tpl,
-  project_template/default/snaplets/heist/templates/_login.tpl,
-  project_template/default/snaplets/heist/templates/login.tpl,
-  project_template/default/snaplets/heist/templates/_new_user.tpl,
-  project_template/default/snaplets/heist/templates/new_user.tpl,
-  project_template/default/snaplets/heist/templates/userform.tpl,
-  project_template/default/src/Application.hs,
-  project_template/default/src/Main.hs,
-  project_template/default/src/Site.hs,
-  project_template/tutorial/.ghci,
-  project_template/tutorial/foo.cabal,
-  project_template/tutorial/log/placeholder,
-  project_template/tutorial/src/Part2.lhs,
-  project_template/tutorial/src/Tutorial.lhs,
   extra/hscolour.css,
   extra/haddock.css,
   extra/logo.gif,
@@ -98,6 +74,12 @@ extra-source-files:
   test/foosnaplet/templates/foopage.tpl,
   test/foosnaplet/devel.cfg
 
+data-files:
+  resources/foosnaplet/snaplets/heist/templates/foopage.tpl
+  resources/foosnaplet/snaplets/heist/templates/foopage.tpl
+  resources/foosnaplet/snaplets/heist/templates/extraTemplates/barpage.tpl
+  resources/foosnaplet/templates/evenMoreTemplates/bazpage.tpl
+
 Library
   hs-source-dirs: src
 
@@ -126,6 +108,7 @@ Library
     Control.Access.RoleBased.Internal.RoleMap
     Control.Access.RoleBased.Internal.Rule
     Control.Access.RoleBased.Internal.Types
+    Paths_snap
     Snap.Snaplet.Auth.AuthManager
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
@@ -148,6 +131,7 @@ Library
     comonad                   >= 1.1      && < 4.3,
     configurator              >= 0.1      && < 0.3,
     containers                >= 0.3      && < 0.6,
+    deepseq                   >= 1.3      && < 1.4,
     directory                 >= 1.0      && < 1.3,
     directory-tree            >= 0.11     && < 0.13,
     dlist                     >= 0.5      && < 0.8,
@@ -211,8 +195,23 @@ Test-suite testsuite
   main-is: TestSuite.hs
   ghc-options: -fhpc
 
---  other-modules: Snap.Snaplet.Internal.Types
   other-modules:
+    Snap,
+    Snap.Snaplet
+    Snap.Snaplet.Heist
+    Snap.Snaplet.HeistNoClass
+    Snap.Snaplet.Heist.Compiled
+    Snap.Snaplet.Heist.Generic
+    Snap.Snaplet.Heist.Interpreted
+    Snap.Snaplet.Auth
+    Snap.Snaplet.Auth.Backends.JsonFile
+    Snap.Snaplet.Config
+    Snap.Snaplet.Session
+    Snap.Snaplet.Session.Common
+    Snap.Snaplet.Session.SessionManager
+    Snap.Snaplet.Session.Backends.CookieSession
+    Snap.Snaplet.Test
+
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role
     Control.Access.RoleBased.Types
@@ -220,10 +219,12 @@ Test-suite testsuite
     Control.Access.RoleBased.Internal.RoleMap
     Control.Access.RoleBased.Internal.Rule
     Control.Access.RoleBased.Internal.Types
+    Paths_snap
     Snap.Snaplet.Auth.AuthManager
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
     Snap.Snaplet.Auth.SpliceHelpers
+    Snap.Snaplet.Heist.App
     Snap.Snaplet.Heist.Internal
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT

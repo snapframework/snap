@@ -8,6 +8,7 @@ module Snap.Snaplet.Auth.Handlers.Tests
 import           Control.Error
 import           Control.Monad.State as S
 import qualified Data.Map as Map
+import           Data.Time.Clock
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
@@ -27,6 +28,7 @@ tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.Handlers"
     [mutuallyExclusive $ testGroup "createUser tests"
         [ testCreateUserGood
+        , testCreateUserTimely
         , testCreateEmptyUser
         , testCreateDupUser
         , testUsernameExists 
@@ -83,6 +85,25 @@ testCreateUserGood = testCase "createUser good params" assertGoodUser
         either (assertFailure . show) (assertBool failMsg . isRight) res
 
     failMsg = "createUser failed: Couldn't create a new user."
+
+
+------------------------------------------------------------------------------
+testCreateUserTimely :: Test
+testCreateUserTimely = testCase "createUser good updatedAt" assertCreateTimely
+  where
+    assertCreateTimely :: Assertion
+    assertCreateTimely = withTemporaryFile "users.json" $ do
+      let hdl = with auth $ createUser "foo" "foo"
+      tNow <- getCurrentTime
+      let isTimely t' = maybe False (\t -> diffUTCTime tNow t < 1) t'
+      res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
+      case res of
+        Left  e          -> assertFailure . show $ e
+        Right (Left e)   -> assertFailure . show $ e
+        Right (Right au) -> assertBool failMsg $ isTimely (userUpdatedAt au)
+                            && isTimely (userCreatedAt au)
+
+    failMsg = "createUser: userUpdatedAt, userCreatetAt times not set"
 
 
 ------------------------------------------------------------------------------

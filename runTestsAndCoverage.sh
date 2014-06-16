@@ -8,7 +8,7 @@ fi
 
 SUITE=./dist/build/testsuite/testsuite
 
-rm -f snap-testsuite.tix
+rm -f testsuite.tix
 
 if [ ! -f $SUITE ]; then
     cat <<EOF
@@ -35,9 +35,12 @@ Blackbox.EmbeddedSnaplet
 Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types
+Paths_snap
 Snap.Snaplet.Auth.App
 Snap.Snaplet.Auth.Handlers.Tests
 Snap.Snaplet.Auth.Tests
+Snap.Snaplet.Heist.App
+Snap.Snaplet.Heist.Tests
 Snap.Snaplet.Internal.Lensed.Tests
 Snap.Snaplet.Internal.LensT.Tests
 Snap.Snaplet.Internal.RST.Tests
@@ -46,6 +49,7 @@ Snap.TestCommon
 Snap.Snaplet.Test.App
 Snap.Snaplet.Test.Tests
 '
+
 
 EXCL=""
 
