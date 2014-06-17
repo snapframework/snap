@@ -77,16 +77,11 @@ accessibleHeistState = do
 ------------------------------------------------------------------------------
 simpleRender :: Assertion
 simpleRender = do
---  let hdl = with heist $ do
---        withHeistState $ \s -> do
---          liftIO . putStrLn . show . H.spliceNames $ s
---          gRender "smalTemplate"
---      a = hdl :: Snap.Snaplet.Handler App App ()
-  let hdl = with heist $ gRender "barpage"
+  let hdl = with heist $ gRender "foopage"
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
-  {-
-  assertEqual "Simple template rendering"
-    (Right [XML.TextNode "Content"])
-    res
-  -}
+
+simpleRenderAsOK :: Assertion
+simpleRenderAsOK = do
+  let hdl = with heist $ gRenderAs "text/html" "foopage"
+  res <- 
