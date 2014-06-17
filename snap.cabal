@@ -74,12 +74,6 @@ extra-source-files:
   test/foosnaplet/templates/foopage.tpl,
   test/foosnaplet/devel.cfg
 
-data-files:
-  resources/foosnaplet/snaplets/heist/templates/foopage.tpl
-  resources/foosnaplet/snaplets/heist/templates/foopage.tpl
-  resources/foosnaplet/snaplets/heist/templates/extraTemplates/barpage.tpl
-  resources/foosnaplet/templates/evenMoreTemplates/bazpage.tpl
-
 Library
   hs-source-dirs: src
 
