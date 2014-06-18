@@ -43,6 +43,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "Get Heist state" assertHasTemplates
              ,testCase "Handler with heist state" accessibleHeistState
              ,testCase "gRender a template" gSimpleRender
+             ,testCase "gRender another template" gSimpleRenderAnother
              ,testCase "cRender a template" (simpleRender False)
              ,testCase "Render a template"  (simpleRender True)
              ,testCase "gRenderAs a small template" gSimpleRenderAs
@@ -65,6 +66,8 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "Choose compiled mode" chooseCompiled
              ,testCase "Choose interpreted mode" chooseInterpreted
              ,testCase "Render with splices" fooRenderWith
+             ,testCase "Recognize withSplices" seeLocalSplices
+             ,testCase "Recognize heistLocal" seeLocalState
              ]
 
 
@@ -107,6 +110,11 @@ gSimpleRender = do
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
+gSimpleRenderAnother :: Assertion
+gSimpleRenderAnother = do
+  let hdl = with heist $ gRender "bazpage"
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
 simpleRender :: Bool -> Assertion
@@ -236,3 +244,30 @@ fooRenderWith = do
   res  <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   rStr <- either (const $ return "") ST.responseToString res
   assertBool "Splice was not spliced in" (BSC.isInfixOf "Content" (rStr :: BSC.ByteString))
+
+
+------------------------------------------------------------------------------
+seeLocalSplices :: Assertion
+seeLocalSplices = do
+  let mySplices = do
+        "aSplice" ## I.textSplice "Content"
+        "bSplice" ## I.textSplice "BContent"
+      hdl = with heist $ withSplices mySplices (withHeistState H.spliceNames)
+  res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
+  either
+    (assertFailure . show)
+    (\r -> assertBool "Local splices not stored" $
+           all (`elem` r) ["aSplice","bSplice"])
+    res
+  
+
+------------------------------------------------------------------------------
+seeLocalState :: Assertion
+seeLocalState = do
+  let hdl = with heist $ 
+            heistLocal (I.addTemplate "tinyTemplate" [XML.TextNode "aNode"] Nothing)
+            (withHeistState H.templateNames)
+  res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
+  either (assertFailure . show)
+    (\r -> assertBool "Local state template not found" $
+           "tinyTemplate" `elem` (map head r)) res
