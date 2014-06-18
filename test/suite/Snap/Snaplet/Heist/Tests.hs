@@ -71,6 +71,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "cRender with compiled module" compiledModuleRender
              ,testCase "cRenderAs compiled module" compiledModuleRenderAs
              ,testCase "cHeistServe a template" compiledModuleServe
+             ,testCase "cHeistServeSingle a template" compiledModuleServeOne
              ]
 
 
@@ -298,5 +299,13 @@ compiledModuleRenderAs = do
 compiledModuleServe :: Assertion
 compiledModuleServe = do
   let hdl = with heist $ C.heistServe
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInitCompiled
+  either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
+compiledModuleServeOne :: Assertion
+compiledModuleServeOne = do
+  let hdl = with heist $ C.heistServeSingle "foopage"
   res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInitCompiled
   either (assertFailure . show) ST.assertSuccess res
