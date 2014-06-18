@@ -11,6 +11,7 @@ module Snap.Snaplet.Heist.App
   , authInit
   , appInit
   , appInit'
+  , appInitCompiled
   ) where
 
 
@@ -23,7 +24,8 @@ import           Data.Map.Syntax ((##))
 import qualified Heist.Interpreted                            as I
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Heist
+import qualified Snap.Snaplet.Heist                           as HS
+import qualified Snap.Snaplet.Heist.Compiled                  as HSC
 import qualified Snap.Snaplet.HeistNoClass                    as Unclassed
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Auth.Backends.JsonFile
@@ -34,11 +36,11 @@ import qualified Text.XmlHtml                                 as XML
 data App = App
     { _sess  :: Snaplet SessionManager
     , _auth  :: Snaplet (AuthManager App)
-    , _heist :: Snaplet (Heist App)
+    , _heist :: Snaplet (HS.Heist App)
     }
 $(makeLenses ''App)
 
-instance HasHeist App where
+instance HS.HasHeist App where
     heistLens = subSnaplet heist
 
 aTestTemplate :: [XML.Node]
@@ -53,7 +55,7 @@ appInit = appInit' False
 appInit' :: Bool -> SnapletInit App App
 appInit' defInterp = makeSnaplet "foosnaplet" "Test application" Nothing $ do
 
-    h <- nestSnaplet "" heist $ heistInit "templates"
+    h <- nestSnaplet "" heist $ HS.heistInit "templates"
 
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
@@ -61,18 +63,29 @@ appInit' defInterp = makeSnaplet "foosnaplet" "Test application" Nothing $ do
     a <- nestSnaplet "auth" auth authInit
 
     -- addAuthSplices auth --probably not necessary
-    addTemplates h "extraTemplates"
+    HS.addTemplates h "extraTemplates"
 
     sPath    <- getSnapletFilePath
     let extraTemplatesPath = sPath </> "test" </> "evenMoreTemplates"
 
-    addTemplatesAt h "evenMoreTemplates" extraTemplatesPath
-    modifyHeistState (I.addTemplate "smallTemplate" aTestTemplate Nothing)
+    HS.addTemplatesAt h "evenMoreTemplates" extraTemplatesPath
+    HS.modifyHeistState (I.addTemplate "smallTemplate" aTestTemplate Nothing)
 
     when defInterp (Unclassed.setInterpreted h)
 
     return $ App s a h
 
+appInitCompiled :: SnapletInit App App
+appInitCompiled = makeSnaplet "foosnaplet" "TestApplication" Nothing $ do
+
+  h <- nestSnaplet "" heist $ HSC.heistInit "templates"
+
+  s <- nestSnaplet "sess" sess $
+       initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+
+  a <- nestSnaplet "auth" auth authInit
+
+  return $ App s a h
 
 ------------------------------------------------------------------------------
 authInit :: SnapletInit App (AuthManager App)

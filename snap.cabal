@@ -187,7 +187,7 @@ Test-suite testsuite
   hs-source-dirs: src test/suite
   type: exitcode-stdio-1.0
   main-is: TestSuite.hs
---  ghc-options: -fhpc
+  ghc-options: -fhpc
 
   other-modules:
     Snap,

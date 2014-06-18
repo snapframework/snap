@@ -43,7 +43,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "Get Heist state" assertHasTemplates
              ,testCase "Handler with heist state" accessibleHeistState
              ,testCase "gRender a template" gSimpleRender
-             ,testCase "gRender another template" gSimpleRenderAnother
+--             ,testCase "gRender another template" gSimpleRenderAnother
              ,testCase "cRender a template" (simpleRender False)
              ,testCase "Render a template"  (simpleRender True)
              ,testCase "gRenderAs a small template" gSimpleRenderAs
@@ -68,6 +68,9 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "Render with splices" fooRenderWith
              ,testCase "Recognize withSplices" seeLocalSplices
              ,testCase "Recognize heistLocal" seeLocalState
+             ,testCase "cRender with compiled module" compiledModuleRender
+             ,testCase "cRenderAs compiled module" compiledModuleRenderAs
+             ,testCase "cHeistServe a template" compiledModuleServe
              ]
 
 
@@ -271,3 +274,29 @@ seeLocalState = do
   either (assertFailure . show)
     (\r -> assertBool "Local state template not found" $
            "tinyTemplate" `elem` (map head r)) res
+
+
+------------------------------------------------------------------------------
+compiledModuleRender :: Assertion
+compiledModuleRender = do
+  let hdl = with heist $ C.render "foopage"
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInitCompiled
+  either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
+compiledModuleRenderAs :: Assertion
+compiledModuleRenderAs = do
+  let hdl = with heist $ C.renderAs "audio/ogg" "foopage"
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInitCompiled
+  rStr <- either (\_ -> return "") (ST.responseToString) res
+  assertBool "Compiled Heist snaplet response should contain \"audoi/ogg\""
+    (BSC.isInfixOf "audio/ogg" rStr)
+
+
+------------------------------------------------------------------------------
+compiledModuleServe :: Assertion
+compiledModuleServe = do
+  let hdl = with heist $ C.heistServe
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInitCompiled
+  either (assertFailure . show) ST.assertSuccess res
