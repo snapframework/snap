@@ -1,4 +1,6 @@
 <html>
-<head></head>
-<body>Hi.</body>
+  <head></head>
+  <body>Hi.
+    <aSplice/>
+  </body>
 </html>

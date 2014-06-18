@@ -10,10 +10,12 @@ module Snap.Snaplet.Heist.App
   , heist
   , authInit
   , appInit
+  , appInit'
   ) where
 
 
 ------------------------------------------------------------------------------
+import           Control.Monad
 import           Control.Lens
 import           System.FilePath
 ------------------------------------------------------------------------------
@@ -22,6 +24,7 @@ import qualified Heist.Interpreted                            as I
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Heist
+import qualified Snap.Snaplet.HeistNoClass                    as Unclassed
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Session.Backends.CookieSession
@@ -41,9 +44,14 @@ instance HasHeist App where
 aTestTemplate :: [XML.Node]
 aTestTemplate = [XML.TextNode "littleTemplateNode"]
 
+
 ------------------------------------------------------------------------------
 appInit :: SnapletInit App App
-appInit = makeSnaplet "foosnaplet" "Test application" Nothing $ do
+appInit = appInit' False
+
+------------------------------------------------------------------------------
+appInit' :: Bool -> SnapletInit App App
+appInit' defInterp = makeSnaplet "foosnaplet" "Test application" Nothing $ do
 
     h <- nestSnaplet "" heist $ heistInit "templates"
 
@@ -60,6 +68,8 @@ appInit = makeSnaplet "foosnaplet" "Test application" Nothing $ do
 
     addTemplatesAt h "evenMoreTemplates" extraTemplatesPath
     modifyHeistState (I.addTemplate "smallTemplate" aTestTemplate Nothing)
+
+    when defInterp (Unclassed.setInterpreted h)
 
     return $ App s a h
 

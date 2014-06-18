@@ -7,8 +7,10 @@ module Snap.Snaplet.Heist.Tests where
 import           Control.Applicative
 import           Control.Error
 import           Control.Exception
+import           Control.Monad                        (join)
 import           Control.Monad.IO.Class               (liftIO)
 import qualified Data.ByteString                      as BS
+import qualified Data.ByteString.Char8                as BSC
 import           Data.List
 import qualified Data.Set                             as Set
 import qualified Data.Map                             as Map
@@ -26,6 +28,7 @@ import qualified Heist.Interpreted                    as I
 import           Snap.Core
 import           Snap.Snaplet
 import qualified Snap.Test                            as ST
+import           Snap.TestCommon
 import           Snap.Snaplet.Test
 import           Snap.Snaplet.Heist
 import qualified Snap.Snaplet.Heist.Compiled          as C
@@ -39,7 +42,30 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              [testCase "Load templates" addTemplatesOK
              ,testCase "Get Heist state" assertHasTemplates
              ,testCase "Handler with heist state" accessibleHeistState
-             ,testCase "Render a small template" simpleRender]
+             ,testCase "gRender a template" gSimpleRender
+             ,testCase "cRender a template" (simpleRender False)
+             ,testCase "Render a template"  (simpleRender True)
+             ,testCase "gRenderAs a small template" gSimpleRenderAs
+             ,testCase "cRenderAs a template" (simpleRenderAs False)
+             ,testCase "renderAs a template"  (simpleRenderAs True)
+             ,testCase "gServe existing template" gSimpleHeistServeOK
+             ,testCase "cServe templates" (simpleHeistServeOK False)
+             ,testCase "serve templates" (simpleHeistServeOK True)
+             ,testCase "gHeistServe underscore template" gSimpleHeistServeUnd
+             ,testCase "gHeistServe missing template" gSimpleHeistServeMissing
+             ,testCase "gHeistServeSingle template" gSimpleHeistServeSingle
+             ,testCase "cHeistServeSingle template"
+              (simpleHeistServeSingle False)
+             ,testCase "heistServeSingle template"
+              (simpleHeistServeSingle True)
+             ,testCase "gHeistServeSingle underscored template"
+              gSimpleHeistServeSingleUnd
+             ,testCase "gHeistServeSingle missing template"
+              gSimpleHeistServeSingleMissing
+             ,testCase "Choose compiled mode" chooseCompiled
+             ,testCase "Choose interpreted mode" chooseInterpreted
+             ,testCase "Render with splices" fooRenderWith
+             ]
 
 
 ------------------------------------------------------------------------------
@@ -75,13 +101,138 @@ accessibleHeistState = do
 
 
 ------------------------------------------------------------------------------
-simpleRender :: Assertion
-simpleRender = do
+gSimpleRender :: Assertion
+gSimpleRender = do
   let hdl = with heist $ gRender "foopage"
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
-simpleRenderAsOK :: Assertion
-simpleRenderAsOK = do
-  let hdl = with heist $ gRenderAs "text/html" "foopage"
-  res <- 
+
+------------------------------------------------------------------------------
+simpleRender :: Bool -> Assertion
+simpleRender interp = do
+  let hdl = with heist $ chooseMode (cRender "foopage") (render "foopage")
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl (appInit' interp)
+  either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
+gSimpleRenderAs :: Assertion
+gSimpleRenderAs = do
+  let hdl = with heist $ gRenderAs "audio/ogg" "foopage"
+      defReq = ST.get "" Map.empty
+      rs = either (return . T.unpack)
+           (\r -> (BSC.unpack <$> ST.responseToString r))
+  resStr <- join $ rs <$> runHandler Nothing defReq hdl appInit
+  assertBool "gRenderAs should set content to audio/ogg" $
+    ("audio/ogg" `isInfixOf` resStr)
+
+
+------------------------------------------------------------------------------
+simpleRenderAs :: Bool -> Assertion
+simpleRenderAs interp = do
+  let hdl = with heist $ chooseMode
+            (cRenderAs "audio/ogg" "foopage")
+            (renderAs  "audio/ogg" "foopage")
+      defReq = ST.get "" Map.empty
+      rs  = either (return . T.unpack)
+            (\r -> (BSC.unpack <$> ST.responseToString r))
+
+  resStr <- join $ rs <$> runHandler Nothing defReq hdl (appInit' interp)
+  assertBool "renderAs should set content to audio/ogg" $
+        ("audio/ogg" `isInfixOf` resStr)
+
+
+------------------------------------------------------------------------------
+gSimpleHeistServeOK :: Assertion
+gSimpleHeistServeOK = do
+  let hdl = with heist gHeistServe
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
+simpleHeistServeOK :: Bool -> Assertion
+simpleHeistServeOK interp = do
+  let hdl = with heist $ chooseMode cHeistServe heistServe
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
+  either (assertFailure . show) ST.assertSuccess res
+
+------------------------------------------------------------------------------
+gSimpleHeistServeUnd :: Assertion
+gSimpleHeistServeUnd = do
+  let hdl = with heist gHeistServe
+  res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assert404 res
+
+
+------------------------------------------------------------------------------
+gSimpleHeistServeMissing :: Assertion
+gSimpleHeistServeMissing = do
+  let hdl = with heist gHeistServe
+  res <- runHandler Nothing (ST.get "nonexisting" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assert404 res
+
+
+simpleHeistServeSingle :: Bool -> Assertion
+simpleHeistServeSingle interp = do
+  let hdl = with heist $ chooseMode
+            (cHeistServeSingle "foopage")
+            (heistServeSingle  "foopage")
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
+  either (assertFailure . show) ST.assertSuccess res
+
+------------------------------------------------------------------------------
+-- Serves foopage, despite request for nonexistent
+gSimpleHeistServeSingle :: Assertion
+gSimpleHeistServeSingle = do
+  let hdl = with heist $ gHeistServeSingle "foopage"
+  res <- runHandler Nothing (ST.get "nonexistent" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
+-- serveSingle does not filter out underscored templates
+gSimpleHeistServeSingleUnd :: Assertion
+gSimpleHeistServeSingleUnd = do
+  let hdl = with heist $ gHeistServeSingle "_foopage"
+  res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
+  either (assertFailure . show) ST.assertSuccess res
+
+------------------------------------------------------------------------------
+gSimpleHeistServeSingleMissing :: Assertion
+gSimpleHeistServeSingleMissing = do
+  let hdl = with heist $ gHeistServeSingle "nonexistent"
+  expectException
+    "gHeistServeSingle failed to throw when serving nonexistent template"
+    (runHandler Nothing (ST.get "nonexistent" Map.empty) hdl appInit)
+    
+
+------------------------------------------------------------------------------
+chooseCompiled :: Assertion
+chooseCompiled = do
+  let hdl = with heist $ chooseMode
+            (liftIO $ return ())
+            (liftIO $ assertFailure "Should have chosen compiled mode")
+  res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
+  either (assertFailure . show) return res
+
+
+------------------------------------------------------------------------------
+chooseInterpreted :: Assertion
+chooseInterpreted = do
+  let hdl = with heist $ chooseMode
+            (liftIO $ assertFailure "Should have chosen intpreted mode")
+            (liftIO $ return ())
+  res <- evalHandler Nothing (ST.get "" Map.empty) hdl (appInit' True)
+  either (assertFailure . show) return res
+
+
+------------------------------------------------------------------------------
+fooRenderWith :: Assertion
+fooRenderWith = do
+  let mySplices = ("aSplice" ## I.textSplice "Content")
+      hdl = with heist $ renderWithSplices "foopage" mySplices
+  res  <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
+  rStr <- either (const $ return "") ST.responseToString res
+  assertBool "Splice was not spliced in" (BSC.isInfixOf "Content" (rStr :: BSC.ByteString))

@@ -178,16 +178,16 @@ Library
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans -fno-warn-unused-do-bind -fhpc
+                 -fno-warn-orphans -fno-warn-unused-do-bind
   else
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
-                 -fno-warn-orphans -fhpc
+                 -fno-warn-orphans
 
 Test-suite testsuite
   hs-source-dirs: src test/suite
   type: exitcode-stdio-1.0
   main-is: TestSuite.hs
-  ghc-options: -fhpc
+--  ghc-options: -fhpc
 
   other-modules:
     Snap,
@@ -205,6 +205,7 @@ Test-suite testsuite
     Snap.Snaplet.Session.SessionManager
     Snap.Snaplet.Session.Backends.CookieSession
     Snap.Snaplet.Test
+    Snap.TestCommon
 
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role
