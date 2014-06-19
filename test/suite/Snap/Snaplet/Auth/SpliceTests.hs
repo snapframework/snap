@@ -4,9 +4,11 @@ module Snap.Snaplet.Auth.SpliceTests (
 
 
 ------------------------------------------------------------------------------
+import           Control.Applicative
 import           Control.Error
 import           Control.Monad
 import qualified Data.Map                       as Map
+import           Data.ByteString
 import           Data.Time.Clock
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -26,7 +28,8 @@ import           Snap.Snaplet.Auth.App
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.SpliceHelpers"
-        [testCase "Render new user page"    $ renderNewUser False False
+        [
+         testCase "Render new user page"    $ renderNewUser False False
         ,testCase "New user login render"   $ renderNewUser True  False
         ,testCase "New user suspend render" $ renderNewUser False True
         ,testCase "cRender new user page"   $ cRenderNewUser
@@ -54,11 +57,15 @@ renderNewUser login suspend = withTemporaryFile "users.json" $ do
 cRenderNewUser :: Assertion
 cRenderNewUser = withTemporaryFile "users.json" $ do
   let hdl = with auth $ do
-        usr <- createUser "foo" "foo"
-        either
-          (\_ -> modifyResponse $ setResponseStatus 500 "Login error")
-          (\u -> HC.runChildren $ HC.withSplices "userSplice" userCSplices (return ()) )
-          usr
- 
+        _ <- createUser "foo" "foo"
+        _ <- loginByUsername "foo" (ClearText "foo") True
+        cRender "userpage"
+
+      assertValidRes r = do
+        rStr <- ST.responseToString r
+        assertBool "userpage should contain UserName foo splice" $
+          "UserLogin foo" `isInfixOf` rStr
+
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
-  either (assertFailure . show) ST.assertSuccess res
+  either
+    (assertFailure . show) assertValidRes res

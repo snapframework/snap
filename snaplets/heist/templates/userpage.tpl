@@ -5,46 +5,46 @@
   <body>
 
     <userSplice>
-      <h2>UserID</h2>
-      <userId/>
+      <h2>
+	<ifLoggedIn>
+	  <loggedInUser/> is logged in
+	</ifLoggedIn>
+	
+	<ifLoggedOut>
+	  You are not logged in
+	</ifLoggedOut>
+      </h2>
 
-      <h2>UserLogin</h2>
-      <userLogin/>
+      <h3>loggedInUser: <loggedInUser/></h3>
+
+      <p>UserID <userId/></p>
+
+      <p>UserLogin <userLogin/></p>
       
-      <h2>UserEmail</h2>
-      <userEmail/>
+      <p>UserEmail <userEmail/></p>
+
+      <p>UserActive <userActive/></p>
       
-      <h2>UserActive</h2>
-      <userActive/>
+      <p>UserLoginCount <userLoginCount/></p>
       
-      <h2>UserLoginCount</h2>
-      <userLoginCount/>
+      <p>UserFailedCount <userFailedCount/></p>
       
-      <h2>UserFailedCount</h2>
-      <userFailedCount/>
+      <p>UserLoginAt <userLoginAt/></p>
       
-      <h2>UserLoginAt</h2>
-      <userLoginAt/>
+      <p>UserLastLoginAt <userLastLoginAt/></p>
       
-      <h2>UserLastLoginAt</h2>
-      <userLastLoginAt/>
+      <p>UserSuspendedAt <userSuspendedAt/></p>
       
-      <h2>UserSuspendedAt</h2>
-      <userSuspendedAt/>
+      <p>UserLoginIP <userLoginIP/></p>
       
-      <h2>UserLoginIP</h2>
-      <userLoginIP/>
+      <p>UserLastLoginIP <userLastLoginIP/></p>
       
-      <h2>UserLastLoginIP</h2>
-      <userLastLoginIP/>
+      <p>UserIfActive <userIfActive/></p>
       
-      <h2>UserIfActive</h2>
-      <userIfActive/>
+      <p>userIfSuspended <userIfSuspended/></p>
       
-      <h2>userIfSuspended</h2>
-      <userIfSuspended/>
     </userSplice>
-
+    
   </body>
-
+  
 </html>

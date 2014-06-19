@@ -14,14 +14,19 @@ module Snap.Snaplet.Auth.App
 
 ------------------------------------------------------------------------------
 import           Control.Lens
+import           Control.Monad.Trans (lift)
+import           Data.Monoid
 ------------------------------------------------------------------------------
+import           Data.Map.Syntax
+import           Heist
+import qualified Heist.Compiled as C
+import           Snap.Core                                    (pass)
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.Heist
-import           Snap.Snaplet.Auth.SpliceHelpers
 
 ------------------------------------------------------------------------------
 data App = App
@@ -34,12 +39,20 @@ $(makeLenses ''App)
 instance HasHeist App where
   heistLens = subSnaplet heist
 
+compiledSplices :: Splices (C.Splice (Handler App App))
+compiledSplices = do
+  "userSplice" #! C.withSplices C.runChildren userCSplices $
+    lift $ maybe pass return =<< with auth currentUser
+
 ------------------------------------------------------------------------------
 appInit :: SnapletInit App App
 appInit = makeSnaplet "app" "Test application" Nothing $ do
 
     h <- nestSnaplet "heist" heist $
-           heistInit "templates"
+           heistInit'
+           "templates"
+           (mempty {hcCompiledSplices = compiledSplices})
+
   
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
