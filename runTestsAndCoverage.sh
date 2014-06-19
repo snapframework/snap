@@ -48,6 +48,7 @@ Snap.Snaplet.Internal.Tests
 Snap.TestCommon
 Snap.Snaplet.Test.App
 Snap.Snaplet.Test.Tests
+Snap.Snaplet.Auth.SpliceTests
 '
 
 

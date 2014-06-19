@@ -206,6 +206,7 @@ Test-suite testsuite
     Snap.Snaplet.Session.Backends.CookieSession
     Snap.Snaplet.Test
     Snap.TestCommon
+    Snap.Snaplet.Auth.SpliceTests
 
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role

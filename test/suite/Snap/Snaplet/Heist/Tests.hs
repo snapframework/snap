@@ -43,7 +43,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
              ,testCase "Get Heist state" assertHasTemplates
              ,testCase "Handler with heist state" accessibleHeistState
              ,testCase "gRender a template" gSimpleRender
---             ,testCase "gRender another template" gSimpleRenderAnother
+--             ,testCase "gRender another template" gSimpleRenderAnother -- TODO investigate
              ,testCase "cRender a template" (simpleRender False)
              ,testCase "Render a template"  (simpleRender True)
              ,testCase "gRenderAs a small template" gSimpleRenderAs
