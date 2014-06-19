@@ -364,16 +364,21 @@ setRoutePattern p = withTop' id $
 
 
 ------------------------------------------------------------------------------
+-- | Check whether the request comes from localhost.
+isLocalhost :: MonadSnap m => m Bool
+isLocalhost = do
+    rip <- liftM rqClientAddr getRequest
+    return $ elem rip [ "127.0.0.1"
+                      , "localhost"
+                      , "::1" ]
+
+
+------------------------------------------------------------------------------
 -- | Pass if the request is not coming from localhost.
 failIfNotLocal :: MonadSnap m => m b -> m b
 failIfNotLocal m = do
-    -- FIXME: this moves to auth once control-panel is done
-    rip <- liftM rqClientAddr getRequest
-    if not $ elem rip [ "127.0.0.1"
-                      , "localhost"
-                      , "::1" ]
-      then pass
-      else m
+    isLocal <- isLocalhost
+    if isLocal then m else pass
 
 
 ------------------------------------------------------------------------------
