@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Blackbox.FooSnaplet where
 
+------------------------------------------------------------------------------
 import Prelude hiding (lookup)
 import Control.Monad.State
 import Data.Configurator
@@ -16,7 +17,10 @@ import Heist
 import Heist.Interpreted
 
 import Blackbox.Common
+import Data.Map.Syntax ((##))
 
+
+------------------------------------------------------------------------------
 data FooSnaplet = FooSnaplet { fooField :: String }
 
 fooInit :: HasHeist b => Snaplet (Heist b) -> SnapletInit b FooSnaplet

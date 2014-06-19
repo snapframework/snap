@@ -25,7 +25,7 @@ module Snap.Snaplet.Auth.SpliceHelpers
   ) where
 
 import           Control.Monad.Trans
-import           Data.Map.Syntax
+import           Data.Map.Syntax ((##), mapV)
 import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text as T

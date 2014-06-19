@@ -10,17 +10,20 @@
 
 module Blackbox.EmbeddedSnaplet where
 
+------------------------------------------------------------------------------
 import Prelude hiding ((.))
 import Control.Lens
 import Control.Monad.State
 import qualified Data.Text as T
 import System.FilePath.Posix
 
+import Data.Map.Syntax ((##))
 import Snap.Snaplet
 import Snap.Snaplet.Heist
-import Heist
 import Heist.Interpreted
 
+
+------------------------------------------------------------------------------
 -- If we universally quantify EmbeddedSnaplet to get rid of the type parameter
 -- mkLabels throws an error "Can't reify a GADT data constructor"
 data EmbeddedSnaplet = EmbeddedSnaplet
