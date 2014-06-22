@@ -31,6 +31,7 @@ import qualified Snap.Snaplet.Internal.Tests
 import qualified Snap.Snaplet.Auth.Tests
 import qualified Snap.Snaplet.Test.Tests
 import qualified Snap.Snaplet.Heist.Tests
+import qualified Snap.Snaplet.Config.Tests
 
 import           SafeCWD
 
@@ -61,6 +62,7 @@ main = do
 --                                 , Snap.Snaplet.Test.Tests.tests
 
                                    , Snap.Snaplet.Heist.Tests.heistTests
+                                   , Snap.Snaplet.Config.Tests.configTests
                                  ]
 
 
