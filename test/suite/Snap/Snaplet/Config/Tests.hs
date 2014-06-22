@@ -4,6 +4,7 @@ module Snap.Snaplet.Config.Tests where
 import Control.Monad
 import Data.Function
 import Data.Monoid
+import Data.Typeable
 ------------------------------------------------------------------------------
 import Snap.Snaplet.Config
 import Test.Framework
@@ -16,9 +17,10 @@ import Test.HUnit hiding (Test)
 ------------------------------------------------------------------------------
 configTests :: Test
 configTests = testGroup "Snaplet Config"
-        [ testProperty "Monoid left identity" monoidLeftIdentity
-        , testProperty "Monoid right identity" monoidRightIdentity
-        , testProperty "Monoid associativity" monoidAssociativity 
+        [ testProperty "Monoid left identity"     monoidLeftIdentity
+        , testProperty "Monoid right identity"    monoidRightIdentity
+        , testProperty "Monoid associativity"     monoidAssociativity
+        , testCase     "Verify Typeable instance" verTypeable
         ]
 
 newtype ArbAppConfig = ArbAppConfig { unArbAppConfig :: AppConfig }
@@ -46,3 +48,10 @@ monoidRightIdentity a = a <> mempty == a
 monoidAssociativity :: ArbAppConfig -> ArbAppConfig -> ArbAppConfig
                     -> Bool
 monoidAssociativity a b c = (a <> b) <> c == a <> (b <> c)
+
+------------------------------------------------------------------------------
+verTypeable :: Assertion
+verTypeable =
+  assertEqual "Unexpected Typeable behavior"
+  "Snap.Snaplet.Config.AppConfig"
+  (tyConString . typeRepTyCon . typeOf $ (undefined :: AppConfig))
