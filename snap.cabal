@@ -233,6 +233,7 @@ Test-suite testsuite
 
   build-depends:
     aeson                     >= 0.6      && < 0.8,
+    async,
     attoparsec                >= 0.10     && < 0.13,
     base                      >= 4.4      && < 5,
     blaze-builder,
@@ -242,6 +243,7 @@ Test-suite testsuite
     comonad                   >= 1.1      && < 4.3,
     configurator              >= 0.1      && < 0.3,
     containers                >= 0.3      && < 0.6,
+    deepseq,
     directory                 >= 1.0      && < 1.3,
     directory-tree            >= 0.11     && < 0.13,
     dlist                     >= 0.5      && < 0.8,

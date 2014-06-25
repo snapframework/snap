@@ -63,6 +63,9 @@ main = do
 
                                    , Snap.Snaplet.Heist.Tests.heistTests
                                    , Snap.Snaplet.Config.Tests.configTests
+                                   , Snap.Snaplet.Internal.RST.Tests.tests
+                                   , Snap.Snaplet.Internal.LensT.Tests.tests
+                                   , Snap.Snaplet.Internal.Lensed.Tests.tests
                                  ]
 
 

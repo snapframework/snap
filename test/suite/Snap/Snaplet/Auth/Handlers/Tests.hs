@@ -28,7 +28,9 @@ tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.Handlers"
     [mutuallyExclusive $ testGroup "createUser tests"
         [ testCreateUserGood
+        , testWithCfgFile
         , testCreateUserTimely
+        , testCreateUserWithRole
         , testCreateEmptyUser
         , testCreateDupUser
         , testUsernameExists 
@@ -88,6 +90,17 @@ testCreateUserGood = testCase "createUser good params" assertGoodUser
 
 
 ------------------------------------------------------------------------------
+testWithCfgFile :: Test
+testWithCfgFile = testCase "createUser with config file settings" assertCfg
+  where
+    assertCfg :: Assertion
+    assertCfg = withTemporaryFile "users.json" $ do
+      let hdl = with auth $ createUser "foo" "foo"
+      res <- runHandler Nothing (ST.get "" Map.empty) hdl (appInit' True)
+      either (assertFailure . show) ST.assertSuccess res
+
+
+------------------------------------------------------------------------------
 testCreateUserTimely :: Test
 testCreateUserTimely = testCase "createUser good updatedAt" assertCreateTimely
   where
@@ -104,6 +117,27 @@ testCreateUserTimely = testCase "createUser good updatedAt" assertCreateTimely
                             && isTimely (userCreatedAt au)
 
     failMsg = "createUser: userUpdatedAt, userCreatetAt times not set"
+
+
+------------------------------------------------------------------------------
+testCreateUserWithRole :: Test
+testCreateUserWithRole = testCase "createUser with role" assertUserRole
+  where
+    assertUserRole :: Assertion
+    assertUserRole = withTemporaryFile "users.json" $ do
+      let hdl = with auth $ runMaybeT $ do
+            u <- hushT $ EitherT $ createUser "foo" "foo"
+            _ <- hushT $ EitherT $
+                 saveUser $ u {userRoles = [Role "admin",Role "user"]}
+            hushT $ EitherT $
+              loginByUsername "foo" (ClearText "foo") False
+      res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
+      case res of
+        Left e           -> assertFailure $ show e
+        Right Nothing    -> assertFailure "Failed saved user lookup"
+        Right (Just usr) -> assertEqual "Roles don't match expectation"
+                         [Role "admin",Role "user"]
+                         (userRoles usr)
 
 
 ------------------------------------------------------------------------------
