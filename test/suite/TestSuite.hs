@@ -59,13 +59,13 @@ main = do
                 testGroup "snap" [ --internalServerTests
 
                                    Snap.Snaplet.Auth.Tests.tests
---                                 , Snap.Snaplet.Test.Tests.tests
+                                 , Snap.Snaplet.Test.Tests.tests
 
-                                   , Snap.Snaplet.Heist.Tests.heistTests
-                                   , Snap.Snaplet.Config.Tests.configTests
-                                   , Snap.Snaplet.Internal.RST.Tests.tests
-                                   , Snap.Snaplet.Internal.LensT.Tests.tests
-                                   , Snap.Snaplet.Internal.Lensed.Tests.tests
+                                 , Snap.Snaplet.Heist.Tests.heistTests
+                                 , Snap.Snaplet.Config.Tests.configTests
+                                 , Snap.Snaplet.Internal.RST.Tests.tests
+                                 , Snap.Snaplet.Internal.LensT.Tests.tests
+                                 , Snap.Snaplet.Internal.Lensed.Tests.tests
                                  ]
 
 

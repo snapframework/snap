@@ -5,6 +5,9 @@ module Snap.Snaplet.Test.Tests
 
 
 ------------------------------------------------------------------------------
+import           Control.Concurrent       (threadDelay)
+import           Control.Concurrent.Async (race)
+import           Control.Monad            (join)
 import qualified Data.Map as Map
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
@@ -26,6 +29,7 @@ tests = testGroup "Snap.Snaplet.Test"
     , testEvalHandler'
     , testFailingEvalHandler
     , testFailingGetSnaplet
+--    , readRequestBodyHangIssue
     ]
 
 testRunHandler :: Test
@@ -91,3 +95,15 @@ testFailingGetSnaplet = testCase "getSnaplet failing" assertGetSnaplet
                          case init of
                            Left _ -> assertBool "" True
                            Right _ -> assertFailure "Should have failed in initializer"
+
+
+readRequestBodyHangIssue :: Test
+readRequestBodyHangIssue = testCase "readRequestBody doesn't hang" assertReadRqBody
+  where
+    assertReadRqBody = do let hdl = readRequestBody 5000 >>= writeLBS
+                          res <- race
+                                 (threadDelay 1000000)
+                                 (runHandler Nothing (ST.get "" Map.empty) hdl appInit)
+                          either (assertFailure . ("readRequestBody timeout" ++) . show)
+                            (either (assertFailure . show) ST.assertSuccess) res
+
