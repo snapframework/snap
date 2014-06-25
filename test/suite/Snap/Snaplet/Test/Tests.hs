@@ -29,7 +29,7 @@ tests = testGroup "Snap.Snaplet.Test"
     , testEvalHandler'
     , testFailingEvalHandler
     , testFailingGetSnaplet
---    , readRequestBodyHangIssue
+    , readRequestBodyHangIssue
     ]
 
 testRunHandler :: Test
