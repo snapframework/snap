@@ -48,13 +48,12 @@ extra-source-files:
   test/suite/Snap/Snaplet/Internal/RST/Tests.hs,
   test/suite/Snap/Snaplet/Internal/Tests.hs,
   test/suite/Snap/Snaplet/Internal/LensT/Tests.hs,
-  test/suite/Blackbox/Types.hs,
-  test/suite/Blackbox/FooSnaplet.hs,
-  test/suite/Blackbox/BarSnaplet.hs,
+  test/suite/Snap/Snaplet/Common/Types.hs,
+  test/suite/Snap/Snaplet/Common/BarSnaplet.hs,
+  test/suite/Snap/Snaplet/Common/FooSnaplet.hs,
   test/suite/Blackbox/Common.hs,
   test/suite/Blackbox/EmbeddedSnaplet.hs,
   test/suite/Blackbox/Tests.hs,
-  test/suite/Blackbox/App.hs,
   test/suite/SafeCWD.hs,
   test/suite/AppMain.hs,
   test/non-cabal-appdir/db.cfg,
@@ -199,6 +198,11 @@ Test-suite testsuite
     Snap.Snaplet.Heist.Interpreted
     Snap.Snaplet.Auth
     Snap.Snaplet.Auth.Backends.JsonFile
+    Snap.Snaplet.Common.App
+    Snap.Snaplet.Common.Handlers
+    Snap.Snaplet.Common.BarSnaplet
+    Snap.Snaplet.Common.FooSnaplet
+    Snap.Snaplet.Common.Types
     Snap.Snaplet.Config
     Snap.Snaplet.Session
     Snap.Snaplet.Session.Common

@@ -48,9 +48,6 @@ $(makeLenses ''App)
 instance HS.HasHeist App where
     heistLens = subSnaplet heist
 
-aTestTemplate :: [XML.Node]
-aTestTemplate = [XML.TextNode "littleTemplateNode"]
-
 
 ------------------------------------------------------------------------------
 appInit :: SnapletInit App App

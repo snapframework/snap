@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Blackbox.FooSnaplet where
+module Snap.Snaplet.Common.FooSnaplet where
 
 ------------------------------------------------------------------------------
 import Prelude hiding (lookup)

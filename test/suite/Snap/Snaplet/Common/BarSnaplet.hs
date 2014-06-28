@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
-module Blackbox.BarSnaplet where
+module Snap.Snaplet.Common.BarSnaplet where
 
 ------------------------------------------------------------------------------
 import Prelude hiding (lookup)
