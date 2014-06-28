@@ -12,22 +12,37 @@ module Snap.Snaplet.Auth.App
   , appInit'
   ) where
 
-
 ------------------------------------------------------------------------------
-import           Control.Lens
-import           Control.Monad.Trans (lift)
-import           Data.Monoid
+import           Control.Lens                                (makeLenses)
+import           Control.Monad.Trans                         (lift)
+import           Data.Monoid                                 (mempty)
 ------------------------------------------------------------------------------
-import           Data.Map.Syntax
-import           Heist
-import qualified Heist.Compiled as C
-import           Snap.Core                                    (pass)
-import           Snap.Snaplet
-import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Session
-import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Snaplet.Heist
+import           Data.Map.Syntax                             ((#!))
+import           Heist                                       (Splices,
+                                                              hcCompiledSplices)
+import qualified Heist.Compiled                              as C
+import           Snap.Core                                   (pass)
+import           Snap.Snaplet                                (Handler,
+                                                              Snaplet,
+                                                              SnapletInit,
+                                                              makeSnaplet,
+                                                              nestSnaplet,
+                                                              subSnaplet,
+                                                              with)
+import           Snap.Snaplet.Auth                           (AuthManager,
+                                                              AuthSettings(..),
+                                                              addAuthSplices,
+                                                              authSettingsFromConfig,
+                                                              currentUser,
+                                                              defAuthSettings,
+                                                              userCSplices)
+import           Snap.Snaplet.Session                        (SessionManager)
+import           Snap.Snaplet.Auth.Backends.JsonFile         (initJsonFileAuthManager)
+import           Snap.Snaplet.Session.Backends.CookieSession (initCookieSessionManager)
+import           Snap.Snaplet.Heist                          (Heist,
+                                                              HasHeist,
+                                                              heistLens,
+                                                              heistInit')
 
 
 ------------------------------------------------------------------------------

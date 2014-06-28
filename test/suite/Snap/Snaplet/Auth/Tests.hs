@@ -7,7 +7,7 @@ module Snap.Snaplet.Auth.Tests
 
 
 ------------------------------------------------------------------------------
-import           Test.Framework
+import           Test.Framework                   (Test, testGroup)
 import qualified Snap.Snaplet.Auth.Handlers.Tests
 import qualified Snap.Snaplet.Auth.Types.Tests
 import qualified Snap.Snaplet.Auth.SpliceTests

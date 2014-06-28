@@ -5,37 +5,31 @@ module Snap.Snaplet.Heist.Tests where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Error
-import           Control.Exception
-import           Control.Monad                        (join)
-import           Control.Monad.IO.Class               (liftIO)
-import qualified Data.ByteString                      as BS
-import qualified Data.ByteString.Char8                as BSC
-import           Data.List
-import qualified Data.Set                             as Set
-import qualified Data.Map                             as Map
-import qualified Data.Text                            as T
-import           Test.QuickCheck
-import           Test.HUnit
-import qualified Test.Framework as F
-import           Test.Framework.Providers.QuickCheck2
-import           Test.Framework.Providers.HUnit       (testCase)
-
-import           Data.Map.Syntax                      ((##))
-import qualified Heist                                as H
-import qualified Heist.Compiled                       as C
-import qualified Heist.Interpreted                    as I
-import           Snap.Core
-import           Snap.Snaplet
-import qualified Snap.Test                            as ST
-import           Snap.TestCommon
-import           Snap.Snaplet.Test
-import           Snap.Snaplet.Heist
-import qualified Snap.Snaplet.Heist.Compiled          as C
-import qualified Snap.Snaplet.Heist.Interpreted       as I
-import           Snap.Snaplet.Heist.App
-import           SafeCWD
-import qualified Text.XmlHtml                         as XML
+import           Control.Monad                  (join)
+import           Control.Monad.IO.Class         (liftIO)
+import qualified Data.ByteString.Char8          as BSC
+import           Data.List                      (isInfixOf)
+import qualified Data.Set                       as Set
+import qualified Data.Map                       as Map
+import qualified Data.Text                      as T
+import           Test.HUnit                     (Assertion, assertBool,
+                                                 assertFailure)
+import qualified Test.Framework                 as F
+import           Test.Framework.Providers.HUnit (testCase)
+------------------------------------------------------------------------------
+import           Data.Map.Syntax                ((##))
+import qualified Heist                          as H
+import qualified Heist.Interpreted              as I
+import           Snap.Snaplet                   (with)
+import qualified Snap.Test                      as ST
+import           Snap.TestCommon                (expectException)
+import           Snap.Snaplet.Test              (evalHandler, runHandler)
+import qualified Snap.Snaplet.Heist             as HS
+import qualified Snap.Snaplet.Heist.Compiled    as C
+import qualified Snap.Snaplet.Heist.Interpreted as I
+import           Snap.Snaplet.Heist.App         (appInit, appInit', heist,
+                                                 appInitCompiled)
+import qualified Text.XmlHtml                   as XML
 
 heistTests :: F.Test
 heistTests = F.testGroup "Snap.Snaplet.Heist"
@@ -87,7 +81,7 @@ addTemplatesOK = do
 assertHasTemplates :: Assertion
 assertHasTemplates = do
   let hdl = with heist $  do
-        s <- getHeistState
+        s <- HS.getHeistState
         t <- return $ H.templateNames s
         return $ Set.fromList (map head t)
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
@@ -101,7 +95,7 @@ assertHasTemplates = do
 ------------------------------------------------------------------------------
 accessibleHeistState :: Assertion
 accessibleHeistState = do
-  let hdl = with heist . withHeistState $
+  let hdl = with heist . HS.withHeistState $
         I.lookupSplice "thisSpliceDoesntExist"
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) (ST.assertSuccess) res
@@ -110,20 +104,21 @@ accessibleHeistState = do
 ------------------------------------------------------------------------------
 gSimpleRender :: Assertion
 gSimpleRender = do
-  let hdl = with heist $ gRender "foopage"
+  let hdl = with heist $ HS.gRender "foopage"
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 gSimpleRenderAnother :: Assertion
 gSimpleRenderAnother = do
-  let hdl = with heist $ gRender "bazpage"
+  let hdl = with heist $ HS.gRender "bazpage"
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
 simpleRender :: Bool -> Assertion
 simpleRender interp = do
-  let hdl = with heist $ chooseMode (cRender "foopage") (render "foopage")
+  let hdl = with heist $
+            HS.chooseMode (HS.cRender "foopage") (HS.render "foopage")
   res <- runHandler Nothing (ST.get "" Map.empty) hdl (appInit' interp)
   either (assertFailure . show) ST.assertSuccess res
 
@@ -131,7 +126,7 @@ simpleRender interp = do
 ------------------------------------------------------------------------------
 gSimpleRenderAs :: Assertion
 gSimpleRenderAs = do
-  let hdl = with heist $ gRenderAs "audio/ogg" "foopage"
+  let hdl = with heist $ HS.gRenderAs "audio/ogg" "foopage"
       defReq = ST.get "" Map.empty
       rs = either (return . T.unpack)
            (\r -> (BSC.unpack <$> ST.responseToString r))
@@ -143,9 +138,9 @@ gSimpleRenderAs = do
 ------------------------------------------------------------------------------
 simpleRenderAs :: Bool -> Assertion
 simpleRenderAs interp = do
-  let hdl = with heist $ chooseMode
-            (cRenderAs "audio/ogg" "foopage")
-            (renderAs  "audio/ogg" "foopage")
+  let hdl = with heist $ HS.chooseMode
+            (HS.cRenderAs "audio/ogg" "foopage")
+            (HS.renderAs  "audio/ogg" "foopage")
       defReq = ST.get "" Map.empty
       rs  = either (return . T.unpack)
             (\r -> (BSC.unpack <$> ST.responseToString r))
@@ -158,7 +153,7 @@ simpleRenderAs interp = do
 ------------------------------------------------------------------------------
 gSimpleHeistServeOK :: Assertion
 gSimpleHeistServeOK = do
-  let hdl = with heist gHeistServe
+  let hdl = with heist HS.gHeistServe
   res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
@@ -166,14 +161,14 @@ gSimpleHeistServeOK = do
 ------------------------------------------------------------------------------
 simpleHeistServeOK :: Bool -> Assertion
 simpleHeistServeOK interp = do
-  let hdl = with heist $ chooseMode cHeistServe heistServe
+  let hdl = with heist $ HS.chooseMode HS.cHeistServe HS.heistServe
   res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
   either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
 gSimpleHeistServeUnd :: Assertion
 gSimpleHeistServeUnd = do
-  let hdl = with heist gHeistServe
+  let hdl = with heist HS.gHeistServe
   res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assert404 res
 
@@ -181,16 +176,16 @@ gSimpleHeistServeUnd = do
 ------------------------------------------------------------------------------
 gSimpleHeistServeMissing :: Assertion
 gSimpleHeistServeMissing = do
-  let hdl = with heist gHeistServe
+  let hdl = with heist HS.gHeistServe
   res <- runHandler Nothing (ST.get "nonexisting" Map.empty) hdl appInit
   either (assertFailure . show) ST.assert404 res
 
 
 simpleHeistServeSingle :: Bool -> Assertion
 simpleHeistServeSingle interp = do
-  let hdl = with heist $ chooseMode
-            (cHeistServeSingle "foopage")
-            (heistServeSingle  "foopage")
+  let hdl = with heist $ HS.chooseMode
+            (HS.cHeistServeSingle "foopage")
+            (HS.heistServeSingle  "foopage")
   res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
   either (assertFailure . show) ST.assertSuccess res
 
@@ -198,7 +193,7 @@ simpleHeistServeSingle interp = do
 -- Serves foopage, despite request for nonexistent
 gSimpleHeistServeSingle :: Assertion
 gSimpleHeistServeSingle = do
-  let hdl = with heist $ gHeistServeSingle "foopage"
+  let hdl = with heist $ HS.gHeistServeSingle "foopage"
   res <- runHandler Nothing (ST.get "nonexistent" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
@@ -207,14 +202,14 @@ gSimpleHeistServeSingle = do
 -- serveSingle does not filter out underscored templates
 gSimpleHeistServeSingleUnd :: Assertion
 gSimpleHeistServeSingleUnd = do
-  let hdl = with heist $ gHeistServeSingle "_foopage"
+  let hdl = with heist $ HS.gHeistServeSingle "_foopage"
   res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
 gSimpleHeistServeSingleMissing :: Assertion
 gSimpleHeistServeSingleMissing = do
-  let hdl = with heist $ gHeistServeSingle "nonexistent"
+  let hdl = with heist $ HS.gHeistServeSingle "nonexistent"
   expectException
     "gHeistServeSingle failed to throw when serving nonexistent template"
     (runHandler Nothing (ST.get "nonexistent" Map.empty) hdl appInit)
@@ -223,7 +218,7 @@ gSimpleHeistServeSingleMissing = do
 ------------------------------------------------------------------------------
 chooseCompiled :: Assertion
 chooseCompiled = do
-  let hdl = with heist $ chooseMode
+  let hdl = with heist $ HS.chooseMode
             (liftIO $ return ())
             (liftIO $ assertFailure "Should have chosen compiled mode")
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
@@ -233,7 +228,7 @@ chooseCompiled = do
 ------------------------------------------------------------------------------
 chooseInterpreted :: Assertion
 chooseInterpreted = do
-  let hdl = with heist $ chooseMode
+  let hdl = with heist $ HS.chooseMode
             (liftIO $ assertFailure "Should have chosen intpreted mode")
             (liftIO $ return ())
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl (appInit' True)
@@ -244,7 +239,7 @@ chooseInterpreted = do
 fooRenderWith :: Assertion
 fooRenderWith = do
   let mySplices = ("aSplice" ## I.textSplice "Content")
-      hdl = with heist $ renderWithSplices "foopage" mySplices
+      hdl = with heist $ HS.renderWithSplices "foopage" mySplices
   res  <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   rStr <- either (const $ return "") ST.responseToString res
   assertBool "Splice was not spliced in" (BSC.isInfixOf "Content" (rStr :: BSC.ByteString))
@@ -256,7 +251,8 @@ seeLocalSplices = do
   let mySplices = do
         "aSplice" ## I.textSplice "Content"
         "bSplice" ## I.textSplice "BContent"
-      hdl = with heist $ withSplices mySplices (withHeistState H.spliceNames)
+      hdl = with heist $
+            HS.withSplices mySplices (HS.withHeistState H.spliceNames)
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
   either
     (assertFailure . show)
@@ -269,8 +265,9 @@ seeLocalSplices = do
 seeLocalState :: Assertion
 seeLocalState = do
   let hdl = with heist $ 
-            heistLocal (I.addTemplate "tinyTemplate" [XML.TextNode "aNode"] Nothing)
-            (withHeistState H.templateNames)
+            HS.heistLocal
+            (I.addTemplate "tinyTemplate" [XML.TextNode "aNode"] Nothing)
+            (HS.withHeistState H.templateNames)
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show)
     (\r -> assertBool "Local state template not found" $

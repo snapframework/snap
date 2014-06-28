@@ -14,16 +14,14 @@ import           Prelude hiding (catch)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
 import           System.IO
-import           System.Posix.Process
-import           System.Posix.Signals
-import           System.Posix.Types
+
 import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
 ------------------------------------------------------------------------------
---import           Blackbox.App
---import qualified Blackbox.Tests
---import           Snap.Http.Server (simpleHttpServe)
+import           Blackbox.App
+import qualified Blackbox.Tests
+import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
@@ -38,24 +36,27 @@ import           SafeCWD
 import           Snap.Snaplet
 import           Snap.Snaplet.Test
 import           Snap.Snaplet.Auth
-import           Test.HUnit
+import           Test.HUnit hiding (Test)
 
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
---    Blackbox.Tests.remove
---                "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
---    Blackbox.Tests.remove
---                "non-cabal-appdir/snaplets/heist/templates/good.tpl"
---    Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
+  {-
+    Blackbox.Tests.remove
+                "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
+    Blackbox.Tests.remove
+                "non-cabal-appdir/snaplets/heist/templates/good.tpl"
+    Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
 
---    (tid, mvar) <- inDir False "non-cabal-appdir" startServer
-    defaultMain [tests]  -- `finally` killThread tid
+    (tid, mvar) <- inDir False "non-cabal-appdir" startServer
+-}
+    defaultMain [tests]
+{-      `finally` killThread tid
 
---    putStrLn "waiting for termination mvar"
---    takeMVar mvar
-
-  where tests = mutuallyExclusive $
+    putStrLn "waiting for termination mvar"
+    takeMVar mvar
+-}
+      where tests = mutuallyExclusive $
                 testGroup "snap" [ --internalServerTests
 
                                    Snap.Snaplet.Auth.Tests.tests
@@ -69,7 +70,7 @@ main = do
                                  ]
 
 
-{-
+
 ------------------------------------------------------------------------------
 internalServerTests :: Test
 internalServerTests =
@@ -106,4 +107,4 @@ startServer = do
 
     handleErr :: SomeException -> IO ()
     handleErr e = hPutStrLn stderr $ "startServer exception: " ++ show e
--}
+

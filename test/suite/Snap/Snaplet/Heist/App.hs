@@ -16,20 +16,25 @@ module Snap.Snaplet.Heist.App
 
 
 ------------------------------------------------------------------------------
-import           Control.Monad
-import           Control.Lens
-import           System.FilePath
+import           Control.Monad                                (when)
+import           Control.Lens                                 (makeLenses)
+import           System.FilePath                              ((</>))
 ------------------------------------------------------------------------------
-import           Data.Map.Syntax ((##))
 import qualified Heist.Interpreted                            as I
-import           Snap.Snaplet
-import           Snap.Snaplet.Auth
+import           Snap.Snaplet                                 (Snaplet,
+                                                               SnapletInit,
+                                                               getSnapletFilePath,
+                                                               makeSnaplet,
+                                                               nestSnaplet,
+                                                               subSnaplet)
+import           Snap.Snaplet.Auth                            (AuthManager,
+                                                               defAuthSettings)
 import qualified Snap.Snaplet.Heist                           as HS
 import qualified Snap.Snaplet.Heist.Compiled                  as HSC
 import qualified Snap.Snaplet.HeistNoClass                    as Unclassed
-import           Snap.Snaplet.Session
-import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Session.Backends.CookieSession
+import           Snap.Snaplet.Session                         (SessionManager)
+import           Snap.Snaplet.Auth.Backends.JsonFile          (initJsonFileAuthManager)
+import           Snap.Snaplet.Session.Backends.CookieSession  (initCookieSessionManager)
 import qualified Text.XmlHtml                                 as XML
 
 ------------------------------------------------------------------------------

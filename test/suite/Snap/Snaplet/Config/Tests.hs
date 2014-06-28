@@ -11,7 +11,6 @@ import qualified Data.Map as Map
 import Data.Monoid
 import Data.Typeable
 import System.Environment
-import System.Process
 ------------------------------------------------------------------------------
 import Snap.Core
 import Snap.Http.Server.Config

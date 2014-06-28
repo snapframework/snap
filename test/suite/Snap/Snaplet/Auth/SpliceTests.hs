@@ -4,32 +4,30 @@ module Snap.Snaplet.Auth.SpliceTests (
 
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
-import           Control.Error
-import           Control.Monad
+import           Control.Monad                  (replicateM_, when)
 import qualified Data.Map                       as Map
-import           Data.ByteString
-import           Data.Time.Clock
-import           Test.Framework
-import           Test.Framework.Providers.HUnit
+import qualified Data.ByteString                as BS
+import           Test.Framework                 (Test, testGroup)
+import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     hiding (Test)
-
-import qualified Heist.Compiled                 as HC
-import           Snap.Core
-import           Snap.Snaplet
-import qualified Snap.Test as ST
-import           Snap.Snaplet.Test
-import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Heist
-import qualified Snap.Snaplet.Heist.Interpreted      as HI
-import           Snap.Snaplet.Auth.App
+------------------------------------------------------------------------------
+import           Snap.Core                      as Core
+import           Snap.Snaplet                   (with)
+import qualified Snap.Test                      as ST
+import           Snap.Snaplet.Test              (runHandler,
+                                                 withTemporaryFile)
+import           Snap.Snaplet.Auth              (Password(ClearText),
+                                                 createUser, loginByUsername,
+                                                 userISplices)
+import           Snap.Snaplet.Heist             (cRender, render,
+                                                 withSplices)
+import           Snap.Snaplet.Auth.App          (appInit, auth)
 
 
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Snap.Snaplet.Auth.SpliceHelpers"
-        [
-         testCase "Render new user page"    $ renderNewUser False False
+        [testCase "Render new user page"    $ renderNewUser False False
         ,testCase "New user login render"   $ renderNewUser True  False
         ,testCase "New user suspend render" $ renderNewUser False True
         ,testCase "cRender new user page"   $ cRenderNewUser
@@ -46,8 +44,8 @@ renderNewUser login suspend = withTemporaryFile "users.json" $ do
         _ <- when suspend $ replicateM_ 4 $
              loginByUsername "foo" (ClearText "wrong") False
         either
-          (\_ -> modifyResponse $ setResponseStatus 500 "Login error")
-          (\u     -> withSplices (userISplices u) $ render "userpage")
+          (\_ -> Core.modifyResponse $ Core.setResponseStatus 500 "Error")
+          (\u -> withSplices (userISplices u) $ render "userpage")
           usr
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
@@ -64,8 +62,7 @@ cRenderNewUser = withTemporaryFile "users.json" $ do
       assertValidRes r = do
         rStr <- ST.responseToString r
         assertBool "userpage should contain UserName foo splice" $
-          "UserLogin foo" `isInfixOf` rStr
+          "UserLogin foo" `BS.isInfixOf` rStr
 
   res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
-  either
-    (assertFailure . show) assertValidRes res
+  either (assertFailure . show) assertValidRes res

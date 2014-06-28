@@ -4,21 +4,25 @@
 module Snap.Snaplet.Config.App where
 
 ------------------------------------------------------------------------------
-import Control.Concurrent.Async
-import Control.Lens
-import Control.Monad.IO.Class
+import Control.Lens                                  (makeLenses)
+import Control.Monad.IO.Class                        (liftIO)
 ------------------------------------------------------------------------------
-import Heist
-import Snap.Core
-import Snap.Http.Server.Config
-import Snap.Snaplet
-import Snap.Snaplet.Auth
-import Snap.Snaplet.Auth.Backends.JsonFile
-import Snap.Snaplet.Config
-import Snap.Snaplet.Heist
-import Snap.Snaplet.Internal.Initializer
-import Snap.Snaplet.Session
-import Snap.Snaplet.Session.Backends.CookieSession
+import Snap.Http.Server.Config                       (Config, completeConfig,
+                                                      defaultConfig)
+import Snap.Snaplet                                  (Handler, Initializer,
+                                                      Snaplet, SnapletInit,
+                                                      makeSnaplet,
+                                                      nestSnaplet,
+                                                      subSnaplet)
+import Snap.Snaplet.Auth                             (AuthManager,
+                                                      defAuthSettings)
+import Snap.Snaplet.Auth.Backends.JsonFile           (initJsonFileAuthManager)
+import Snap.Snaplet.Config                           (AppConfig,
+                                                      commandLineAppConfig)
+import Snap.Snaplet.Heist                            (Heist, HasHeist,
+                                                      heistInit, heistLens)
+import Snap.Snaplet.Session                          (SessionManager)
+import Snap.Snaplet.Session.Backends.CookieSession   (initCookieSessionManager)
 
 ------------------------------------------------------------------------------
 data App = App {
@@ -40,7 +44,6 @@ appInit = makeSnaplet "app" "Test application" Nothing $ do
   s <- nestSnaplet "sess"  sess  $ initCookieSessionManager
                                    "site_key.txt" "sess" (Just 3600)
 
---  liftIO $ print $ appOpts defaultConfig
   cfg <- liftIO $ completeConfig =<< commandLineAppConfig defaultConfig :: Initializer App App (Config (Handler App App) AppConfig) --TODO doesn't seem to touch tests
 
   liftIO $ print cfg

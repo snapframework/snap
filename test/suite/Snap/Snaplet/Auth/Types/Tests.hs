@@ -3,36 +3,29 @@ module Snap.Snaplet.Auth.Types.Tests (
   ) where
 
 ------------------------------------------------------------------------------
-import Control.DeepSeq
-import Control.Exception
-import Control.Monad
-import Control.Monad.IO.Class
-import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Map as Map
-import qualified Data.Text as T
-import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import Data.Time
-import Data.Time.Clock
-import GHC.Read
-import Test.HUnit hiding (Test)
-import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.Framework.Providers.QuickCheck2
-import Test.QuickCheck
-import qualified Test.QuickCheck.Monadic as QCM
-import Text.ParserCombinators.ReadPrec
+import           Control.DeepSeq                      (deepseq)
+import           Control.Exception                    (SomeException, try)
+import           Control.Monad                        (liftM)
+import           Data.Aeson                           (decode, eitherDecode,
+                                                       encode)
+import qualified Data.ByteString                      as BS
+import qualified Data.ByteString.Lazy.Char8           as BSL
+import qualified Data.Text                            as T
+import           Data.Text.Encoding                   (encodeUtf8)
+import           Data.Time
+import           Test.HUnit                           hiding (Test)
+import           Test.Framework                       (Test, testGroup)
+import           Test.Framework.Providers.HUnit       (testCase)
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import qualified Test.QuickCheck                      as QC
+import qualified Test.QuickCheck.Monadic              as QCM
 ------------------------------------------------------------------------------
-import Snap.Core
-import qualified Snap.Test as ST
-import Snap.Snaplet.Test
-import Heist
-import Snap.Snaplet.Auth
-import Snap.Snaplet.Heist
-import Snap.TestCommon
+import qualified Snap.Snaplet.Auth                    as A
+import           Snap.TestCommon                      (eqTestCase,
+                                                       ordTestCase,
+                                                       readTestCase,
+                                                       showTestCase)
+
 
 ------------------------------------------------------------------------------
 tests :: Test
@@ -43,39 +36,39 @@ tests = testGroup "Auth type tests" [
   , testProperty "AuthFailure show instances"      authFailureShows
   , testProperty "Encrypt agrees with password"    encryptByteString
   , testCase     "Reject clear encrypted pw check" rejectCheckClearText
-  , testCase     "Test Role Show instance"         $ showTestCase (Role "a")
-  , testCase     "Test Role Read instance"         $ readTestCase (Role "a")
+  , testCase     "Test Role Show instance"         $ showTestCase (A.Role "a")
+  , testCase     "Test Role Read instance"         $ readTestCase (A.Role "a")
   , testCase     "Test Role Ord  instance"         $
-    ordTestCase (Role "a") (Role "b")
+    ordTestCase (A.Role "a") (A.Role "b")
   , testCase     "Test PW Show instance"           $
-    showTestCase (ClearText "pw")
+    showTestCase (A.ClearText "pw")
   , testCase     "Test PW Read instance"           $
-    readTestCase (ClearText "pw")
+    readTestCase (A.ClearText "pw")
   , testCase     "Test PW Ord  instance"           $
-    ordTestCase (ClearText "a") (ClearText "b")
+    ordTestCase (A.ClearText "a") (A.ClearText "b")
   , testCase     "Test AuthFailure Eq instance"    $
-    eqTestCase BackendError DuplicateLogin --TODO better as property
+    eqTestCase A.BackendError A.DuplicateLogin --TODO better as property
   , testCase     "Test AuthFailure Show instance"  $
-    showTestCase BackendError
+    showTestCase A.BackendError
 --  , testCase     "Test AuthFailure Read instance"  $
 --    readTestCase BackendError -- TODO/NOTE: show . read isn't id for 
   , testCase     "Test AuthFailure Ord instance"   $
-    ordTestCase BackendError DuplicateLogin
+    ordTestCase A.BackendError A.DuplicateLogin
   , testCase     "Test UserId Show instance"       $
-    showTestCase (UserId "1")
+    showTestCase (A.UserId "1")
   , testCase     "Test UserId Read instance"       $
-    readTestCase (UserId "2")
+    readTestCase (A.UserId "2")
   , testCase     "Test AuthUser Show instance"     $
-    showTestCase defAuthUser
+    showTestCase A.defAuthUser
   , testCase     "Test AuthUser Eq instance"       $
-    eqTestCase defAuthUser defAuthUser
+    eqTestCase A.defAuthUser A.defAuthUser
   ]
 
 
 ------------------------------------------------------------------------------
 dontSerializeClearText :: Assertion
 dontSerializeClearText = do
-  let s = encode (ClearText "passwordisnthamster")
+  let s = encode (A.ClearText "passwordisnthamster")
   r <- try $ s `deepseq` return s
   case r of
     Left  e -> (e :: SomeException) `seq` return ()
@@ -115,7 +108,7 @@ deserializeDefaultRoles :: Assertion
 deserializeDefaultRoles =
   either
   (\e -> assertFailure $ "Failed user deserialization: " ++ e)
-  (\u -> assertEqual "Roles wasn't initialized to empty" [] (userRoles u))
+  (\u -> assertEqual "Roles wasn't initialized to empty" [] (A.userRoles u))
   (eitherDecode . BSL.fromStrict . encodeUtf8 $
    sampleUserJson "\"activated_at\":null" "\"extra\":null")
 
@@ -127,7 +120,7 @@ failDeserialize = do
     Nothing -> return ()
     Just a  -> assertFailure $
                "Expected deserialization failure, got authUser: "
-               ++ show (a :: AuthUser)
+               ++ show (a :: A.AuthUser)
 
   where
     t = T.replace "login" "loogin" $
@@ -135,47 +128,51 @@ failDeserialize = do
 
 
 ------------------------------------------------------------------------------
-authFailureShows :: AuthFailure -> Bool
+authFailureShows :: A.AuthFailure -> Bool
 authFailureShows ae = length (show ae) > 0
 
 
 ------------------------------------------------------------------------------
-instance Arbitrary AuthFailure where
+instance QC.Arbitrary A.AuthFailure where
   arbitrary = do
-    s <- (arbitrary `suchThat` (( > 0 ) . length))
-    tA <- arbitrary
-    tB <- arbitrary
+    s <- (QC.arbitrary `QC.suchThat` (( > 0 ) . length))
+    tA <- QC.arbitrary
+    tB <- QC.arbitrary
     let t = UTCTime
             (ModifiedJulianDay tA)
             (realToFrac (tB :: Double))
-    oneof (map return [AuthError s, BackendError, DuplicateLogin
-                      ,EncryptedPassword, IncorrectPassword, LockedOut t
-                      ,PasswordMissing, UsernameMissing, UserNotFound])
+    QC.oneof $ map return [A.AuthError s,       A.BackendError
+                          ,A.DuplicateLogin,    A.EncryptedPassword
+                          ,A.IncorrectPassword, A.LockedOut t
+                          ,A.PasswordMissing,   A.UsernameMissing
+                          ,A.UserNotFound
+                          ]
 
 
 ------------------------------------------------------------------------------
-encryptByteString :: Property
+encryptByteString :: QC.Property
 encryptByteString = QCM.monadicIO testStringEq
   where
-    clearPw = BS.pack `liftM` (arbitrary `suchThat` ((>0) . length))
+    clearPw = BS.pack `liftM` (QC.arbitrary `QC.suchThat` ((>0) . length))
     testStringEq = QCM.forAllM clearPw $ \s -> do
-      ePW  <- Encrypted `liftM` (QCM.run $ encrypt s)
-      ePW' <- QCM.run $ encryptPassword (ClearText s)
-      let cPW  = ClearText s
-{-      QCM.assert $ (checkPassword cPW ePW
+      ePW  <- A.Encrypted `liftM` (QCM.run $ A.encrypt s)
+
+      let cPW  = A.ClearText s
+{-      ePW' <- QCM.run $ encryptPassword (ClearText s)
+      QCM.assert $ (checkPassword cPW ePW
                     && checkPassword cPW cPW
                     && checkPassword ePW ePW') --TODO/NOTe: This fails.
                                                  Surpsising?
                                                  Encrypt twice and get two
                                                  different password hashes -}
-      QCM.assert $ (checkPassword cPW ePW
-                    && checkPassword cPW (ClearText s))
+      QCM.assert $ (A.checkPassword cPW ePW
+                    && A.checkPassword cPW (A.ClearText s))
 
 
 ------------------------------------------------------------------------------
 rejectCheckClearText :: Assertion
 rejectCheckClearText = do
-  let b = checkPassword (Encrypted "") (ClearText "")
+  let b = A.checkPassword (A.Encrypted "") (A.ClearText "")
   r <- try $ b `seq` return b
   case r of
     Left  e -> (e :: SomeException) `seq` return ()
