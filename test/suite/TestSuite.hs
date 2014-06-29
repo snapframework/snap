@@ -19,7 +19,7 @@ import           Test.Framework
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit hiding (Test, path)
 ------------------------------------------------------------------------------
-import           Blackbox.App
+import           Snap.Snaplet.Common.App
 import qualified Blackbox.Tests
 import           Snap.Http.Server (simpleHttpServe)
 import qualified Snap.Snaplet.Internal.Lensed.Tests
@@ -88,7 +88,7 @@ internalServerTests =
 startServer :: IO (ThreadId, MVar ())
 startServer = do
     mvar <- newEmptyMVar
-    t    <- forkIO $ serve mvar (setPort 9753 defaultConfig) app
+    t    <- forkIO $ serve mvar (setPort 9753 defaultConfig) appInit
     threadDelay $ 2*10^(6::Int)
     return (t, mvar)
 

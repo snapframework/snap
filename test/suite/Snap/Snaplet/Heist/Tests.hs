@@ -27,8 +27,7 @@ import           Snap.Snaplet.Test              (evalHandler, runHandler)
 import qualified Snap.Snaplet.Heist             as HS
 import qualified Snap.Snaplet.Heist.Compiled    as C
 import qualified Snap.Snaplet.Heist.Interpreted as I
-import           Snap.Snaplet.Heist.App         (appInit, appInit', heist,
-                                                 appInitCompiled)
+import           Snap.Snaplet.Common.App         (appInit, appInit', heist)
 import qualified Text.XmlHtml                   as XML
 
 heistTests :: F.Test
@@ -278,7 +277,7 @@ seeLocalState = do
 compiledModuleRender :: Assertion
 compiledModuleRender = do
   let hdl = with heist $ C.render "foopage"
-  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInitCompiled
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 
@@ -286,7 +285,7 @@ compiledModuleRender = do
 compiledModuleRenderAs :: Assertion
 compiledModuleRenderAs = do
   let hdl = with heist $ C.renderAs "audio/ogg" "foopage"
-  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInitCompiled
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl appInit
   rStr <- either (\_ -> return "") (ST.responseToString) res
   assertBool "Compiled Heist snaplet response should contain \"audoi/ogg\""
     (BSC.isInfixOf "audio/ogg" rStr)
@@ -296,7 +295,7 @@ compiledModuleRenderAs = do
 compiledModuleServe :: Assertion
 compiledModuleServe = do
   let hdl = with heist $ C.heistServe
-  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInitCompiled
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 
@@ -304,5 +303,5 @@ compiledModuleServe = do
 compiledModuleServeOne :: Assertion
 compiledModuleServeOne = do
   let hdl = with heist $ C.heistServeSingle "foopage"
-  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInitCompiled
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res

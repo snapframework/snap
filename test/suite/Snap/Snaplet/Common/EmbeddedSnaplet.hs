@@ -8,7 +8,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Blackbox.EmbeddedSnaplet where
+module Snap.Snaplet.Common.EmbeddedSnaplet where
 
 ------------------------------------------------------------------------------
 import Prelude hiding ((.))

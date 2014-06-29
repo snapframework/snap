@@ -16,7 +16,7 @@ import Snap.Core
 import Heist
 import Heist.Interpreted
 
-import Blackbox.Common
+import Snap.TestCommon (handlerConfig, shConfigSplice)
 import Data.Map.Syntax ((##))
 
 

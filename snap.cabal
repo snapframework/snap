@@ -226,7 +226,6 @@ Test-suite testsuite
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
     Snap.Snaplet.Auth.SpliceHelpers
-    Snap.Snaplet.Heist.App
     Snap.Snaplet.Heist.Internal
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT
