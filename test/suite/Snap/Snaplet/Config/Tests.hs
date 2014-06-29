@@ -17,7 +17,7 @@ import Snap.Http.Server.Config
 import Snap.Snaplet
 import Snap.Snaplet.Config
 import Snap.Snaplet.Heist
-import Snap.Snaplet.Config.App
+import Snap.Snaplet.Common.App
 import Snap.Snaplet.Internal.Initializer
 import qualified Snap.Test as ST
 import Snap.Snaplet.Test

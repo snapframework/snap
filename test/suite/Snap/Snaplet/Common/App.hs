@@ -67,6 +67,7 @@ import Snap.Snaplet.Heist                            (Heist, HasHeist,
                                                       addConfig,
                                                       addTemplates,
                                                       addTemplatesAt,
+                                                      heistInit,
                                                       heistInit', heistLens,
                                                       heistServe,
                                                       modifyHeistState)
@@ -90,7 +91,7 @@ appInit' hInterp authConfigFile =
   ------------------------------
   -- Initial subSnaplet setup --
   ------------------------------
-  
+
   hs <- nestSnaplet "heist"   heist   $
         heistInit'
         "templates"
@@ -98,7 +99,6 @@ appInit' hInterp authConfigFile =
 
   sm <- nestSnaplet "session" session $
         initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
-  au <- nestSnaplet "auth" auth authInit
   fs <- nestSnaplet "foo"     foo     $ fooInit hs
   bs <- nestSnaplet ""        bar     $ nameSnaplet "baz" $ barInit hs foo
   ns <- embedSnaplet "embed" embedded embeddedInit
@@ -106,8 +106,7 @@ appInit' hInterp authConfigFile =
   --------------------------------
   -- Exercise the Heist snaplet --
   --------------------------------
-  
-  addAuthSplices hs auth -- TODO/NOTE: probably not necessary (?)
+
   addTemplates hs "extraTemplates"
 
   sPath    <- getSnapletFilePath
@@ -119,6 +118,13 @@ appInit' hInterp authConfigFile =
     modifyHeistState (addTemplate "smallTemplate" aTestTemplate Nothing)
     setInterpreted hs
 
+  _lens <- getLens
+  addConfig hs $
+    mempty { hcInterpretedSplices = do
+                "appsplice" ## textSplice "contents of the app splice"
+                "appconfig" ## shConfigSplice _lens
+           }
+    
   ---------------------------
   -- Exercise Auth snaplet --
   ---------------------------
@@ -127,13 +133,11 @@ appInit' hInterp authConfigFile =
                     then authSettingsFromConfig
                     else return defAuthSettings
 
-  _lens <- getLens
-  addConfig hs $
-    mempty { hcInterpretedSplices = do
-                "appsplice" ## textSplice "contents of the app splice"
-                "appconfig" ## shConfigSplice _lens
-           }
-    
+  au <- nestSnaplet "auth" auth $ authInit authSettings
+
+  addAuthSplices hs auth -- TODO/NOTE: probably not necessary (?)
+
+
   addRoutes [ ("/hello",           writeText "hello world")
             , ("/routeWithSplice", routeWithSplice)
             , ("/routeWithConfig", routeWithConfig)
@@ -147,16 +151,10 @@ appInit' hInterp authConfigFile =
 
 
 ------------------------------------------------------------------------------
-authInit :: SnapletInit App (AuthManager App)
-authInit = initJsonFileAuthManager defAuthSettings session "users.json"
-
-
-{-
-------------------------------------------------------------------------------
 -- Alternative authInit for tunable settings
-authInit' :: AuthSettings -> SnapletInit App (AuthManager App)
-authInit' settings = initJsonFileAuthManager settings session "users.json"
--}
+authInit :: AuthSettings -> SnapletInit App (AuthManager App)
+authInit settings = initJsonFileAuthManager settings session "users.json"
+
 
 ------------------------------------------------------------------------------
 compiledSplices :: Splices (Splice (Handler App App))

@@ -201,6 +201,7 @@ Test-suite testsuite
     Snap.Snaplet.Common.App
     Snap.Snaplet.Common.Handlers
     Snap.Snaplet.Common.BarSnaplet
+    Snap.Snaplet.Common.EmbeddedSnaplet
     Snap.Snaplet.Common.FooSnaplet
     Snap.Snaplet.Common.Types
     Snap.Snaplet.Config
@@ -211,9 +212,7 @@ Test-suite testsuite
     Snap.Snaplet.Test
     Snap.TestCommon
     Snap.Snaplet.Auth.SpliceTests
-    Snap.Snaplet.Config.App
     Snap.Snaplet.Config.Tests
-
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role
     Control.Access.RoleBased.Types
