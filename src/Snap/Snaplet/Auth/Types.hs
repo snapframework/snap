@@ -18,7 +18,7 @@ import qualified Data.HashMap.Strict   as HM
 import           Data.Hashable         (Hashable)
 import           Data.Time
 import           Data.Text             (Text)
-import           Data.Text.Encoding
+import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
 import           Data.Typeable
 import           Snap.Snaplet
 

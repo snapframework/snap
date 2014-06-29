@@ -6,9 +6,9 @@ if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
 
-SUITE=./dist/build/snap-testsuite/snap-testsuite
+SUITE=./dist/build/testsuite/testsuite
 
-rm -f snap-testsuite.tix
+rm -f testsuite.tix
 
 if [ ! -f $SUITE ]; then
     cat <<EOF
@@ -35,9 +35,12 @@ Blackbox.EmbeddedSnaplet
 Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types
+Paths_snap
 Snap.Snaplet.Auth.App
 Snap.Snaplet.Auth.Handlers.Tests
 Snap.Snaplet.Auth.Tests
+Snap.Snaplet.Heist.App
+Snap.Snaplet.Heist.Tests
 Snap.Snaplet.Internal.Lensed.Tests
 Snap.Snaplet.Internal.LensT.Tests
 Snap.Snaplet.Internal.RST.Tests
@@ -45,7 +48,12 @@ Snap.Snaplet.Internal.Tests
 Snap.TestCommon
 Snap.Snaplet.Test.App
 Snap.Snaplet.Test.Tests
+Snap.Snaplet.Auth.SpliceTests
+Snap.Snaplet.Auth.Types.Tests
+Snap.Snaplet.Config.App
+Snap.Snaplet.Config.Tests
 '
+
 
 EXCL=""
 
@@ -57,7 +65,7 @@ rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
 rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl
 rm -fr non-cabal-appdir/snaplets/foosnaplet
 
-hpc markup $EXCL --destdir=$DIR snap-testsuite >/dev/null 2>&1
+hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
 
 cat <<EOF
 

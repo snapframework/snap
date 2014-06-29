@@ -3,13 +3,17 @@
 
 module Snap.Snaplet.Config where
 
-import Data.Function
-import Data.Maybe
-import Data.Monoid
-import Data.Typeable
+------------------------------------------------------------------------------
+import Data.Function         (on)
+import Data.Maybe            (fromMaybe)
+import Data.Monoid           (Monoid, mappend, mempty, Last(..), getLast)
+import Data.Typeable         (Typeable, typeOf, TyCon, mkTyCon, mkTyConApp)
+import System.Console.GetOpt (OptDescr(Option), ArgDescr(ReqArg))
+------------------------------------------------------------------------------
 import Snap.Core
-import Snap.Http.Server.Config
-import System.Console.GetOpt
+import Snap.Http.Server.Config (Config, fmapOpt, setOther, getOther, optDescrs
+                               ,extendedCommandLineConfig)
+
 
 ------------------------------------------------------------------------------
 -- | AppConfig contains the config options for command line arguments in

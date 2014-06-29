@@ -7,20 +7,18 @@ module Snap.Snaplet.Internal.Tests
   ( tests, initTest ) where
 
 ------------------------------------------------------------------------------
-import           Control.Lens
-import           Control.Monad
-import           Control.Monad.Trans
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as B
-import           Data.List
-import           Data.Text (Text)
-import           Prelude hiding (catch, (.))
-import           System.Directory
-import           Test.Framework
-import           Test.Framework.Providers.HUnit
-import           Test.Framework.Providers.SmallCheck
-import           Test.HUnit hiding (Test, path)
-import           Test.SmallCheck
+import           Control.Lens                        (makeLenses)
+import           Control.Monad.Trans                 (MonadIO, liftIO)
+import           Data.ByteString                     (ByteString)
+import qualified Data.ByteString.Char8               as B
+import           Data.Text                           (Text)
+import           Prelude                             hiding (catch, (.))
+import           System.Directory                    (getCurrentDirectory)
+import           Test.Framework                      (Test, testGroup)
+import           Test.Framework.Providers.HUnit      (testCase)
+import           Test.Framework.Providers.SmallCheck (testProperty)
+import           Test.HUnit                          hiding (Test, path)
+import           Test.SmallCheck                     ((==>))
 ------------------------------------------------------------------------------
 import           Snap.Snaplet.Internal.Initializer
 import           Snap.Snaplet.Internal.Types
