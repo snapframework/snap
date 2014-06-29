@@ -42,13 +42,17 @@ import           Test.HUnit hiding (Test)
 main :: IO ()
 main = do
 
+ 
     Blackbox.Tests.remove
-                "non-cabal-appdir/snaplets/heist/templates/bad.tpl"
+                "snaplets/heist/templates/bad.tpl"
     Blackbox.Tests.remove
-                "non-cabal-appdir/snaplets/heist/templates/good.tpl"
-    Blackbox.Tests.removeDir "non-cabal-appdir/snaplets/foosnaplet"
-
-    (tid, mvar) <- inDir False "non-cabal-appdir" startServer
+                "snaplets/heist/templates/good.tpl"
+ {- Why were we removing this?
+    Blackbox.Tests.removeDir "snaplets/foosnaplet"
+ -}
+  
+--    (tid, mvar) <- inDir False "non-cabal-appdir" startServer
+    (tid, mvar) <- inDir False "." startServer
 
     defaultMain [tests]
       `finally` killThread tid
@@ -58,10 +62,8 @@ main = do
 
       where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
-
-                                 ,Snap.Snaplet.Auth.Tests.tests
+                                 , Snap.Snaplet.Auth.Tests.tests
                                  , Snap.Snaplet.Test.Tests.tests
-
                                  , Snap.Snaplet.Heist.Tests.heistTests
                                  , Snap.Snaplet.Config.Tests.configTests
                                  , Snap.Snaplet.Internal.RST.Tests.tests

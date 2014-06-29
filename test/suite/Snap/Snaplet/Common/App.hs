@@ -29,7 +29,8 @@ import Data.Map.Syntax                               ((##),(#!))
 import Text.XmlHtml                                  (Node(TextNode))
 import Heist                                         (Splices, Template,
                                                       hcCompiledSplices,
-                                                      hcInterpretedSplices)
+                                                      hcInterpretedSplices,
+                                                      templateNames)
 import Heist.Compiled                                (Splice, withSplices,
                                                       runChildren)
 import Snap                                          ((<|>))
@@ -67,10 +68,16 @@ import Snap.Snaplet.Heist                            (Heist, HasHeist,
                                                       addConfig,
                                                       addTemplates,
                                                       addTemplatesAt,
+                                                      cHeistServe,
+                                                      gRender,
+                                                      getHeistState,
+                                                      gHeistServe,
                                                       heistInit,
                                                       heistInit', heistLens,
                                                       heistServe,
-                                                      modifyHeistState)
+                                                      heistServeSingle,
+                                                      modifyHeistState,
+                                                      withHeistState)
 import Heist.Interpreted                             (addTemplate, textSplice)
 import Snap.Snaplet.HeistNoClass                     (setInterpreted)
 import Snap.Snaplet.Session                          (SessionManager)
@@ -124,7 +131,7 @@ appInit' hInterp authConfigFile =
                 "appsplice" ## textSplice "contents of the app splice"
                 "appconfig" ## shConfigSplice _lens
            }
-    
+
   ---------------------------
   -- Exercise Auth snaplet --
   ---------------------------

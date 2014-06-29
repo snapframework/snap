@@ -25,7 +25,7 @@ data FooSnaplet = FooSnaplet { fooField :: String }
 
 fooInit :: HasHeist b => Snaplet (Heist b) -> SnapletInit b FooSnaplet
 fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
-    (Just $ return "../foosnaplet") $ do
+    (Just $ return "foosnaplet") $ do
     config <- getSnapletUserConfig
     addTemplates h ""
     rootUrl <- getSnapletRootURL

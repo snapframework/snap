@@ -80,8 +80,13 @@ addTemplatesOK = do
 assertHasTemplates :: Assertion
 assertHasTemplates = do
   let hdl = with heist $  do
-        s <- HS.getHeistState
-        t <- return $ H.templateNames s
+        s  <- HS.getHeistState
+        t  <- return $ H.templateNames s
+        sp <- return $ H.spliceNames s
+        sc <- return $ H.compiledSpliceNames s
+        liftIO $ putStrLn $ "Templates " ++ unwords (map show t)
+        liftIO $ putStrLn $ "Splices: " ++ unwords (map show sp)
+        liftIO $ putStrLn $ "Compiled splices: " ++ unwords (map show sc)
         return $ Set.fromList (map head t)
   res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
   assertBool "templateNames include foopage, barpage, bazpage" $ 
@@ -155,7 +160,7 @@ simpleRenderAs interp = do
 gSimpleHeistServeOK :: Assertion
 gSimpleHeistServeOK = do
   let hdl = with heist HS.gHeistServe
-  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl appInit
+  res <- runHandler Nothing (ST.get "index" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
 
