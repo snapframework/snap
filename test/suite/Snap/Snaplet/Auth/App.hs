@@ -4,13 +4,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 
 module Snap.Snaplet.Auth.App
-  ( App(..)
-  , auth
-  , heist
-  , authInit
-  , appInit
-  , appInit'
-  ) where
+  () where
 
 ------------------------------------------------------------------------------
 import           Control.Lens                                (makeLenses)

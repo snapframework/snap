@@ -28,6 +28,7 @@ rm -Rf $DIR
 mkdir -p $DIR
 
 EXCLUDES='Main
+Snap
 Blackbox.App
 Blackbox.BarSnaplet
 Blackbox.Common
@@ -36,7 +37,6 @@ Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types
 Paths_snap
-Snap.Snaplet.Auth.App
 Snap.Snaplet.Auth.Handlers.Tests
 Snap.Snaplet.Auth.Tests
 Snap.Snaplet.Common.App
@@ -45,7 +45,6 @@ Snap.Snaplet.Common.EmbeddedSnaplet
 Snap.Snaplet.Common.FooSnaplet
 Snap.Snaplet.Common.Handlers
 Snap.Snaplet.Common.Types
-Snap.Snaplet.Heist.App
 Snap.Snaplet.Heist.Tests
 Snap.Snaplet.Internal.Lensed.Tests
 Snap.Snaplet.Internal.LensT.Tests

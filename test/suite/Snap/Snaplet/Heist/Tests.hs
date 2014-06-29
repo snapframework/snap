@@ -118,7 +118,8 @@ simpleRender :: Bool -> Assertion
 simpleRender interp = do
   let hdl = with heist $
             HS.chooseMode (HS.cRender "foopage") (HS.render "foopage")
-  res <- runHandler Nothing (ST.get "" Map.empty) hdl (appInit' interp)
+  res <- runHandler Nothing (ST.get "" Map.empty) hdl
+         (appInit' interp False)
   either (assertFailure . show) ST.assertSuccess res
 
 
@@ -144,7 +145,8 @@ simpleRenderAs interp = do
       rs  = either (return . T.unpack)
             (\r -> (BSC.unpack <$> ST.responseToString r))
 
-  resStr <- join $ rs <$> runHandler Nothing defReq hdl (appInit' interp)
+  resStr <- join $ rs <$> runHandler Nothing defReq hdl
+                          (appInit' interp False)
   assertBool "renderAs should set content to audio/ogg" $
         ("audio/ogg" `isInfixOf` resStr)
 
@@ -161,7 +163,8 @@ gSimpleHeistServeOK = do
 simpleHeistServeOK :: Bool -> Assertion
 simpleHeistServeOK interp = do
   let hdl = with heist $ HS.chooseMode HS.cHeistServe HS.heistServe
-  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl
+         (appInit' interp False)
   either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
@@ -185,7 +188,8 @@ simpleHeistServeSingle interp = do
   let hdl = with heist $ HS.chooseMode
             (HS.cHeistServeSingle "foopage")
             (HS.heistServeSingle  "foopage")
-  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl (appInit' interp)
+  res <- runHandler Nothing (ST.get "foopage" Map.empty) hdl
+         (appInit' interp False)
   either (assertFailure . show) ST.assertSuccess res
 
 ------------------------------------------------------------------------------
@@ -230,7 +234,8 @@ chooseInterpreted = do
   let hdl = with heist $ HS.chooseMode
             (liftIO $ assertFailure "Should have chosen intpreted mode")
             (liftIO $ return ())
-  res <- evalHandler Nothing (ST.get "" Map.empty) hdl (appInit' True)
+  res <- evalHandler Nothing (ST.get "" Map.empty) hdl
+         (appInit' True False)
   either (assertFailure . show) return res
 
 

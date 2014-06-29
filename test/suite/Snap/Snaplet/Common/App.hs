@@ -6,8 +6,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Snap.Snaplet.Common.App (
+  App,
   appInit,
   appInit',
+  auth,
   heist,
   session,
   embedded,
@@ -19,14 +21,19 @@ module Snap.Snaplet.Common.App (
 import Control.Lens                                  (makeLenses, over)
 import Control.Monad                                 (when)
 import Control.Monad.IO.Class                        (liftIO)
+import Control.Monad.Trans                           (lift)
 import Data.Monoid                                   (mempty)
 import System.FilePath                               ((</>))
 ------------------------------------------------------------------------------
-import Data.Map.Syntax                               ((##))
+import Data.Map.Syntax                               ((##),(#!))
 import Text.XmlHtml                                  (Node(TextNode))
-import Heist                                         (Template, hcInterpretedSplices)
+import Heist                                         (Splices, Template,
+                                                      hcCompiledSplices,
+                                                      hcInterpretedSplices)
+import Heist.Compiled                                (Splice, withSplices,
+                                                      runChildren)
 import Snap                                          ((<|>))
-import Snap.Core                                     (writeText)
+import Snap.Core                                     (pass, writeText)
 import Snap.Http.Server.Config                       (Config, completeConfig,
                                                       defaultConfig)
 import Snap.Snaplet                                  (Handler, Initializer,
@@ -39,10 +46,15 @@ import Snap.Snaplet                                  (Handler, Initializer,
                                                       nestSnaplet,
                                                       snapletValue,
                                                       subSnaplet,
+                                                      with,
                                                       wrapSite)
 import Snap.Snaplet.Auth                             (AuthManager,
+                                                      AuthSettings,
                                                       addAuthSplices,
-                                                      defAuthSettings)
+                                                      authSettingsFromConfig,
+                                                      currentUser,
+                                                      defAuthSettings,
+                                                      userCSplices)
 import Snap.Snaplet.Auth.Backends.JsonFile           (initJsonFileAuthManager)
 import Snap.Snaplet.Common.BarSnaplet
 import Snap.Snaplet.Common.EmbeddedSnaplet
@@ -55,7 +67,7 @@ import Snap.Snaplet.Heist                            (Heist, HasHeist,
                                                       addConfig,
                                                       addTemplates,
                                                       addTemplatesAt,
-                                                      heistInit, heistLens,
+                                                      heistInit', heistLens,
                                                       heistServe,
                                                       modifyHeistState)
 import Heist.Interpreted                             (addTemplate, textSplice)
@@ -67,18 +79,23 @@ import Snap.Util.FileServe                           (serveDirectory)
 
 ------------------------------------------------------------------------------
 appInit :: SnapletInit App App
-appInit = appInit' False
+appInit = appInit' False False
 
 
 ------------------------------------------------------------------------------
-appInit' :: Bool -> SnapletInit App App
-appInit' hInterp = makeSnaplet "app" "Test application" Nothing $ do
+appInit' :: Bool -> Bool -> SnapletInit App App
+appInit' hInterp authConfigFile =
+  makeSnaplet "app" "Test application" Nothing $ do
 
   ------------------------------
   -- Initial subSnaplet setup --
   ------------------------------
   
-  hs <- nestSnaplet "heist"   heist   $ heistInit "templates"
+  hs <- nestSnaplet "heist"   heist   $
+        heistInit'
+        "templates"
+        (mempty {hcCompiledSplices = compiledSplices})
+
   sm <- nestSnaplet "session" session $
         initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
   au <- nestSnaplet "auth" auth authInit
@@ -101,6 +118,14 @@ appInit' hInterp = makeSnaplet "app" "Test application" Nothing $ do
   when hInterp $ do
     modifyHeistState (addTemplate "smallTemplate" aTestTemplate Nothing)
     setInterpreted hs
+
+  ---------------------------
+  -- Exercise Auth snaplet --
+  ---------------------------
+
+  authSettings <- if authConfigFile
+                    then authSettingsFromConfig
+                    else return defAuthSettings
 
   _lens <- getLens
   addConfig hs $
@@ -125,6 +150,19 @@ appInit' hInterp = makeSnaplet "app" "Test application" Nothing $ do
 authInit :: SnapletInit App (AuthManager App)
 authInit = initJsonFileAuthManager defAuthSettings session "users.json"
 
+
+{-
+------------------------------------------------------------------------------
+-- Alternative authInit for tunable settings
+authInit' :: AuthSettings -> SnapletInit App (AuthManager App)
+authInit' settings = initJsonFileAuthManager settings session "users.json"
+-}
+
+------------------------------------------------------------------------------
+compiledSplices :: Splices (Splice (Handler App App))
+compiledSplices = do
+  "userSplice" #! withSplices runChildren userCSplices $
+    lift $ maybe pass return =<< with auth currentUser
 
 ------------------------------------------------------------------------------
 fooMod :: FooSnaplet -> FooSnaplet
