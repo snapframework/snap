@@ -30,7 +30,7 @@ tests = testGroup "Snap.Snaplet.Test"
     , testEvalHandler'
     , testFailingEvalHandler
     , testFailingGetSnaplet
---    , readRequestBodyHangIssue -- TODO/NOTE fix
+    , readRequestBodyHangIssue -- TODO/NOTE fix
     ]
 
 
