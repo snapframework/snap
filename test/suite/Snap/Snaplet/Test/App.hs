@@ -28,8 +28,3 @@ makeLenses ''App
 appInit :: SnapletInit App App
 appInit = makeSnaplet "app" "Test application" Nothing $ do
    return App
-
-failingAppInit :: SnapletInit App App
-failingAppInit = makeSnaplet "app" "Test application" Nothing $ do
-   error "Error"
-   return App
