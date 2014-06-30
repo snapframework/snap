@@ -32,6 +32,7 @@ homepage:       http://snapframework.com/
 category:       Web, Snap
 
 extra-source-files:
+  .ghci
   CONTRIBUTORS,
   LICENSE,
   README.md,
