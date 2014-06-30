@@ -178,6 +178,7 @@ Test-suite testsuite
   ghc-options: -fhpc
 
   other-modules:
+    Blackbox.Tests
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role
     Control.Access.RoleBased.Types
@@ -216,8 +217,12 @@ Test-suite testsuite
     Snap.Snaplet.HeistNoClass
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT
+    Snap.Snaplet.Internal.LensT.Tests
     Snap.Snaplet.Internal.Lensed
+    Snap.Snaplet.Internal.Lensed.Tests
     Snap.Snaplet.Internal.RST
+    Snap.Snaplet.Internal.RST.Tests
+    Snap.Snaplet.Internal.Tests
     Snap.Snaplet.Internal.Types
     Snap.Snaplet.Session
     Snap.Snaplet.Session.Backends.CookieSession
