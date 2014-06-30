@@ -36,42 +36,31 @@ extra-source-files:
   LICENSE,
   README.md,
   README.SNAP.md,
+  bad.tpl,
+  db.cfg,
+  design.md,
+  devel.cfg,
+  good.tpl,
   extra/hscolour.css,
   extra/haddock.css,
   extra/logo.gif,
-  test/snap-testsuite.cabal,
-  test/runTestsAndCoverage.sh,
-  test/suite/TestSuite.hs,
-  test/suite/NestTest.hs,
-  test/suite/Snap/TestCommon.hs,
-  test/suite/Snap/Snaplet/Internal/Lensed/Tests.hs,
-  test/suite/Snap/Snaplet/Internal/RST/Tests.hs,
-  test/suite/Snap/Snaplet/Internal/Tests.hs,
-  test/suite/Snap/Snaplet/Internal/LensT/Tests.hs,
-  test/suite/Snap/Snaplet/Common/Types.hs,
-  test/suite/Snap/Snaplet/Common/BarSnaplet.hs,
-  test/suite/Snap/Snaplet/Common/FooSnaplet.hs,
-  test/suite/Blackbox/Common.hs,
-  test/suite/Blackbox/EmbeddedSnaplet.hs,
-  test/suite/Blackbox/Tests.hs,
-  test/suite/SafeCWD.hs,
-  test/suite/AppMain.hs,
-  test/non-cabal-appdir/db.cfg,
-  test/non-cabal-appdir/bad.tpl,
-  test/non-cabal-appdir/snaplets/baz/templates/bazpage.tpl,
-  test/non-cabal-appdir/snaplets/baz/templates/bazconfig.tpl,
-  test/non-cabal-appdir/snaplets/baz/devel.cfg,
-  test/non-cabal-appdir/snaplets/embedded/extra-templates/extra.tpl,
-  test/non-cabal-appdir/snaplets/embedded/snaplets/heist/templates/embeddedpage.tpl,
-  test/non-cabal-appdir/snaplets/heist/templates/index.tpl,
-  test/non-cabal-appdir/snaplets/heist/templates/session.tpl,
-  test/non-cabal-appdir/snaplets/heist/templates/splicepage.tpl,
-  test/non-cabal-appdir/snaplets/heist/templates/page.tpl,
-  test/non-cabal-appdir/good.tpl,
-  test/non-cabal-appdir/log/placeholder,
-  test/non-cabal-appdir/devel.cfg,
-  test/foosnaplet/templates/foopage.tpl,
-  test/foosnaplet/devel.cfg
+  haddock.sh,
+  runTestsAndCoverage.sh,
+  snaplets/baz/devel.cfg
+  snaplets/baz/templates/bazconfig.tpl
+  snaplets/baz/templates/bazpage.tpl
+  snaplets/embedded/extra-templates/extra.tpl,
+  snaplets/embedded/snaplets/heist/templates/embeddedpage.tpl,
+  snaplets/foosnaplet/devel.cfg,
+  snaplets/foosnaplet/templates/foopage.tpl,
+  snaplets/heist/templates/_foopage.tpl,
+  snaplets/heist/templates/extraTemplates/barpage.tpl,
+  snaplets/heist/templates/index.tpl,
+  snaplets/heist/templates/page.tpl,
+  snaplets/heist/templates/session.tpl,
+  snaplets/heist/templates/splicepage.tpl,
+  snaplets/heist/templates/userpage.tpl,
+  test/evenMoreTemplates/bazpage.tpl
 
 Library
   hs-source-dirs: src
@@ -189,30 +178,6 @@ Test-suite testsuite
   ghc-options: -fhpc
 
   other-modules:
-    Snap,
-    Snap.Snaplet
-    Snap.Snaplet.Heist
-    Snap.Snaplet.HeistNoClass
-    Snap.Snaplet.Heist.Compiled
-    Snap.Snaplet.Heist.Generic
-    Snap.Snaplet.Heist.Interpreted
-    Snap.Snaplet.Auth
-    Snap.Snaplet.Auth.Backends.JsonFile
-    Snap.Snaplet.Common.App
-    Snap.Snaplet.Common.Handlers
-    Snap.Snaplet.Common.BarSnaplet
-    Snap.Snaplet.Common.EmbeddedSnaplet
-    Snap.Snaplet.Common.FooSnaplet
-    Snap.Snaplet.Common.Types
-    Snap.Snaplet.Config
-    Snap.Snaplet.Session
-    Snap.Snaplet.Session.Common
-    Snap.Snaplet.Session.SessionManager
-    Snap.Snaplet.Session.Backends.CookieSession
-    Snap.Snaplet.Test
-    Snap.TestCommon
-    Snap.Snaplet.Auth.SpliceTests
-    Snap.Snaplet.Config.Tests
     Control.Access.RoleBased.Checker
     Control.Access.RoleBased.Role
     Control.Access.RoleBased.Types
@@ -221,17 +186,46 @@ Test-suite testsuite
     Control.Access.RoleBased.Internal.Rule
     Control.Access.RoleBased.Internal.Types
     Paths_snap
+    SafeCWD
+    Snap,
+    Snap.Snaplet
+    Snap.Snaplet.Auth
     Snap.Snaplet.Auth.AuthManager
-    Snap.Snaplet.Auth.Types
+    Snap.Snaplet.Auth.Backends.JsonFile
     Snap.Snaplet.Auth.Handlers
+    Snap.Snaplet.Auth.Handlers.Tests
     Snap.Snaplet.Auth.SpliceHelpers
+    Snap.Snaplet.Auth.SpliceTests
+    Snap.Snaplet.Auth.Tests
+    Snap.Snaplet.Auth.Types
+    Snap.Snaplet.Auth.Types.Tests
+    Snap.Snaplet.Common.App
+    Snap.Snaplet.Common.BarSnaplet
+    Snap.Snaplet.Common.EmbeddedSnaplet
+    Snap.Snaplet.Common.FooSnaplet
+    Snap.Snaplet.Common.Handlers
+    Snap.Snaplet.Common.Types
+    Snap.Snaplet.Config
+    Snap.Snaplet.Config.Tests
+    Snap.Snaplet.Heist
+    Snap.Snaplet.Heist.Compiled
+    Snap.Snaplet.Heist.Generic
     Snap.Snaplet.Heist.Internal
+    Snap.Snaplet.Heist.Interpreted
+    Snap.Snaplet.Heist.Tests
+    Snap.Snaplet.HeistNoClass
     Snap.Snaplet.Internal.Initializer
     Snap.Snaplet.Internal.LensT
     Snap.Snaplet.Internal.Lensed
     Snap.Snaplet.Internal.RST
     Snap.Snaplet.Internal.Types
+    Snap.Snaplet.Session
+    Snap.Snaplet.Session.Backends.CookieSession
+    Snap.Snaplet.Session.Common
     Snap.Snaplet.Session.SecureCookie
+    Snap.Snaplet.Session.SessionManager
+    Snap.Snaplet.Test
+    Snap.TestCommon
 
   build-depends:
     aeson                      >= 0.6      && < 0.8,
@@ -281,7 +275,6 @@ Test-suite testsuite
     time                       >= 1.1      && < 1.5,
     transformers               >= 0.2      && < 0.5,
     transformers-base          >= 0.4      && < 0.5,
---    unix                       >= 2.6.0.1  && < 2.7,                     
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.7,
