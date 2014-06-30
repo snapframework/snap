@@ -55,6 +55,7 @@ extra-source-files:
   snaplets/foosnaplet/templates/foopage.tpl,
   snaplets/heist/templates/_foopage.tpl,
   snaplets/heist/templates/extraTemplates/barpage.tpl,
+  snaplets/heist/templates/foopage.tpl,
   snaplets/heist/templates/index.tpl,
   snaplets/heist/templates/page.tpl,
   snaplets/heist/templates/session.tpl,
