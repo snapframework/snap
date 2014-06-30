@@ -10,6 +10,7 @@ module Snap.Snaplet.Common.App (
   appInit,
   appInit',
   auth,
+  failingAppInit,
   heist,
   session,
   embedded,
@@ -178,3 +179,9 @@ fooMod f = f { fooField = fooField f ++ "z" }
 aTestTemplate :: Template
 aTestTemplate =  [TextNode "littleTemplateNode"]
 
+
+------------------------------------------------------------------------------
+failingAppInit :: SnapletInit App App
+failingAppInit = makeSnaplet "app" "Test application" Nothing $ do
+   error "Error"
+   return undefined

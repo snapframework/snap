@@ -225,6 +225,7 @@ Test-suite testsuite
     Snap.Snaplet.Session.SecureCookie
     Snap.Snaplet.Session.SessionManager
     Snap.Snaplet.Test
+    Snap.Snaplet.Test.Tests
     Snap.TestCommon
 
   build-depends:
