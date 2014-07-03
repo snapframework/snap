@@ -66,6 +66,8 @@ monoidAssociativity a b c = (a <> b) <> c == a <> (b <> c)
 
 
 ------------------------------------------------------------------------------
+-- TODO/NOTE: What do we need from the Typeable instance?
+-- Is this test too specific? How's it used in dynamic loader?
 verTypeable :: Assertion
 verTypeable =
   assertEqual "Unexpected Typeable behavior"
