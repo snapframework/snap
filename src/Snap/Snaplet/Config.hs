@@ -4,11 +4,17 @@
 module Snap.Snaplet.Config where
 
 ------------------------------------------------------------------------------
-import Data.Function         (on)
-import Data.Maybe            (fromMaybe)
-import Data.Monoid           (Monoid, mappend, mempty, Last(..), getLast)
-import Data.Typeable         (Typeable, typeOf, TyCon, mkTyCon, mkTyConApp)
-import System.Console.GetOpt (OptDescr(Option), ArgDescr(ReqArg))
+import Data.Function                    (on)
+import Data.Maybe                       (fromMaybe)
+import Data.Monoid                      (Monoid, mappend, mempty, Last(..), getLast)
+
+#if MIN_VERSION_base(4,7,0)
+import           Data.Typeable.Internal (Typeable)
+#else
+import           Data.Typeable          (Typeable, mkTyCon3, mkTyConApp, typeOf)
+#endif
+
+import System.Console.GetOpt            (OptDescr(Option), ArgDescr(ReqArg))
 ------------------------------------------------------------------------------
 import Snap.Core
 import Snap.Http.Server.Config (Config, fmapOpt, setOther, getOther, optDescrs
@@ -20,7 +26,7 @@ import Snap.Http.Server.Config (Config, fmapOpt, setOther, getOther, optDescrs
 -- snaplet-based apps.
 newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
 #if MIN_VERSION_base(4,7,0)
-                  deriving Typeable
+  deriving Typeable
 #else
 
 ------------------------------------------------------------------------------
@@ -30,7 +36,7 @@ newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
 -- dynamic loader package can be updated so that manual Typeable instances
 -- are no longer needed.
 appConfigTyCon :: TyCon
-appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
+appConfigTyCon = mkTyCon3 "snap" "Snap.Snaplet.Config" "AppConfig"
 {-# NOINLINE appConfigTyCon #-}
 
 instance Typeable AppConfig where
