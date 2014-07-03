@@ -29,6 +29,7 @@ import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
 import qualified Snap.Snaplet.Internal.Tests
 import qualified Snap.Snaplet.Auth.Tests
+import qualified Snap.Snaplet.Test.Tests
 import           Snap.TestCommon
 
 import           SafeCWD
@@ -52,6 +53,7 @@ main = do
   where tests = mutuallyExclusive $
                 testGroup "snap" [ internalServerTests
                                  , Snap.Snaplet.Auth.Tests.tests
+                                 , Snap.Snaplet.Test.Tests.tests
                                  , testDefault
                                  , testBarebones
                                  , testTutorial
@@ -140,5 +142,3 @@ testTutorial = testCase "snap/tutorial" go
     testIt = do
         body <- get (S.pack $ "http://127.0.0.1:"++(show port)++"/hello") concatHandler
         assertEqual "server not up" "hello world" body
-
-
