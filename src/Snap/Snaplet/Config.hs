@@ -11,7 +11,7 @@ import Data.Monoid                      (Monoid, mappend, mempty, Last(..), getL
 #if MIN_VERSION_base(4,7,0)
 import           Data.Typeable.Internal (Typeable)
 #else
-import           Data.Typeable          (Typeable, mkTyCon3, mkTyConApp, typeOf)
+import           Data.Typeable          (TyCon, Typeable, mkTyCon3, mkTyConApp, typeOf)
 #endif
 
 import System.Console.GetOpt            (OptDescr(Option), ArgDescr(ReqArg))
