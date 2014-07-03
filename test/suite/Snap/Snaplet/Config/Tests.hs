@@ -69,7 +69,7 @@ monoidAssociativity a b c = (a <> b) <> c == a <> (b <> c)
 verTypeable :: Assertion
 verTypeable =
   assertEqual "Unexpected Typeable behavior"
-  "Snap.Snaplet.Config.AppConfig"
+  "AppConfig"
   (tyConString . typeRepTyCon . typeOf $ (undefined :: AppConfig))
 
 
