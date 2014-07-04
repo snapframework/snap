@@ -66,13 +66,15 @@ monoidAssociativity a b c = (a <> b) <> c == a <> (b <> c)
 
 
 ------------------------------------------------------------------------------
--- TODO/NOTE: What do we need from the Typeable instance?
--- Is this test too specific? How's it used in dynamic loader?
 verTypeable :: Assertion
 verTypeable =
   assertEqual "Unexpected Typeable behavior"
-  "AppConfig"
-  (tyConString . typeRepTyCon . typeOf $ (undefined :: AppConfig))
+#if MIN_VERSION_base(4,7,0)
+    "AppConfig"
+#else
+    "Snap.Snaplet.Config.AppConfig"
+#endif
+  (show . typeOf $ (undefined :: AppConfig))
 
 
 ------------------------------------------------------------------------------
