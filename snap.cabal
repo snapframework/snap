@@ -145,7 +145,7 @@ Library
   build-depends:
     MonadCatchIO-transformers >= 0.2      && < 0.4,
     -- Blacklist aeson versions with problems from lack of upper bounds
-    aeson                     (>= 0.6 && < 0.7) || (>= 0.7.0.4 && < 0.8),
+    aeson                     (>= 0.6 && < 0.7) || (>= 0.7.0.4 && < 0.9),
     attoparsec                >= 0.10     && < 0.13,
     bytestring                >= 0.9.1    && < 0.11,
     cereal                    >= 0.3      && < 0.5,
@@ -186,7 +186,7 @@ Library
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.2
+      lens                      >= 3.7.6    && < 4.4
 
   extensions:
     BangPatterns,
