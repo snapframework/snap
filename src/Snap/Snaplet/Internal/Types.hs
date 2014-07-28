@@ -258,7 +258,7 @@ snapletURL suffix = do
 -- 'MonadSnaplet' instance, which gives you all the functionality described
 -- above.
 newtype Handler b v a =
-    Handler (L.Lensed (Snaplet b) (Snaplet v) Snap a)
+    Handler { _unHandler :: L.Lensed (Snaplet b) (Snaplet v) Snap a }
   deriving ( Monad
            , Functor
            , Applicative
@@ -275,9 +275,15 @@ instance MonadBase IO (Handler b v) where
 
 ------------------------------------------------------------------------------
 instance MonadBaseControl IO (Handler b v) where
-    newtype StM (Handler b v) a = StMHandler {unStMHandler :: StM (Handler b v) a}
-    liftBaseWith f = liftBaseWith $ \g' -> f $ \m -> liftM StMHandler $ g' m
-    restoreM = restoreM . unStMHandler
+    newtype StM (Handler b v) a = StMHandler {
+          unStMHandler :: StM (L.Lensed (Snaplet b) (Snaplet v) Snap) a
+        }
+    liftBaseWith f = Handler
+                       $ liftBaseWith
+                       $ \g' -> f
+                       $ \m -> liftM StMHandler
+                       $ g' $ _unHandler m
+    restoreM = Handler . restoreM . unStMHandler
 
 
 ------------------------------------------------------------------------------
