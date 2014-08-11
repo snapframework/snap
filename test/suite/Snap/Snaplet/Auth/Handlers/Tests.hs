@@ -24,7 +24,7 @@ import           Snap.Snaplet.Auth              (AuthUser(..),
                                                  AuthFailure(..),
                                                  Password(..), Role(..))
 import qualified Snap.Snaplet.Auth              as A
-import           Snap.Snaplet.Common.App        (App, appInit, appInit',
+import           Snap.Snaplet.Test.Common.App   (App, appInit, appInit',
                                                  auth)
 import qualified Snap.Test                      as ST
 import           Snap.Snaplet.Test              (evalHandler, runHandler,

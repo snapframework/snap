@@ -1,4 +1,4 @@
-module Snap.Snaplet.Common.Handlers where
+module Snap.Snaplet.Test.Common.Handlers where
 
 ------------------------------------------------------------------------------
 import Control.Monad.IO.Class                        (liftIO)
@@ -10,30 +10,11 @@ import Data.Text.Encoding                            (decodeUtf8)
 import Data.Map.Syntax                               ((##))
 import Heist.Interpreted                             (textSplice)
 import Snap.Core                                     (writeText, getParam)
---import Snap.Http.Server.Config                       (Config, completeConfig,
---                                                      defaultConfig)
-import Snap.Snaplet                                  (Handler, 
-                                                      getSnapletUserConfig,
-                                                      nestSnaplet,
-                                                      with)
---import Snap.Snaplet.Auth                             (AuthManager,
---                                                      defAuthSettings)
---import Snap.Snaplet.Auth.Backends.JsonFile           (initJsonFileAuthManager)
-import Snap.Snaplet.Common.FooSnaplet
---import Snap.Snaplet.Common.BarSnaplet
-import Snap.Snaplet.Common.Types
---import Snap.Snaplet.Config                           (AppConfig,
---                                                      commandLineAppConfig)
-import Snap.Snaplet.Heist                            (Heist, HasHeist,
-                                                      heistInit, heistLens)
-import Snap.Snaplet.HeistNoClass                     (setInterpreted,
-                                                      renderWithSplices)
-import Snap.Snaplet.Session                          (SessionManager,
-                                                      csrfToken,
-                                                      getFromSession,
-                                                      sessionToList,
-                                                      setInSession,
-                                                      withSession)
+import Snap.Snaplet                                  (Handler, getSnapletUserConfig, with)
+import Snap.Snaplet.Test.Common.FooSnaplet
+import Snap.Snaplet.Test.Common.Types
+import Snap.Snaplet.HeistNoClass                     (renderWithSplices)
+import Snap.Snaplet.Session                          (csrfToken, getFromSession, sessionToList, setInSession, withSession)
 
 
 -------------------------------------------------------------------------------

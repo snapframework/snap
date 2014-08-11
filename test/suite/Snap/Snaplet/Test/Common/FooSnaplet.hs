@@ -1,24 +1,24 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts #-}
-module Snap.Snaplet.Common.FooSnaplet where
+{-# LANGUAGE TypeOperators     #-}
+
+module Snap.Snaplet.Test.Common.FooSnaplet where
 
 ------------------------------------------------------------------------------
-import Prelude hiding (lookup)
-import Control.Monad.State
-import Data.Configurator
-import Data.Maybe
-import Data.Monoid
-import qualified Data.Text as T
-import Snap.Snaplet
-import Snap.Snaplet.Heist
-import Snap.Core
-import Heist
-import Heist.Interpreted
-
-import Snap.TestCommon (handlerConfig, shConfigSplice)
-import Data.Map.Syntax ((##))
-
+import           Control.Monad.State
+import           Data.Configurator
+import           Data.Maybe
+import           Data.Monoid
+import qualified Data.Text           as T
+import           Prelude             hiding (lookup)
+------------------------------------------------------------------------------
+import           Data.Map.Syntax     (( ## ))
+import           Heist
+import           Heist.Interpreted
+import           Snap.Core
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
+import           Snap.TestCommon     (handlerConfig, shConfigSplice)
 
 ------------------------------------------------------------------------------
 data FooSnaplet = FooSnaplet { fooField :: String }

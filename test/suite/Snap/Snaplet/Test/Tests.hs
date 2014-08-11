@@ -19,7 +19,7 @@ import           Snap.Snaplet.Test              (closeSnaplet,
                                                  getSnaplet,
                                                  evalHandler, evalHandler',
                                                  runHandler, runHandler')
-import           Snap.Snaplet.Common.App        (appInit, failingAppInit)
+import           Snap.Snaplet.Test.Common.App   (appInit, failingAppInit)
 
 ------------------------------------------------------------------------------
 tests :: Test

@@ -5,7 +5,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Snap.Snaplet.Common.App (
+module Snap.Snaplet.Test.Common.App (
   App,
   appInit,
   appInit',
@@ -19,9 +19,8 @@ module Snap.Snaplet.Common.App (
   )where
 
 ------------------------------------------------------------------------------
-import Control.Lens                                  (makeLenses, over)
+import Control.Lens                                  (over)
 import Control.Monad                                 (when)
-import Control.Monad.IO.Class                        (liftIO)
 import Control.Monad.Trans                           (lift)
 import Data.Monoid                                   (mempty)
 import System.FilePath                               ((</>))
@@ -30,16 +29,13 @@ import Data.Map.Syntax                               ((##),(#!))
 import Text.XmlHtml                                  (Node(TextNode))
 import Heist                                         (Splices, Template,
                                                       hcCompiledSplices,
-                                                      hcInterpretedSplices,
-                                                      templateNames)
+                                                      hcInterpretedSplices)
 import Heist.Compiled                                (Splice, withSplices,
                                                       runChildren)
 import Snap                                          ((<|>))
 import Snap.Core                                     (pass, writeText)
-import Snap.Http.Server.Config                       (Config, completeConfig,
-                                                      defaultConfig)
-import Snap.Snaplet                                  (Handler, Initializer,
-                                                      Snaplet, SnapletInit,
+import Snap.Snaplet                                  (Handler,
+                                                      SnapletInit,
                                                       addRoutes,
                                                       embedSnaplet, getLens,
                                                       getSnapletFilePath,
@@ -47,7 +43,6 @@ import Snap.Snaplet                                  (Handler, Initializer,
                                                       nameSnaplet,
                                                       nestSnaplet,
                                                       snapletValue,
-                                                      subSnaplet,
                                                       with,
                                                       wrapSite)
 import Snap.Snaplet.Auth                             (AuthManager,
@@ -58,30 +53,19 @@ import Snap.Snaplet.Auth                             (AuthManager,
                                                       defAuthSettings,
                                                       userCSplices)
 import Snap.Snaplet.Auth.Backends.JsonFile           (initJsonFileAuthManager)
-import Snap.Snaplet.Common.BarSnaplet
-import Snap.Snaplet.Common.EmbeddedSnaplet
-import Snap.Snaplet.Common.FooSnaplet
-import Snap.Snaplet.Common.Handlers
-import Snap.Snaplet.Common.Types
-import Snap.Snaplet.Config                           (AppConfig,
-                                                      commandLineAppConfig)
-import Snap.Snaplet.Heist                            (Heist, HasHeist,
-                                                      addConfig,
+import Snap.Snaplet.Test.Common.BarSnaplet
+import Snap.Snaplet.Test.Common.EmbeddedSnaplet
+import Snap.Snaplet.Test.Common.FooSnaplet
+import Snap.Snaplet.Test.Common.Handlers
+import Snap.Snaplet.Test.Common.Types
+import Snap.Snaplet.Heist                            (addConfig,
                                                       addTemplates,
                                                       addTemplatesAt,
-                                                      cHeistServe,
-                                                      gRender,
-                                                      getHeistState,
-                                                      gHeistServe,
-                                                      heistInit,
-                                                      heistInit', heistLens,
+                                                      heistInit',
                                                       heistServe,
-                                                      heistServeSingle,
-                                                      modifyHeistState,
-                                                      withHeistState)
+                                                      modifyHeistState)
 import Heist.Interpreted                             (addTemplate, textSplice)
 import Snap.Snaplet.HeistNoClass                     (setInterpreted)
-import Snap.Snaplet.Session                          (SessionManager)
 import Snap.Snaplet.Session.Backends.CookieSession   (initCookieSessionManager)
 import Snap.TestCommon                               (shConfigSplice)
 import Snap.Util.FileServe                           (serveDirectory)
@@ -183,5 +167,5 @@ aTestTemplate =  [TextNode "littleTemplateNode"]
 ------------------------------------------------------------------------------
 failingAppInit :: SnapletInit App App
 failingAppInit = makeSnaplet "app" "Test application" Nothing $ do
-   error "Error"
+   _ <- error "Error"
    return undefined

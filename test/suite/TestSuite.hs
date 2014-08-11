@@ -6,22 +6,15 @@ module Main where
 ------------------------------------------------------------------------------
 import           Control.Concurrent
 import           Control.Exception
-import           Control.Monad
-import qualified Data.ByteString.Lazy.Char8 as L
-import qualified Data.ByteString.Char8 as S
-import           Network.Http.Client
-import           Prelude hiding (catch)
-import           Snap.Http.Server.Config
-import           Snap.Snaplet
 import           System.IO
 
-import           Test.Framework
-import           Test.Framework.Providers.HUnit
-import           Test.HUnit hiding (Test, path)
 ------------------------------------------------------------------------------
-import           Snap.Snaplet.Common.App
+import           Test.Framework
+import           Snap.Snaplet.Test.Common.App
 import qualified Blackbox.Tests
 import           Snap.Http.Server (simpleHttpServe)
+import           Snap.Http.Server.Config
+import           Snap.Snaplet
 import qualified Snap.Snaplet.Internal.Lensed.Tests
 import qualified Snap.Snaplet.Internal.LensT.Tests
 import qualified Snap.Snaplet.Internal.RST.Tests
@@ -32,11 +25,6 @@ import qualified Snap.Snaplet.Heist.Tests
 import qualified Snap.Snaplet.Config.Tests
 
 import           SafeCWD
-
-import           Snap.Snaplet
-import           Snap.Snaplet.Test
-import           Snap.Snaplet.Auth
-import           Test.HUnit hiding (Test)
 
 ------------------------------------------------------------------------------
 main :: IO ()
