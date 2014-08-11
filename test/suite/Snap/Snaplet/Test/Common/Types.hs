@@ -1,16 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Snap.Snaplet.Common.Types where
-
+module Snap.Snaplet.Test.Common.Types where
 
 ------------------------------------------------------------------------------
 import Control.Lens
 ------------------------------------------------------------------------------
-import Snap.Snaplet                        (Snaplet, subSnaplet)
-import Snap.Snaplet.Auth                   (AuthManager)
-import Snap.Snaplet.Common.BarSnaplet
-import Snap.Snaplet.Common.EmbeddedSnaplet
-import Snap.Snaplet.Common.FooSnaplet
+import Snap.Snaplet                             (Snaplet, subSnaplet)
+import Snap.Snaplet.Auth                        (AuthManager)
+import Snap.Snaplet.Test.Common.BarSnaplet
+import Snap.Snaplet.Test.Common.EmbeddedSnaplet
+import Snap.Snaplet.Test.Common.FooSnaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Session
 

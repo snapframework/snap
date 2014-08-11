@@ -27,7 +27,7 @@ import           Snap.Snaplet.Test              (evalHandler, runHandler)
 import qualified Snap.Snaplet.Heist             as HS
 import qualified Snap.Snaplet.Heist.Compiled    as C
 import qualified Snap.Snaplet.Heist.Interpreted as I
-import           Snap.Snaplet.Common.App         (appInit, appInit', heist)
+import           Snap.Snaplet.Test.Common.App   (appInit, appInit', heist)
 import qualified Text.XmlHtml                   as XML
 
 heistTests :: F.Test

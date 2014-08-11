@@ -202,12 +202,12 @@ Test-suite testsuite
     Snap.Snaplet.Auth.Tests
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Types.Tests
-    Snap.Snaplet.Common.App
-    Snap.Snaplet.Common.BarSnaplet
-    Snap.Snaplet.Common.EmbeddedSnaplet
-    Snap.Snaplet.Common.FooSnaplet
-    Snap.Snaplet.Common.Handlers
-    Snap.Snaplet.Common.Types
+    Snap.Snaplet.Test.Common.App
+    Snap.Snaplet.Test.Common.BarSnaplet
+    Snap.Snaplet.Test.Common.EmbeddedSnaplet
+    Snap.Snaplet.Test.Common.FooSnaplet
+    Snap.Snaplet.Test.Common.Handlers
+    Snap.Snaplet.Test.Common.Types
     Snap.Snaplet.Config
     Snap.Snaplet.Config.Tests
     Snap.Snaplet.Heist

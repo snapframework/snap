@@ -1,4 +1,4 @@
-module Snap.Snaplet.Common.Handlers where
+module Snap.Snaplet.Test.Common.Handlers where
 
 ------------------------------------------------------------------------------
 import Control.Monad.IO.Class                        (liftIO)
@@ -11,8 +11,8 @@ import Data.Map.Syntax                               ((##))
 import Heist.Interpreted                             (textSplice)
 import Snap.Core                                     (writeText, getParam)
 import Snap.Snaplet                                  (Handler, getSnapletUserConfig, with)
-import Snap.Snaplet.Common.FooSnaplet
-import Snap.Snaplet.Common.Types
+import Snap.Snaplet.Test.Common.FooSnaplet
+import Snap.Snaplet.Test.Common.Types
 import Snap.Snaplet.HeistNoClass                     (renderWithSplices)
 import Snap.Snaplet.Session                          (csrfToken, getFromSession, sessionToList, setInSession, withSession)
 
