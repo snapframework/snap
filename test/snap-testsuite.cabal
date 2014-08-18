@@ -26,7 +26,7 @@ Executable snap-testsuite
     unix                       >= 2.2.0.0  && < 2.8,
 
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.8,
+    aeson                      >= 0.6      && < 0.9,
     attoparsec                 >= 0.10     && < 0.13,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,
@@ -41,9 +41,9 @@ Executable snap-testsuite
     filepath                   >= 1.1      && < 1.4,
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
-    heist                      >= 0.13     && < 0.14,
+    heist                      >= 0.13     && < 0.15,
     logict                     >= 0.4.2    && < 0.7,
-    mtl                        >  2.0      && < 2.2,
+    mtl                        >  2.0      && < 2.3,
     mwc-random                 >= 0.8      && < 0.14,
     pwstore-fast               >= 2.2      && < 2.5,
     regex-posix                >= 0.95     && < 1,
@@ -53,7 +53,7 @@ Executable snap-testsuite
     syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 1.2,
     time                       >= 1.1      && < 1.5,
-    transformers               >= 0.2      && < 0.4,
+    transformers               >= 0.2      && < 0.5,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.7,
@@ -66,7 +66,7 @@ Executable snap-testsuite
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.2
+      lens                      >= 3.7.6    && < 4.4
 
 
   extensions:
@@ -98,7 +98,7 @@ Executable app
 
   build-depends:
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.8,
+    aeson                      >= 0.6      && < 0.9,
     attoparsec                 >= 0.10     && < 0.13,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,
@@ -113,9 +113,9 @@ Executable app
     filepath                   >= 1.1      && < 1.4,
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
-    heist                      >= 0.13     && < 0.14,
+    heist                      >= 0.13     && < 0.15,
     logict                     >= 0.4.2    && < 0.7,
-    mtl                        >  2.0      && < 2.2,
+    mtl                        >  2.0      && < 2.3,
     mwc-random                 >= 0.8      && < 0.14,
     pwstore-fast               >= 2.2      && < 2.5,
     regex-posix                >= 0.95     && < 1,
@@ -125,7 +125,7 @@ Executable app
     syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 1.2,
     time                       >= 1.1      && < 1.5,
-    transformers               >= 0.2      && < 0.4,
+    transformers               >= 0.2      && < 0.5,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.7,
@@ -138,7 +138,7 @@ Executable app
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.2
+      lens                      >= 3.7.6    && < 4.4
 
   extensions:
     BangPatterns,
@@ -180,7 +180,7 @@ Executable nesttest
     unix                       >= 2.2.0.0  && < 2.8,
 
     MonadCatchIO-transformers  >= 0.2      && < 0.4,
-    aeson                      >= 0.6      && < 0.8,
+    aeson                      >= 0.6      && < 0.9,
     attoparsec                 >= 0.10     && < 0.13,
     bytestring                 >= 0.9.1    && < 0.11,
     cereal                     >= 0.3      && < 0.5,
@@ -195,9 +195,9 @@ Executable nesttest
     filepath                   >= 1.1      && < 1.4,
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
-    heist                      >= 0.13     && < 0.14,
+    heist                      >= 0.13     && < 0.15,
     logict                     >= 0.4.2    && < 0.7,
-    mtl                        >  2.0      && < 2.2,
+    mtl                        >  2.0      && < 2.3,
     mwc-random                 >= 0.8      && < 0.14,
     pwstore-fast               >= 2.2      && < 2.5,
     regex-posix                >= 0.95     && < 1,
@@ -207,7 +207,7 @@ Executable nesttest
     syb                        >= 0.1      && < 0.5,
     text                       >= 0.11     && < 1.2,
     time                       >= 1.1      && < 1.5,
-    transformers               >= 0.2      && < 0.4,
+    transformers               >= 0.2      && < 0.5,
     unordered-containers       >= 0.1.4    && < 0.3,
     vector                     >= 0.7.1    && < 0.11,
     vector-algorithms          >= 0.4      && < 0.7,
@@ -220,7 +220,7 @@ Executable nesttest
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.2
+      lens                      >= 3.7.6    && < 4.4
 
 
   extensions:

@@ -24,6 +24,8 @@ module Snap.Snaplet.Auth.SpliceHelpers
   , cLoggedInUser
   ) where
 
+------------------------------------------------------------------------------
+import           Control.Lens
 import           Control.Monad.Trans
 import           Data.Maybe
 import           Data.Monoid
@@ -34,12 +36,12 @@ import           Heist
 import qualified Heist.Interpreted as I
 import qualified Heist.Compiled as C
 import           Heist.Splices
-
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Heist
+------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------
@@ -55,13 +57,16 @@ addAuthSplices
   -> SnapletLens b (AuthManager b)
       -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
-addAuthSplices h auth = addConfig h $ mempty
-    { hcInterpretedSplices = do
-          "ifLoggedIn"   ## ifLoggedIn auth
-          "ifLoggedOut"  ## ifLoggedOut auth
-          "loggedInUser" ## loggedInUser auth
-    , hcCompiledSplices = compiledAuthSplices auth
-    }
+addAuthSplices h auth = addConfig h sc
+  where
+    sc = mempty & scInterpretedSplices .~ is
+                & scCompiledSplices .~ cs
+    is = do
+        "ifLoggedIn"   ## ifLoggedIn auth
+        "ifLoggedOut"  ## ifLoggedOut auth
+        "loggedInUser" ## loggedInUser auth
+    cs = compiledAuthSplices auth
+    
 
 
 ------------------------------------------------------------------------------
@@ -99,7 +104,7 @@ userISplices AuthUser{..} = do
 userCSplices :: Monad m => Splices (RuntimeSplice m AuthUser -> C.Splice m)
 userCSplices = fields `mappend` ifs
   where
-    fields = mapS (C.pureSplice . C.textSplice) $ do
+    fields = mapV (C.pureSplice . C.textSplice) $ do
         "userId"          ## maybe "-" unUid . userId
         "userLogin"       ## userLogin
         "userEmail"       ## fromMaybe "-" . userEmail
@@ -136,11 +141,11 @@ ifLoggedIn auth = do
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
 cIfLoggedIn :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedIn auth = do
-    children <- C.runChildren
+    cs <- C.runChildren
     return $ C.yieldRuntime $ do
         chk <- lift $ withTop auth isLoggedIn
         case chk of
-          True -> C.codeGen children
+          True -> C.codeGen cs
           False -> mempty
 
 
@@ -164,11 +169,11 @@ ifLoggedOut auth = do
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
 cIfLoggedOut :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedOut auth = do
-    children <- C.runChildren
+    cs <- C.runChildren
     return $ C.yieldRuntime $ do
         chk <- lift $ withTop auth isLoggedIn
         case chk of
-          False -> C.codeGen children
+          False -> C.codeGen cs
           True -> mempty
 
 

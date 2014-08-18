@@ -54,7 +54,8 @@ gHeistInit serve templateDir = do
                   ]
         return hs
   where
-    defaultConfig = mempty { hcLoadTimeSplices = defaultLoadTimeSplices }
+    sc = set scLoadTimeSplices defaultLoadTimeSplices mempty
+    defaultConfig = HeistConfig sc "" True
 
 
 ------------------------------------------------------------------------------
@@ -74,8 +75,8 @@ heistInitWorker templateDir initialConfig = do
         , "templates from"
         , tDir
         ]
-    let config = initialConfig `mappend`
-                 mempty { hcTemplateLocations = [loadTemplates tDir] }
+    let config = over hcTemplateLocations (<> [loadTemplates tDir])
+                      initialConfig
     ref <- liftIO $ newIORef (config, Compiled)
 
     -- FIXME This runs after all the initializers, but before post init
