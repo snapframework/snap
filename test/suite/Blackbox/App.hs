@@ -54,10 +54,10 @@ app = makeSnaplet "app" "Test application" Nothing $ do
           initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
     ns <- embedSnaplet "embed" embedded embeddedInit
     _lens <- getLens
-    addConfig hs $ mempty
-        { hcInterpretedSplices = do
+    let splices = do
             "appsplice" ## textSplice "contents of the app splice"
-            "appconfig" ## shConfigSplice _lens }
+            "appconfig" ## shConfigSplice _lens
+    addConfig hs $ mempty & scInterpretedSplices .~ splices
     addRoutes [ ("/hello", writeText "hello world")
               , ("/routeWithSplice", routeWithSplice)
               , ("/routeWithConfig", routeWithConfig)
