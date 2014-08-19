@@ -29,6 +29,7 @@ maintainer:     snap@snapframework.com
 build-type:     Simple
 cabal-version:  >= 1.8
 homepage:       http://snapframework.com/
+bug-reports:    https://github.com/snapframework/snap/issues
 category:       Web, Snap
 
 extra-source-files:
