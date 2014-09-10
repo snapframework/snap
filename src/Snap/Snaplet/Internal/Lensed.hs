@@ -22,8 +22,7 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               defaultLiftBaseWith,
                                               defaultRestoreM)
 import           Control.Monad.Trans.State   (StateT(..))
-import           Prelude                     (Functor (..), Monad (..), const,
-                                              seq, ($), ($!))
+import           Prelude                     (Functor (..), Monad (..), ($))
 import           Snap.Core                   (MonadSnap (..))
 ------------------------------------------------------------------------------
 
