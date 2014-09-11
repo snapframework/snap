@@ -24,7 +24,7 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               defaultLiftWith, defaultRestoreM,
                                               defaultRestoreT)
 import           Prelude                     (Functor (..), Monad (..), const,
-                                              seq, ($), ($!))
+                                              ($), ($!))
 import           Snap.Core                   (MonadSnap (..))
 import           Snap.Snaplet.Internal.RST   (RST (..), runRST, withRST)
 ------------------------------------------------------------------------------

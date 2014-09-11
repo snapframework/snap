@@ -117,7 +117,7 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                     >= 0.6      && < 0.8,
+    aeson                     >= 0.6      && < 0.9,
     attoparsec                >= 0.10     && < 0.13,
     base                      >= 4.4      && < 5,
     bytestring                >= 0.9.1    && < 0.11,
@@ -135,7 +135,7 @@ Library
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
     heist                     >= 1.0      && < 1.1,
-    lens                      >= 3.7.6    && < 4.2,
+    lens                      >= 3.7.6    && < 4.5,
     lifted-base               >= 0.2      && < 0.3,
     logict                    >= 0.4.2    && < 0.7,
     map-syntax                >= 0.1      && < 0.2,
@@ -148,7 +148,7 @@ Library
     snap-server               >= 1.0      && < 1.1,
     stm                       >= 2.2      && < 2.5,
     syb                       >= 0.1      && < 0.5,
-    text                      >= 0.11     && < 1.2,
+    text                      >= 0.11     && < 1.3,
     time                      >= 1.1      && < 1.5,
     transformers              >= 0.2      && < 0.5,
     transformers-base         >= 0.4      && < 0.5,
@@ -233,7 +233,7 @@ Test-suite testsuite
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                      >= 0.6      && < 0.8,
+    aeson                      >= 0.6      && < 0.9,
     async                      >= 2.0.1.5  && < 2.1,
     attoparsec                 >= 0.10     && < 0.13,
     base                       >= 4.4      && < 5,
@@ -256,7 +256,7 @@ Test-suite testsuite
     heist                      >= 1.0      && < 1.1,
     http-streams               >= 0.7.1.1  && < 0.8,
     HUnit                      >= 1.2.5.2  && < 1.3,            
-    lens                       >= 3.7.6    && < 4.2,
+    lens                       >= 3.7.6    && < 4.5,
     lifted-base                >= 0.2      && < 0.3,
     logict                     >= 0.4.2    && < 0.7,
     map-syntax                 >= 0.1      && < 0.2,
@@ -276,7 +276,7 @@ Test-suite testsuite
     test-framework-hunit       >= 0.3.0.1  && < 0.4, 
     test-framework-quickcheck2 >= 0.3.0.3  && < 0.4,
     test-framework-smallcheck  >= 0.2      && < 0.3, 
-    text                       >= 0.11     && < 1.2,
+    text                       >= 0.11     && < 1.3,
     time                       >= 1.1      && < 1.5,
     transformers               >= 0.2      && < 0.5,
     transformers-base          >= 0.4      && < 0.5,
