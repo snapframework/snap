@@ -2,6 +2,8 @@
 
 set -e
 
+cp -r test/snaplets ./
+
 if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
@@ -65,6 +67,8 @@ EXCL=""
 for m in $EXCLUDES; do
     EXCL="$EXCL --exclude=$m"
 done
+
+rm -fr ./snaplets
 
 rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
 rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl
