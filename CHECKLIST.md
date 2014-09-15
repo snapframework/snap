@@ -41,7 +41,7 @@ Snaplets release checklist
   - [X]  user/auth snaplet interface
 
   - [X]  heist snaplet
-    
+
   - [ ]  admin panel snaplet
 
 
@@ -56,5 +56,3 @@ Snaplets release checklist
     - [ ]  routing
 
       - still question marks here, especially re: producing internal links?
-
-
