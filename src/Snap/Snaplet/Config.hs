@@ -11,7 +11,7 @@ import Data.Monoid                      (Monoid, mappend, mempty, Last(..), getL
 #if MIN_VERSION_base(4,7,0)
 import           Data.Typeable.Internal (Typeable)
 #else
-import           Data.Typeable          (Typeable, mkTyCon3, mkTyConApp, typeOf)
+import           Data.Typeable          (TyCon, Typeable, mkTyCon, mkTyConApp, typeOf)
 #endif
 
 import System.Console.GetOpt            (OptDescr(Option), ArgDescr(ReqArg))
@@ -36,7 +36,7 @@ newtype AppConfig = AppConfig { appEnvironment :: Maybe String }
 -- dynamic loader package can be updated so that manual Typeable instances
 -- are no longer needed.
 appConfigTyCon :: TyCon
-appConfigTyCon = mkTyCon3 "snap" "Snap.Snaplet.Config" "AppConfig"
+appConfigTyCon = mkTyCon "Snap.Snaplet.Config.AppConfig"
 {-# NOINLINE appConfigTyCon #-}
 
 instance Typeable AppConfig where

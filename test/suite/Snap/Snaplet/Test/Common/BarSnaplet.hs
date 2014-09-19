@@ -3,26 +3,25 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
-module Blackbox.BarSnaplet where
+
+module Snap.Snaplet.Test.Common.BarSnaplet where
 
 ------------------------------------------------------------------------------
-import Prelude hiding (lookup)
-
-import Control.Lens
-import Control.Monad.State
-import qualified Data.ByteString as B
-import Data.Configurator
-import Data.Maybe
-import Snap.Snaplet
-import Snap.Snaplet.Heist
-import Snap.Core
-import Heist
-import Heist.Interpreted
-
-import Blackbox.Common
-import Blackbox.FooSnaplet
-import Data.Map.Syntax ((##))
-
+import           Prelude                             hiding (lookup)
+import           Control.Lens
+import           Control.Monad.State
+import qualified Data.ByteString                     as B
+import           Data.Configurator
+import           Data.Maybe
+------------------------------------------------------------------------------
+import           Data.Map.Syntax                     ((##))
+import           Heist
+import           Heist.Interpreted
+import           Snap.Core
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Test.Common.FooSnaplet
+import           Snap.TestCommon                     (handlerConfig, shConfigSplice)
 
 ------------------------------------------------------------------------------
 data BarSnaplet b = BarSnaplet

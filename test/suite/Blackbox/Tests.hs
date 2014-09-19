@@ -100,7 +100,7 @@ tests = testGroup "non-cabal-tests"
 ------------------------------------------------------------------------------
 testName :: String -> String
 testName uri = "internal/" ++ uri
-
+--testName = id
 
 ------------------------------------------------------------------------------
 requestTest :: String -> Text -> Test
@@ -135,7 +135,7 @@ requestExpectingError' url status desired = do
 fooConfigPathTest :: Test
 fooConfigPathTest = testCase (testName "foo/fooFilePath") $ do
     b <- liftM L.unpack $ grab "/foo/fooFilePath"
-    assertRelativelyTheSame b "non-cabal-appdir/snaplets/foosnaplet"
+    assertRelativelyTheSame b "snaplets/foosnaplet"
 
 
 ------------------------------------------------------------------------------
@@ -178,7 +178,7 @@ fooHandlerConfigTest :: Test
 fooHandlerConfigTest = testWithCwd "foo/handlerConfig" $ \cwd b -> do
     let response = L.fromChunks [ "([\"app\"],\""
                                 , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/foosnaplet\","
+                                , "/snaplets/foosnaplet\","
                                 , "Just \"foosnaplet\",\"A demonstration "
                                 , "snaplet called foo.\",\"foo\")" ]
     assertEqual "" response b
@@ -189,7 +189,7 @@ barHandlerConfigTest :: Test
 barHandlerConfigTest = testWithCwd "bar/handlerConfig" $ \cwd b -> do
     let response = L.fromChunks [ "([\"app\"],\""
                                 , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/baz\","
+                                , "/snaplets/baz\","
                                 , "Just \"baz\",\"An example snaplet called "
                                 , "bar.\",\"\")" ]
     assertEqual "" response b
@@ -201,7 +201,7 @@ bazpage5Test :: Test
 bazpage5Test = testWithCwd "bazpage5" $ \cwd b -> do
     let response = L.fromChunks [ "baz template page ([\"app\"],\""
                                 , S.pack cwd
-                                , "/non-cabal-appdir/snaplets/baz\","
+                                , "/snaplets/baz\","
                                 , "Just \"baz\",\"An example snaplet called "
                                 , "bar.\",\"\")\n" ]
     assertEqual "" (T.decodeUtf8 response) (T.decodeUtf8 b)
@@ -216,11 +216,11 @@ bazConfigTest = testWithCwd "bazconfig" $ \cwd b -> do
     let response = L.fromChunks [
                      "baz config page ([],\""
                    , S.pack cwd
-                   , "/non-cabal-appdir\",Just \"app\","
+                   , "\",Just \"app\"," -- TODO, right?
                    , "\"Test application\",\"\") "
                    , "([\"app\"],\""
                    , S.pack cwd
-                   , "/non-cabal-appdir/snaplets/foosnaplet\","
+                   , "/snaplets/foosnaplet\","
                    , "Just \"foosnaplet\",\"A demonstration snaplet "
                    , "called foo.\",\"foo\")\n"
                    ]
@@ -251,24 +251,24 @@ remove f = do
 removeDir :: FilePath -> IO ()
 removeDir d = do
     exists <- doesDirectoryExist d
-    when exists $ removeDirectoryRecursive "non-cabal-appdir/snaplets/foosnaplet"
+    when exists $ removeDirectoryRecursive "snaplets/foosnaplet"
 
 
 ------------------------------------------------------------------------------
 reloadTest :: Test
 reloadTest = testCase "internal/reload-test" $ do
-    let goodTplOrig = "non-cabal-appdir" </> "good.tpl"
-    let badTplOrig  = "non-cabal-appdir" </> "bad.tpl"
-    let goodTplNew  = "non-cabal-appdir" </> "snaplets"  </> "heist"
-                                         </> "templates" </> "good.tpl"
-    let badTplNew   = "non-cabal-appdir" </> "snaplets"  </> "heist"
-                                         </> "templates" </> "bad.tpl"
+    let goodTplOrig = "good.tpl"
+    let badTplOrig  = "bad.tpl"
+    let goodTplNew  = "snaplets"  </> "heist"
+                      </> "templates" </> "good.tpl"
+    let badTplNew   = "snaplets"  </> "heist"
+                      </> "templates" </> "bad.tpl"
 
     goodExists <- doesFileExist goodTplNew
     badExists  <- doesFileExist badTplNew
 
     assertBool "good.tpl exists" (not goodExists)
-    assertBool "bad.tpl exists" (not badExists)
+    assertBool "bad.tpl exists"  (not badExists)
     expect404 "bad"
 
     copyFile badTplOrig badTplNew
@@ -281,10 +281,10 @@ reloadTest = testCase "internal/reload-test" $ do
                 T.concat     [ "Error reloading site!\n\nInitializer "
                              , "threw an exception...\n"
                              , T.pack cwd'
-                             , "/non-cabal-appdir/snaplets/heist"
+                             , "/snaplets/heist"
                              , "/templates/bad.tpl \""
                              , T.pack cwd'
-                             , "/non-cabal-appdir/snaplets/heist/templates"
+                             , "/snaplets/heist/templates"
                              , "/bad.tpl\" (line 2, column 1):\nunexpected "
                              , "end of input\nexpecting \"=\", \"/\" or "
                              , "\">\"\n\n...but before it died it generated "
@@ -295,38 +295,36 @@ reloadTest = testCase "internal/reload-test" $ do
     remove badTplNew
     copyFile goodTplOrig goodTplNew
 
-    testWithCwd' "admin/reload" $ \cwd' b -> do
+    testWithCwd' "admin/reload" $ \cwd' b -> do  -- TODO/NOTE: Needs cleanup
         let cwd = S.pack cwd'
-        let response =
-                L.fromChunks [ "Initializing app @ /\n"
-                             , "Initializing heist @ /heist\n"
-                             , "...loaded 5 templates from "
-                             , cwd
-                             , "/non-cabal-appdir/snaplets/heist/templates\n"
-                             , "Initializing foosnaplet @ /foo\n"
-                             , "...adding 1 templates from "
-                             , cwd
-                             , "/non-cabal-appdir/snaplets/foosnaplet"
-                             , "/templates with route prefix foo/\n"
-                             , "Initializing baz @ /\n"
-                             , "...adding 2 templates from "
-                             , cwd
-                             , "/non-cabal-appdir/snaplets/baz/templates "
-                             , "with route prefix /\n"
-                             , "Initializing CookieSession @ /session\n"
-                             , "Initializing embedded @ /\n"
-                             , "Initializing heist @ /heist\n"
-                             , "...loaded 1 templates from "
-                             , cwd
-                             , "/non-cabal-appdir/snaplets/embedded"
-                             , "/snaplets/heist/templates\n"
-                             , "...adding 1 templates from "
-                             , cwd
-                             , "/non-cabal-appdir/snaplets/embedded"
-                             , "/extra-templates with route prefix "
-                             , "onemoredir/\n"
-                             , "Site successfully reloaded.\n"
-                             ]
+        let response = L.fromChunks [
+              "Initializing app @ /\nInitializing heist @ ",
+              "/heist\n...loaded 9 templates from ",
+              cwd,
+              "/snaplets/heist/templates\nInitializing CookieSession ",
+              "@ /session\nInitializing foosnaplet @ /foo\n...adding 1 ",
+              "templates from ",
+              cwd,
+              "/snaplets/foosnaplet/templates with route prefix ",
+              "foo/\nInitializing baz @ /\n...adding 2 templates from ",
+              cwd,
+              "/snaplets/baz/templates with route prefix /\nInitializing ",
+              "embedded @ /\nInitializing heist @ /heist\n...loaded ",
+              "1 templates from ",
+              cwd,
+              "/snaplets/embedded/snaplets/heist/templates\n...adding ",
+              "1 templates from ",
+              cwd,
+              "/snaplets/embedded/extra-templates with route prefix ",
+              "onemoredir/\n...adding 0 templates from ",
+              cwd,
+              "/templates with route prefix extraTemplates/\n...adding ",
+              "1 templates from ",
+              cwd,
+              "/test/evenMoreTemplates with route prefix ",
+              "evenMoreTemplates/\nInitializing JsonFileAuthManager @ ",
+              "/auth\nSite successfully reloaded.\n"
+              ]
 
         assertEqual "admin/reload" response b
 

@@ -17,7 +17,7 @@ import Snap.Http.Server.Config
 import Snap.Snaplet
 import Snap.Snaplet.Config
 import Snap.Snaplet.Heist
-import Snap.Snaplet.Config.App
+import Snap.Snaplet.Test.Common.App
 import Snap.Snaplet.Internal.Initializer
 import qualified Snap.Test as ST
 import Snap.Snaplet.Test
@@ -69,8 +69,12 @@ monoidAssociativity a b c = (a <> b) <> c == a <> (b <> c)
 verTypeable :: Assertion
 verTypeable =
   assertEqual "Unexpected Typeable behavior"
-  "Snap.Snaplet.Config.AppConfig"
-  (tyConString . typeRepTyCon . typeOf $ (undefined :: AppConfig))
+#if MIN_VERSION_base(4,7,0)
+    "AppConfig"
+#else
+    "Snap.Snaplet.Config.AppConfig"
+#endif
+  (show . typeOf $ (undefined :: AppConfig))
 
 
 ------------------------------------------------------------------------------

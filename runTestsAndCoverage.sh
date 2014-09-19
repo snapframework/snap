@@ -2,6 +2,8 @@
 
 set -e
 
+cp -r test/snaplets ./
+
 if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
@@ -28,6 +30,7 @@ rm -Rf $DIR
 mkdir -p $DIR
 
 EXCLUDES='Main
+Snap
 Blackbox.App
 Blackbox.BarSnaplet
 Blackbox.Common
@@ -36,10 +39,14 @@ Blackbox.FooSnaplet
 Blackbox.Tests
 Blackbox.Types
 Paths_snap
-Snap.Snaplet.Auth.App
 Snap.Snaplet.Auth.Handlers.Tests
 Snap.Snaplet.Auth.Tests
-Snap.Snaplet.Heist.App
+Snap.Snaplet.Test.Common.App
+Snap.Snaplet.Test.Common.BarSnaplet
+Snap.Snaplet.Test.Common.EmbeddedSnaplet
+Snap.Snaplet.Test.Common.FooSnaplet
+Snap.Snaplet.Test.Common.Handlers
+Snap.Snaplet.Test.Common.Types
 Snap.Snaplet.Heist.Tests
 Snap.Snaplet.Internal.Lensed.Tests
 Snap.Snaplet.Internal.LensT.Tests
@@ -60,6 +67,8 @@ EXCL=""
 for m in $EXCLUDES; do
     EXCL="$EXCL --exclude=$m"
 done
+
+rm -fr ./snaplets
 
 rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
 rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl

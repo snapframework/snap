@@ -21,7 +21,7 @@ import           Snap.Snaplet.Auth              (Password(ClearText),
                                                  userISplices)
 import           Snap.Snaplet.Heist             (cRender, render,
                                                  withSplices)
-import           Snap.Snaplet.Auth.App          (appInit, auth)
+import           Snap.Snaplet.Test.Common.App   (appInit, auth)
 
 
 ------------------------------------------------------------------------------
