@@ -18,6 +18,8 @@ Testsuite executable not found, please run:
     cabal configure
 then
     cabal build
+then
+    cabal install --enable-tests
 EOF
     exit;
 fi
