@@ -318,11 +318,8 @@ reloadTest = testCase "internal/reload-test" $ do
               "/snaplets/embedded/extra-templates with route prefix ",
               "onemoredir/\n...adding 0 templates from ",
               cwd,
-              "/templates with route prefix extraTemplates/\n...adding ",
-              "1 templates from ",
-              cwd,
-              "/test/evenMoreTemplates with route prefix ",
-              "evenMoreTemplates/\nInitializing JsonFileAuthManager @ ",
+              "/templates with route prefix extraTemplates/\n",
+              "Initializing JsonFileAuthManager @ ",
               "/auth\nSite successfully reloaded.\n"
               ]
 

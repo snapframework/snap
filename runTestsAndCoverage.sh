@@ -2,13 +2,13 @@
 
 set -e
 
-cp -r test/snaplets ./
+cd test
 
 if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
 
-SUITE=./dist/build/testsuite/testsuite
+SUITE=../dist/build/testsuite/testsuite
 
 rm -f testsuite.tix
 
@@ -24,7 +24,7 @@ fi
 
 $SUITE $*
 
-DIR=dist/hpc
+DIR=../dist/hpc
 
 rm -Rf $DIR
 mkdir -p $DIR
@@ -68,11 +68,9 @@ for m in $EXCLUDES; do
     EXCL="$EXCL --exclude=$m"
 done
 
-rm -fr ./snaplets
-
-rm -f non-cabal-appdir/snaplets/heist/templates/bad.tpl
-rm -f non-cabal-appdir/snaplets/heist/templates/good.tpl
-rm -fr non-cabal-appdir/snaplets/foosnaplet
+rm -f snaplets/heist/templates/bad.tpl
+rm -f snaplets/heist/templates/good.tpl
+rm -fr non-cabal-appdir/snaplets/foosnaplet # TODO
 
 hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
 

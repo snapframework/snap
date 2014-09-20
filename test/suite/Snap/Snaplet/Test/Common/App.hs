@@ -103,8 +103,8 @@ appInit' hInterp authConfigFile =
 
   sPath    <- getSnapletFilePath
 
-  let extraTemplatesPath = sPath </> "test" </> "evenMoreTemplates"   -- TODO/NODE is this right?
-  addTemplatesAt hs "evenMoreTemplates" extraTemplatesPath  -- TODO/NODE is this right?
+--  let extraTemplatesPath = sPath </> "test" </> "evenMoreTemplates"   -- TODO/NODE is this right?
+--  addTemplatesAt hs "evenMoreTemplates" extraTemplatesPath  -- TODO/NODE is this right?
   
   when hInterp $ do
     modifyHeistState (addTemplate "smallTemplate" aTestTemplate Nothing)

@@ -170,11 +170,9 @@ Library
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
                  -fno-warn-orphans -fno-warn-unused-do-bind
-                 -fhpc
   else
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
                  -fno-warn-orphans
-                 -fhpc
 
 Test-suite testsuite
   hs-source-dirs: src test/suite
