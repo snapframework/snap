@@ -26,10 +26,10 @@ fi
 
 $SUITE $*
 
-DIR=../dist/hpc
+DIR=dist/hpc
 
-rm -Rf $DIR
-mkdir -p $DIR
+rm -Rf ../$DIR
+mkdir -p ../$DIR
 
 EXCLUDES='Main
 Snap
@@ -74,7 +74,9 @@ rm -f snaplets/heist/templates/bad.tpl
 rm -f snaplets/heist/templates/good.tpl
 rm -fr non-cabal-appdir/snaplets/foosnaplet # TODO
 
-hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
+cd .. 
+
+hpc markup $EXCL --destdir=$DIR test/testsuite # >/dev/null 2>&1
 
 cat <<EOF
 
