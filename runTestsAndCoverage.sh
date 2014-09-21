@@ -2,17 +2,25 @@
 
 set -e
 
+# All directory variables relative to project root
+MIXDIR=./dist/hpc
+TIX=./test/testsuite.tix
+HTMLDIR=./test/hpc
+
+SUITE=./dist/build/testsuite/testsuite
+
 cd test
 
 if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
 
-SUITE=../dist/build/testsuite/testsuite
+rm -f ../$TIX
+rm -rf ../$HTMLDIR
 
-rm -f testsuite.tix
+mkdir -p ../$OUTDIR
 
-if [ ! -f $SUITE ]; then
+if [ ! -f ../$SUITE ]; then
     cat <<EOF
 Testsuite executable not found, please run:
     cabal configure
@@ -24,12 +32,7 @@ EOF
     exit;
 fi
 
-$SUITE $*
-
-DIR=dist/hpc
-
-rm -Rf ../$DIR
-mkdir -p ../$DIR
+../$SUITE $*
 
 EXCLUDES='Main
 Snap
@@ -63,7 +66,6 @@ Snap.Snaplet.Config.App
 Snap.Snaplet.Config.Tests
 '
 
-
 EXCL=""
 
 for m in $EXCLUDES; do
@@ -76,9 +78,10 @@ rm -fr non-cabal-appdir/snaplets/foosnaplet # TODO
 
 cd .. 
 
-hpc markup $EXCL --destdir=$DIR test/testsuite # >/dev/null 2>&1
+# TODO - actually send results to /dev/null when hpc kinks are fully removed
+hpc markup $EXCL --hpcdir=$MIXDIR --destdir=$HTMLDIR test/testsuite # >/dev/null 2>&1
 
 cat <<EOF
 
-Test coverage report written to $DIR.
+Test coverage report written to $HTMLDIR.
 EOF
