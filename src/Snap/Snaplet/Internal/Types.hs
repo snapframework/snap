@@ -316,7 +316,7 @@ getsSnapletState f = do
 
 
 ------------------------------------------------------------------------------
--- | Lets you access the current snaplet's state through the MonadState
+-- | Lets you access the current snaplet's state through the 'MonadState'
 -- interface.
 instance MonadState v (Handler b v) where
     get = getsSnapletState _snapletValue
@@ -324,7 +324,7 @@ instance MonadState v (Handler b v) where
 
 
 ------------------------------------------------------------------------------
--- | Lets you access the current snaplet's state through the MonadReader
+-- | Lets you access the current snaplet's state through the 'MonadReader'
 -- interface.
 instance MonadReader v (Handler b v) where
     ask = getsSnapletState _snapletValue
