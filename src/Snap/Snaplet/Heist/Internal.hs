@@ -55,7 +55,9 @@ gHeistInit serve templateDir = do
         return hs
   where
     sc = set scLoadTimeSplices defaultLoadTimeSplices mempty
-    defaultConfig = HeistConfig sc "" True
+    defaultConfig = emptyHeistConfig & hcSpliceConfig .~ sc
+                                     & hcNamespace .~ ""
+                                     & hcErrorNotBound .~ True
 
 
 ------------------------------------------------------------------------------
