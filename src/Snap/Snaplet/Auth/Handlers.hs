@@ -327,7 +327,7 @@ setRememberToken sk rc rp token = setSecureCookie rc sk rp token
 
 ------------------------------------------------------------------------------
 forgetRememberToken :: MonadSnap m => ByteString -> m ()
-forgetRememberToken rc = expireCookie rc (Just "/")
+forgetRememberToken rc = expireCookie rc Nothing (Just "/")
 
 
 ------------------------------------------------------------------------------
