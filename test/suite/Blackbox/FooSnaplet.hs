@@ -5,6 +5,7 @@ module Blackbox.FooSnaplet where
 
 ------------------------------------------------------------------------------
 import Prelude hiding (lookup)
+import Control.Lens
 import Control.Monad.State
 import Data.Configurator
 import Data.Maybe
@@ -32,11 +33,10 @@ fooInit h = makeSnaplet "foosnaplet" "A demonstration snaplet called foo."
     fp <- getSnapletFilePath
     name <- getSnapletName
     _lens <- getLens
-    addConfig h $ mempty
-        { hcInterpretedSplices = do
+    let splices = do
             "foosplice" ## textSplice "contents of the foo splice"
             "fooconfig" ## shConfigSplice _lens
-        }
+    addConfig h $ mempty & scInterpretedSplices .~ splices
     addRoutes [("fooConfig", liftIO (lookup config "fooSnapletField") >>= writeLBS . fromJust)
               ,("fooRootUrl", writeBS rootUrl)
               ,("fooSnapletName", writeText $ fromMaybe "empty snaplet name" name)

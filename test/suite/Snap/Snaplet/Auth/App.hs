@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 
 module Snap.Snaplet.Auth.App
@@ -13,13 +13,12 @@ module Snap.Snaplet.Auth.App
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.Lens                                (makeLenses)
+import           Control.Lens                                (makeLenses, (&), (.~))
 import           Control.Monad.Trans                         (lift)
 import           Data.Monoid                                 (mempty)
 ------------------------------------------------------------------------------
-import           Data.Map.Syntax                             ((#!))
-import           Heist                                       (Splices,
-                                                              hcCompiledSplices)
+import           Data.Map.Syntax                             (( #! ))
+import           Heist                                       (Splices, scCompiledSplices)
 import qualified Heist.Compiled                              as C
 import           Snap.Core                                   (pass)
 import           Snap.Snaplet                                (Handler,
@@ -41,8 +40,10 @@ import           Snap.Snaplet.Auth.Backends.JsonFile         (initJsonFileAuthMa
 import           Snap.Snaplet.Session.Backends.CookieSession (initCookieSessionManager)
 import           Snap.Snaplet.Heist                          (Heist,
                                                               HasHeist,
+                                                              addConfig,
                                                               heistLens,
-                                                              heistInit')
+                                                              heistInit)
+import           Snap.Snaplet.Session                        (SessionManager)
 
 
 ------------------------------------------------------------------------------
@@ -68,19 +69,18 @@ compiledSplices = do
 appInit' :: Bool -> SnapletInit App App
 appInit' useConfigFile = makeSnaplet "app" "Test application" Nothing $ do
 
-    h <- nestSnaplet "heist" heist $
-           heistInit'
-           "templates"
-           (mempty {hcCompiledSplices = compiledSplices})
+    h <- nestSnaplet "heist" heist $ heistInit "templates"
 
-  
+    addConfig h $ mempty & scCompiledSplices .~ compiledSplices
+
+
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
     authSettings <- if useConfigFile
                     then authSettingsFromConfig
                     else return defAuthSettings
-    
+
     a <- nestSnaplet "auth" auth $ authInit authSettings
 
     addAuthSplices h auth
