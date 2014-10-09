@@ -206,9 +206,9 @@ addTemplatesAt h urlPrefix templateDir = do
         , fullPrefix ++ "/"
         ]
     let locations = [liftM addPrefix $ loadTemplates templateDir]
-        hc' = mempty { hcTemplateLocations = locations }
-    liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
-        (\(hc,dm) -> ((hc `mappend` hc', dm), ()))
+        add (hc, dm) =
+          ((over hcTemplateLocations (mappend locations) hc, dm), ())
+    liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h) add
 
 
 getCurHeistConfig :: Snaplet (Heist b)
@@ -263,15 +263,17 @@ withHeistState heist f = withHeistState' (subSnaplet heist) f
 -- there.  This is the preferred method for adding all four kinds of splices
 -- as well as new templates.
 addConfig :: Snaplet (Heist b)
-          -> HeistConfig (Handler b b)
+          -> SpliceConfig (Handler b b)
           -> Initializer b v ()
-addConfig h hc = case view snapletValue h of
+addConfig h sc = case view snapletValue h of
     Configuring ref ->
-        liftIO $ atomicModifyIORef ref
-                   (\(hc1,dm) -> ((hc1 `mappend` hc, dm), ()))
+        liftIO $ atomicModifyIORef ref add
     Running _ _ _ _ -> do
         printInfo "finalLoadHook called while running"
         error "this shouldn't happen"
+  where
+    add (hc, dm) =
+      ((over hcSpliceConfig (`mappend` sc) hc, dm), ())
 
 
                             -----------------------

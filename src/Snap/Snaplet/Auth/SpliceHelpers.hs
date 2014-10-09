@@ -24,6 +24,8 @@ module Snap.Snaplet.Auth.SpliceHelpers
   , cLoggedInUser
   ) where
 
+------------------------------------------------------------------------------
+import           Control.Lens
 import           Control.Monad.Trans
 import           Data.Map.Syntax ((##), mapV)
 import           Data.Maybe
@@ -35,12 +37,12 @@ import           Heist
 import qualified Heist.Interpreted as I
 import qualified Heist.Compiled as C
 import           Heist.Splices
-
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Heist
+------------------------------------------------------------------------------
 
 
 ------------------------------------------------------------------------------
@@ -56,13 +58,16 @@ addAuthSplices
   -> SnapletLens b (AuthManager b)
       -- ^ A lens reference to 'AuthManager'
   -> Initializer b v ()
-addAuthSplices h auth = addConfig h $ mempty
-    { hcInterpretedSplices = do
-          "ifLoggedIn"   ## ifLoggedIn auth
-          "ifLoggedOut"  ## ifLoggedOut auth
-          "loggedInUser" ## loggedInUser auth
-    , hcCompiledSplices = compiledAuthSplices auth
-    }
+addAuthSplices h auth = addConfig h sc
+  where
+    sc = mempty & scInterpretedSplices .~ is
+                & scCompiledSplices .~ cs
+    is = do
+        "ifLoggedIn"   ## ifLoggedIn auth
+        "ifLoggedOut"  ## ifLoggedOut auth
+        "loggedInUser" ## loggedInUser auth
+    cs = compiledAuthSplices auth
+
 
 
 ------------------------------------------------------------------------------
@@ -137,11 +142,11 @@ ifLoggedIn auth = do
 -- > <ifLoggedIn> Show this when there is a logged in user </ifLoggedIn>
 cIfLoggedIn :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedIn auth = do
-    children <- C.runChildren
+    cs <- C.runChildren
     return $ C.yieldRuntime $ do
         chk <- lift $ withTop auth isLoggedIn
         case chk of
-          True -> C.codeGen children
+          True -> C.codeGen cs
           False -> mempty
 
 
@@ -165,11 +170,11 @@ ifLoggedOut auth = do
 -- > <ifLoggedOut> Show this when there is a logged in user </ifLoggedOut>
 cIfLoggedOut :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cIfLoggedOut auth = do
-    children <- C.runChildren
+    cs <- C.runChildren
     return $ C.yieldRuntime $ do
         chk <- lift $ withTop auth isLoggedIn
         case chk of
-          False -> C.codeGen children
+          False -> C.codeGen cs
           True -> mempty
 
 
@@ -179,7 +184,7 @@ cIfLoggedOut auth = do
 loggedInUser :: SnapletLens b (AuthManager b) -> SnapletISplice b
 loggedInUser auth = do
     u <- lift $ withTop auth currentUser
-    maybe (return []) (I.textSplice . userLogin) u 
+    maybe (return []) (I.textSplice . userLogin) u
 
 
 -------------------------------------------------------------------------------
@@ -189,6 +194,6 @@ cLoggedInUser :: SnapletLens b (AuthManager b) -> SnapletCSplice b
 cLoggedInUser auth =
     return $ C.yieldRuntimeText $ do
         u <- lift $ withTop auth currentUser
-        return $ maybe "" userLogin u 
+        return $ maybe "" userLogin u
 
 

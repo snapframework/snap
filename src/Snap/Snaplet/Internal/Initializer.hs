@@ -59,8 +59,7 @@ import           Prelude                      (Bool (..), Either (..), Eq (..),
 import           Snap.Core                    (Snap, liftSnap, route)
 import           Snap.Http.Server             (Config, completeConfig,
                                                getCompression, getErrorHandler,
-                                               getOther, getVerbose,
-                                               simpleHttpServe)
+                                               getOther, getVerbose, httpServe)
 import           Snap.Util.GZip               (withCompression)
 import           System.Directory             (copyFile,
                                                createDirectoryIfMissing,
@@ -629,7 +628,7 @@ serveSnaplet startConfig initializer = do
 
     (conf, site) <- combineConfig config handler
     createDirectoryIfMissing False "log"
-    let serve = simpleHttpServe conf
+    let serve = httpServe conf
 
     when (loggingEnabled conf) $ liftIO $ hPutStrLn stderr $ T.unpack msgs
     _ <- try $ serve $ site

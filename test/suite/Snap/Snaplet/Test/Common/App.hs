@@ -23,13 +23,12 @@ import Control.Lens                                  (over)
 import Control.Monad                                 (when)
 import Control.Monad.Trans                           (lift)
 import Data.Monoid                                   (mempty)
-import System.FilePath                               ((</>))
 ------------------------------------------------------------------------------
 import Data.Map.Syntax                               ((##),(#!))
 import Text.XmlHtml                                  (Node(TextNode))
-import Heist                                         (Splices, Template,
-                                                      hcCompiledSplices,
-                                                      hcInterpretedSplices)
+import Heist                                         (Splices, Template)
+import Heist.Internal.Types                          (HeistConfig(..),
+                                                      SpliceConfig(..))
 import Heist.Compiled                                (Splice, withSplices,
                                                       runChildren)
 import Snap                                          ((<|>))
@@ -60,7 +59,6 @@ import Snap.Snaplet.Test.Common.Handlers
 import Snap.Snaplet.Test.Common.Types
 import Snap.Snaplet.Heist                            (addConfig,
                                                       addTemplates,
-                                                      addTemplatesAt,
                                                       heistInit',
                                                       heistServe,
                                                       modifyHeistState)
@@ -87,7 +85,7 @@ appInit' hInterp authConfigFile =
   hs <- nestSnaplet "heist"   heist   $
         heistInit'
         "templates"
-        (mempty {hcCompiledSplices = compiledSplices})
+        (HeistConfig (mempty {_scCompiledSplices = compiledSplices}) "" True)
 
   sm <- nestSnaplet "session" session $
         initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
@@ -101,18 +99,13 @@ appInit' hInterp authConfigFile =
 
   addTemplates hs "extraTemplates"
 
-  sPath    <- getSnapletFilePath
-
---  let extraTemplatesPath = sPath </> "test" </> "evenMoreTemplates"   -- TODO/NODE is this right?
---  addTemplatesAt hs "evenMoreTemplates" extraTemplatesPath  -- TODO/NODE is this right?
-  
   when hInterp $ do
     modifyHeistState (addTemplate "smallTemplate" aTestTemplate Nothing)
     setInterpreted hs
 
   _lens <- getLens
   addConfig hs $
-    mempty { hcInterpretedSplices = do
+    mempty { _scInterpretedSplices = do
                 "appsplice" ## textSplice "contents of the app splice"
                 "appconfig" ## shConfigSplice _lens
            }

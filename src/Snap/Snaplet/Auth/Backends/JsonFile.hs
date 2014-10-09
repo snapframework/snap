@@ -14,7 +14,7 @@ import           Control.Applicative
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
-import qualified Data.Attoparsec as Atto
+import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
 import qualified Data.Map as HM
