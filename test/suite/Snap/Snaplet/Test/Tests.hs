@@ -19,7 +19,7 @@ import           Snap.Snaplet.Test              (closeSnaplet,
                                                  getSnaplet,
                                                  evalHandler, evalHandler',
                                                  runHandler, runHandler')
-import           Snap.Snaplet.Test.App          (appInit, failingAppInit)
+import           Snap.Snaplet.Test.Common.App   (appInit, failingAppInit)
 
 ------------------------------------------------------------------------------
 tests :: Test
@@ -30,7 +30,7 @@ tests = testGroup "Snap.Snaplet.Test"
     , testEvalHandler'
     , testFailingEvalHandler
     , testFailingGetSnaplet
---    , readRequestBodyHangIssue -- TODO/NOTE fix
+    , readRequestBodyHangIssue -- TODO/NOTE fix
     ]
 
 

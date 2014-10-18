@@ -1,4 +1,2 @@
-:set -isrc
-:set -hide-package monads-fd
-:set -hide-package monads-tf
 :set -XOverloadedStrings
+:set -isrc

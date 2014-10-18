@@ -1,27 +1,26 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE TypeSynonymInstances      #-}
 
-module Blackbox.EmbeddedSnaplet where
+module Snap.Snaplet.Test.Common.EmbeddedSnaplet where
 
 ------------------------------------------------------------------------------
-import Prelude hiding ((.))
-import Control.Lens
-import Control.Monad.State
-import qualified Data.Text as T
-import System.FilePath.Posix
-
-import Data.Map.Syntax ((##))
-import Snap.Snaplet
-import Snap.Snaplet.Heist
-import Heist.Interpreted
-
+import           Control.Lens
+import           Control.Monad.State
+import qualified Data.Text             as T
+import           Prelude               hiding ((.))
+import           System.FilePath.Posix
+------------------------------------------------------------------------------
+import           Data.Map.Syntax       (( ## ))
+import           Heist.Interpreted
+import           Snap.Snaplet
+import           Snap.Snaplet.Heist
 
 ------------------------------------------------------------------------------
 -- If we universally quantify EmbeddedSnaplet to get rid of the type parameter

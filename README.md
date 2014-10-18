@@ -40,17 +40,19 @@ The docs get put in `dist/doc/html/`.
 
 ## Building the testsuite
 
-To build the test suite, `cd` into the `test/` directory and run
+To build the test suite, run
 
-    $ cabal configure
+    $ cabal clean
+    $ cabal configure --enable-tests --enable-library-coverage
     $ cabal build
+    $ cabal install --enable-tests
 
 From here you can invoke the testsuite by running:
 
     $ ./runTestsAndCoverage.sh
 
 
-The testsuite generates an `hpc` test coverage report in `test/dist/hpc`.
+The testsuite generates an `hpc` test coverage report in `dist/hpc`.
 
 
 ## Roadmap to Understanding Snaplets

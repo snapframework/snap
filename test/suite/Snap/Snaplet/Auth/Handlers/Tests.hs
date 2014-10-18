@@ -24,7 +24,7 @@ import           Snap.Snaplet.Auth              (AuthUser(..),
                                                  AuthFailure(..),
                                                  Password(..), Role(..))
 import qualified Snap.Snaplet.Auth              as A
-import           Snap.Snaplet.Auth.App          (App, appInit, appInit',
+import           Snap.Snaplet.Test.Common.App   (App, appInit, appInit',
                                                  auth)
 import qualified Snap.Test                      as ST
 import           Snap.Snaplet.Test              (evalHandler, runHandler,
@@ -104,7 +104,8 @@ testWithCfgFile = testCase "createUser with config file settings" assertCfg
     assertCfg :: Assertion
     assertCfg = withTemporaryFile "users.json" $ do
       let hdl = with auth $ A.createUser "foo" "foo"
-      res <- runHandler Nothing (ST.get "" Map.empty) hdl (appInit' True)
+      res <- runHandler Nothing (ST.get "" Map.empty) hdl
+             (appInit' False True)
       either (assertFailure . show) ST.assertSuccess res
 
 
