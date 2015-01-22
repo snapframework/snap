@@ -6,12 +6,14 @@ module Snap.Snaplet.Config where
 ------------------------------------------------------------------------------
 import Data.Function                    (on)
 import Data.Maybe                       (fromMaybe)
-import Data.Monoid                      (Monoid, mappend, mempty, Last(..), getLast)
+import Data.Monoid                      (Monoid, mappend, mempty, Last(..),
+                                         getLast)
 
 #if MIN_VERSION_base(4,7,0)
 import           Data.Typeable.Internal (Typeable)
 #else
-import           Data.Typeable          (TyCon, Typeable, mkTyCon, mkTyConApp, typeOf)
+import           Data.Typeable          (Typeable, TyCon, mkTyCon,
+                                         mkTyConApp, typeOf)
 #endif
 
 import System.Console.GetOpt            (OptDescr(Option), ArgDescr(ReqArg))
