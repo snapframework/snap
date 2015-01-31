@@ -9,7 +9,7 @@ module Snap.Snaplet.Internal.RST where
 import           Control.Applicative         (Alternative (..),
                                               Applicative (..))
 import           Control.Category            ((.))
-import           Control.Monad               (MonadPlus (..), ap, liftM)
+import           Control.Monad               (MonadPlus (..), ap)
 import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.Reader        (MonadReader (..))
 import           Control.Monad.State.Class   (MonadState (..))
@@ -116,19 +116,18 @@ instance MonadBase b m => MonadBase b (RST r s m) where
 
 
 instance MonadBaseControl b m => MonadBaseControl b (RST r s m) where
-     newtype StM (RST r s m) a = StMRS {unStMRS :: ComposeSt (RST r s) m a}
-     liftBaseWith = defaultLiftBaseWith StMRS
-     restoreM = defaultRestoreM unStMRS
+     type StM (RST r s m) a = ComposeSt (RST r s) m a
+     liftBaseWith = defaultLiftBaseWith
+     restoreM = defaultRestoreM
      {-# INLINE liftBaseWith #-}
      {-# INLINE restoreM #-}
 
 
 instance MonadTransControl (RST r s) where
-    newtype StT (RST r s) a = StRST {unStRST :: (a, s)}
+    type StT (RST r s) a = (a, s)
     liftWith f = RST $ \r s -> do
-        res <- f $ \(RST g) -> liftM StRST $ g r s
+        res <- f $ \(RST g) -> g r s
         return (res, s)
-    restoreT k = RST $ \_ _ -> liftM unStRST k
+    restoreT k = RST $ \_ _ -> k
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
-

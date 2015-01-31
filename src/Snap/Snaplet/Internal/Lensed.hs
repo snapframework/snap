@@ -106,20 +106,20 @@ instance MonadBase base m => MonadBase base (Lensed b v m) where
 
 ------------------------------------------------------------------------------
 instance MonadBaseControl base m => MonadBaseControl base (Lensed b v m) where
-     newtype StM (Lensed b v m) a = StMRS {unStMRS :: ComposeSt (Lensed b v) m a}
-     liftBaseWith = defaultLiftBaseWith StMRS
-     restoreM = defaultRestoreM unStMRS
+     type StM (Lensed b v m) a = ComposeSt (Lensed b v) m a
+     liftBaseWith = defaultLiftBaseWith
+     restoreM = defaultRestoreM
      {-# INLINE liftBaseWith #-}
      {-# INLINE restoreM #-}
 
 
 ------------------------------------------------------------------------------
 instance MonadTransControl (Lensed b v) where
-    newtype StT (Lensed b v) a = StLensed {unStLensed :: (a, v, b)}
+    type StT (Lensed b v) a = (a, v, b)
     liftWith f = Lensed $ \l v b -> do
-        res <- f $ \(Lensed g) -> liftM StLensed $ g l v b
+        res <- f $ \(Lensed g) -> g l v b
         return (res, v, b)
-    restoreT k = Lensed $ \_ _ _ -> liftM unStLensed k
+    restoreT k = Lensed $ \_ _ _ -> k
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
 

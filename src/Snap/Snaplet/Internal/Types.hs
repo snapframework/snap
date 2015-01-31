@@ -274,10 +274,13 @@ instance MonadBase IO (Handler b v) where
 
 
 ------------------------------------------------------------------------------
+newtype StMHandler b v a = StMHandler {
+      unStMHandler :: StM (L.Lensed (Snaplet b) (Snaplet v) Snap) a
+    }
+
+
 instance MonadBaseControl IO (Handler b v) where
-    newtype StM (Handler b v) a = StMHandler {
-          unStMHandler :: StM (L.Lensed (Snaplet b) (Snaplet v) Snap) a
-        }
+    type StM (Handler b v) a = StMHandler b v a
     liftBaseWith f = Handler
                        $ liftBaseWith
                        $ \g' -> f

@@ -52,17 +52,17 @@ instance MonadBase bs m => MonadBase bs (LensT b v s m) where
 
 
 instance MonadBaseControl bs m => MonadBaseControl bs (LensT b v s m) where
-     newtype StM (LensT b v s m) a = StMLens {unStMLens :: ComposeSt (LensT b v s) m a}
-     liftBaseWith = defaultLiftBaseWith StMLens
-     restoreM = defaultRestoreM unStMLens
+     type StM (LensT b v s m) a = ComposeSt (LensT b v s) m a
+     liftBaseWith = defaultLiftBaseWith
+     restoreM = defaultRestoreM
      {-# INLINE liftBaseWith #-}
      {-# INLINE restoreM #-}
 
 
 instance MonadTransControl (LensT b v s) where
-    newtype StT (LensT b v s) a = StLensT {unStLensT :: StT (RST (ALens' b v) s) a}
-    liftWith = defaultLiftWith LensT (\(LensT rst) -> rst) StLensT
-    restoreT = defaultRestoreT LensT unStLensT
+    type StT (LensT b v s) a = StT (RST (ALens' b v) s) a
+    liftWith = defaultLiftWith LensT (\(LensT rst) -> rst)
+    restoreT = defaultRestoreT LensT
     {-# INLINE liftWith #-}
     {-# INLINE restoreT #-}
 
