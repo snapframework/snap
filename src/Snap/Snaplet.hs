@@ -111,6 +111,7 @@ module Snap.Snaplet
   , runSnaplet
   , combineConfig
   , serveSnaplet
+  , serveSnapletNoArgParsing
   , loadAppConfig
 
   -- * Snaplet Lenses
