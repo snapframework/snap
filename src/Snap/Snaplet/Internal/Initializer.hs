@@ -19,6 +19,7 @@ module Snap.Snaplet.Internal.Initializer
   , runSnaplet
   , combineConfig
   , serveSnaplet
+  , serveSnapletNoArgParsing
   , loadAppConfig
   , printInfo
   , getRoutes
@@ -622,7 +623,19 @@ serveSnaplet :: Config Snap AppConfig
                  -- ^ The snaplet initializer function.
              -> IO ()
 serveSnaplet startConfig initializer = do
-    config       <- commandLineAppConfig startConfig
+    config <- commandLineAppConfig startConfig
+    serveSnapletNoArgParsing config initializer
+
+------------------------------------------------------------------------------
+-- | Like 'serveSnaplet', but don't try to parse command-line arguments.
+serveSnapletNoArgParsing :: Config Snap AppConfig
+                 -- ^ The configuration of the server - you can usually pass a
+                 -- default 'Config' via
+                 -- 'Snap.Http.Server.Config.defaultConfig'.
+             -> SnapletInit b b
+                 -- ^ The snaplet initializer function.
+             -> IO ()
+serveSnapletNoArgParsing config initializer = do
     let env = appEnvironment =<< getOther config
     (msgs, handler, doCleanup) <- runSnaplet env initializer
 
