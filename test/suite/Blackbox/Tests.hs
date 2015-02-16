@@ -10,7 +10,7 @@ module Blackbox.Tests
 ------------------------------------------------------------------------------
 import           Blaze.ByteString.Builder       (Builder)
 import qualified Blaze.ByteString.Builder       as Builder
-import           Control.Exception              (catch, throwIO)
+import           Control.Exception              (catch, finally, throwIO)
 import           Control.Monad
 import           Control.Monad.Trans
 import qualified Data.ByteString.Char8          as S
@@ -57,7 +57,7 @@ testServerUrl = testServerUri ++ "/"
                             --------------------
                             --  TEST LOADER   --
                             --------------------
-  
+
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "non-cabal-tests"
@@ -275,7 +275,8 @@ reloadTest = testCase "internal/reload-test" $ do
     expect404 "good"
     expect404 "bad"
 
-    testWithCwd' "admin/reload" $ \cwd' b -> do
+    flip finally (remove badTplNew) $
+      testWithCwd' "admin/reload" $ \cwd' b -> do
         let cwd = S.pack cwd'
         let response =
                 T.concat     [ "Error reloading site!\n\nInitializer "
@@ -292,7 +293,6 @@ reloadTest = testCase "internal/reload-test" $ do
                              , "Initializing heist @ /heist\n\n" ]
         assertEqual "admin/reload" response (T.decodeUtf8 b)
 
-    remove badTplNew
     copyFile goodTplOrig goodTplNew
 
     testWithCwd' "admin/reload" $ \cwd' b -> do  -- TODO/NOTE: Needs cleanup

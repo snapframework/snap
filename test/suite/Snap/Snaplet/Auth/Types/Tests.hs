@@ -6,25 +6,21 @@ module Snap.Snaplet.Auth.Types.Tests (
 import           Control.DeepSeq                      (deepseq)
 import           Control.Exception                    (SomeException, try)
 import           Control.Monad                        (liftM)
-import           Data.Aeson                           (decode, eitherDecode,
-                                                       encode)
+import           Data.Aeson                           (decode, eitherDecode, encode)
 import qualified Data.ByteString                      as BS
 import qualified Data.ByteString.Lazy.Char8           as BSL
 import qualified Data.Text                            as T
 import           Data.Text.Encoding                   (encodeUtf8)
 import           Data.Time
-import           Test.HUnit                           hiding (Test)
 import           Test.Framework                       (Test, testGroup)
 import           Test.Framework.Providers.HUnit       (testCase)
 import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.HUnit                           hiding (Test)
 import qualified Test.QuickCheck                      as QC
 import qualified Test.QuickCheck.Monadic              as QCM
 ------------------------------------------------------------------------------
 import qualified Snap.Snaplet.Auth                    as A
-import           Snap.TestCommon                      (eqTestCase,
-                                                       ordTestCase,
-                                                       readTestCase,
-                                                       showTestCase)
+import           Snap.TestCommon                      (eqTestCase, ordTestCase, readTestCase, showTestCase)
 
 
 ------------------------------------------------------------------------------
@@ -51,7 +47,7 @@ tests = testGroup "Auth type tests" [
   , testCase     "Test AuthFailure Show instance"  $
     showTestCase A.BackendError
 --  , testCase     "Test AuthFailure Read instance"  $
---    readTestCase BackendError -- TODO/NOTE: show . read isn't id for 
+--    readTestCase BackendError -- TODO/NOTE: show . read isn't id for
   , testCase     "Test AuthFailure Ord instance"   $
     ordTestCase A.BackendError A.DuplicateLogin
   , testCase     "Test UserId Show instance"       $
@@ -109,14 +105,14 @@ deserializeDefaultRoles =
   either
   (\e -> assertFailure $ "Failed user deserialization: " ++ e)
   (\u -> assertEqual "Roles wasn't initialized to empty" [] (A.userRoles u))
-  (eitherDecode . BSL.fromStrict . encodeUtf8 $
+  (eitherDecode . BSL.fromChunks . (:[]) . encodeUtf8 $
    sampleUserJson "\"activated_at\":null" "\"extra\":null")
 
 
 ------------------------------------------------------------------------------
 failDeserialize :: Assertion
 failDeserialize = do
-  case decode . BSL.fromStrict . encodeUtf8 $ t of
+  case decode . BSL.fromChunks . (:[]) . encodeUtf8 $ t of
     Nothing -> return ()
     Just a  -> assertFailure $
                "Expected deserialization failure, got authUser: "
