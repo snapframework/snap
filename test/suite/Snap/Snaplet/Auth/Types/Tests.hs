@@ -3,8 +3,7 @@ module Snap.Snaplet.Auth.Types.Tests (
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.DeepSeq                      (deepseq)
-import           Control.Exception                    (SomeException, try)
+import           Control.Exception                    (SomeException, evaluate, try)
 import           Control.Monad                        (liftM)
 import           Data.Aeson                           (decode, eitherDecode, encode)
 import qualified Data.ByteString                      as BS
@@ -65,13 +64,14 @@ tests = testGroup "Auth type tests" [
 dontSerializeClearText :: Assertion
 dontSerializeClearText = do
   let s = encode (A.ClearText "passwordisnthamster")
-  r <- try $ s `deepseq` return s
+  r <- try $ force s >> return s
   case r of
     Left  e -> (e :: SomeException) `seq` return ()
     Right j -> assertFailure $
                "Failed to reject ClearText password serialization: "
                ++ show j
-
+  where
+    force s = evaluate $! foldl (\i x -> BS.length x + i) 0 (BSL.toChunks s)
 
 ------------------------------------------------------------------------------
 sampleUserJson :: T.Text -> T.Text -> T.Text
