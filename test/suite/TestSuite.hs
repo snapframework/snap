@@ -7,11 +7,13 @@ module Main where
 import           Control.Concurrent
 import           Control.Exception                  (SomeException (..), bracket, catch, finally)
 import           Control.Monad                      (void)
+import           System.Directory                   (getCurrentDirectory, setCurrentDirectory)
+import           System.FilePath                    ((</>))
 import           System.IO
 
 ------------------------------------------------------------------------------
 import qualified Blackbox.Tests
-import           Prelude                            (Bool (False), IO, Int, Maybe (Nothing), Num (..), flip, return, ($), (.), (^))
+import           Prelude                            (Bool (False), IO, Int, Maybe (Nothing), Monad (..), Num (..), flip, return, ($), (.), (^))
 import           Snap.Http.Server                   (simpleHttpServe)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
@@ -31,7 +33,8 @@ import           SafeCWD
 ------------------------------------------------------------------------------
 main :: IO ()
 main = do
-
+    -- chdir into test/
+    getCurrentDirectory >>= setCurrentDirectory . (</> "test")
 
     Blackbox.Tests.remove
                 "snaplets/heist/templates/bad.tpl"

@@ -3,36 +3,29 @@
 set -e
 
 # All directory variables relative to project root
-MIXDIR=./dist/hpc
-TIX=./test/testsuite.tix
-HTMLDIR=./test/hpc
+DIR=dist/hpc
 
 SUITE=./dist/build/testsuite/testsuite
-
-cd test
 
 if [ -z "$DEBUG" ]; then
     export DEBUG=snap-testsuite
 fi
 
-rm -f ../$TIX
-rm -rf ../$HTMLDIR
+rm -f testsuite.tix
+rm -rf "$DIR"
+mkdir -p "$DIR"
 
-mkdir -p ../$OUTDIR
-
-if [ ! -f ../$SUITE ]; then
+if [ ! -f $SUITE ]; then
     cat <<EOF
 Testsuite executable not found, please run:
-    cabal configure
-then
+    cabal install --enable-tests --only-dependencies
+    cabal configure --enable-tests
     cabal build
-then
-    cabal install --enable-tests
 EOF
     exit;
 fi
 
-../$SUITE $*
+$SUITE $*
 
 EXCLUDES='Main
 Snap
@@ -72,14 +65,14 @@ for m in $EXCLUDES; do
     EXCL="$EXCL --exclude=$m"
 done
 
-rm -f snaplets/heist/templates/bad.tpl
-rm -f snaplets/heist/templates/good.tpl
-rm -fr non-cabal-appdir/snaplets/foosnaplet # TODO
+rm -f test/snaplets/heist/templates/bad.tpl
+rm -f test/snaplets/heist/templates/good.tpl
+rm -fr test/non-cabal-appdir/snaplets/foosnaplet # TODO
 
 cd .. 
 
 # TODO - actually send results to /dev/null when hpc kinks are fully removed
-hpc markup $EXCL --hpcdir=$MIXDIR --destdir=$HTMLDIR test/testsuite # >/dev/null 2>&1
+hpc markup $EXCL --hpcdir=$DIR --destdir=$DIR testsuite # >/dev/null 2>&1
 
 cat <<EOF
 
