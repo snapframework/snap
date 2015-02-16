@@ -5,12 +5,13 @@ module Main where
 
 ------------------------------------------------------------------------------
 import           Control.Concurrent
-import           Control.Exception
+import           Control.Exception                  (SomeException (..), bracket, catch, finally)
 import           Control.Monad                      (void)
 import           System.IO
 
 ------------------------------------------------------------------------------
 import qualified Blackbox.Tests
+import           Prelude                            (Bool (False), IO, Int, Maybe (Nothing), Num (..), flip, return, ($), (.), (^))
 import           Snap.Http.Server                   (simpleHttpServe)
 import           Snap.Http.Server.Config
 import           Snap.Snaplet
