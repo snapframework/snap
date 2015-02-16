@@ -34,7 +34,8 @@ import           SafeCWD
 main :: IO ()
 main = do
     -- chdir into test/
-    getCurrentDirectory >>= setCurrentDirectory . (</> "test")
+    cwd <- getCurrentDirectory
+    setCurrentDirectory (cwd </> "test")
 
     Blackbox.Tests.remove
                 "snaplets/heist/templates/bad.tpl"
@@ -49,6 +50,7 @@ main = do
 
     defaultMain [tests]
       `finally` do
+          setCurrentDirectory cwd
           killThread tid
           putStrLn "waiting for termination mvar"
           takeMVar mvar
