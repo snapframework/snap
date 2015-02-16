@@ -69,10 +69,8 @@ rm -f test/snaplets/heist/templates/bad.tpl
 rm -f test/snaplets/heist/templates/good.tpl
 rm -fr test/non-cabal-appdir/snaplets/foosnaplet # TODO
 
-cd .. 
-
 # TODO - actually send results to /dev/null when hpc kinks are fully removed
-hpc markup $EXCL --hpcdir=$DIR --destdir=$DIR testsuite # >/dev/null 2>&1
+hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
 
 cat <<EOF
 
