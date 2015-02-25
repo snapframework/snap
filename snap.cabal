@@ -186,7 +186,7 @@ Library
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.7
+      lens                      >= 3.7.6    && < 4.8
 
   extensions:
     BangPatterns,
@@ -232,7 +232,7 @@ Executable snap
     hashable            (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
     old-time            >= 1.0     && < 1.2,
     snap-server         >= 0.9     && < 0.11,
-    template-haskell    >= 2.2     && < 2.10,
+    template-haskell    >= 2.2     && < 2.11,
     text                >= 0.11    && < 1.3
 
   extensions:
