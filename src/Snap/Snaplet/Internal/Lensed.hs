@@ -11,7 +11,7 @@ module Snap.Snaplet.Internal.Lensed where
 import           Control.Applicative         (Alternative (..),
                                               Applicative (..), (<$>))
 import           Control.Category            ((.))
-import           Control.Lens.Loupe          (ALens', cloneLens, storing, (^#))
+import           Control.Lens                (ALens', cloneLens, storing, (^#))
 import           Control.Monad               (MonadPlus (..), liftM)
 import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.Reader        (MonadReader (..))

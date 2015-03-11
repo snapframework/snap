@@ -12,7 +12,7 @@ module Snap.Snaplet.Internal.LensT where
 import           Control.Applicative         (Alternative (..),
                                               Applicative (..))
 import           Control.Category            ((.))
-import           Control.Lens.Loupe          (ALens', cloneLens, storing, (^#))
+import           Control.Lens                (ALens', cloneLens, storing, (^#))
 import           Control.Monad               (MonadPlus (..))
 import           Control.Monad.Base          (MonadBase (..))
 import           Control.Monad.Reader        (MonadReader (..))

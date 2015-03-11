@@ -17,14 +17,21 @@ This is top-level project for the Snap Framework, which contains:
     pieces.
 
 The command-line utility `snap` for creating initial Snap applications used to
-be a part of this package. Since version 1.0, it is provided by the package
-[`snap-template`](https://github.com/snapframework/snap-templates).
+be a part of this package. As of version 1.0, the snap command-line utility is
+no longer provided by this package.  It is now provided by the package
+[`snap-templates`](https://github.com/snapframework/snap-templates).
 
 Building snap
 =============
 
-The snap library is built using [Cabal](http://www.haskell.org/cabal/) and
-[Hackage](http://hackage.haskell.org/packages/hackage.html). Just run
+After you clone the repository, change to the newly created snap directory and
+run
+
+    git submodule update --init --recursive
+
+This updates all the Snap Framework dependencies to the correct version.  The
+snap library is built using [Cabal](http://www.haskell.org/cabal/) and
+[Hackage](http://hackage.haskell.org/packages/hackage.html). Now just run
 
     cabal install
 
