@@ -5,7 +5,7 @@
 module Snap.Snaplet.Internal.Lensed where
 
 import Control.Applicative
-import Control.Lens.Loupe
+import Control.Lens
 import Control.Monad
 import Control.Monad.Reader.Class
 import Control.Monad.Trans

@@ -7,7 +7,7 @@ module Snap.Snaplet.Internal.LensT where
 
 import           Control.Applicative
 import           Control.Category
-import           Control.Lens.Loupe
+import           Control.Lens
 import           Control.Monad.CatchIO
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
