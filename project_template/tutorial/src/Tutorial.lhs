@@ -65,9 +65,12 @@ You can also install the full code in the current directory with the command
 > 
 > module Main where
 > 
+> import           Control.Applicative
 > import           Control.Lens.TH
-> import           Data.IORef
+> import           Control.Monad.State
+> import           Control.Monad.Trans
 > import qualified Data.ByteString.Char8 as B
+> import           Data.IORef
 > import           Data.Maybe
 > import           Snap
 > import           Snap.Snaplet.Heist

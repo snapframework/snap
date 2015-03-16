@@ -11,6 +11,7 @@ module Site
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Data.ByteString (ByteString)
+import           Data.Monoid
 import qualified Data.Text as T
 import           Snap.Core
 import           Snap.Snaplet
@@ -30,7 +31,7 @@ import           Application
 handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
 handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
   where
-    errs = maybe noSplices splice authError
+    errs = maybe mempty splice authError
     splice err = "loginError" ## I.textSplice err
 
 
