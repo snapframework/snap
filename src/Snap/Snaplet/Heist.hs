@@ -337,14 +337,13 @@ heistLocal = Unclassed.heistLocal' heistLens
 
 
 -- $spliceSection
--- As can be seen in the type signature of heistLocal, the internal
--- HeistState used by the heist snaplet is parameterized by (Handler b b).
--- The reasons for this are beyond the scope of this discussion, but the
--- result is that 'lift' inside a splice only works with @Handler b b@
--- actions.  When you're writing your own snaplets you obviously would rather
--- work with @Handler b v@ so your local snaplet's state is available.  We
--- provide the SnapletHeist monad to make this possible.  The general rule is
--- that when you're using Snaplets and Heist, use SnapletHeist instead of
--- HeistT (previously called TemplateMonad) and use SnapletISplice instead of
--- Splice.
+-- The type signature for SnapletHeist uses @(Handler b b)@ as the Heist
+-- snaplet's runtime monad.  This means that your splices must use the
+-- top-level snaplet's @Handler b b@ monad.  The reasons for this are beyond
+-- the scope of this discussion, but the result is that 'lift' inside a splice
+-- only works with @Handler b b@ actions.  When you're writing your own
+-- snaplets using some snaplet-specific monad @Handler b v@ you still have to
+-- use @Handler b b@ for your splices.  If the splices need any of the context
+-- provided by the @v@, you must pass it in as a parameter to the splice
+-- function.
 
