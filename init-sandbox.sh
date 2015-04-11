@@ -1,3 +1,5 @@
+#! /bin/sh
+
 cabal sandbox init
 cabal sandbox add-source deps/io-streams
 cabal sandbox add-source deps/io-streams-haproxy
