@@ -8,8 +8,6 @@ module Blackbox.Tests
   ) where
 
 ------------------------------------------------------------------------------
-import           Blaze.ByteString.Builder       (Builder)
-import qualified Blaze.ByteString.Builder       as Builder
 import           Control.Exception              (catch, finally, throwIO)
 import           Control.Monad
 import           Control.Monad.Trans
@@ -26,10 +24,7 @@ import           System.FilePath
 import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit
 import           Test.HUnit                     hiding (Test, path)
-
 ------------------------------------------------------------------------------
-
-
 
 
 ------------------------------------------------------------------------------

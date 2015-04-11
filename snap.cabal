@@ -241,7 +241,6 @@ Test-suite testsuite
     async                      >= 2.0.1.5  && < 2.1,
     attoparsec,
     base,
-    blaze-builder              >= 0.3.3.2  && < 0.4,
     bytestring,
     cereal,
     clientsession,
