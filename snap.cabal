@@ -1,5 +1,5 @@
 name:           snap
-version:        0.14.0.3
+version:        0.14.0.4
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -147,7 +147,7 @@ Library
     MonadCatchIO-transformers >= 0.2      && < 0.4,
     -- Blacklist aeson versions with problems from lack of upper bounds
     aeson                     (>= 0.6 && < 0.7) || (>= 0.7.0.4 && < 0.9),
-    attoparsec                >= 0.10     && < 0.13,
+    attoparsec                >= 0.10     && < 0.14,
     bytestring                >= 0.9.1    && < 0.11,
     cereal                    >= 0.3      && < 0.5,
     clientsession             >= 0.8      && < 0.10,
@@ -187,7 +187,7 @@ Library
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.11
+      lens                      >= 3.7.6    && < 4.12
 
   extensions:
     BangPatterns,
