@@ -78,6 +78,14 @@ setSecureCookie name key to val = do
 
 
 ------------------------------------------------------------------------------
+-- | Expire secure cookie
+expireSecureCookie :: MonadSnap m => ByteString -> m ()
+expireSecureCookie name = expireCookie cookie
+  where
+    cookie = Cookie name "" Nothing (Just "/") Nothing False True
+
+
+------------------------------------------------------------------------------
 -- | Validate session against timeout policy.
 --
 -- * If timeout is set to 'Nothing', never trigger a time-out.

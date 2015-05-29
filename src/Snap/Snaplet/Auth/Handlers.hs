@@ -132,7 +132,7 @@ logout = do
     s <- gets session
     withTop s $ withSession s removeSessionUserId
     rc <- gets rememberCookieName
-    forgetRememberToken rc
+    expireSecureCookie rc
     modify $ \mgr -> mgr { activeUser = Nothing }
 
 
@@ -323,13 +323,6 @@ setRememberToken :: (Serialize t, MonadSnap m)
                  -> t
                  -> m ()
 setRememberToken sk rc rp token = setSecureCookie rc sk rp token
-
-
-------------------------------------------------------------------------------
-forgetRememberToken :: MonadSnap m => ByteString -> m ()
-forgetRememberToken rc = expireCookie cookie
-  where
-   cookie = Cookie rc "" Nothing (Just "/") Nothing False False
 
 
 ------------------------------------------------------------------------------
