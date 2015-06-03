@@ -1,3 +1,7 @@
+# 0.14.0.5
+
+* Eliminate unnecessary dependency on syb
+
 # 0.14.0
 
 * Allow lens-4.8
