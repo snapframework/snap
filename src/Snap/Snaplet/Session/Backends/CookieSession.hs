@@ -11,13 +11,13 @@ module Snap.Snaplet.Session.Backends.CookieSession
 import           Control.Applicative
 import           Control.Monad.Reader
 import           Data.ByteString                     (ByteString)
-import           Data.Generics
 import           Data.HashMap.Strict                 (HashMap)
 import qualified Data.HashMap.Strict                 as HM
 import           Data.Serialize                      (Serialize)
 import qualified Data.Serialize                      as S
 import           Data.Text                           (Text)
 import           Data.Text.Encoding
+import           Data.Typeable
 import           Snap.Core                           (Snap)
 import           Web.ClientSession
 ------------------------------------------------------------------------------
