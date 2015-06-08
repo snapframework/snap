@@ -57,6 +57,7 @@ initJsonFileAuthManager s l db = do
                        , activeUser            = Nothing
                        , minPasswdLen          = asMinPasswdLen s
                        , rememberCookieName    = asRememberCookieName s
+                       , rememberCookieDomain  = Nothing
                        , rememberPeriod        = asRememberPeriod s
                        , siteKey               = key
                        , lockout               = asLockout s

@@ -67,18 +67,20 @@ loginByUsername _ (Encrypted _) _ = return $ Left EncryptedPassword
 loginByUsername unm pwd shouldRemember = do
     sk <- gets siteKey
     cn <- gets rememberCookieName
+    cd <- gets rememberCookieDomain
     rp <- gets rememberPeriod
-    withBackend $ loginByUsername' sk cn rp
+    withBackend $ loginByUsername' sk cn cd rp
 
   where
     --------------------------------------------------------------------------
     loginByUsername' :: (IAuthBackend t) =>
                         Key
                      -> ByteString
+                     -> Maybe ByteString
                      -> Maybe Int
                      -> t
                      -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-    loginByUsername' sk cn rp r =
+    loginByUsername' sk cn cd rp r =
         liftIO (lookupByLogin r unm) >>=
         maybe (return $! Left UserNotFound) found
 
@@ -93,7 +95,7 @@ loginByUsername unm pwd shouldRemember = do
                   token <- gets randomNumberGenerator >>=
                            liftIO . randomToken 64
 
-                  setRememberToken sk cn rp token
+                  setRememberToken sk cn cd rp token
 
                   let user' = user {
                                 userRememberToken = Just (decodeUtf8 token)
@@ -132,7 +134,8 @@ logout = do
     s <- gets session
     withTop s $ withSession s removeSessionUserId
     rc <- gets rememberCookieName
-    expireSecureCookie rc
+    rd <- gets rememberCookieDomain
+    expireSecureCookie rc rd
     modify $ \mgr -> mgr { activeUser = Nothing }
 
 
@@ -319,10 +322,11 @@ getRememberToken sk rc rp = getSecureCookie rc sk rp
 setRememberToken :: (Serialize t, MonadSnap m)
                  => Key
                  -> ByteString
+                 -> Maybe ByteString
                  -> Maybe Int
                  -> t
                  -> m ()
-setRememberToken sk rc rp token = setSecureCookie rc sk rp token
+setRememberToken sk rc rd rp token = setSecureCookie rc rd sk rp token
 
 
 ------------------------------------------------------------------------------
@@ -492,7 +496,7 @@ withBackend ::
       -- ^ The function to run with the handler.
   -> Handler b (AuthManager v) a
 withBackend f = join $ do
-  (AuthManager backend_ _ _ _ _ _ _ _ _) <- get
+  (AuthManager backend_ _ _ _ _ _ _ _ _ _) <- get
   return $ f backend_
 
 

@@ -81,6 +81,9 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
     , rememberCookieName    :: ByteString
         -- ^ Cookie name for the remember token
 
+    , rememberCookieDomain  :: Maybe ByteString
+        -- ^ Domain for which remember cookie will be created.
+
     , rememberPeriod        :: Maybe Int
         -- ^ Remember period in seconds. Defaults to 2 weeks.
 
