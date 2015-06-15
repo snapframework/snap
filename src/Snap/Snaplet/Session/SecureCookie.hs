@@ -12,25 +12,27 @@
 --     cookie. This will limit intercept-and-replay attacks by disallowing
 --     cookies older than the timeout threshold.
 
-module Snap.Snaplet.Session.SecureCookie where
+module Snap.Snaplet.Session.SecureCookie
+       ( SecureCookie(..)
+       , getSecureCookie
+       , setSecureCookie
+       , expireSecureCookie
+       -- ** Helper functions
+       , encodeSecureCookie
+       , decodeSecureCookie
+       , checkTimeout
+       ) where
 
 ------------------------------------------------------------------------------
-import Control.Applicative
-import Control.Monad
-import Control.Monad.Trans
-import Data.ByteString (ByteString)
-import Data.Time
-import Data.Time.Clock.POSIX
-import Data.Serialize
-import Snap.Core
-import Web.ClientSession
-
-
-------------------------------------------------------------------------------
--- | Serialize UTCTime
---instance Serialize UTCTime where
---    put t = put (round (utcTimeToPOSIXSeconds t) :: Integer)
---    get   = posixSecondsToUTCTime . fromInteger <$> get
+import           Control.Applicative
+import           Control.Monad
+import           Control.Monad.Trans
+import           Data.ByteString       (ByteString)
+import           Data.Serialize
+import           Data.Time
+import           Data.Time.Clock.POSIX
+import           Snap.Core
+import           Web.ClientSession
 
 
 ------------------------------------------------------------------------------
@@ -39,7 +41,7 @@ type SecureCookie t = (UTCTime, t)
 
 
 ------------------------------------------------------------------------------
--- Get the payload back
+-- | Get the cookie payload.
 getSecureCookie :: (MonadSnap m, Serialize t)
                 => ByteString       -- ^ Cookie name
                 -> Key              -- ^ Encryption key
@@ -49,32 +51,66 @@ getSecureCookie name key timeout = do
     rqCookie <- getCookie name
     rspCookie <- getResponseCookie name <$> getResponse
     let ck = rspCookie `mplus` rqCookie
-    let val = fmap cookieValue ck >>= decrypt key >>= return . decode
-    let val' = val >>= either (const Nothing) Just
-    case val' of
+    let val = fmap cookieValue ck >>= decodeSecureCookie key
+    case val of
       Nothing -> return Nothing
       Just (ts, t) -> do
-          to <- checkTimeout timeout $ posixSecondsToUTCTime $ fromInteger ts
+          to <- checkTimeout timeout ts
           return $ case to of
             True -> Nothing
             False -> Just t
 
 
 ------------------------------------------------------------------------------
--- | Inject the payload
+-- | Decode secure cookie payload wih key.
+decodeSecureCookie  :: Serialize a
+                     => Key                     -- ^ Encryption key
+                     -> ByteString              -- ^ Encrypted payload
+                     -> Maybe (SecureCookie a)
+decodeSecureCookie key value = do
+    cv <- decrypt key value
+    (i, val) <- either (const Nothing) Just $ decode cv
+    return $ (posixSecondsToUTCTime (fromInteger i), val)
+
+
+------------------------------------------------------------------------------
+-- | Inject the payload.
 setSecureCookie :: (MonadSnap m, Serialize t)
                 => ByteString       -- ^ Cookie name
+                -> Maybe ByteString -- ^ Cookie domain
                 -> Key              -- ^ Encryption key
                 -> Maybe Int        -- ^ Max age in seconds
                 -> t                -- ^ Serializable payload
                 -> m ()
-setSecureCookie name key to val = do
+setSecureCookie name domain key to val = do
     t <- liftIO getCurrentTime
-    let seconds = round (utcTimeToPOSIXSeconds t) :: Integer
+    val' <- encodeSecureCookie key (t, val)
     let expire = to >>= Just . flip addUTCTime t . fromIntegral
-    val' <- liftIO . encryptIO key . encode $ (seconds, val)
-    let nc = Cookie name val' expire Nothing (Just "/") False True
+    let nc = Cookie name val' expire domain (Just "/") False True
     modifyResponse $ addResponseCookie nc
+
+
+------------------------------------------------------------------------------
+-- | Encode SecureCookie with key into injectable payload
+encodeSecureCookie :: (MonadIO m, Serialize t)
+                    => Key            -- ^ Encryption key
+                    -> SecureCookie t -- ^ Payload
+                    -> m ByteString
+encodeSecureCookie key (t, val) =
+    liftIO $ encryptIO key . encode $ (seconds, val)
+  where
+    seconds = round (utcTimeToPOSIXSeconds t) :: Integer
+
+
+------------------------------------------------------------------------------
+-- | Expire secure cookie
+expireSecureCookie :: MonadSnap m
+                   => ByteString       -- ^ Cookie name
+                   -> Maybe ByteString -- ^ Cookie domain
+                   -> m ()
+expireSecureCookie name domain = expireCookie cookie
+  where
+    cookie = Cookie name "" Nothing domain (Just "/") False False
 
 
 ------------------------------------------------------------------------------

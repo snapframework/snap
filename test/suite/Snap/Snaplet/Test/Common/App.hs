@@ -66,7 +66,7 @@ appInit' hInterp authConfigFile =
         (HeistConfig (mempty {_scCompiledSplices = compiledSplices}) "" True)
 
   sm <- nestSnaplet "session" session $
-        initCookieSessionManager "sitekey.txt" "_session" (Just (30 * 60))
+        initCookieSessionManager "sitekey.txt" "_session" Nothing (Just (30 * 60))
   fs <- nestSnaplet "foo"     foo     $ fooInit hs
   bs <- nestSnaplet ""        bar     $ nameSnaplet "baz" $ barInit hs foo
   ns <- embedSnaplet "embed" embedded embeddedInit
