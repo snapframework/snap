@@ -63,15 +63,16 @@ module Snap.Snaplet.HeistNoClass
 import           Prelude hiding ((.), id)
 import           Control.Applicative
 import           Control.Category
-import           Control.Error
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Control.Monad.Trans.Either
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
+import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Text as T
 import           Data.Text.Encoding

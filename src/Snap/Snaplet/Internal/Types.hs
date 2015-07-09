@@ -14,11 +14,11 @@
 module Snap.Snaplet.Internal.Types where
 
 import           Control.Applicative
-import           Control.Error
 import           Control.Lens
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State.Class
+import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Writer hiding (pass)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B

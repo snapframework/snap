@@ -28,13 +28,13 @@ module Snap.Snaplet.Internal.Initializer
 
 import           Prelude hiding (catch)
 import           Control.Concurrent.MVar
-import           Control.Error
 import           Control.Exception (SomeException)
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.CatchIO hiding (Handler)
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Writer hiding (pass)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as B
