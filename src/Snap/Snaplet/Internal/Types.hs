@@ -17,12 +17,12 @@ module Snap.Snaplet.Internal.Types where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative          (Alternative, Applicative)
-import           Control.Error                (EitherT)
 import           Control.Lens                 (ALens', makeLenses, set)
 import           Control.Monad.Base           (MonadBase (..))
 import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local), liftM, (>=>))
 import           Control.Monad.State.Class    (MonadState (get, put), gets)
 import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Trans.Either   (EitherT)
 import           Control.Monad.Trans.Writer   (WriterT)
 import           Data.ByteString              (ByteString)
 import qualified Data.ByteString.Char8        as B (dropWhile, intercalate, null, reverse)

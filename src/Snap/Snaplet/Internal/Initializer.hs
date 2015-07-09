@@ -30,8 +30,6 @@ module Snap.Snaplet.Internal.Initializer
 ------------------------------------------------------------------------------
 import           Control.Concurrent.MVar      (MVar, modifyMVar_, newEmptyMVar,
                                                putMVar, readMVar)
-import           Control.Error                (EitherT, either, right,
-                                               runEitherT)
 import           Control.Exception.Lifted     (SomeException, catch, try)
 import           Control.Lens                 (ALens', cloneLens, over, set,
                                                storing, (^#))
@@ -40,6 +38,7 @@ import           Control.Monad                (Monad (..), join, liftM, unless,
 import           Control.Monad.Reader         (ask)
 import           Control.Monad.State          (get, modify)
 import           Control.Monad.Trans          (lift, liftIO)
+import           Control.Monad.Trans.Either   (EitherT, right, runEitherT)
 import           Control.Monad.Trans.Writer   hiding (pass)
 import           Data.ByteString.Char8        (ByteString)
 import qualified Data.ByteString.Char8        as B
@@ -53,7 +52,8 @@ import           Data.Maybe                   (Maybe (..), fromJust, fromMaybe,
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Prelude                      (Bool (..), Either (..), Eq (..),
-                                               String, concat, concatMap, const,
+                                               String, concat, concatMap,
+                                               const, either,
                                                error, filter, flip, fst, id,
                                                map, not, show, ($), ($!), (++),
                                                (.))
