@@ -11,9 +11,11 @@ module Snap.Snaplet.Auth.Handlers where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
-import           Control.Error
 import           Control.Monad.State
+import           Control.Monad.Trans.Either
+import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)
+import           Data.Maybe
 import           Data.Serialize hiding (get)
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
@@ -24,6 +26,7 @@ import           Web.ClientSession
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
+import           Snap.Snaplet.Auth.Handlers.Errors
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
 ------------------------------------------------------------------------------

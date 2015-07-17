@@ -2,9 +2,9 @@
 module Snap.Snaplet.Heist.Internal where
 
 import           Prelude
-import           Control.Error
 import           Control.Lens
 import           Control.Monad.State
+import           Control.Monad.Trans.Either
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
