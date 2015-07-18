@@ -13,7 +13,7 @@
 --     cookies older than the timeout threshold.
 
 module Snap.Snaplet.Session.SecureCookie
-       ( SecureCookie(..)
+       ( SecureCookie
        , getSecureCookie
        , setSecureCookie
        , expireSecureCookie

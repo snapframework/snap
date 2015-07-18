@@ -232,6 +232,7 @@ Test-suite testsuite
     directory,
     directory-tree,
     dlist,
+    either                     >= 4.3      && < 4.5,
     errors,
     filepath,
     Glob                       >= 0.7.5    && < 0.8,
