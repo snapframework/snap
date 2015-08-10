@@ -126,7 +126,7 @@ snapletValue :: SimpleLens (Snaplet a) a
 -}
 
 
--- NOTE: We cannot use one of the smaller lens packages because nonoe of them
+-- NOTE: We cannot use one of the smaller lens packages because none of them
 -- include ALens'.  We have to use ALens' because we use lenses inside f's...
 -- f (Lens a b).  That requires ImpredicativeTypes which doesn't work.  We
 -- also can't inline the type aliases because ALens' uses Pretext which is a
