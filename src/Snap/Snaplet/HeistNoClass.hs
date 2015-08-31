@@ -21,7 +21,7 @@ module Snap.Snaplet.HeistNoClass
   , heistInit'
   , heistReloader
   , setInterpreted
-  , getCurHeistConfig 
+  , getCurHeistConfig
   , clearHeistCache
 
   , addTemplates
@@ -160,7 +160,7 @@ heistInit' templateDir initialConfig =
 -- versions directly, then this value will not be checked and you will get the
 -- mode implemented by the function you called.
 setInterpreted :: Snaplet (Heist b) -> Initializer b v ()
-setInterpreted h = 
+setInterpreted h =
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
         (\(hc,_) -> ((hc,Interpreted),()))
 
@@ -221,7 +221,7 @@ getCurHeistConfig h = case view snapletValue h of
         return hc
     Running _ _ _ _ ->
         error "Can't get HeistConfig after heist is initialized."
-    
+
 
 ------------------------------------------------------------------------------
 getHeistState :: SnapletLens (Snaplet b) (Heist b)
@@ -479,5 +479,3 @@ renderWithSplices :: SnapletLens b (Heist b)
                   -> Handler b v ()
 renderWithSplices heist t splices =
     renderWithSplices' (subSnaplet heist) t splices
-
-
