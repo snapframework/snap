@@ -70,6 +70,7 @@ import           Control.Monad.Trans.Either
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
+import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.Maybe
@@ -196,7 +197,7 @@ addTemplatesAt h urlPrefix templateDir = do
                      (T.unpack $ decodeUtf8 urlPrefix)
         addPrefix = addTemplatePathPrefix
                       (encodeUtf8 $ T.pack fullPrefix)
-    ts <- liftIO $ runEitherT (loadTemplates templateDir) >>=
+    ts <- liftIO $ (loadTemplates templateDir) >>=
                    either (error . concat) return
     printInfo $ T.pack $ unwords
         [ "...adding"
@@ -206,7 +207,7 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
-    let locations = [liftM addPrefix $ loadTemplates templateDir]
+    let locations = [mapRight addPrefix <$> loadTemplates templateDir]
         add (hc, dm) =
           ((over hcTemplateLocations (mappend locations) hc, dm), ())
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h) add
