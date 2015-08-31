@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 ------------------------------------------------------------------------------
 -- | This module contains functionality common among multiple back-ends.
 --
@@ -11,7 +12,6 @@ module Snap.Snaplet.Session.Common
   ) where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Concurrent
 import           Control.Monad
 import           Data.ByteString (ByteString)
@@ -20,6 +20,10 @@ import qualified Data.Text.Encoding as T
 import           Data.Text (Text)
 import           Numeric
 import           System.Random.MWC
+
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+#endif
 
 
 ------------------------------------------------------------------------------

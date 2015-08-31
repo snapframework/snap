@@ -1,8 +1,8 @@
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
-
 
 module Snap.Snaplet.Auth.Backends.JsonFile
   ( initJsonFileAuthManager
@@ -10,7 +10,6 @@ module Snap.Snaplet.Auth.Backends.JsonFile
   ) where
 
 
-import           Control.Applicative
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
@@ -25,6 +24,10 @@ import qualified Data.Text as T
 import           Data.Time
 import           Web.ClientSession
 import           System.Directory
+
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+#endif
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.Types

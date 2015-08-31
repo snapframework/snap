@@ -66,7 +66,6 @@ import           Control.Category
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Control.Monad.Trans.Either
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
@@ -74,7 +73,6 @@ import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.Maybe
-import           Data.Monoid
 import qualified Data.Text as T
 import           Data.Text.Encoding
 import           System.FilePath.Posix
@@ -82,6 +80,10 @@ import           Heist
 import qualified Heist.Compiled as C
 import qualified Heist.Interpreted as I
 import           Heist.Splices.Cache
+
+#if !MIN_VERSION_base(4,8,0)
+import           Data.Monoid
+#endif
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist.Internal

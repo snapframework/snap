@@ -1,4 +1,5 @@
 ------------------------------------------------------------------------------
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
@@ -8,7 +9,6 @@ module Snap.Snaplet.Session.Backends.CookieSession
     ) where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Monad.Reader
 import           Data.ByteString                     (ByteString)
 import           Data.Generics
@@ -20,6 +20,10 @@ import           Data.Text                           (Text)
 import           Data.Text.Encoding
 import           Snap.Core                           (Snap)
 import           Web.ClientSession
+
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+#endif
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
 import           Snap.Snaplet.Session
