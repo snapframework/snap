@@ -5,7 +5,7 @@ module Snap.Snaplet.Auth.Handlers.Tests
 
 
 ------------------------------------------------------------------------------
-import           Control.Error                  (EitherT(..), hushT, isJust,
+import           Control.Error                  (ExceptT(..), hushT, isJust,
                                                  isLeft, isNothing, isRight,
                                                  runMaybeT)
 import           Control.Monad.State            as S
@@ -135,10 +135,10 @@ testCreateUserWithRole = testCase "createUser with role" assertUserRole
     assertUserRole :: Assertion
     assertUserRole = withTemporaryFile "users.json" $ do
       let hdl = with auth $ runMaybeT $ do
-            u <- hushT $ EitherT $ A.createUser "foo" "foo"
-            _ <- hushT $ EitherT $
+            u <- hushT $ ExceptT $ A.createUser "foo" "foo"
+            _ <- hushT $ ExceptT $
                  A.saveUser $ u {userRoles = [Role "admin",Role "user"]}
-            hushT $ EitherT $
+            hushT $ ExceptT $
               A.loginByUsername "foo" (ClearText "foo") False
       res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
       case res of
