@@ -55,5 +55,3 @@ randomToken n rng = do
 -- | Generate a randomized CSRF token
 mkCSRFToken :: RNG -> IO Text
 mkCSRFToken rng = T.decodeUtf8 <$> randomToken 40 rng
-
-

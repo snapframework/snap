@@ -79,4 +79,3 @@ commandLineAppConfig defaults =
                               mappend defaults
   where
     appDefaults = fromMaybe mempty $ getOther defaults
-
