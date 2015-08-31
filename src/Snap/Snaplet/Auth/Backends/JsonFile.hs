@@ -316,5 +316,3 @@ instance FromJSON UserCache where
       <*> v .: "tokenCache"
       <*> v .: "uidCounter"
   parseJSON _ = error "Unexpected JSON input"
-
-

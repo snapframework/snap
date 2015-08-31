@@ -200,5 +200,3 @@ cLoggedInUser auth =
     return $ C.yieldRuntimeText $ do
         u <- lift $ withTop auth currentUser
         return $ maybe "" userLogin u
-
-

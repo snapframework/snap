@@ -493,5 +493,3 @@ instance MonadSnaplet Initializer where
 -- | Opaque newtype which gives us compile-time guarantees that the user is
 -- using makeSnaplet and either nestSnaplet or embedSnaplet correctly.
 newtype SnapletInit b v = SnapletInit (Initializer b v (Snaplet v))
-
-
