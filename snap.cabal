@@ -64,8 +64,7 @@ extra-source-files:
   test/snaplets/heist/templates/page.tpl,
   test/snaplets/heist/templates/session.tpl,
   test/snaplets/heist/templates/splicepage.tpl,
-  test/snaplets/heist/templates/userpage.tpl,
-  test/evenMoreTemplates/bazpage.tpl
+  test/snaplets/heist/templates/userpage.tpl
 
 Library
   hs-source-dirs: src
