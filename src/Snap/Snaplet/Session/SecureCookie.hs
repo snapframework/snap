@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 ------------------------------------------------------------------------------
 -- | This is a support module meant to back all session back-end
@@ -24,7 +25,6 @@ module Snap.Snaplet.Session.SecureCookie
        ) where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.ByteString       (ByteString)
@@ -34,6 +34,9 @@ import           Data.Time.Clock.POSIX
 import           Snap.Core
 import           Web.ClientSession
 
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+#endif
 
 ------------------------------------------------------------------------------
 -- | Arbitrary payload with timestamp.

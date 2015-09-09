@@ -16,7 +16,7 @@
 module Snap.Snaplet.Internal.Types where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative          (Alternative, Applicative)
+import           Control.Applicative          (Alternative)
 import           Control.Lens                 (ALens', makeLenses, set)
 import           Control.Monad.Base           (MonadBase (..))
 import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local), liftM, (>=>))
@@ -28,11 +28,16 @@ import           Data.ByteString              (ByteString)
 import qualified Data.ByteString.Char8        as B (dropWhile, intercalate, null, reverse)
 import           Data.Configurator.Types      (Config)
 import           Data.IORef                   (IORef)
-import           Data.Monoid                  (Monoid (mappend, mempty))
 import           Data.Text                    (Text)
 import           Snap.Core                    (MonadSnap, Request (rqClientAddr), Snap, bracketSnap, getRequest, pass, writeText)
 import qualified Snap.Snaplet.Internal.Lensed as L (Lensed (..), runLensed, with, withTop)
 import qualified Snap.Snaplet.Internal.LensT  as LT (LensT, getBase, with, withTop)
+
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative          (Alternative, Applicative)
+import           Data.Monoid                  (Monoid (mappend, mempty))
+#endif
+
 ------------------------------------------------------------------------------
 
 
@@ -494,5 +499,3 @@ instance MonadSnaplet Initializer where
 -- | Opaque newtype which gives us compile-time guarantees that the user is
 -- using makeSnaplet and either nestSnaplet or embedSnaplet correctly.
 newtype SnapletInit b v = SnapletInit (Initializer b v (Snaplet v))
-
-

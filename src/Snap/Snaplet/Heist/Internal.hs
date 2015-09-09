@@ -5,6 +5,7 @@ import           Prelude
 import           Control.Lens
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
@@ -69,7 +70,7 @@ heistInitWorker :: FilePath
 heistInitWorker templateDir initialConfig = do
     snapletPath <- getSnapletFilePath
     let tDir = snapletPath </> templateDir
-    templates <- liftIO $ runEitherT (loadTemplates tDir) >>=
+    templates <- liftIO $ (loadTemplates tDir) >>=
                           either (error . concat) return
     printInfo $ T.pack $ unwords
         [ "...loaded"
@@ -93,10 +94,10 @@ heistInitWorker templateDir initialConfig = do
 finalLoadHook :: Heist b -> EitherT Text IO (Heist b)
 finalLoadHook (Configuring ref) = do
     (hc,dm) <- lift $ readIORef ref
-    (hs,cts) <- toTextErrors $ initHeistWithCacheTag hc
+    (hs,cts) <- EitherT $ toTextErrors <$> (initHeistWithCacheTag hc)
     return $ Running hc hs cts dm
   where
-    toTextErrors = bimapEitherT (T.pack . intercalate "\n") id
+    toTextErrors = mapBoth (T.pack . intercalate "\n") id
 finalLoadHook (Running _ _ _ _) = left "finalLoadHook called while running"
 
 
@@ -109,10 +110,8 @@ finalLoadHook (Running _ _ _ _) = left "finalLoadHook called while running"
 heistReloader :: Handler b (Heist b) ()
 heistReloader = do
     h <- get
-    ehs <- liftIO $ runEitherT $ initHeist $ _masterConfig h
+    ehs <- liftIO $ initHeist $ _masterConfig h
     either (writeText . T.pack . unlines)
            (\hs -> do writeText "Heist reloaded."
                       modifyMaster $ set heistState hs h)
            ehs
-
-

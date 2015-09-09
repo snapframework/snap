@@ -1,12 +1,12 @@
-{-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE ExistentialQuantification  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
 module Snap.Snaplet.Auth.Types where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative
 import           Control.Arrow
 import           Control.Monad.Trans
 import           Crypto.PasswordStore
@@ -21,6 +21,10 @@ import           Data.Text             (Text)
 import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
 import           Data.Typeable
 import           Snap.Snaplet
+
+#if !MIN_VERSION_base(4,8,0)
+import           Control.Applicative
+#endif
 
 
 ------------------------------------------------------------------------------

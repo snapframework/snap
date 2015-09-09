@@ -21,7 +21,7 @@ module Snap.Snaplet.HeistNoClass
   , heistInit'
   , heistReloader
   , setInterpreted
-  , getCurHeistConfig 
+  , getCurHeistConfig
   , clearHeistCache
 
   , addTemplates
@@ -66,14 +66,13 @@ import           Control.Category
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Control.Monad.Trans.Either
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
+import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.Maybe
-import           Data.Monoid
 import qualified Data.Text as T
 import           Data.Text.Encoding
 import           System.FilePath.Posix
@@ -81,6 +80,10 @@ import           Heist
 import qualified Heist.Compiled as C
 import qualified Heist.Interpreted as I
 import           Heist.Splices.Cache
+
+#if !MIN_VERSION_base(4,8,0)
+import           Data.Monoid
+#endif
 
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist.Internal
@@ -159,7 +162,7 @@ heistInit' templateDir initialConfig =
 -- versions directly, then this value will not be checked and you will get the
 -- mode implemented by the function you called.
 setInterpreted :: Snaplet (Heist b) -> Initializer b v ()
-setInterpreted h = 
+setInterpreted h =
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h)
         (\(hc,_) -> ((hc,Interpreted),()))
 
@@ -196,7 +199,7 @@ addTemplatesAt h urlPrefix templateDir = do
                      (T.unpack $ decodeUtf8 urlPrefix)
         addPrefix = addTemplatePathPrefix
                       (encodeUtf8 $ T.pack fullPrefix)
-    ts <- liftIO $ runEitherT (loadTemplates templateDir) >>=
+    ts <- liftIO $ (loadTemplates templateDir) >>=
                    either (error . concat) return
     printInfo $ T.pack $ unwords
         [ "...adding"
@@ -206,7 +209,7 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
-    let locations = [liftM addPrefix $ loadTemplates templateDir]
+    let locations = [mapRight addPrefix <$> loadTemplates templateDir]
         add (hc, dm) =
           ((over hcTemplateLocations (mappend locations) hc, dm), ())
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h) add
@@ -220,7 +223,7 @@ getCurHeistConfig h = case view snapletValue h of
         return hc
     Running _ _ _ _ ->
         error "Can't get HeistConfig after heist is initialized."
-    
+
 
 ------------------------------------------------------------------------------
 getHeistState :: SnapletLens (Snaplet b) (Heist b)
@@ -478,5 +481,3 @@ renderWithSplices :: SnapletLens b (Heist b)
                   -> Handler b v ()
 renderWithSplices heist t splices =
     renderWithSplices' (subSnaplet heist) t splices
-
-

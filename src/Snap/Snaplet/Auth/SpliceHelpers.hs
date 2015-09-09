@@ -1,8 +1,9 @@
+{-# LANGUAGE CPP                       #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RecordWildCards           #-}
 
 {-|
 
@@ -29,7 +30,6 @@ import           Control.Lens
 import           Control.Monad.Trans
 import           Data.Map.Syntax ((##), mapV)
 import           Data.Maybe
-import           Data.Monoid
 import qualified Data.Text as T
 import           Data.Text.Encoding
 import qualified Text.XmlHtml as X
@@ -42,6 +42,11 @@ import           Snap.Snaplet.Auth.AuthManager
 import           Snap.Snaplet.Auth.Handlers
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Heist
+
+#if !MIN_VERSION_base(4,8,0)
+import           Data.Monoid
+#endif
+
 ------------------------------------------------------------------------------
 
 
@@ -195,5 +200,3 @@ cLoggedInUser auth =
     return $ C.yieldRuntimeText $ do
         u <- lift $ withTop auth currentUser
         return $ maybe "" userLogin u
-
-
