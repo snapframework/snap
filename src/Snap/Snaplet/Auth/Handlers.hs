@@ -12,7 +12,6 @@ module Snap.Snaplet.Auth.Handlers where
 ------------------------------------------------------------------------------
 import           Control.Applicative
 import           Control.Monad.State
-import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)
 import           Data.Maybe
@@ -26,7 +25,6 @@ import           Web.ClientSession
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth.AuthManager
-import           Snap.Snaplet.Auth.Handlers.Errors
 import           Snap.Snaplet.Auth.Types
 import           Snap.Snaplet.Session
 ------------------------------------------------------------------------------
@@ -119,14 +117,15 @@ loginByRememberToken = withBackend $ \impl -> do
     cookieName_ <- gets rememberCookieName
     period      <- gets rememberPeriod
 
-    runEitherT $ do
-        token <- noteT (AuthError "loginByRememberToken: no remember token") $
-                   MaybeT $ getRememberToken key cookieName_ period
-        user  <- noteT (AuthError "loginByRememberToken: no remember token") $
-                   MaybeT $ liftIO $ lookupByRememberToken impl
-                                   $ decodeUtf8 token
-        lift $ forceLogin user
-        return user
+    res <- runMaybeT $ do
+        token <- MaybeT $ getRememberToken key cookieName_ period
+        MaybeT $ liftIO $ lookupByRememberToken impl $ decodeUtf8 token
+    case res of
+      Nothing -> return $ Left $ AuthError
+                   "loginByRememberToken: no remember token"
+      Just user -> do
+        forceLogin user
+        return $ Right user
 
 
 ------------------------------------------------------------------------------
@@ -150,7 +149,7 @@ currentUser = cacheOrLookup $ withBackend $ \r -> do
     s   <- gets session
     uid <- withTop s getSessionUserId
     case uid of
-      Nothing -> hush <$> loginByRememberToken
+      Nothing -> either (const Nothing) Just <$> loginByRememberToken
       Just uid' -> liftIO $ lookupByUserId r uid'
 
 
@@ -400,8 +399,8 @@ registerUser lf pf = do
     l <- fmap decodeUtf8 <$> getParam lf
     p <- getParam pf
 
-    let l' = note UsernameMissing l
-    let p' = note PasswordMissing p
+    let l' = maybe (Left UsernameMissing) Right l
+    let p' = maybe (Left PasswordMissing) Right p
 
     -- In case of multiple AuthFailure, the first available one
     -- will be propagated.
@@ -433,29 +432,28 @@ loginUser
       -- ^ Upon success
   -> Handler b (AuthManager b) ()
 loginUser unf pwdf remf loginFail loginSucc =
-    runEitherT (loginUser' unf pwdf remf)
-    >>= either loginFail (const loginSucc)
+    loginUser' unf pwdf remf >>= either loginFail (const loginSucc)
 
 
 ------------------------------------------------------------------------------
 loginUser' :: ByteString
            -> ByteString
            -> Maybe ByteString
-           -> EitherT AuthFailure (Handler b (AuthManager b)) AuthUser
+           -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 loginUser' unf pwdf remf = do
-    mbUsername <- lift $ getParam unf
-    mbPassword <- lift $ getParam pwdf
-    remember   <- lift $ liftM (fromMaybe False)
+    mbUsername <- getParam unf
+    mbPassword <- getParam pwdf
+    remember   <- liftM (fromMaybe False)
                     (runMaybeT $
                     do field <- MaybeT $ return remf
                        value <- MaybeT $ getParam field
                        return $ value == "1" || value == "on")
 
-    password <- noteT PasswordMissing $ hoistMaybe mbPassword
-    username <- noteT UsernameMissing $ hoistMaybe mbUsername
-
-    EitherT $ loginByUsername (decodeUtf8 username)
-                              (ClearText password) remember
+    case mbUsername of
+      Nothing -> return $ Left UsernameMissing
+      Just u -> case mbPassword of
+        Nothing -> return $ Left PasswordMissing
+        Just p -> loginByUsername (decodeUtf8 u) (ClearText p) remember
 
 
 ------------------------------------------------------------------------------

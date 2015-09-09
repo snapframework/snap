@@ -69,7 +69,6 @@ import           Control.Monad.State
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as B
 import           Data.DList (DList)
-import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.Maybe
@@ -209,7 +208,7 @@ addTemplatesAt h urlPrefix templateDir = do
         , "with route prefix"
         , fullPrefix ++ "/"
         ]
-    let locations = [mapRight addPrefix <$> loadTemplates templateDir]
+    let locations = [fmap addPrefix <$> loadTemplates templateDir]
         add (hc, dm) =
           ((over hcTemplateLocations (mappend locations) hc, dm), ())
     liftIO $ atomicModifyIORef (_heistConfig $ view snapletValue h) add
@@ -236,7 +235,7 @@ modifyHeistState' :: SnapletLens (Snaplet b) (Heist b)
                   -> (HeistState (Handler b b) -> HeistState (Handler b b))
                   -> Initializer b v ()
 modifyHeistState' heist f = do
-    withTop' heist $ addPostInitHook $ return . changeState f
+    withTop' heist $ addPostInitHook $ return . Right . changeState f
 
 
 ------------------------------------------------------------------------------

@@ -16,13 +16,12 @@
 module Snap.Snaplet.Internal.Types where
 
 ------------------------------------------------------------------------------
-import           Control.Applicative          (Alternative)
 import           Control.Lens                 (ALens', makeLenses, set)
+import           Control.Monad                (liftM)
 import           Control.Monad.Base           (MonadBase (..))
-import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local), liftM, (>=>))
+import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local))
 import           Control.Monad.State.Class    (MonadState (get, put), gets)
 import           Control.Monad.Trans.Control  (MonadBaseControl (..))
-import           Control.Monad.Trans.Either   (EitherT)
 import           Control.Monad.Trans.Writer   (WriterT)
 import           Data.ByteString              (ByteString)
 import qualified Data.ByteString.Char8        as B (dropWhile, intercalate, null, reverse)
@@ -465,13 +464,21 @@ data InitializerState b = InitializerState
 ------------------------------------------------------------------------------
 -- | Wrapper around IO actions that modify state elements created during
 -- initialization.
-newtype Hook a = Hook (Snaplet a -> EitherT Text IO (Snaplet a))
+newtype Hook a = Hook (Snaplet a -> IO (Either Text (Snaplet a)))
 
 
 ------------------------------------------------------------------------------
 instance Monoid (Hook a) where
-    mempty = Hook return
-    (Hook a) `mappend` (Hook b) = Hook (a >=> b)
+    mempty = Hook (return . Right)
+    (Hook a) `mappend` (Hook b) = Hook $ \s -> do
+      ea <- a s
+      case ea of
+        Left e -> return $ Left e
+        Right ares -> do
+          eb <- b ares
+          case eb of
+            Left e -> return $ Left e
+            Right bres -> return $ Right bres
 
 
 ------------------------------------------------------------------------------

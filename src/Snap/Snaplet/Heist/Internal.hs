@@ -4,8 +4,6 @@ module Snap.Snaplet.Heist.Internal where
 import           Prelude
 import           Control.Lens
 import           Control.Monad.State
-import           Control.Monad.Trans.Either
-import           Data.Either.Combinators
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
@@ -91,14 +89,22 @@ heistInitWorker templateDir initialConfig = do
 ------------------------------------------------------------------------------
 -- | Hook that converts the Heist type from Configuring to Running at the end
 -- of initialization.
-finalLoadHook :: Heist b -> EitherT Text IO (Heist b)
+finalLoadHook :: Heist b -> IO (Either Text (Heist b))
 finalLoadHook (Configuring ref) = do
-    (hc,dm) <- lift $ readIORef ref
-    (hs,cts) <- EitherT $ toTextErrors <$> (initHeistWithCacheTag hc)
-    return $ Running hc hs cts dm
+    (hc,dm) <- readIORef ref
+    res <- liftM toTextErrors $ initHeistWithCacheTag hc
+    return $ case res of
+      Left e -> Left e
+      Right (hs,cts) -> Right $ Running hc hs cts dm
   where
     toTextErrors = mapBoth (T.pack . intercalate "\n") id
-finalLoadHook (Running _ _ _ _) = left "finalLoadHook called while running"
+finalLoadHook (Running _ _ _ _) =
+    return $ Left "finalLoadHook called while running"
+
+
+mapBoth :: (a -> c) -> (b -> d) -> Either a b -> Either c d
+mapBoth f _ (Left x)  = Left (f x)
+mapBoth _ f (Right x) = Right (f x)
 
 
 ------------------------------------------------------------------------------

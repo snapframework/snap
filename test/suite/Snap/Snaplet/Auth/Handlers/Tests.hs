@@ -5,11 +5,11 @@ module Snap.Snaplet.Auth.Handlers.Tests
 
 
 ------------------------------------------------------------------------------
-import           Control.Error                  (ExceptT(..), hushT, isJust,
-                                                 isLeft, isNothing, isRight,
-                                                 runMaybeT)
+import           Control.Applicative
 import           Control.Monad.State            as S
+import           Control.Monad.Trans.Maybe      (MaybeT(..), runMaybeT)
 import qualified Data.Map                       as Map
+import           Data.Maybe                     (isJust, isNothing)
 import           Data.Time.Clock                (diffUTCTime, getCurrentTime)
 import           Test.Framework                 (Test, mutuallyExclusive,
                                                  testGroup)
@@ -128,6 +128,10 @@ testCreateUserTimely = testCase "createUser good updatedAt" assertCreateTimely
     failMsg = "createUser: userUpdatedAt, userCreatetAt times not set"
 
 
+hush :: Either e a -> Maybe a
+hush (Left _) = Nothing
+hush (Right a) = Just a
+
 ------------------------------------------------------------------------------
 testCreateUserWithRole :: Test
 testCreateUserWithRole = testCase "createUser with role" assertUserRole
@@ -135,11 +139,10 @@ testCreateUserWithRole = testCase "createUser with role" assertUserRole
     assertUserRole :: Assertion
     assertUserRole = withTemporaryFile "users.json" $ do
       let hdl = with auth $ runMaybeT $ do
-            u <- hushT $ ExceptT $ A.createUser "foo" "foo"
-            _ <- hushT $ ExceptT $
-                 A.saveUser $ u {userRoles = [Role "admin",Role "user"]}
-            hushT $ ExceptT $
-              A.loginByUsername "foo" (ClearText "foo") False
+            u <- MaybeT $ hush <$> A.createUser "foo" "foo"
+            _ <- MaybeT $ hush <$>
+                 A.saveUser (u {userRoles = [Role "admin",Role "user"]})
+            MaybeT $ hush <$> A.loginByUsername "foo" (ClearText "foo") False
       res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
       case res of
         Left e           -> assertFailure $ show e
@@ -693,8 +696,8 @@ testRequireUserOK = testCase "requireUser good handler exec" assertion
 
     hdl :: Handler App App ()
     hdl = with auth $ do
-        let badHdl = writeText "bad" 
-        let goodHdl = writeText "good" 
+        let badHdl = writeText "bad"
+        let goodHdl = writeText "good"
         A.loginByUsername "foo" (ClearText "foo") True
         A.requireUser auth badHdl goodHdl
 
@@ -710,7 +713,17 @@ testRequireUserKO = testCase "requireUser bad handler exec" assertion
 
     hdl :: Handler App App ()
     hdl = with auth $ do
-        let badHdl = writeText "bad" 
-        let goodHdl = writeText "good" 
+        let badHdl = writeText "bad"
+        let goodHdl = writeText "good"
         _ <- A.loginByUsername "doesnotexist" (ClearText "") True
         A.requireUser auth badHdl goodHdl
+
+
+isRight :: Either a b -> Bool
+isRight (Left _) = False
+isRight (Right _) = True
+
+isLeft :: Either a b -> Bool
+isLeft (Left _) = True
+isLeft (Right _) = False
+

@@ -91,7 +91,6 @@ Library
     Snap.Snaplet.Auth.AuthManager
     Snap.Snaplet.Auth.Types
     Snap.Snaplet.Auth.Handlers
-    Snap.Snaplet.Auth.Handlers.Errors
     Snap.Snaplet.Auth.SpliceHelpers
     Snap.Snaplet.Heist.Internal
     Snap.Snaplet.Internal.Initializer
@@ -113,7 +112,6 @@ Library
     directory                 >= 1.0      && < 1.3,
     directory-tree            >= 0.11     && < 0.13,
     dlist                     >= 0.5      && < 0.8,
-    either                    >= 4.3      && < 4.5,
     filepath                  >= 1.1      && < 1.5,
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
@@ -232,8 +230,6 @@ Test-suite testsuite
     directory,
     directory-tree,
     dlist,
-    either                     >= 4.3      && < 4.5,
-    errors                     >= 2.0      && < 2.1,
     filepath,
     Glob                       >= 0.7.5    && < 0.8,
     hashable,
