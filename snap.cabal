@@ -187,7 +187,7 @@ Library
   else
     build-depends:
       base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 4.13
+      lens                      >= 3.7.6    && < 4.14
 
   extensions:
     BangPatterns,
