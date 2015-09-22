@@ -16,6 +16,7 @@
 module Snap.Snaplet.Internal.Types where
 
 ------------------------------------------------------------------------------
+import           Control.Applicative          (Alternative)
 import           Control.Lens                 (ALens', makeLenses, set)
 import           Control.Monad                (liftM)
 import           Control.Monad.Base           (MonadBase (..))
@@ -33,7 +34,7 @@ import qualified Snap.Snaplet.Internal.Lensed as L (Lensed (..), runLensed, with
 import qualified Snap.Snaplet.Internal.LensT  as LT (LensT, getBase, with, withTop)
 
 #if !MIN_VERSION_base(4,8,0)
-import           Control.Applicative          (Alternative, Applicative)
+import           Control.Applicative          (Applicative)
 import           Data.Monoid                  (Monoid (mappend, mempty))
 #endif
 
