@@ -116,7 +116,7 @@ Library
     -- Blacklist bad versions of hashable
     hashable                  (>= 1.1 && < 1.2) || (>= 1.2.0.6 && <1.3),
     heist                     >= 1.0      && < 1.1,
-    lens                      >= 3.7.6    && < 4.13,
+    lens                      >= 3.7.6    && < 4.14,
     lifted-base               >= 0.2      && < 0.3,
     map-syntax                >= 0.2      && < 0.3,
     monad-control             >= 1.0      && < 1.1,
