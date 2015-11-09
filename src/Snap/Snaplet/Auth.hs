@@ -41,14 +41,14 @@ module Snap.Snaplet.Auth
   , AuthUser(..)
   , defAuthUser
   , UserId(..)
-  , Password(..)
+  , HashedPassword(..)
+  , hashPassword
+  , hashedByteString
   , AuthFailure(..)
-  , Role(..)
 
   -- * Other Utilities
   , authSettingsFromConfig 
   , withBackend
-  , encryptPassword
   , checkPassword
   , authenticatePassword
   , setPassword
