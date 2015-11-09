@@ -61,10 +61,9 @@ usernameExists username =
 -- | Lookup a user by her username, check given password and perform login
 --
 loginByUsername :: Text             -- ^ Username/login for user
-                -> Password         -- ^ Should be ClearText
+                -> ByteString       -- ^ Cleartext password
                 -> Bool             -- ^ Set remember token?
                 -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-loginByUsername _ (Encrypted _) _ = return $ Left EncryptedPassword
 loginByUsername unm pwd shouldRemember = do
     sk <- gets siteKey
     cn <- gets rememberCookieName
@@ -81,9 +80,9 @@ loginByUsername unm pwd shouldRemember = do
                      -> Maybe Int
                      -> t
                      -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-    loginByUsername' sk cn cd rp r =
-        liftIO (lookupByLogin r unm) >>=
-        maybe (return $! Left UserNotFound) found
+    loginByUsername' sk cn cd rp r = do
+        u <- liftIO (lookupByLogin r unm)
+        maybe (return $! Left UserNotFound) found u
 
       where
         ----------------------------------------------------------------------
@@ -217,12 +216,12 @@ markAuthFail u = withBackend $ \r -> do
 --
 markAuthSuccess :: AuthUser
                 -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-markAuthSuccess u = withBackend $ \r ->
-                        incLoginCtr u     >>=
+markAuthSuccess au = withBackend $ \r ->
+                        incLoginCtr au    >>=
                         updateIp          >>=
                         updateLoginTS     >>=
                         resetFailCtr      >>=
-                        liftIO . save r
+                        updateUser r
   where
     --------------------------------------------------------------------------
     incLoginCtr u' = return $ u' { userLoginCount = userLoginCount u' + 1 }
@@ -244,6 +243,7 @@ markAuthSuccess u = withBackend $ \r ->
     resetFailCtr u' = return $ u' { userFailedLoginCount = 0
                                   , userLockedOutUntil = Nothing }
 
+    updateUser r u = liftIO $ save r u
 
 ------------------------------------------------------------------------------
 -- | Authenticate and log the user into the current session if successful.
@@ -261,7 +261,7 @@ markAuthSuccess u = withBackend $ \r ->
 --
 checkPasswordAndLogin
   :: AuthUser               -- ^ An existing user, somehow looked up from db
-  -> Password               -- ^ A ClearText password
+  -> ByteString             -- ^ A ClearText password
   -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
 checkPasswordAndLogin u pw =
     case userLockedOutUntil u of
@@ -360,7 +360,7 @@ getSessionUserId = do
 -- otherwise
 --
 authenticatePassword :: AuthUser        -- ^ Looked up from the back-end
-                     -> Password        -- ^ Check against this password
+                     -> ByteString      -- ^ Check against this password
                      -> Maybe AuthFailure
 authenticatePassword u pw = auth
   where
@@ -453,7 +453,7 @@ loginUser' unf pwdf remf = do
       Nothing -> return $ Left UsernameMissing
       Just u -> case mbPassword of
         Nothing -> return $ Left PasswordMissing
-        Just p -> loginByUsername (decodeUtf8 u) (ClearText p) remember
+        Just p -> loginByUsername (decodeUtf8 u) p remember
 
 
 ------------------------------------------------------------------------------
