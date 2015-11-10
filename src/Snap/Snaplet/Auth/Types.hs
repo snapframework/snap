@@ -13,10 +13,11 @@ import           Crypto.PasswordStore
 import           Data.Aeson
 import           Data.ByteString       (ByteString)
 import qualified Data.Configurator as C
+import           Data.HashMap.Strict   (HashMap)
+import qualified Data.HashMap.Strict   as HM
 import           Data.Hashable         (Hashable)
 import           Data.Time
 import           Data.Text             (Text)
-import qualified Data.Text             as T
 import           Data.Text.Encoding    (decodeUtf8, encodeUtf8)
 import           Data.Typeable
 import           Snap.Snaplet
@@ -26,17 +27,12 @@ import           Control.Applicative
 #endif
 
 
-newtype HashedPassword = HashedPassword ByteString
-  deriving (Eq, Ord)
-
-instance Show HashedPassword where
-  show (HashedPassword bs) = T.unpack $ decodeUtf8 bs
-
-hashPassword :: ByteString -> IO HashedPassword
-hashPassword = fmap HashedPassword . encrypt
-
-hashedByteString :: HashedPassword -> ByteString
-hashedByteString (HashedPassword bs) = bs
+------------------------------------------------------------------------------
+-- | Password is clear when supplied by the user and encrypted later when
+-- returned from the db.
+data Password = ClearText ByteString
+              | Encrypted ByteString
+  deriving (Read, Show, Ord, Eq)
 
 
 ------------------------------------------------------------------------------
@@ -55,16 +51,28 @@ encrypt = flip makePassword defaultStrength
 -------------------------------------------------------------------------------
 -- | The underlying verify function, in case you need it for external
 -- processing.
-verify
+verify 
     :: ByteString               -- ^ Cleartext
     -> ByteString               -- ^ Encrypted reference
     -> Bool
-verify = verifyPassword
+verify = verifyPassword 
 
 
 ------------------------------------------------------------------------------
-checkPassword :: ByteString -> HashedPassword -> Bool
-checkPassword pw (HashedPassword pw') = verify pw pw'
+-- | Turn a 'ClearText' password into an 'Encrypted' password, ready to
+-- be stuffed into a database.
+encryptPassword :: Password -> IO Password
+encryptPassword p@(Encrypted {}) = return p
+encryptPassword (ClearText p)    = Encrypted `fmap` encrypt p 
+
+
+------------------------------------------------------------------------------
+checkPassword :: Password -> Password -> Bool
+checkPassword (ClearText pw) (Encrypted pw') = verify pw pw'
+checkPassword (ClearText pw) (ClearText pw') = pw == pw'
+checkPassword (Encrypted pw) (Encrypted pw') = pw == pw'
+checkPassword _ _ =
+  error "checkPassword failed. Make sure you pass ClearText passwords"
 
 
 ------------------------------------------------------------------------------
@@ -107,6 +115,12 @@ newtype UserId = UserId { unUid :: Text }
 
 
 ------------------------------------------------------------------------------
+-- | This will be replaced by a role-based permission system.
+data Role = Role ByteString
+  deriving (Read, Show, Ord, Eq)
+
+
+------------------------------------------------------------------------------
 -- | Type representing the concept of a User in your application.
 data AuthUser = AuthUser
     { userId               :: Maybe UserId
@@ -115,7 +129,7 @@ data AuthUser = AuthUser
     -- We have to have an email field for password reset functionality, but we
     -- don't want to force users to log in with their email address.
     , userEmail            :: Maybe Text
-    , userPassword         :: Maybe HashedPassword
+    , userPassword         :: Maybe Password
     , userActivatedAt      :: Maybe UTCTime
     , userSuspendedAt      :: Maybe UTCTime
     , userRememberToken    :: Maybe Text
@@ -130,6 +144,8 @@ data AuthUser = AuthUser
     , userUpdatedAt        :: Maybe UTCTime
     , userResetToken       :: Maybe Text
     , userResetRequestedAt :: Maybe UTCTime
+    , userRoles            :: [Role]
+    , userMeta             :: HashMap Text Value
     }
   deriving (Show,Eq)
 
@@ -156,6 +172,8 @@ defAuthUser = AuthUser
     , userUpdatedAt        = Nothing
     , userResetToken       = Nothing
     , userResetRequestedAt = Nothing
+    , userRoles            = []
+    , userMeta             = HM.empty
     }
 
 
@@ -164,7 +182,7 @@ defAuthUser = AuthUser
 -- clear-text; it will be encrypted into a 'Encrypted'.
 setPassword :: AuthUser -> ByteString -> IO AuthUser
 setPassword au pass = do
-    pw <- hashPassword pass
+    pw <- Encrypted <$> makePassword pass defaultStrength
     return $! au { userPassword = Just pw }
 
 
@@ -175,9 +193,6 @@ data AuthSettings = AuthSettings {
       -- ^ Currently not used/checked
 
   , asRememberCookieName :: ByteString
-      -- ^ Name of the desired remember cookie
-
-  , asRememberCookieDomain :: Maybe ByteString
       -- ^ Name of the desired remember cookie
 
   , asRememberPeriod     :: Maybe Int
@@ -202,12 +217,11 @@ data AuthSettings = AuthSettings {
 -- > asSiteKey = "site_key.txt"
 defAuthSettings :: AuthSettings
 defAuthSettings = AuthSettings {
-    asMinPasswdLen         = 8
-  , asRememberCookieName   = "_remember"
-  , asRememberCookieDomain = Nothing
-  , asRememberPeriod       = Just (2*7*24*60*60)
-  , asLockout              = Nothing
-  , asSiteKey              = "site_key.txt"
+    asMinPasswdLen       = 8
+  , asRememberCookieName = "_remember"
+  , asRememberPeriod     = Just (2*7*24*60*60)
+  , asLockout            = Nothing
+  , asSiteKey            = "site_key.txt"
 }
 
 
@@ -265,6 +279,8 @@ instance ToJSON AuthUser where
     , "updated_at"         .= userUpdatedAt         u
     , "reset_token"        .= userResetToken        u
     , "reset_requested_at" .= userResetRequestedAt  u
+    , "roles"              .= userRoles             u
+    , "meta"               .= userMeta              u
     ]
 
 
@@ -289,15 +305,28 @@ instance FromJSON AuthUser where
     <*> v .: "updated_at"
     <*> v .: "reset_token"
     <*> v .: "reset_requested_at"
+    <*> v .:? "roles" .!= []
+    <*> v .: "meta"
   parseJSON _ = error "Unexpected JSON input"
 
 
 ------------------------------------------------------------------------------
-instance ToJSON HashedPassword where
-  toJSON (HashedPassword x) = toJSON $ decodeUtf8 x
+instance ToJSON Password where
+  toJSON (Encrypted x) = toJSON $ decodeUtf8 x
+  toJSON (ClearText _) =
+      error "ClearText passwords can't be serialized into JSON"
 
 
 ------------------------------------------------------------------------------
-instance FromJSON HashedPassword where
-  parseJSON = fmap (HashedPassword . encodeUtf8) . parseJSON
+instance FromJSON Password where
+  parseJSON = fmap (Encrypted . encodeUtf8) . parseJSON
 
+
+------------------------------------------------------------------------------
+instance ToJSON Role where
+  toJSON (Role x) = toJSON $ decodeUtf8 x
+
+
+------------------------------------------------------------------------------
+instance FromJSON Role where
+  parseJSON = fmap (Role . encodeUtf8) . parseJSON
