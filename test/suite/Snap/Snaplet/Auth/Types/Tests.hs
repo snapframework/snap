@@ -64,15 +64,16 @@ tests = testGroup "Auth type tests" [
 dontSerializeClearText :: Assertion
 dontSerializeClearText = do
   let s = encode (A.ClearText "passwordisnthamster")
-  r <- try $ force s >> return s
+  -- Take the length of the ByteString to force it completely, rather than
+  -- using deepseq; BSL.ByteString lacked an NFData instance until
+  -- bytestring-0.10.
+  r <- try $ evaluate (BSL.length s) >> return s
   case r of
     Left  e -> (e :: SomeException) `seq` return ()
     Right j -> assertFailure $
                "Failed to reject ClearText password serialization: "
                ++ show j
-  where
-    force s = evaluate $! foldl (\i x -> BS.length x + i) 0 (BSL.toChunks s)
-
+ 
 ------------------------------------------------------------------------------
 sampleUserJson :: T.Text -> T.Text -> T.Text
 sampleUserJson reqPair optPair = T.intercalate "," [
