@@ -11,7 +11,7 @@ module Snap.Snaplet.Session.Backends.CookieSession
 ------------------------------------------------------------------------------
 import           Control.Monad.Reader
 import           Data.ByteString                     (ByteString)
-import           Data.Generics
+import           Data.Typeable
 import           Data.HashMap.Strict                 (HashMap)
 import qualified Data.HashMap.Strict                 as HM
 import           Data.Serialize                      (Serialize)
