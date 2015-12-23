@@ -1,18 +1,18 @@
 [submodule "deps/io-streams"]
 	path = deps/io-streams
-	url = git@github.com:snapframework/io-streams.git
+	url = https://github.com/snapframework/io-streams.git
 [submodule "deps/snap-core"]
 	path = deps/snap-core
-	url = git@github.com:snapframework/snap-core.git
+	url = https://github.com/snapframework/snap-core.git
 [submodule "deps/snap-server"]
 	path = deps/snap-server
-	url = git@github.com:snapframework/snap-server.git
+	url = https://github.com/snapframework/snap-server.git
 [submodule "deps/xmlhtml"]
 	path = deps/xmlhtml
-	url = git@github.com:snapframework/xmlhtml.git
+	url = https://github.com/snapframework/xmlhtml.git
 [submodule "deps/heist"]
 	path = deps/heist
-	url = git@github.com:snapframework/heist.git
+	url = https://github.com/snapframework/heist.git
 [submodule "deps/io-streams-haproxy"]
 	path = deps/io-streams-haproxy
-	url = git@github.com:snapframework/io-streams-haproxy.git
+	url = https://github.com/snapframework/io-streams-haproxy.git
