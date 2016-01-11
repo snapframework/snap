@@ -28,15 +28,13 @@ After you clone the repository, change to the newly created snap directory and
 run
 
     git submodule update --init --recursive
-
-This updates all the Snap Framework dependencies to the correct version.  The
-snap library is built using [Cabal](http://www.haskell.org/cabal/) and
-[Hackage](http://hackage.haskell.org/packages/hackage.html). Now just run
-
+    ./init-sandbox.sh
     cabal install
 
-from the `snap` toplevel directory.
-
+This updates all the Snap Framework dependencies to the correct version,
+creates a sandbox, and installs everything.  The snap library is built using
+[Cabal](http://www.haskell.org/cabal/) and
+[Hackage](http://hackage.haskell.org/packages/hackage.html).
 
 ## Building the Haddock Documentation
 
