@@ -13,6 +13,7 @@
 .hpc
 cabal-dev/
 cabal.sandbox.config
+.stack-work
 dist*/
 docs/templates/out
 site_key.txt
