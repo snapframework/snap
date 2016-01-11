@@ -6,18 +6,12 @@ resolver: lts-4.1
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
-- location:
-    git: https://github.com/snapframework/heist
-    commit: 8e1a202387416f154c90f12275675792271fa1db
-- location:
-    git: https://github.com/snapframework/snap-core
-    commit: b5ca1f086f8cd49a8f139e2547d597a87ddc3ef1
-- location:
-    git: https://github.com/snapframework/snap-server
-    commit: d84500c262b9125e5f673e1db517ce54ae5fab93
-- location:
-    git: https://github.com/snapframework/io-streams-haproxy
-    commit: ab208d49fe73c9cf05e46c0d929eec311fb0cfd9
+- ./deps/io-streams
+- ./deps/snap-core
+- ./deps/snap-server
+- ./deps/xmlhtml
+- ./deps/heist
+- ./deps/io-streams-haproxy
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
