@@ -234,7 +234,7 @@ Test-suite testsuite
     hashable,
     heist,
     http-streams               >= 0.7.1.1  && < 0.9,
-    HUnit                      >= 1.2.5.2  && < 1.3,
+    HUnit                      >= 1.2.5.2  && < 1.4,
     lens,
     lifted-base,
     map-syntax,
