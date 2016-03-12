@@ -105,7 +105,7 @@ Library
     attoparsec                >= 0.10     && < 0.14,
     base                      >= 4.4      && < 5,
     bytestring                >= 0.9.1    && < 0.11,
-    cereal                    >= 0.3      && < 0.5,
+    cereal                    >= 0.3      && < 0.6,
     clientsession             >= 0.8      && < 0.10,
     configurator              >= 0.1      && < 0.4,
     containers                >= 0.3      && < 0.6,
