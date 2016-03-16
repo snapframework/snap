@@ -239,6 +239,9 @@ Executable snap
   extensions:
     OverloadedStrings
 
+  other-extensions:
+    TemplateHaskell
+
   ghc-prof-options: -prof -auto-all
 
   if impl(ghc >= 6.12.0)
