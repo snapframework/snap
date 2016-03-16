@@ -1,3 +1,7 @@
+# 0.14.0.7
+
+Fix issue #147, problems compiling with executable profiling
+
 # 0.14.0.5
 
 * Eliminate unnecessary dependency on syb
