@@ -1,4 +1,4 @@
-Snap Framework [![Hackage Status](https://img.shields.io/hackage/v/snap.svg)](https://hackage.haskell.io/package/snap)
+Snap Framework [![Hackage Status](https://img.shields.io/hackage/v/snap.svg)](https://hackage.haskell.org/package/snap)
 ==============
 
 Snap is a simple and fast web development framework and server written in
