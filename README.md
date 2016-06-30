@@ -31,6 +31,7 @@ run
     ./init-sandbox.sh
     cabal install
 
+(You may want to look at pull.sh or pullLatestMaster.sh.)
 This updates all the Snap Framework dependencies to the correct version,
 creates a sandbox, and installs everything.  The snap library is built using
 [Cabal](http://www.haskell.org/cabal/) and
