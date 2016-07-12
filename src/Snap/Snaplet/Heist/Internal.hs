@@ -4,6 +4,8 @@ module Snap.Snaplet.Heist.Internal where
 import           Prelude
 import           Control.Lens
 import           Control.Monad.State
+import qualified Data.ByteString as B
+import           Data.Char
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
@@ -76,14 +78,19 @@ heistInitWorker templateDir initialConfig = do
         , "templates from"
         , tDir
         ]
-    let config = over hcTemplateLocations (<> [loadTemplates tDir])
-                      initialConfig
+    let config = initialConfig & hcTemplateLocations %~
+                                 (<> [loadTemplates tDir])
+                               & hcCompiledTemplateFilter %~
+                                 (\f x -> f x && nsFilter x)
+
     ref <- liftIO $ newIORef (config, Compiled)
 
     -- FIXME This runs after all the initializers, but before post init
     -- hooks registered by other snaplets.
     addPostInitHook finalLoadHook
     return $ Configuring ref
+  where
+    nsFilter = (/=) (fromIntegral $ ord '_') . B.head . head
 
 
 ------------------------------------------------------------------------------
