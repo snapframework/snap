@@ -52,7 +52,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
               (simpleHeistServeSingle False)
              ,testCase "heistServeSingle template"
               (simpleHeistServeSingle True)
-             ,testCase "gHeistServeSingle underscored template"
+             ,testCase "gHeistServeSingle underscored template" -- TODO investigate
               gSimpleHeistServeSingleUnd
              ,testCase "gHeistServeSingle missing template"
               gSimpleHeistServeSingleMissing

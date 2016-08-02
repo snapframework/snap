@@ -14,12 +14,6 @@ before_cache:
 
 matrix:
   include:
-    - env: CABALVER=1.24 GHCVER=7.4.2
-      compiler: ": #GHC 7.4.2"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-7.4.2], sources: [hvr-ghc]}}
-    - env: CABALVER=1.24 GHCVER=7.6.3
-      compiler: ": #GHC 7.6.3"
-      addons: {apt: {packages: [cabal-install-1.24,ghc-7.6.3], sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=7.8.4
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.24,ghc-7.8.4], sources: [hvr-ghc]}}
@@ -62,13 +56,14 @@ script:
    else echo "= $T FAILED ="; RC=false; fi; done; $RC
  - cabal sdist # test that a source-distribution can be generated
 
- # Check that the resulting source distribution can be built w/o and w tests
- - SRC_BASENAME=$(cabal info . | awk '{print $2;exit}')
- - tar -C dist/ -xf dist/$SRC_BASENAME.tar.gz
- - "echo 'packages: *.cabal' > dist/$SRC_BASENAME/cabal.project"
- - cd dist/$SRC_BASENAME/
- - cabal new-build --disable-tests --disable-benchmarks
- - rm -rf ./dist-newstyle
- - cabal new-build ${TEST} ${BENCH}
+ # Ignore rebuilding from source until all snap dependencies are on Hackage
+ # # Check that the resulting source distribution can be built w/o and w tests
+ # - SRC_BASENAME=$(cabal info . | awk '{print $2;exit}')
+ # - tar -C dist/ -xf dist/$SRC_BASENAME.tar.gz
+ # - "echo 'packages: *.cabal' > dist/$SRC_BASENAME/cabal.project"
+ # - cd dist/$SRC_BASENAME/
+ # - cabal new-build --disable-tests --disable-benchmarks
+ # - rm -rf ./dist-newstyle
+ # - cabal new-build ${TEST} ${BENCH}
 
 # EOF
