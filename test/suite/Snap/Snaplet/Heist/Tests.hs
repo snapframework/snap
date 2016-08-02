@@ -52,7 +52,7 @@ heistTests = F.testGroup "Snap.Snaplet.Heist"
               (simpleHeistServeSingle False)
              ,testCase "heistServeSingle template"
               (simpleHeistServeSingle True)
-             ,testCase "gHeistServeSingle underscored template" -- TODO investigate
+             ,testCase "gHeistServeSingle underscored template"
               gSimpleHeistServeSingleUnd
              ,testCase "gHeistServeSingle missing template"
               gSimpleHeistServeSingleMissing
@@ -210,7 +210,7 @@ gSimpleHeistServeSingle = do
 -- serveSingle does not filter out underscored templates
 gSimpleHeistServeSingleUnd :: Assertion
 gSimpleHeistServeSingleUnd = do
-  let hdl = with heist $ HS.gHeistServeSingle "_foopage"
+  let hdl = with heist $ I.heistServeSingle "_foopage"
   res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 
