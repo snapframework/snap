@@ -1,6 +1,8 @@
 Snap Framework [![Hackage Status](https://img.shields.io/hackage/v/snap.svg)](https://hackage.haskell.org/package/snap)
 ==============
 
+[![Build Status](https://travis-ci.org/snapframework/snap.svg?branch=master)](https://travis-ci.org/snapframework/snap)
+
 Snap is a simple and fast web development framework and server written in
 Haskell. For more information about Snap, read the `README.SNAP.md` or visit
 the Snap project website at http://www.snapframework.com/.
