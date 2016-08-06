@@ -14,6 +14,12 @@ before_cache:
 
 matrix:
   include:
+    - env: CABALVER=1.24 GHCVER=7.4.2
+      compiler: ": #GHC 7.4.2"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-7.4.2,pandoc], sources: [hvr-ghc]}}
+    - env: CABALVER=1.24 GHCVER=7.6.3
+      compiler: ": #GHC 7.6.3"
+      addons: {apt: {packages: [cabal-install-1.24,ghc-7.6.3,pandoc], sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=7.8.4
       compiler: ": #GHC 7.8.4"
       addons: {apt: {packages: [cabal-install-1.24,ghc-7.8.4], sources: [hvr-ghc]}}
