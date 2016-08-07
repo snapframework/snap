@@ -158,17 +158,16 @@ Library
     TypeSynonymInstances
 
   if impl(ghc >= 6.12.0)
-    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
                  -fno-warn-orphans -fno-warn-unused-do-bind
   else
-    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields -O2
+    ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
                  -fno-warn-orphans
 
 Test-suite testsuite
   hs-source-dirs: src test/suite
   type: exitcode-stdio-1.0
   main-is: TestSuite.hs
-  ghc-options: -fhpc
 
   other-modules:
     Blackbox.Tests
