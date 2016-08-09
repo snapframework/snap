@@ -16,8 +16,7 @@ import           Snap.Snaplet                   (with)
 import qualified Snap.Test                      as ST
 import           Snap.Snaplet.Test              (runHandler,
                                                  withTemporaryFile)
-import           Snap.Snaplet.Auth              (Password(ClearText),
-                                                 createUser, loginByUsername,
+import           Snap.Snaplet.Auth              (createUser, loginByUsername,
                                                  userISplices)
 import           Snap.Snaplet.Heist             (cRender, render,
                                                  withSplices)
@@ -40,9 +39,9 @@ renderNewUser login suspend = withTemporaryFile "users.json" $ do
   let hdl = with auth $ do
         usr <- createUser "foo" "foo"
         _ <- when login $
-             loginByUsername "foo" (ClearText "foo") False >> return ()
+             loginByUsername "foo" "foo" False >> return ()
         _ <- when suspend $ replicateM_ 4 $
-             loginByUsername "foo" (ClearText "wrong") False
+             loginByUsername "foo" "wrong" False
         either
           (\_ -> Core.modifyResponse $ Core.setResponseStatus 500 "Error")
           (\u -> withSplices (userISplices u) $ render "userpage")
@@ -56,7 +55,7 @@ cRenderNewUser :: Assertion
 cRenderNewUser = withTemporaryFile "users.json" $ do
   let hdl = with auth $ do
         _ <- createUser "foo" "foo"
-        _ <- loginByUsername "foo" (ClearText "foo") True
+        _ <- loginByUsername "foo" "foo" True
         cRender "userpage"
 
       assertValidRes r = do

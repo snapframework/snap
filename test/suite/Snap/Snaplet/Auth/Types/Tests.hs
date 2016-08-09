@@ -25,22 +25,13 @@ import           Snap.TestCommon                      (eqTestCase, ordTestCase, 
 ------------------------------------------------------------------------------
 tests :: Test
 tests = testGroup "Auth type tests" [
-    testCase     "Password serialization"          dontSerializeClearText
-  , testCase     "Fill in [] roles"                deserializeDefaultRoles
-  , testCase     "Fail deserialization"            failDeserialize
+    testCase     "Fail deserialization"            failDeserialize
   , testProperty "AuthFailure show instances"      authFailureShows
   , testProperty "Encrypt agrees with password"    encryptByteString
-  , testCase     "Reject clear encrypted pw check" rejectCheckClearText
-  , testCase     "Test Role Show instance"         $ showTestCase (A.Role "a")
-  , testCase     "Test Role Read instance"         $ readTestCase (A.Role "a")
-  , testCase     "Test Role Ord  instance"         $
-    ordTestCase (A.Role "a") (A.Role "b")
   , testCase     "Test PW Show instance"           $
-    showTestCase (A.ClearText "pw")
-  , testCase     "Test PW Read instance"           $
-    readTestCase (A.ClearText "pw")
+    showTestCase (A.HashedPassword "pw")
   , testCase     "Test PW Ord  instance"           $
-    ordTestCase (A.ClearText "a") (A.ClearText "b")
+    ordTestCase (A.HashedPassword "a") (A.HashedPassword "b")
   , testCase     "Test AuthFailure Eq instance"    $
     eqTestCase A.BackendError A.DuplicateLogin --TODO better as property
   , testCase     "Test AuthFailure Show instance"  $
@@ -60,20 +51,6 @@ tests = testGroup "Auth type tests" [
   ]
 
 
-------------------------------------------------------------------------------
-dontSerializeClearText :: Assertion
-dontSerializeClearText = do
-  let s = encode (A.ClearText "passwordisnthamster")
-  -- Take the length of the ByteString to force it completely, rather than
-  -- using deepseq; BSL.ByteString lacked an NFData instance until
-  -- bytestring-0.10.
-  r <- try $ evaluate (BSL.length s) >> return s
-  case r of
-    Left  e -> (e :: SomeException) `seq` return ()
-    Right j -> assertFailure $
-               "Failed to reject ClearText password serialization: "
-               ++ show j
- 
 ------------------------------------------------------------------------------
 sampleUserJson :: T.Text -> T.Text -> T.Text
 sampleUserJson reqPair optPair = T.intercalate "," [
@@ -98,16 +75,6 @@ sampleUserJson reqPair optPair = T.intercalate "," [
   , optPair
   , "\"meta\":{}}"
   ]
-
-
-------------------------------------------------------------------------------
-deserializeDefaultRoles :: Assertion
-deserializeDefaultRoles =
-  either
-  (\e -> assertFailure $ "Failed user deserialization: " ++ e)
-  (\u -> assertEqual "Roles wasn't initialized to empty" [] (A.userRoles u))
-  (eitherDecode . BSL.fromChunks . (:[]) . encodeUtf8 $
-   sampleUserJson "\"activated_at\":null" "\"extra\":null")
 
 
 ------------------------------------------------------------------------------
@@ -151,10 +118,9 @@ encryptByteString :: QC.Property
 encryptByteString = QCM.monadicIO testStringEq
   where
     clearPw = BS.pack `liftM` (QC.arbitrary `QC.suchThat` ((>0) . length))
-    testStringEq = QCM.forAllM clearPw $ \s -> do
-      ePW  <- A.Encrypted `liftM` (QCM.run $ A.encrypt s)
+    testStringEq = QCM.forAllM clearPw $ \cPW -> do
+      ePW  <- A.HashedPassword `liftM` (QCM.run $ A.encrypt cPW)
 
-      let cPW  = A.ClearText s
 {-      ePW' <- QCM.run $ encryptPassword (ClearText s)
       QCM.assert $ (checkPassword cPW ePW
                     && checkPassword cPW cPW
@@ -162,17 +128,4 @@ encryptByteString = QCM.monadicIO testStringEq
                                                  Surpsising?
                                                  Encrypt twice and get two
                                                  different password hashes -}
-      QCM.assert $ (A.checkPassword cPW ePW
-                    && A.checkPassword cPW (A.ClearText s))
-
-
-------------------------------------------------------------------------------
-rejectCheckClearText :: Assertion
-rejectCheckClearText = do
-  let b = A.checkPassword (A.Encrypted "") (A.ClearText "")
-  r <- try $ b `seq` return b
-  case r of
-    Left  e -> (e :: SomeException) `seq` return ()
-    Right _ -> assertFailure
-               "checkPassword should not accept encripted-clear pair"
-
+      QCM.assert $ (A.checkPassword cPW ePW)

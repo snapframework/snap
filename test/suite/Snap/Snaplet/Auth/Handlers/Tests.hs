@@ -8,6 +8,7 @@ module Snap.Snaplet.Auth.Handlers.Tests
 import           Control.Applicative
 import           Control.Monad.State            as S
 import           Control.Monad.Trans.Maybe      (MaybeT(..), runMaybeT)
+import           Data.ByteString                (ByteString)
 import qualified Data.Map                       as Map
 import           Data.Maybe                     (isJust, isNothing)
 import           Data.Time.Clock                (diffUTCTime, getCurrentTime)
@@ -21,8 +22,7 @@ import           Test.HUnit                     hiding (Test, path)
 import           Snap.Core                      (writeText)
 import           Snap.Snaplet                   (Handler, with)
 import           Snap.Snaplet.Auth              (AuthUser(..),
-                                                 AuthFailure(..),
-                                                 Password(..), Role(..))
+                                                 AuthFailure(..))
 import qualified Snap.Snaplet.Auth              as A
 import           Snap.Snaplet.Test.Common.App   (App, appInit, appInit',
                                                  auth)
@@ -38,13 +38,11 @@ tests = testGroup "Snap.Snaplet.Auth.Handlers"
         [ testCreateUserGood
         , testWithCfgFile
         , testCreateUserTimely
-        , testCreateUserWithRole
         , testCreateEmptyUser
         , testCreateDupUser
-        , testUsernameExists 
-        , testLoginByUsername 
-        , testLoginByUsernameEnc
-        , testLoginByUsernameNoU 
+        , testUsernameExists
+        , testLoginByUsername
+        , testLoginByUsernameNoU
         , testLoginByUsernameInvPwd
         , testLoginByRememberTokenKO
         , testLoginByRememberTokenOK
@@ -132,30 +130,11 @@ hush :: Either e a -> Maybe a
 hush (Left _) = Nothing
 hush (Right a) = Just a
 
-------------------------------------------------------------------------------
-testCreateUserWithRole :: Test
-testCreateUserWithRole = testCase "createUser with role" assertUserRole
-  where
-    assertUserRole :: Assertion
-    assertUserRole = withTemporaryFile "users.json" $ do
-      let hdl = with auth $ runMaybeT $ do
-            u <- MaybeT $ hush <$> A.createUser "foo" "foo"
-            _ <- MaybeT $ hush <$>
-                 A.saveUser (u {userRoles = [Role "admin",Role "user"]})
-            MaybeT $ hush <$> A.loginByUsername "foo" (ClearText "foo") False
-      res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
-      case res of
-        Left e           -> assertFailure $ show e
-        Right Nothing    -> assertFailure "Failed saved user lookup"
-        Right (Just usr) -> assertEqual "Roles don't match expectation"
-                         [Role "admin",Role "user"]
-                         (userRoles usr)
-
 
 ------------------------------------------------------------------------------
 testCreateEmptyUser :: Test
 testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
-  where 
+  where
     assertEmptyUser :: Assertion
     assertEmptyUser = do
         let hdl = with auth $ A.createUser "" "foo"
@@ -171,7 +150,7 @@ testCreateEmptyUser = testCase "createUser empty username" assertEmptyUser
 -- will be already present in the backend.
 testCreateDupUser :: Test
 testCreateDupUser = testCase "createUser duplicate user" assertDupUser
-  where 
+  where
     assertDupUser :: Assertion
     assertDupUser = do
         let hdl = with auth $ A.createUser "foo" "foo"
@@ -204,31 +183,17 @@ testLoginByUsername = testCase "successful loginByUsername" assertion
   where
     assertion :: Assertion
     assertion = do
-        let pwd = ClearText "foo"
+        let pwd = "foo"
         res <- evalHandler Nothing (ST.get "" Map.empty) (loginByUnameHdlr pwd) appInit
         either (assertFailure . show) (assertBool failMsg . isRight) res
 
-    failMsg = "loginByUsername: Failed with ClearText pwd."
+    failMsg = "loginByUsername: Failed with pwd."
 
 
 ------------------------------------------------------------------------------
 -- Reused below.
-loginByUnameHdlr :: Password -> Handler App App (Either AuthFailure AuthUser)
+loginByUnameHdlr :: ByteString -> Handler App App (Either AuthFailure AuthUser)
 loginByUnameHdlr pwd = with auth $ A.loginByUsername "foo" pwd False
-
-
-------------------------------------------------------------------------------
-testLoginByUsernameEnc :: Test
-testLoginByUsernameEnc = testCase "loginByUsername encrypted pwd" assertion
-  where
-    assertion :: Assertion
-    assertion = do
-        let pwd = Encrypted "foo"
-        res <- evalHandler Nothing (ST.get "" Map.empty) (loginByUnameHdlr pwd) appInit
-        either (assertFailure . show)
-               (assertBool failMsg . isLeftFailure EncryptedPassword) res
-
-    failMsg = "loginByUsername: Expected to find an Encrypted password, but I haven't."
 
 
 ------------------------------------------------------------------------------
@@ -237,7 +202,7 @@ testLoginByUsernameNoU = testCase "loginByUsername invalid user" assertion
   where
     assertion :: Assertion
     assertion = do
-        let pwd = ClearText "foo"
+        let pwd = "foo"
         let hdl = with auth $ A.loginByUsername "doesnotexist" pwd False
         res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
         either (assertFailure . show)
@@ -252,7 +217,7 @@ testLoginByUsernameInvPwd = testCase "loginByUsername invalid user" assertion
   where
     assertion :: Assertion
     assertion = do
-        let pwd = ClearText "invalid"
+        let pwd = "invalid"
         let hdl = with auth $ A.loginByUsername "foo" pwd False
         res <- evalHandler Nothing (ST.get "" Map.empty) hdl appInit
         either (assertFailure . show) (assertBool failMsg . isLeft) res
@@ -287,7 +252,7 @@ testLoginByRememberTokenOK = testCase "loginByRememberToken token" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        res <- A.loginByUsername "foo" (ClearText "foo") True
+        res <- A.loginByUsername "foo" "foo" True
         either (\e -> return (Left e)) (\_ -> A.loginByRememberToken) res
 
     failMsg = "loginByRememberToken: Expected to succeed but I didn't."
@@ -320,7 +285,7 @@ testLogoutOK = testCase "logout user logged in." $ assertLogout hdl failMsg
   where
     hdl :: Handler App App (Maybe AuthUser)
     hdl = with auth $ do
-        _ <- A.loginByUsername "foo" (ClearText "foo") True
+        _ <- A.loginByUsername "foo" "foo" True
         A.logout
         mgr <- get
         return (A.activeUser mgr)
@@ -354,7 +319,7 @@ testCurrentUserOK = testCase "successful currentUser call" assertion
 
     hdl :: Handler App App (Maybe AuthUser)
     hdl = with auth $ do
-        res <- A.loginByUsername "foo" (ClearText "foo") True
+        res <- A.loginByUsername "foo" "foo" True
         either (\_ -> return Nothing) (\_ -> A.currentUser) res
 
     failMsg = "currentUser: Expected to get the current user, " ++
@@ -385,7 +350,7 @@ testIsLoggedInOK = testCase "isLoggedIn, user logged" assertion
 
     hdl :: Handler App App Bool
     hdl = with auth $ do
-        _ <- A.loginByUsername "foo" (ClearText "foo") True
+        _ <- A.loginByUsername "foo" "foo" True
         A.isLoggedIn
 
     failMsg = "isLoggedIn: Expected True, but got False."
@@ -423,7 +388,7 @@ testSaveUserKO = testCase "saveUser null username" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        user <- A.loginByUsername "foo" (ClearText "foo") True
+        user <- A.loginByUsername "foo" "foo" True
         case user of
           (Left e) -> return $ Left e
           (Right u) -> A.saveUser (u { userLogin = "" })
@@ -435,6 +400,7 @@ testSaveUserKO = testCase "saveUser null username" assertion
 ------------------------------------------------------------------------------
 -- Trying to update a Cleartext text pwd result in an error. Feature or
 -- bug? (error: Json can't serialize ClearText pwd)
+-- TODO: Note above still holds?
 testSaveUserOK :: Test
 testSaveUserOK = testCase "saveUser good update params" assertion
   where
@@ -445,10 +411,10 @@ testSaveUserOK = testCase "saveUser good update params" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        user <- A.loginByUsername "foo" (ClearText "foo") True
+        user <- A.loginByUsername "foo" "foo" True
         case user of
-          (Left e) -> return $ Left e
-          (Right u) -> A.saveUser (u { userLoginCount = 99 })
+          Left e -> return $ Left e
+          Right u -> A.saveUser (u { userLoginCount = 99 })
 
     failMsg = "saveUser: I expected to success since I'm saving a " ++
               "valid user, but I didn't."
@@ -467,7 +433,7 @@ testMarkAuthFail = testCase "successful markAuthFail call" assertion
     -- failedLoginCount increased by 1.
     hdl :: Handler App App Bool
     hdl = with auth $ do
-        user <- A.loginByUsername "foo" (ClearText "foo") True
+        user <- A.loginByUsername "foo" "foo" True
         case user of
           (Left _) -> return False
           (Right u) ->
@@ -494,7 +460,7 @@ testMarkAuthFailLockedOut = testCase "markAuthFail lockedOut" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        user <- A.loginByUsername "bar" (ClearText "bar") True
+        user <- A.loginByUsername "bar" "bar" True
         case user of
           (Left e) -> return $ Left e
           (Right u) ->
@@ -521,7 +487,7 @@ testMarkAuthSuccess = testCase "successful markAuthSuccess call" assertion
 
     hdl :: Handler App App Bool
     hdl = with auth $ do
-        user <- A.loginByUsername "foo" (ClearText "foo") True
+        user <- A.loginByUsername "foo" "foo" True
         case user of
           (Left _) -> return False
           (Right u) ->
@@ -548,7 +514,7 @@ testCheckPasswordAndLoginOK = testCase "checkPasswordAndLogin OK" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        let pwd = ClearText "foo"
+        let pwd = "foo"
         res <- A.loginByUsername "foo" pwd False
         either (return . Left) (`A.checkPasswordAndLogin` pwd) res
 
@@ -567,7 +533,7 @@ testCheckPasswordAndLoginKO = testCase "checkPasswordAndLogin KO" assertion
 
     hdl :: Handler App App (Either AuthFailure AuthUser)
     hdl = with auth $ do
-        let pwd = ClearText "wrongpass"
+        let pwd = "wrongpass"
         res <- A.loginByUsername "foo" pwd False
         either (return . Left) (`A.checkPasswordAndLogin` pwd) res
 
@@ -586,7 +552,7 @@ testAuthenticatePasswordOK = testCase "authenticatePassword OK" assertion
 
     hdl :: Handler App App (Maybe AuthFailure)
     hdl = with auth $ do
-        let pwd = ClearText "foo"
+        let pwd = "foo"
         res <- A.loginByUsername "foo" pwd False
         either (return . Just)
                (\u -> return $ A.authenticatePassword u pwd) res
@@ -607,7 +573,7 @@ testAuthenticatePasswordPwdMissing = testCase "authenticatePassword no pwd" a
 
     hdl :: Handler App App (Maybe AuthFailure)
     hdl = with auth $ do
-        let pwd = ClearText "foo"
+        let pwd = "foo"
         res <- A.loginByUsername "foo" pwd False
         either (return . Just)
                (\u -> let u' = u { userPassword = Nothing }
@@ -629,10 +595,9 @@ testAuthenticatePasswordPwdWrong = testCase "authenticatePassword wrong pwd" a
 
     hdl :: Handler App App (Maybe AuthFailure)
     hdl = with auth $ do
-        let pwd = ClearText "foo"
-        res <- A.loginByUsername "foo" pwd False
+        res <- A.loginByUsername "foo" "foo" False
         either (return . Just)
-               (return . flip A.authenticatePassword (ClearText "bar")) res
+               (return . flip A.authenticatePassword "bar") res
 
     failMsg = "authenticatePassword: I expected to fail due to " ++
               " IncorrectPassword, but I didn't."
@@ -698,7 +663,7 @@ testRequireUserOK = testCase "requireUser good handler exec" assertion
     hdl = with auth $ do
         let badHdl = writeText "bad"
         let goodHdl = writeText "good"
-        A.loginByUsername "foo" (ClearText "foo") True
+        A.loginByUsername "foo" "foo" True
         A.requireUser auth badHdl goodHdl
 
 
@@ -715,7 +680,7 @@ testRequireUserKO = testCase "requireUser bad handler exec" assertion
     hdl = with auth $ do
         let badHdl = writeText "bad"
         let goodHdl = writeText "good"
-        _ <- A.loginByUsername "doesnotexist" (ClearText "") True
+        _ <- A.loginByUsername "doesnotexist" "" True
         A.requireUser auth badHdl goodHdl
 
 
