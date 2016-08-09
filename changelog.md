@@ -1,4 +1,10 @@
-## [UNRELEASED] 1.0.0.0
+## 1.1.0.0
+### Added
+### Removed
+
+ - Password type (including ClearText and Encrypted constructors)
+
+## 1.0.0.0
 ### Added
 ### Removed
 
