@@ -71,7 +71,7 @@ tests = testGroup "non-cabal-tests"
     , requestTest "bazpage3" "baz template page <barsplice></barsplice>\n"
     , requestTest "bazpage4" "baz template page <barsplice></barsplice>\n"
     , requestTest "barrooturl" "url"
-    , requestExpectingError "bazbadpage" 500 "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
+    , requestExpectingErrorPrefix "bazbadpage" 500 "A web handler threw an exception. Details:\nTemplate \"cpyga\" not found."
     , requestTest "foo/fooSnapletName" "foosnaplet"
 
     , fooConfigPathTest
@@ -110,20 +110,20 @@ requestTest' url desired = do
 
 
 ------------------------------------------------------------------------------
-requestExpectingError :: String -> Int -> Text -> Test
-requestExpectingError url status desired =
-    testCase (testName url) $ requestExpectingError' url status desired
+requestExpectingErrorPrefix :: String -> Int -> Text -> Test
+requestExpectingErrorPrefix url status desired =
+    testCase (testName url) $ requestExpectingErrorPrefix' url status desired
 
 
 ------------------------------------------------------------------------------
-requestExpectingError' :: String -> Int -> Text -> IO ()
-requestExpectingError' url status desired = do
+requestExpectingErrorPrefix' :: String -> Int -> Text -> IO ()
+requestExpectingErrorPrefix' url status desired = do
     let fullUrl = testServerUrl ++ url
     get (S.pack fullUrl) $ \resp is -> do
       assertEqual ("Status code: "++fullUrl) status
                   (getStatusCode resp)
       res <- concatHandler resp is
-      assertEqual fullUrl desired (T.decodeUtf8 $ L.fromChunks [res])
+      assertBool fullUrl $ desired `T.isPrefixOf` (T.decodeUtf8 $ L.fromChunks [res])
 
 
 ------------------------------------------------------------------------------
@@ -274,7 +274,7 @@ reloadTest = testCase "internal/reload-test" $ do
       testWithCwd' "admin/reload" $ \cwd' b -> do
         let cwd = S.pack cwd'
         let response =
-                T.concat     [ "Error reloading site!\n\nInitializer "
+               [T.concat     [ "Error reloading site!\n\nInitializer "
                              , "threw an exception...\n"
                              , T.pack cwd'
                              , "/snaplets/heist"
@@ -286,7 +286,24 @@ reloadTest = testCase "internal/reload-test" $ do
                              , "\">\"\n\n...but before it died it generated "
                              , "the following output:\nInitializing app @ /\n"
                              , "Initializing heist @ /heist\n\n" ]
-        assertEqual "admin/reload" response (T.decodeUtf8 b)
+
+               ,T.concat     [ "Error reloading site!\n\nInitializer "
+                             , "threw an exception...\n"
+                             , T.pack cwd'
+                             , "/snaplets/heist"
+                             , "/templates/bad.tpl \""
+                             , T.pack cwd'
+                             , "/snaplets/heist/templates"
+                             , "/bad.tpl\" (line 2, column 1):\nunexpected "
+                             , "end of input\nexpecting \"=\", \"/\" or "
+                             , "\">\"\n"
+                             , "CallStack (from HasCallStack):\n  error, called at src/Snap/Snaplet/Heist/Internal.hs:74:35 in main:Snap.Snaplet.Heist.Internal\n"
+                             , "\n...but before it died it generated "
+                             , "the following output:\nInitializing app @ /\n"
+                             , "Initializing heist @ /heist\n\n" ]
+               ]
+
+        assertBool "admin/reload" $ (T.decodeUtf8 b) `elem` response 
 
     copyFile goodTplOrig goodTplNew
 

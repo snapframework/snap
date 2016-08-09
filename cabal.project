@@ -1,0 +1,3 @@
+packages: .
+
+optional-packages: deps/heist deps/io-streams deps/io-streams-haproxy deps/snap-core deps/snap-server deps/xmlhtml

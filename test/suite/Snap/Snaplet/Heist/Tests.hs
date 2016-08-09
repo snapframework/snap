@@ -210,7 +210,7 @@ gSimpleHeistServeSingle = do
 -- serveSingle does not filter out underscored templates
 gSimpleHeistServeSingleUnd :: Assertion
 gSimpleHeistServeSingleUnd = do
-  let hdl = with heist $ HS.gHeistServeSingle "_foopage"
+  let hdl = with heist $ I.heistServeSingle "_foopage"
   res <- runHandler Nothing (ST.get "_foopage" Map.empty) hdl appInit
   either (assertFailure . show) ST.assertSuccess res
 

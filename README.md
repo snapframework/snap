@@ -1,5 +1,7 @@
-Snap Framework [![Hackage Status](https://img.shields.io/hackage/v/snap.svg)](https://hackage.haskell.io/package/snap)
+Snap Framework [![Hackage Status](https://img.shields.io/hackage/v/snap.svg)](https://hackage.haskell.org/package/snap)
 ==============
+
+[![Build Status](https://travis-ci.org/snapframework/snap.svg?branch=master)](https://travis-ci.org/snapframework/snap)
 
 Snap is a simple and fast web development framework and server written in
 Haskell. For more information about Snap, read the `README.SNAP.md` or visit
@@ -31,6 +33,7 @@ run
     ./init-sandbox.sh
     cabal install
 
+(You may want to look at pull.sh or pullLatestMaster.sh.)
 This updates all the Snap Framework dependencies to the correct version,
 creates a sandbox, and installs everything.  The snap library is built using
 [Cabal](http://www.haskell.org/cabal/) and
