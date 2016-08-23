@@ -3,6 +3,7 @@
 {-# LANGUAGE ExistentialQuantification  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 
 module Snap.Snaplet.Auth.Types where
 
@@ -113,6 +114,10 @@ instance Show AuthFailure where
 newtype UserId = UserId { unUid :: Text }
   deriving ( Read, Show, Ord, Eq, FromJSON, ToJSON, Hashable )
 
+#if MIN_VERSION_aeson(1,0,0)
+deriving instance FromJSONKey UserId
+deriving instance ToJSONKey UserId
+#endif
 
 ------------------------------------------------------------------------------
 -- | This will be replaced by a role-based permission system.

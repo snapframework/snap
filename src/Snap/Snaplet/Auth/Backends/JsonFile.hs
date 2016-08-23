@@ -89,11 +89,15 @@ mkJsonAuthMgr fp = do
 ------------------------------------------------------------------------------
 type UserIdCache = Map UserId AuthUser
 
+#if !MIN_VERSION_aeson(1,0,0)
+-- In aeson >= 1 these instances are not needed because we have
+-- derived ToJSONKey/FromJSONKey instances for UserId.
 instance ToJSON UserIdCache where
   toJSON m = toJSON $ HM.toList m
 
 instance FromJSON UserIdCache where
   parseJSON = fmap HM.fromList . parseJSON
+#endif
 
 ------------------------------------------------------------------------------
 type LoginUserCache = Map Text UserId
