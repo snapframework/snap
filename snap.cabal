@@ -11,7 +11,7 @@ description:
     .
     To get started, issue the following sequence of commands:
     .
-    @$ cabal install snap snap-template
+    @$ cabal install snap snap-templates
     $ mkdir myproject
     $ cd myproject
     $ snap init@
@@ -21,7 +21,7 @@ description:
     (<http://snapframework.com/docs>).
     .
     Note: since version 1.0, the \"snap\" executable program for generating
-    starter projects is provided by the @snap-template@ package.
+    starter projects is provided by the @snap-templates@ package.
 
 license:        BSD3
 license-file:   LICENSE
