@@ -9,7 +9,9 @@ import Data.Function                    (on)
 import Data.Maybe                       (fromMaybe)
 import Data.Monoid                      (Last(..), getLast)
 
-#if MIN_VERSION_base(4,7,0)
+#if MIN_VERSION_base(4,10,0)
+import           Data.Typeable          (Typeable)
+#elif MIN_VERSION_base(4,7,0)
 import           Data.Typeable.Internal (Typeable)
 #else
 import           Data.Typeable          (Typeable, TyCon, mkTyCon,
