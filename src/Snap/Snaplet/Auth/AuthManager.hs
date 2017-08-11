@@ -59,6 +59,7 @@ class IAuthBackend r where
   save                  :: r -> AuthUser -> IO (Either AuthFailure AuthUser)
   lookupByUserId        :: r -> UserId   -> IO (Maybe AuthUser)
   lookupByLogin         :: r -> Text     -> IO (Maybe AuthUser)
+  lookupByEmail         :: r -> Text     -> IO (Maybe AuthUser)
   lookupByRememberToken :: r -> Text     -> IO (Maybe AuthUser)
   destroy               :: r -> AuthUser -> IO ()
 
@@ -101,6 +102,6 @@ instance IAuthBackend (AuthManager b) where
     save AuthManager{..} u = save backend u
     lookupByUserId AuthManager{..} u = lookupByUserId backend u
     lookupByLogin AuthManager{..} u = lookupByLogin backend u
+    lookupByEmail AuthManager{..}  u = lookupByEmail backend u
     lookupByRememberToken AuthManager{..} u = lookupByRememberToken backend u
     destroy AuthManager{..} u = destroy backend u
-

@@ -273,6 +273,11 @@ instance IAuthBackend JsonFileAuthManager where
       f cache = getUid >>= getUser cache
         where getUid = HM.lookup login (loginCache cache)
 
+  lookupByEmail mgr email = withCache mgr f
+    where
+      f cache = getEmail >>= getUser cache
+        where getEmail = HM.lookup email (loginCache cache)
+
   lookupByRememberToken mgr token = withCache mgr f
     where
       f cache = getUid >>= getUser cache
