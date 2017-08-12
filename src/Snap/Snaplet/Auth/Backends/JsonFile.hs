@@ -19,7 +19,7 @@ import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
 import qualified Data.Map as HM
 import           Data.Map (Map)
-import           Data.Maybe (fromJust, isJust)
+import           Data.Maybe (fromJust, isJust, listToMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time
@@ -298,7 +298,12 @@ instance IAuthBackend JsonFileAuthManager where
   lookupByEmail mgr email = withCache mgr f
     where
       f cache = getEmail >>= getUser cache
-        where getEmail = HM.lookup email (emailCache cache)
+        where getEmail = case HM.lookup email (emailCache cache) of
+                      Just u  -> return u
+                      Nothing -> (join . fmap userId .
+                                  listToMaybe . HM.elems $
+                                  HM.filter ((== Just email) . userEmail)
+                                  (uidCache  cache))
 
   lookupByRememberToken mgr token = withCache mgr f
     where
