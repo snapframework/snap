@@ -10,6 +10,7 @@ module Snap.Snaplet.Auth.Backends.JsonFile
   ) where
 
 
+import           Control.Applicative ((<|>))
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
@@ -104,6 +105,10 @@ type LoginUserCache = Map Text UserId
 
 
 ------------------------------------------------------------------------------
+type EmailUserCache = Map Text UserId
+
+
+------------------------------------------------------------------------------
 type RemTokenUserCache = Map Text UserId
 
 
@@ -113,6 +118,7 @@ type RemTokenUserCache = Map Text UserId
 data UserCache = UserCache {
     uidCache    :: UserIdCache          -- ^ the actual datastore
   , loginCache  :: LoginUserCache       -- ^ fast lookup for login field
+  , emailCache  :: EmailUserCache       -- ^ fast lookup for email field
   , tokenCache  :: RemTokenUserCache    -- ^ fast lookup for remember tokens
   , uidCounter  :: Int                  -- ^ user id counter
 }
@@ -123,6 +129,7 @@ defUserCache :: UserCache
 defUserCache = UserCache {
     uidCache   = HM.empty
   , loginCache = HM.empty
+  , emailCache = HM.empty
   , tokenCache = HM.empty
   , uidCounter = 0
 }
@@ -198,6 +205,8 @@ jsonFileSave mgr u = do
             return $! cache {
               uidCache   = HM.insert uid' u' $ uidCache cache
             , loginCache = HM.insert (userLogin u') uid' $ loginCache cache
+            , emailCache = maybe id (\em -> HM.insert em uid') (userEmail u) $
+                           emailCache cache
             , tokenCache = case userRememberToken u' of
                              Nothing -> tokenCache cache
                              Just x  -> HM.insert x uid' $ tokenCache cache
@@ -216,9 +225,11 @@ jsonFileSave mgr u = do
         Nothing -> return $! Left UserNotFound
         Just x -> do
           let oldLogin = userLogin x
+          let oldEmail = userEmail x
           let oldToken = userRememberToken x
           let uid      = fromJust $ userId u
           let newLogin = userLogin u
+          let newEmail = userEmail u
           let newToken = userRememberToken u
 
           let lc       = if oldLogin /= userLogin u
@@ -226,6 +237,16 @@ jsonFileSave mgr u = do
                                 HM.delete oldLogin $
                                 loginCache cache
                            else loginCache cache
+
+          let ec       = if oldEmail /= newEmail
+                           then (case (oldEmail, newEmail) of
+                                   (Nothing, Nothing) -> id
+                                   (Just e,  Nothing) -> HM.delete e
+                                   (Nothing, Just e ) -> HM.insert e uid
+                                   (Just e,  Just e') -> HM.insert e' uid .
+                                                         HM.delete e
+                                ) (emailCache cache)
+                           else emailCache cache
 
           let tc       = if oldToken /= newToken && isJust oldToken
                            then HM.delete (fromJust oldToken) $ loginCache cache
@@ -240,6 +261,7 @@ jsonFileSave mgr u = do
           let new      = cache {
                              uidCache   = HM.insert uid u' $ uidCache cache
                            , loginCache = lc
+                           , emailCache = ec
                            , tokenCache = tc'
                          }
 
@@ -276,7 +298,7 @@ instance IAuthBackend JsonFileAuthManager where
   lookupByEmail mgr email = withCache mgr f
     where
       f cache = getEmail >>= getUser cache
-        where getEmail = HM.lookup email (loginCache cache)
+        where getEmail = HM.lookup email (emailCache cache)
 
   lookupByRememberToken mgr token = withCache mgr f
     where
@@ -311,6 +333,7 @@ instance ToJSON UserCache where
   toJSON uc = object
     [ "uidCache"   .= uidCache   uc
     , "loginCache" .= loginCache uc
+    , "emailCache" .= emailCache uc
     , "tokenCache" .= tokenCache uc
     , "uidCounter" .= uidCounter uc
     ]
@@ -322,6 +345,8 @@ instance FromJSON UserCache where
     UserCache
       <$> v .: "uidCache"
       <*> v .: "loginCache"
+      <*> (v .: "emailCache" <|> mempty) -- Old versions of users.json do
+                                         -- not carry this field
       <*> v .: "tokenCache"
       <*> v .: "uidCounter"
   parseJSON _ = error "Unexpected JSON input"
