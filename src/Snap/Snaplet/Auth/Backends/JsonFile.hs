@@ -345,8 +345,8 @@ instance FromJSON UserCache where
     UserCache
       <$> v .: "uidCache"
       <*> v .: "loginCache"
-      <*> (v .: "emailCache" <|> mempty) -- Old versions of users.json do
-                                         -- not carry this field
+      <*> (v .: "emailCache" <|> pure mempty) -- Old versions of users.json do
+                                              -- not carry this field
       <*> v .: "tokenCache"
       <*> v .: "uidCounter"
   parseJSON _ = error "Unexpected JSON input"
