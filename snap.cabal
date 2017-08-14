@@ -233,7 +233,7 @@ Test-suite testsuite
     directory-tree,
     dlist,
     filepath,
-    Glob                       >= 0.7.5    && < 0.8,
+    Glob                       >= 0.7.5    && < 0.9,
     hashable,
     heist,
     http-streams               >= 0.7.1.1  && < 0.9,
