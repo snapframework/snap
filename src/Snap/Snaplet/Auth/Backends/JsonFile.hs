@@ -20,6 +20,7 @@ import qualified Data.ByteString as B
 import qualified Data.Map as HM
 import           Data.Map (Map)
 import           Data.Maybe (fromJust, isJust, listToMaybe)
+import           Data.Monoid (mempty)
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Data.Time
