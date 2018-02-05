@@ -220,7 +220,7 @@ Test-suite testsuite
 
   build-depends:
     aeson,
-    async                      >= 2.0.1.5  && < 2.2,
+    async                      >= 2.0.1.5  && < 2.3,
     attoparsec,
     base,
     bytestring,
