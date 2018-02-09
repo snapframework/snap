@@ -517,7 +517,7 @@ runBase (Handler m) mvar = do
 
 
 ------------------------------------------------------------------------------
--- | Lets you change a snaplet's initial state.  It's alomst like a reload,
+-- | Lets you change a snaplet's initial state.  It's almost like a reload,
 -- except that it doesn't run the initializer.  It just modifies the result of
 -- the initializer.  This can be used to let you define actions for reloading
 -- individual snaplets.
