@@ -129,7 +129,7 @@ Library
     heist                     >= 1.0      && < 1.1,
     lens                      >= 3.7.6    && < 4.17,
     lifted-base               >= 0.2      && < 0.3,
-    map-syntax                >= 0.2      && < 0.3,
+    map-syntax                >= 0.2      && < 0.4,
     monad-control             >= 0.3      && < 1.1,
     mtl                       >= 2.0      && < 2.3,
     mwc-random                >= 0.8      && < 0.14,
