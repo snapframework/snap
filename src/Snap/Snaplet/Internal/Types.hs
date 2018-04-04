@@ -38,6 +38,10 @@ import           Control.Applicative          (Applicative)
 import           Data.Monoid                  (Monoid (mappend, mempty))
 #endif
 
+#if !MIN_VERSION_base(4,11,0)
+import           Data.Semigroup               (Semigroup(..))
+#endif
+
 ------------------------------------------------------------------------------
 
 
@@ -467,11 +471,8 @@ data InitializerState b = InitializerState
 -- initialization.
 newtype Hook a = Hook (Snaplet a -> IO (Either Text (Snaplet a)))
 
-
-------------------------------------------------------------------------------
-instance Monoid (Hook a) where
-    mempty = Hook (return . Right)
-    (Hook a) `mappend` (Hook b) = Hook $ \s -> do
+instance Semigroup (Hook a) where
+    Hook a <> Hook b = Hook $ \s -> do
       ea <- a s
       case ea of
         Left e -> return $ Left e
@@ -480,6 +481,14 @@ instance Monoid (Hook a) where
           case eb of
             Left e -> return $ Left e
             Right bres -> return $ Right bres
+
+
+------------------------------------------------------------------------------
+instance Monoid (Hook a) where
+    mempty = Hook (return . Right)
+#if !MIN_VERSION_base(4,11,0)
+    mappend = (<>)
+#endif
 
 
 ------------------------------------------------------------------------------
