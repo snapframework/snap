@@ -272,6 +272,9 @@ Test-suite testsuite
     unordered-containers,
     xmlhtml
 
+  if !impl(ghc >= 8.0)
+    build-depends: semigroups
+
   extensions:
     BangPatterns,
     CPP,
