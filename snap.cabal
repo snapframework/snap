@@ -144,6 +144,9 @@ Library
     unordered-containers      >= 0.1.4    && < 0.3,
     xmlhtml                   >= 0.1      && < 0.3
 
+  if !impl(ghc >= 8.0)
+    build-depends: semigroups >= 0.16 && < 0.19
+
   extensions:
     BangPatterns,
     CPP,

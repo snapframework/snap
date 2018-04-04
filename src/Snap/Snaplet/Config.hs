@@ -22,6 +22,10 @@ import           Data.Typeable          (Typeable, TyCon, mkTyCon,
 import Data.Monoid                      (Monoid, mappend, mempty)
 #endif
 
+#if !MIN_VERSION_base(4,11,0)
+import           Data.Semigroup         (Semigroup(..))
+#endif
+
 import System.Console.GetOpt            (OptDescr(Option), ArgDescr(ReqArg))
 ------------------------------------------------------------------------------
 import Snap.Core
@@ -51,14 +55,20 @@ instance Typeable AppConfig where
     typeOf _ = mkTyConApp appConfigTyCon []
 #endif
 
-------------------------------------------------------------------------------
-instance Monoid AppConfig where
-    mempty = AppConfig Nothing
-    mappend a b = AppConfig
+instance Semigroup AppConfig where
+    a <> b = AppConfig
         { appEnvironment = ov appEnvironment a b
         }
       where
-        ov f x y = getLast $! (mappend `on` (Last . f)) x y
+        ov f x y = getLast $! ((<>) `on` (Last . f)) x y
+
+
+------------------------------------------------------------------------------
+instance Monoid AppConfig where
+    mempty = AppConfig Nothing
+#if !MIN_VERSION_base(4,11,0)
+    mappend = (<>)
+#endif
 
 
 ------------------------------------------------------------------------------
