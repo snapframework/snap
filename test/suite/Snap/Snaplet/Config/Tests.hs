@@ -9,6 +9,9 @@ import qualified Data.Configurator.Types as C
 import Data.Function
 import qualified Data.Map as Map
 import Data.Monoid
+#if !MIN_VERSION_base(4,11,0)
+import Data.Semigroup hiding ((<>))
+#endif
 import Data.Typeable
 import System.Environment
 ------------------------------------------------------------------------------
@@ -50,9 +53,14 @@ instance Eq ArbAppConfig where
 instance Arbitrary ArbAppConfig where
   arbitrary = liftM (ArbAppConfig . AppConfig) arbitrary
 
+instance Semigroup ArbAppConfig where
+  a <> b = ArbAppConfig $ ((<>) `on` unArbAppConfig) a b
+
 instance Monoid ArbAppConfig where
   mempty        = ArbAppConfig mempty
-  a `mappend` b = ArbAppConfig $ ((<>) `on` unArbAppConfig) a b
+#if !MIN_VERSION_base(4,11,0)
+  mappend = (<>)
+#endif
 
 monoidLeftIdentity :: ArbAppConfig -> Bool
 monoidLeftIdentity a = mempty <> a == a
