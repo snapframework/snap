@@ -8,9 +8,11 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Configurator.Types as C
 import Data.Function
 import qualified Data.Map as Map
-import Data.Monoid
 #if !MIN_VERSION_base(4,11,0)
-import Data.Semigroup hiding ((<>))
+import Data.Semigroup
+import Data.Monoid hiding ((<>))
+#else
+import Data.Monoid
 #endif
 import Data.Typeable
 import System.Environment
