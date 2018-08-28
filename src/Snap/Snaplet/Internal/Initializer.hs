@@ -111,7 +111,7 @@ getRoutes = liftM (map fst) $ iGets _handlers
 ------------------------------------------------------------------------------
 -- | Return the current environment string.  This will be the
 -- environment given to 'runSnaplet' or from the command line when
--- using 'serveSnaplet'.  Usefully for changing behavior during
+-- using 'serveSnaplet'.  Useful for changing behavior during
 -- development and testing.
 getEnvironment :: Initializer b v String
 getEnvironment = iGets _environment
