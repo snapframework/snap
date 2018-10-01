@@ -289,8 +289,11 @@ iRenderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 iRenderHelper c t = do
-    (Running _ hs _ _) <- get
-    withTop' id $ I.renderTemplate hs t >>= maybe pass serve
+    r <- get
+    case r of
+      (Running _ hs _ _) ->
+        withTop' id $ I.renderTemplate hs t >>= maybe pass serve
+      _ -> error "pattern match failed in iRenderHelper"
   where
     serve (b, mime) = do
         modifyResponse $ setContentType $ fromMaybe mime c
@@ -303,8 +306,11 @@ cRenderHelper :: Maybe MIMEType
               -> ByteString
               -> Handler b (Heist b) ()
 cRenderHelper c t = do
-    (Running _ hs _ _) <- get
-    withTop' id $ maybe pass serve $ C.renderTemplate hs t
+    r <- get
+    case r of
+      (Running _ hs _ _) ->
+        withTop' id $ maybe pass serve $ C.renderTemplate hs t
+      _ -> error "pattern match failed in cRenderHelper"
   where
     serve (b, mime) = do
         modifyResponse $ setContentType $ fromMaybe mime c
