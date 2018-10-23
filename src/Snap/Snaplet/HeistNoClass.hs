@@ -289,7 +289,9 @@ iRenderHelper :: Maybe MIMEType
              -> ByteString
              -> Handler b (Heist b) ()
 iRenderHelper c t = do
-    (Running _ hs _ _) <- get
+    x <- get
+    -- TODO Incomplete pattern matching!
+    let (Running _ hs _ _) = x
     withTop' id $ I.renderTemplate hs t >>= maybe pass serve
   where
     serve (b, mime) = do
@@ -303,7 +305,9 @@ cRenderHelper :: Maybe MIMEType
               -> ByteString
               -> Handler b (Heist b) ()
 cRenderHelper c t = do
-    (Running _ hs _ _) <- get
+    x <- get
+    -- TODO Incomplete pattern matching!
+    let (Running _ hs _ _) = x
     withTop' id $ maybe pass serve $ C.renderTemplate hs t
   where
     serve (b, mime) = do
