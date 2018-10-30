@@ -244,6 +244,7 @@ Test-suite testsuite
     directory,
     directory-tree,
     dlist,
+    fail,
     filepath,
     hashable,
     heist,
