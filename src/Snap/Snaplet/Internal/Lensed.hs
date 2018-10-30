@@ -14,6 +14,7 @@ import           Control.Category            ((.))
 import           Control.Lens                (ALens', cloneLens, storing, (^#))
 import           Control.Monad               (MonadPlus (..), liftM)
 import           Control.Monad.Base          (MonadBase (..))
+import qualified Control.Monad.Fail          as Fail
 import           Control.Monad.Reader        (MonadReader (..))
 import           Control.Monad.State.Class   (MonadState (..))
 import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
@@ -44,6 +45,11 @@ instance (Functor m, Monad m) => Applicative (Lensed b v m) where
     Lensed mf <*> Lensed ma = Lensed $ \l v s -> do
         (f, v', s') <- mf l v s
         (\(a,v'',s'') -> (f a, v'', s'')) <$> ma l v' s'
+
+
+------------------------------------------------------------------------------
+instance Fail.MonadFail m => Fail.MonadFail (Lensed b v m) where
+    fail s = Lensed $ \_ _ _ -> Fail.fail s
 
 
 ------------------------------------------------------------------------------

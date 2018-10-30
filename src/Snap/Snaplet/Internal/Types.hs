@@ -20,6 +20,7 @@ import           Control.Applicative          (Alternative)
 import           Control.Lens                 (ALens', makeLenses, set)
 import           Control.Monad                (liftM)
 import           Control.Monad.Base           (MonadBase (..))
+import           Control.Monad.Fail           (MonadFail)
 import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local))
 import           Control.Monad.State.Class    (MonadState (get, put), gets)
 import           Control.Monad.Trans.Control  (MonadBaseControl (..))
@@ -277,6 +278,7 @@ newtype Handler b v a =
   deriving ( Monad
            , Functor
            , Applicative
+           , MonadFail
            , MonadIO
            , MonadPlus
            , Alternative
