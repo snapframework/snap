@@ -9,7 +9,7 @@ import           Data.Char
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
-import           Data.Semigroup ()
+import           Data.Monoid ()
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Heist
