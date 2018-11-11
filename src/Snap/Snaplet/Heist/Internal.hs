@@ -9,7 +9,9 @@ import           Data.Char
 import qualified Data.HashMap.Strict as Map
 import           Data.IORef
 import           Data.List
-import           Data.Monoid ()
+#if !MIN_VERSION_base(4,9,0)
+import           Data.Monoid
+#endif
 import           Data.Text (Text)
 import qualified Data.Text as T
 import           Heist
