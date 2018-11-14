@@ -12,14 +12,10 @@ import           Test.Framework                 (Test, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 import           Test.HUnit                     hiding (Test, path)
 ------------------------------------------------------------------------------
-import           Snap.Core                      (readRequestBody,
-                                                 writeLBS, writeText)
-import qualified Snap.Test                      as ST
-import           Snap.Snaplet.Test              (closeSnaplet,
-                                                 getSnaplet,
-                                                 evalHandler, evalHandler',
-                                                 runHandler, runHandler')
+import           Snap.Core                      (readRequestBody, writeLBS, writeText)
+import           Snap.Snaplet.Test              (closeSnaplet, evalHandler, evalHandler', getSnaplet, runHandler, runHandler')
 import           Snap.Snaplet.Test.Common.App   (appInit, failingAppInit)
+import qualified Snap.Test                      as ST
 
 ------------------------------------------------------------------------------
 tests :: Test
@@ -121,7 +117,7 @@ readRequestBodyHangIssue =
     assertReadRqBody =
       do let hdl = readRequestBody 5000 >>= writeLBS
          res <- race
-                (threadDelay 1000000)
+                (threadDelay 100000000)
                 (runHandler Nothing (ST.get "" Map.empty) hdl appInit)
          either (assertFailure . ("readRequestBody timeout" ++) . show)
            (either (assertFailure . show) ST.assertSuccess) res
