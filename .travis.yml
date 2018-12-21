@@ -72,6 +72,7 @@ install:
   - INSTALLED=${INSTALLED-true}
   - GHCHEAD=${GHCHEAD-false}
   - travis_retry cabal update -v
+  - cabal outdated --exit-code
   - "sed -i.bak 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config"
   - rm -fv cabal.project cabal.project.local
   - grep -Ev -- '^\s*--' ${HOME}/.cabal/config | grep -Ev '^\s*$'
