@@ -110,13 +110,13 @@ script:
 
   # build & run tests, build benchmarks
   - cabal new-build --max-backjumps 4000 -w ${HC} ${TEST} ${BENCH} all
-  - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test -w ${HC} ${TEST} ${BENCH} all; fi
+  - if [ "x$TEST" = "x--enable-tests" ]; then cabal new-test --max-backjumps 4000 -w ${HC} ${TEST} ${BENCH} all; fi
 
   # cabal check
   - (cd snap-* && cabal check)
 
   # haddock
-  - if $HADDOCK; then cabal new-haddock -w ${HC} ${TEST} ${BENCH} all; else echo "Skipping haddock generation";fi
+  - if $HADDOCK; then cabal new-haddock --max-backjumps 4000 -w ${HC} ${TEST} ${BENCH} all; else echo "Skipping haddock generation";fi
 
   # Build without installed constraints for packages in global-db
   - if $UNCONSTRAINED; then rm -f cabal.project.local; echo cabal new-build -w ${HC} --disable-tests --disable-benchmarks all; else echo "Not building without installed constraints"; fi
