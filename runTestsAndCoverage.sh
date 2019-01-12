@@ -2,30 +2,31 @@
 
 set -e
 
-# All directory variables relative to project root
-DIR=dist-newstyle/hpc
-
-SUITE=./dist-newstyle/build/snap-1.0.0.0/build/testsuite/testsuite
-
-if [ -z "$DEBUG" ]; then
-    export DEBUG=snap-testsuite
-fi
-
-rm -f testsuite.tix
-rm -rf "$DIR"
-mkdir -p "$DIR"
-
-if [ ! -f $SUITE ]; then
-    cat <<EOF
-Testsuite executable not found, please run:
-    cabal install --enable-tests --only-dependencies
-    cabal configure --enable-tests
-    cabal build
-EOF
-    exit;
-fi
-
-$SUITE $*
+# # All directory variables relative to project root
+# DIR=dist-newstyle/hpc
+# 
+# SUITE=./dist-newstyle/build/x86_64-osx/ghc-8.2.2/snap-1.1.1.0/t/testsuite/build/testsuite/testsuite
+# 
+# if [ -z "$DEBUG" ]; then
+#     export DEBUG=snap-testsuite
+# fi
+# 
+# rm -f testsuite.tix
+# rm -rf "$DIR"
+# mkdir -p "$DIR"
+# 
+# if [ ! -f $SUITE ]; then
+#     cat <<EOF
+# Testsuite executable not found, please run:
+#     cabal install --enable-tests --only-dependencies
+#     cabal configure --enable-tests
+#     cabal new-build --enable-tests
+# EOF
+#     exit;
+# fi
+# 
+# # cabal new-run testsuite
+# $SUITE $*
 
 EXCLUDES='Main
 Snap
@@ -68,6 +69,8 @@ done
 rm -f test/snaplets/heist/templates/bad.tpl
 rm -f test/snaplets/heist/templates/good.tpl
 rm -fr test/non-cabal-appdir/snaplets/foosnaplet # TODO
+
+cp ./dist-newstyle/build/x86_64-osx/ghc-8.2.2/snap-1.1.1.0/hpc/vanilla/tix/testsuite/testsuite.tix .
 
 # TODO - actually send results to /dev/null when hpc kinks are fully removed
 hpc markup $EXCL --destdir=$DIR testsuite # >/dev/null 2>&1
