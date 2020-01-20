@@ -38,7 +38,7 @@ import           Snap.Snaplet.Internal.Initializer
 
 
 ------------------------------------------------------------------------------
--- | Remove the given file before running an IO computation. Obviously it
+-- | Remove the given file after running an IO computation. Obviously it
 -- can be used with 'Assertion'.
 withTemporaryFile :: FilePath -> IO () -> IO ()
 withTemporaryFile f = finally (removeFileMayNotExist f)
