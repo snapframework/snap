@@ -42,7 +42,8 @@ Tested-With:
   GHC == 8.0.2,
   GHC == 8.2.2,
   GHC == 8.4.4,
-  GHC == 8.6.3
+  GHC == 8.6.3,
+  GHC == 8.8.1
 
 extra-source-files:
   .ghci
@@ -113,7 +114,7 @@ Library
   build-depends:
     aeson                     >= 0.6      && < 1.5,
     attoparsec                >= 0.10     && < 0.14,
-    base                      >= 4        && < 4.13,
+    base                      >= 4        && < 4.14,
     bytestring                >= 0.9.1    && < 0.11,
     cereal                    >= 0.3      && < 0.6,
     clientsession             >= 0.8      && < 0.10,
