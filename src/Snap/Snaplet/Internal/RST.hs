@@ -8,9 +8,12 @@ module Snap.Snaplet.Internal.RST where
 
 import           Control.Applicative         (Alternative (..),
                                               Applicative (..))
-import           Control.Category            ((.))
-import           Control.Monad               (MonadPlus (..), ap)
+import           Control.Monad
 import           Control.Monad.Base          (MonadBase (..))
+#if !MIN_VERSION_base(4,11,0)
+-- Control.Monad.Fail import is redundant since GHC 8.8.1
+import qualified Control.Monad.Fail as Fail
+#endif
 import           Control.Monad.Reader        (MonadReader (..))
 import           Control.Monad.State.Class   (MonadState (..))
 import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
@@ -18,8 +21,6 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               MonadTransControl (..),
                                               defaultLiftBaseWith,
                                               defaultRestoreM)
-import           Prelude                     (Functor (..), Monad (..), seq,
-                                              ($))
 import           Snap.Core                   (MonadSnap (..))
 
 
@@ -93,8 +94,12 @@ rwsBind m f = RST go
 instance (Monad m) => Monad (RST r s m) where
     return a = RST $ \_ s -> return (a, s)
     (>>=)    = rwsBind
-    fail msg = RST $ \_ _ -> fail msg
+#if !MIN_VERSION_base(4,11,0)
+    fail msg = Fail.fail
+#endif
 
+instance MonadFail m => MonadFail (RST r s m) where
+    fail msg = RST $ \_ _ -> fail msg
 
 instance (MonadPlus m) => MonadPlus (RST r s m) where
     mzero       = RST $ \_ _ -> mzero
