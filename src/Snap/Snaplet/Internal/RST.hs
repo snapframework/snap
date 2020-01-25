@@ -92,7 +92,7 @@ instance (Monad m) => Monad (RST r s m) where
     return a = RST $ \_ s -> return (a, s)
     (>>=)    = rwsBind
 #if !MIN_VERSION_base(4,11,0)
-    fail msg = Fail.fail
+    fail = Fail.fail
 #endif
 
 instance Fail.MonadFail m => Fail.MonadFail (RST r s m) where
