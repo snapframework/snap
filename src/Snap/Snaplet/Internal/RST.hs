@@ -10,10 +10,7 @@ import           Control.Applicative         (Alternative (..),
                                               Applicative (..))
 import           Control.Monad
 import           Control.Monad.Base          (MonadBase (..))
-#if !MIN_VERSION_base(4,11,0)
--- Control.Monad.Fail import is redundant since GHC 8.8.1
 import qualified Control.Monad.Fail as Fail
-#endif
 import           Control.Monad.Reader        (MonadReader (..))
 import           Control.Monad.State.Class   (MonadState (..))
 import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
