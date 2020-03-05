@@ -91,8 +91,8 @@ rwsBind m f = RST go
 instance (Monad m) => Monad (RST r s m) where
     return a = RST $ \_ s -> return (a, s)
     (>>=)    = rwsBind
-#if !MIN_VERSION_base(4,11,0)
-    fail = Fail.fail
+#if !MIN_VERSION_base(4,13,0)
+    fail msg = RST $ \_ _ -> fail msg
 #endif
 
 instance Fail.MonadFail m => Fail.MonadFail (RST r s m) where
