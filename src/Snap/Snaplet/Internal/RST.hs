@@ -8,9 +8,9 @@ module Snap.Snaplet.Internal.RST where
 
 import           Control.Applicative         (Alternative (..),
                                               Applicative (..))
-import           Control.Category            ((.))
-import           Control.Monad               (MonadPlus (..), ap)
+import           Control.Monad
 import           Control.Monad.Base          (MonadBase (..))
+import qualified Control.Monad.Fail as Fail
 import           Control.Monad.Reader        (MonadReader (..))
 import           Control.Monad.State.Class   (MonadState (..))
 import           Control.Monad.Trans         (MonadIO (..), MonadTrans (..))
@@ -18,8 +18,6 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               MonadTransControl (..),
                                               defaultLiftBaseWith,
                                               defaultRestoreM)
-import           Prelude                     (Functor (..), Monad (..), seq,
-                                              ($))
 import           Snap.Core                   (MonadSnap (..))
 
 
@@ -93,8 +91,12 @@ rwsBind m f = RST go
 instance (Monad m) => Monad (RST r s m) where
     return a = RST $ \_ s -> return (a, s)
     (>>=)    = rwsBind
+#if !MIN_VERSION_base(4,13,0)
     fail msg = RST $ \_ _ -> fail msg
+#endif
 
+instance Fail.MonadFail m => Fail.MonadFail (RST r s m) where
+    fail msg = RST $ \_ _ -> Fail.fail msg
 
 instance (MonadPlus m) => MonadPlus (RST r s m) where
     mzero       = RST $ \_ _ -> mzero
