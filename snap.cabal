@@ -110,7 +110,7 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                     >= 0.6      && < 1.5,
+    aeson                     >= 0.6      && < 1.6,
     attoparsec                >= 0.10     && < 0.14,
     base                      >= 4        && < 4.15,
     bytestring                >= 0.9.1    && < 0.11,
