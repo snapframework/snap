@@ -108,6 +108,7 @@ jobs:
             packages:
               - '.'
             resolver: nightly-2022-11-08
+            extra-deps: ['heist', 'snap-core', 'snap-server']
           EOF
           stack config set system-ghc true --global
           stack config set resolver nightly
