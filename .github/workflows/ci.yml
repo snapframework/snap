@@ -37,7 +37,9 @@ jobs:
           - "9.4.3"
         include:
           - { os: macOS-latest,   ghc: "9.4.2", cabal: "3.8.1.0" }
-          - { os: windows-latest, ghc: "9.4.2", cabal: "3.8.1.0" }
+
+          # HsOpenSSL fails to build on Windows without openssl.
+          # - { os: windows-latest, ghc: "9.4.2", cabal: "3.8.1.0" }
 
     steps:
       - uses: actions/checkout@v3
