@@ -1,0 +1,135 @@
+# Modified from https://kodimensional.dev/github-actions
+
+name: CI
+
+on:
+  pull_request:
+    types: [synchronize, opened, reopened]
+    paths-ignore:
+      - "**.md"
+      - "*.sh"
+      - "CODEOWNERS"
+      - "CONTRIBUTORS"
+      - "LICENSE"
+      - "extra/**"
+  push:
+    branches:
+      - 'master'
+  schedule:
+    # Additionally run once per week (At 00:00 on Sunday) to maintain cache.
+    - cron: '0 0 * * 0'
+
+jobs:
+  cabal:
+    name: ${{ matrix.os }} / ghc ${{ matrix.ghc }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        cabal: ["3.8.1.0"]
+        ghc:
+          - "8.6.5"
+          - "8.8.4"
+          - "8.10.7"
+          - "9.0.2"
+          - "9.2.5"
+          - "9.4.3"
+        include:
+          - { os: macOS-latest,   ghc: "9.4.2", cabal: "3.8.1.0" }
+          - { os: windows-latest, ghc: "9.4.2", cabal: "3.8.1.0" }
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Haskell
+        uses: haskell/actions/setup@v2.0
+        id: setup-haskell-cabal
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+
+      - name: Configure
+        run: |
+          cabal configure --enable-tests --enable-benchmarks --enable-documentation --test-show-details=direct --write-ghc-environment-files=always
+
+      - name: Freeze
+        run: |
+          cabal freeze
+
+      - uses: actions/cache@v3
+        name: Cache
+        with:
+          path: |
+            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
+            dist-newstyle
+          key:          ${{ runner.os }}-${{ matrix.ghc }}-cabal-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-cabal-
+
+      - name: Install dependencies
+        run: |
+          cabal build all --only-dependencies
+
+      - name: Build
+        run: |
+          cabal build all
+
+      - name: Test
+        run: |
+          cabal test all
+
+      - name: Documentation
+        run: |
+          cabal haddock
+
+  stack:
+    name: stack / ghc ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          # GHC version must match https://www.stackage.org/nightly
+          - stack: "2.9.1"
+            ghc: "9.2.5"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: haskell/actions/setup@v2.0
+        name: Setup Haskell Stack
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          stack-version: ${{ matrix.stack }}
+
+      - name: Configure
+        run: |
+          cat <<EOF > stack.yaml
+            packages:
+              - '.'
+            resolver: nightly-2022-11-08
+          EOF
+          stack config set system-ghc true --global
+          stack config set resolver nightly
+          stack ls dependencies > ci-stack-depends
+
+      - uses: actions/cache@v3
+        name: Cache
+        with:
+          path: |
+            ~/.stack
+            stack-work
+          key:          ${{ runner.os }}-${{ matrix.ghc }}-stack-${{ hashFiles('ci-stack-depends') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-stack-
+
+      - name: Install dependencies
+        run: |
+          stack build --test --bench --no-run-tests --no-run-benchmarks --only-dependencies
+
+      - name: Build
+        run: |
+          stack build --test --bench --no-run-tests --no-run-benchmarks
+
+      - name: Test
+        run: |
+          stack test
