@@ -1,3 +1,9 @@
+## 1.1.3.1
+
+ - Update for GHC 8.10
+
+<!-- n.b. where did the rest of the change log entries go?? -->
+
 ## 1.1.1.0
 
 ### Added

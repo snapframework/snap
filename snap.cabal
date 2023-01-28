@@ -1,5 +1,6 @@
+cabal-version:  2.2
 name:           snap
-version:        1.1.2.0
+version:        1.1.3.1
 synopsis:       Top-level package for the Snap Web Framework
 description:
     This is the top-level package for the official Snap Framework libraries.
@@ -23,33 +24,31 @@ description:
     Note: since version 1.0, the \"snap\" executable program for generating
     starter projects is provided by the @snap-templates@ package.
 
-license:        BSD3
+license:        BSD-3-Clause
 license-file:   LICENSE
 author:         Ozgun Ataman, Doug Beardsley,
                 Gregory Collins, Carl Howells, Chris Smith
 maintainer:     snap@snapframework.com
 build-type:     Simple
-cabal-version:  >= 1.8.0.4
 homepage:       http://snapframework.com/
 bug-reports:    https://github.com/snapframework/snap/issues
 category:       Web, Snap
 
-Tested-With:
-  GHC == 7.4.2,
-  GHC == 7.6.3,
-  GHC == 7.8.4,
-  GHC == 7.10.3,
-  GHC == 8.0.2,
-  GHC == 8.2.2,
-  GHC == 8.4.4,
-  GHC == 8.6.3
+tested-with:
+  GHC == 8.6.5
+  GHC == 8.8.4
+  GHC == 8.10.7
+  GHC == 9.0.2
+  GHC == 9.2.5
+  GHC == 9.4.3
 
 extra-source-files:
-  .ghci
+  .ghci,
   CONTRIBUTORS,
   LICENSE,
   README.md,
   README.SNAP.md,
+  changelog.md,
   design.md,
   extra/hscolour.css,
   extra/haddock.css,
@@ -60,9 +59,9 @@ extra-source-files:
   test/db.cfg,
   test/devel.cfg,
   test/good.tpl,
-  test/snaplets/baz/devel.cfg
-  test/snaplets/baz/templates/bazconfig.tpl
-  test/snaplets/baz/templates/bazpage.tpl
+  test/snaplets/baz/devel.cfg,
+  test/snaplets/baz/templates/bazconfig.tpl,
+  test/snaplets/baz/templates/bazpage.tpl,
   test/snaplets/embedded/extra-templates/extra.tpl,
   test/snaplets/embedded/snaplets/heist/templates/embeddedpage.tpl,
   test/snaplets/foosnaplet/devel.cfg,
@@ -76,11 +75,43 @@ extra-source-files:
   test/snaplets/heist/templates/splicepage.tpl,
   test/snaplets/heist/templates/userpage.tpl
 
+common universal
+  default-language: Haskell2010
+
+  build-depends:
+    , base >= 4.5 && < 4.18
+
+  if !impl(ghc >= 8.0)
+    build-depends:
+      , semigroups >= 0.16 && < 0.19
+      , fail       >= 4.9  && < 4.10
+
+  default-extensions:
+    BangPatterns
+    CPP
+    DeriveDataTypeable
+    ExistentialQuantification
+    FlexibleContexts
+    FlexibleInstances
+    GeneralizedNewtypeDeriving
+    MultiParamTypeClasses
+    NoMonomorphismRestriction
+    OverloadedStrings
+    PackageImports
+    Rank2Types
+    RecordWildCards
+    ScopedTypeVariables
+    TemplateHaskell
+    TypeFamilies
+    TypeOperators
+    TypeSynonymInstances
+
 Library
+  import: universal
   hs-source-dirs: src
 
   exposed-modules:
-    Snap,
+    Snap
     Snap.Snaplet
     Snap.Snaplet.Heist
     Snap.Snaplet.HeistNoClass
@@ -111,63 +142,38 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                     >= 0.6      && < 1.5,
-    attoparsec                >= 0.10     && < 0.14,
-    base                      >= 4        && < 4.13,
-    bytestring                >= 0.9.1    && < 0.11,
+    aeson                     >= 0.6      && < 2.2,
+    attoparsec                >= 0.10     && < 0.15,
+    bytestring                >= 0.9.1    && < 0.12,
     cereal                    >= 0.3      && < 0.6,
     clientsession             >= 0.8      && < 0.10,
     configurator              >= 0.1      && < 0.4,
     containers                >= 0.2      && < 0.7,
     directory                 >= 1.1      && < 1.4,
     directory-tree            >= 0.10     && < 0.13,
-    dlist                     >= 0.5      && < 0.9,
+    dlist                     >= 0.5      && < 1.1,
     filepath                  >= 1.3      && < 1.5,
     -- hashable is broken from 1.2.0.0 through 1.2.0.5
     -- snap does work with hashable 1.1.*, but some have complained that
     -- the version disjunction causes problems with dependency resolution.
-    hashable                  >= 1.2.0.6  && < 1.3,
+    hashable                  >= 1.2.0.6  && < 1.5,
     heist                     >= 1.1      && < 1.2,
-    lens                      >= 3.7.6    && < 4.18,
+    lens                      >= 3.7.6    && < 5.3,
     lifted-base               >= 0.2      && < 0.3,
     map-syntax                >= 0.2      && < 0.4,
     monad-control             >= 0.3      && < 1.1,
     mtl                       >= 2.0      && < 2.3,
-    mwc-random                >= 0.8      && < 0.15,
+    mwc-random                >= 0.8      && < 0.16,
     pwstore-fast              >= 2.2      && < 2.5,
     snap-core                 >= 1.0      && < 1.1,
     snap-server               >= 1.0      && < 1.2,
     stm                       >= 2.2      && < 2.6,
-    text                      >= 0.11     && < 1.3,
-    time                      >= 1.1      && < 1.10,
+    text                      >= 0.11     && < 2.1,
+    time                      >= 1.1      && < 1.14,
     transformers              >= 0.2      && < 0.6,
     transformers-base         >= 0.4      && < 0.5,
     unordered-containers      >= 0.1.4    && < 0.3,
     xmlhtml                   >= 0.1      && < 0.3
-
-  if !impl(ghc >= 8.0)
-    build-depends: semigroups >= 0.16 && < 0.19,
-                   fail       >= 4.9      && < 4.10
-
-  extensions:
-    BangPatterns,
-    CPP,
-    DeriveDataTypeable,
-    ExistentialQuantification,
-    FlexibleContexts,
-    FlexibleInstances,
-    GeneralizedNewtypeDeriving,
-    MultiParamTypeClasses,
-    NoMonomorphismRestriction,
-    OverloadedStrings,
-    PackageImports,
-    Rank2Types,
-    RecordWildCards,
-    ScopedTypeVariables,
-    TemplateHaskell,
-    TypeFamilies,
-    TypeOperators,
-    TypeSynonymInstances
 
   if impl(ghc >= 6.12.0)
     ghc-options: -Wall -fwarn-tabs -funbox-strict-fields
@@ -177,15 +183,19 @@ Library
                  -fno-warn-orphans
 
 Test-suite testsuite
+  import: universal
   hs-source-dirs: src test/suite
   type: exitcode-stdio-1.0
   main-is: TestSuite.hs
+
+  autogen-modules:
+    Paths_snap
 
   other-modules:
     Blackbox.Tests
     Paths_snap
     SafeCWD
-    Snap,
+    Snap
     Snap.Snaplet
     Snap.Snaplet.Auth
     Snap.Snaplet.Auth.AuthManager
@@ -234,7 +244,6 @@ Test-suite testsuite
     aeson,
     async                      >= 2.0.1.5  && < 2.3,
     attoparsec,
-    base,
     bytestring,
     cereal,
     clientsession,
@@ -256,8 +265,8 @@ Test-suite testsuite
     mtl,
     mwc-random,
     pwstore-fast,
-    QuickCheck                 >= 2.4.2    && < 2.13,
-    smallcheck                 >= 1.1.1    && < 1.2,
+    QuickCheck                 >= 2.4.2    && < 2.15,
+    smallcheck                 >= 1.1.1    && < 1.3,
     snap-core,
     snap-server,
     snap,
@@ -273,30 +282,6 @@ Test-suite testsuite
     transformers-base,
     unordered-containers,
     xmlhtml
-
-  if !impl(ghc >= 8.0)
-    build-depends: fail, semigroups
-
-  extensions:
-    BangPatterns,
-    CPP,
-    DeriveDataTypeable,
-    ExistentialQuantification,
-    FlexibleContexts,
-    FlexibleInstances,
-    GeneralizedNewtypeDeriving,
-    MultiParamTypeClasses,
-    NoMonomorphismRestriction,
-    OverloadedStrings,
-    PackageImports,
-    Rank2Types,
-    RecordWildCards,
-    ScopedTypeVariables,
-    TemplateHaskell,
-    TypeFamilies,
-    TypeOperators,
-    TypeSynonymInstances
-
 
 source-repository head
   type:     git
