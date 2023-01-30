@@ -3,6 +3,7 @@ module Snap.Snaplet.Heist.Internal where
 
 import           Prelude
 import           Control.Lens
+import           Control.Monad (liftM)
 import           Control.Monad.State
 import qualified Data.ByteString as B
 import           Data.Char

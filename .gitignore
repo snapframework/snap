@@ -21,6 +21,7 @@ test/*.json
 test/dist*
 test/dist/snaplets
 test/non-cabal-appdir/snaplets/foosnaplet
+test/snaplets/heist/templates/good.tpl
 test/test-cabal-dev
 test/test-snap-exe
 .ghc.environment*

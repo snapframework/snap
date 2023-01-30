@@ -18,10 +18,10 @@ module Snap.Snaplet.Internal.Types where
 ------------------------------------------------------------------------------
 import           Control.Applicative          (Alternative)
 import           Control.Lens                 (ALens', makeLenses, set)
-import           Control.Monad                (liftM)
+import           Control.Monad                (MonadPlus, liftM)
 import           Control.Monad.Base           (MonadBase (..))
 import           Control.Monad.Fail           (MonadFail)
-import           Control.Monad.Reader         (MonadIO (..), MonadPlus, MonadReader (ask, local))
+import           Control.Monad.Reader         (MonadIO (..), MonadReader (ask, local))
 import           Control.Monad.State.Class    (MonadState (get, put), gets)
 import           Control.Monad.Trans.Control  (MonadBaseControl (..))
 import           Control.Monad.Trans.Writer   (WriterT)
