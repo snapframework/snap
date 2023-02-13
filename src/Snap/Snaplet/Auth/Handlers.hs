@@ -11,6 +11,7 @@ module Snap.Snaplet.Auth.Handlers where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Monad (join, liftM, liftM2)
 import           Control.Monad.State
 import           Control.Monad.Trans.Maybe
 import           Data.ByteString (ByteString)

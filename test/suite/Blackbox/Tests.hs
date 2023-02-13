@@ -272,38 +272,36 @@ reloadTest = testCase "internal/reload-test" $ do
 
     flip finally (remove badTplNew) $
       testWithCwd' "admin/reload" $ \cwd' b -> do
-        let cwd = S.pack cwd'
-        let response =
-               [T.concat     [ "Error reloading site!\n\nInitializer "
-                             , "threw an exception...\n"
-                             , T.pack cwd'
-                             , "/snaplets/heist"
-                             , "/templates/bad.tpl \""
-                             , T.pack cwd'
-                             , "/snaplets/heist/templates"
-                             , "/bad.tpl\" (line 2, column 1):\nunexpected "
-                             , "end of input\nexpecting \"=\", \"/\" or "
-                             , "\">\"\n\n...but before it died it generated "
-                             , "the following output:\nInitializing app @ /\n"
-                             , "Initializing heist @ /heist\n\n" ]
+        let cwd = T.pack cwd'
 
-               ,T.concat     [ "Error reloading site!\n\nInitializer "
-                             , "threw an exception...\n"
-                             , T.pack cwd'
-                             , "/snaplets/heist"
-                             , "/templates/bad.tpl \""
-                             , T.pack cwd'
-                             , "/snaplets/heist/templates"
-                             , "/bad.tpl\" (line 2, column 1):\nunexpected "
-                             , "end of input\nexpecting \"=\", \"/\" or "
-                             , "\">\"\n"
-                             , "CallStack (from HasCallStack):\n  error, called at src/Snap/Snaplet/Heist/Internal.hs:74:35 in main:Snap.Snaplet.Heist.Internal\n"
-                             , "\n...but before it died it generated "
-                             , "the following output:\nInitializing app @ /\n"
-                             , "Initializing heist @ /heist\n\n" ]
-               ]
+        let prefix = T.intercalate "\n"
+              [ "Error reloading site!"
+              , ""
+              , "Initializer threw an exception..."
+              , T.concat
+                [ cwd, "/snaplets/heist/templates/bad.tpl \""
+                , cwd, "/snaplets/heist/templates/bad.tpl\" (line 2, column 1):"
+                ]
+              , "unexpected end of input"
+              , "expecting \"=\", \"/\" or \">\""
 
-        assertBool "admin/reload" $ (T.decodeUtf8 b) `elem` response 
+              -- Building with the latest dependency versions produces the following:
+              -- "CallStack (from HasCallStack):"
+              -- "  error, called at src/Snap/Snaplet/Heist/Internal.hs:75:35 in main:Snap.Snaplet.Heist.Internal"
+              ]
+
+        let suffix = T.intercalate "\n"
+              [ "...but before it died it generated the following output:"
+              , "Initializing app @ /"
+              , "Initializing heist @ /heist"
+              , ""
+              , ""
+              ]
+
+        let response = T.decodeUtf8 b
+
+        assertEqual "admin/reload" prefix (T.take    (T.length prefix) response)
+        assertEqual "admin/reload" suffix (T.takeEnd (T.length suffix) response)
 
     copyFile goodTplOrig goodTplNew
 
