@@ -27,25 +27,23 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        cabal: ["3.8.1.0"]
         ghc:
-          - "8.6.5"
-          - "8.8.4"
-          - "8.10.7"
-          - "9.0.2"
-          - "9.2.5"
-          - "9.4.3"
+          - "8.8"
+          - "8.10"
+          - "9.0"
+          - "9.2"
+          - "9.4"
         include:
-          - { os: macOS-latest,   ghc: "9.4.2", cabal: "3.8.1.0" }
+          - { os: macOS-latest,   ghc: "9.4" }
 
           # HsOpenSSL fails to build on Windows without openssl.
-          # - { os: windows-latest, ghc: "9.4.2", cabal: "3.8.1.0" }
+          # - { os: windows-latest, ghc: "latest" }
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Setup Haskell
-        uses: haskell/actions/setup@v2.0
+        uses: haskell/actions/setup@v2
         id: setup-haskell-cabal
         with:
           ghc-version: ${{ matrix.ghc }}
@@ -64,7 +62,6 @@ jobs:
         with:
           path: |
             ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-            dist-newstyle
           key:          ${{ runner.os }}-${{ matrix.ghc }}-cabal-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-cabal-
 
@@ -81,6 +78,7 @@ jobs:
           cabal test all
 
       - name: Documentation
+        if: matrix.ghc >= '9.4'
         run: |
           cabal haddock
 
@@ -92,13 +90,13 @@ jobs:
       matrix:
         include:
           # GHC version must match https://www.stackage.org/nightly
-          - stack: "2.9.1"
-            ghc: "9.4.3"
+          - stack: "latest"
+            ghc: "9.4"
 
     steps:
       - uses: actions/checkout@v3
 
-      - uses: haskell/actions/setup@v2.0
+      - uses: haskell/actions/setup@v2
         name: Setup Haskell Stack
         with:
           ghc-version: ${{ matrix.ghc }}
@@ -110,20 +108,17 @@ jobs:
             packages:
               - '.'
             resolver: nightly-2022-11-08
-            extra-deps: ['heist-1.1.1.0', 'readable-0.3.1', 'snap-core-1.0.5.0', 'snap-server-1.1.2.0']
+            extra-deps: ['snap-server-1.1.2.1']
           EOF
           stack config set system-ghc true --global
           stack config set resolver nightly
-          stack ls dependencies > ci-stack-depends
 
       - uses: actions/cache@v3
         name: Cache
         with:
           path: |
             ~/.stack
-            stack-work
-          key:          ${{ runner.os }}-${{ matrix.ghc }}-stack-${{ hashFiles('ci-stack-depends') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-stack-
+          key: ${{ runner.os }}-${{ matrix.ghc }}-stack
 
       - name: Install dependencies
         run: |
