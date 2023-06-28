@@ -44,43 +44,45 @@ jobs:
 
       - name: Setup Haskell
         uses: haskell/actions/setup@v2
-        id: setup-haskell-cabal
+        id: setup
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: ${{ matrix.cabal }}
 
       - name: Configure
         run: |
-          cabal configure --enable-tests --enable-benchmarks --enable-documentation --test-show-details=direct --write-ghc-environment-files=always
+          cabal configure --enable-tests --enable-benchmarks --enable-documentation
+          cabal build --dry-run
 
-      - name: Freeze
-        run: |
-          cabal freeze
-
-      - uses: actions/cache@v3
-        name: Cache
+      - name: Restore cached dependencies
+        uses: actions/cache/restore@v3
+        id: cache
+        env:
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-cabal-${{ steps.setup.outputs.cabal-version }}
         with:
-          path: |
-            ${{ steps.setup-haskell-cabal.outputs.cabal-store }}
-          key:          ${{ runner.os }}-${{ matrix.ghc }}-cabal-${{ hashFiles('cabal.project.freeze') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.ghc }}-cabal-
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ env.key }}-plan-${{ hashFiles('**/plan.json') }}
+          restore-keys: ${{ env.key }}-
 
       - name: Install dependencies
-        run: |
-          cabal build all --only-dependencies
+        run: cabal build all --only-dependencies
+
+      - name: Save cached dependencies
+        uses: actions/cache/save@v3
+        if: ${{ steps.cache.outputs.cache-primary-key != steps.cache.outputs.cache-matched-key }}
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
       - name: Build
-        run: |
-          cabal build all
+        run: cabal build all
 
       - name: Test
-        run: |
-          cabal test all
+        run: cabal test all
 
       - name: Documentation
         if: matrix.ghc >= '9.4'
-        run: |
-          cabal haddock
+        run: cabal haddock
 
   stack:
     name: stack / ghc ${{ matrix.ghc }}
@@ -107,11 +109,14 @@ jobs:
           cat <<EOF > stack.yaml
             packages:
               - '.'
-            resolver: nightly-2022-11-08
-            extra-deps: ['snap-server-1.1.2.1']
+            resolver: lts-21.0
+            extra-deps:
+              - 'snap-server-1.1.2.1'
+              - 'test-framework-hunit-0.3.0.2'
+              - 'test-framework-quickcheck2-0.3.0.5'
           EOF
           stack config set system-ghc true --global
-          stack config set resolver nightly
+          stack config set resolver lts-21
 
       - uses: actions/cache@v3
         name: Cache

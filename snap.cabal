@@ -38,8 +38,8 @@ tested-with:
   GHC == 8.8.4
   GHC == 8.10.7
   GHC == 9.0.2
-  GHC == 9.2.7
-  GHC == 9.4.4
+  GHC == 9.2.8
+  GHC == 9.4.5
 
 extra-source-files:
   .ghci,
@@ -141,7 +141,7 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                     >= 0.6      && < 2.2,
+    aeson                     >= 0.6      && < 2.2.0.0,
     attoparsec                >= 0.10     && < 0.15,
     bytestring                >= 0.9.1    && < 0.12,
     cereal                    >= 0.3      && < 0.6,
