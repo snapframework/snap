@@ -33,8 +33,9 @@ jobs:
           - "9.0"
           - "9.2"
           - "9.4"
+          - "9.6"
         include:
-          - { os: macOS-latest,   ghc: "9.4" }
+          - { os: macOS-latest,   ghc: "9.6" }
 
           # HsOpenSSL fails to build on Windows without openssl.
           # - { os: windows-latest, ghc: "latest" }
@@ -93,7 +94,7 @@ jobs:
         include:
           # GHC version must match https://www.stackage.org/nightly
           - stack: "latest"
-            ghc: "9.4"
+            ghc: "9.6"
 
     steps:
       - uses: actions/checkout@v3
@@ -109,14 +110,13 @@ jobs:
           cat <<EOF > stack.yaml
             packages:
               - '.'
-            resolver: lts-21.0
+            resolver: nightly-2023-07-19
             extra-deps:
+              - 'clientsession-0.9.2.0'
               - 'snap-server-1.1.2.1'
-              - 'test-framework-hunit-0.3.0.2'
-              - 'test-framework-quickcheck2-0.3.0.5'
           EOF
           stack config set system-ghc true --global
-          stack config set resolver lts-21
+          stack config set resolver nightly
 
       - uses: actions/cache@v3
         name: Cache
