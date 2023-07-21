@@ -1,3 +1,7 @@
+## 1.1.3.2
+
+ - Update for GHC 9.0 through 9.6.2
+
 ## 1.1.3.1
 
  - Update for GHC 8.10
