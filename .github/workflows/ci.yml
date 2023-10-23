@@ -124,7 +124,7 @@ jobs:
         with:
           path: |
             ~/.stack
-          key: ${{ runner.os }}-${{ matrix.ghc }}-stack
+          key: ${{ runner.os }}-${{ steps.setup.outputs.ghc-version }}-stack
 
       - name: Install dependencies
         run: |
