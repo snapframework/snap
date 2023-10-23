@@ -1,3 +1,8 @@
+## 1.1.3.3
+
+ - Update for GHC 9.8
+ - Support aeson 2.2
+
 ## 1.1.3.2
 
  - Update for GHC 9.0 through 9.6.2
