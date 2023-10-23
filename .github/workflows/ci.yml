@@ -34,8 +34,9 @@ jobs:
           - "9.2"
           - "9.4"
           - "9.6"
+          - "9.8"
         include:
-          - { os: macOS-latest,   ghc: "9.6" }
+          - { os: macOS-latest,   ghc: "9.8" }
 
           # HsOpenSSL fails to build on Windows without openssl.
           # - { os: windows-latest, ghc: "latest" }

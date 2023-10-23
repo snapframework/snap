@@ -142,13 +142,14 @@ Library
     Snap.Snaplet.Session.SecureCookie
 
   build-depends:
-    aeson                     >= 0.6      && < 2.2.0.0,
+    aeson                     >= 0.6      && < 2.3,
     attoparsec                >= 0.10     && < 0.15,
+    attoparsec-aeson          >= 2.1.0.0  && < 3.0,
     bytestring                >= 0.9.1    && < 0.13,
     cereal                    >= 0.3      && < 0.6,
     clientsession             >= 0.8      && < 0.10,
     configurator              >= 0.1      && < 0.4,
-    containers                >= 0.2      && < 0.7,
+    containers                >= 0.2      && < 0.8,
     directory                 >= 1.1      && < 1.4,
     directory-tree            >= 0.11     && < 0.13,
     dlist                     >= 0.5      && < 1.1,
@@ -168,7 +169,7 @@ Library
     snap-core                 >= 1.0      && < 1.1,
     snap-server               >= 1.0      && < 1.2,
     stm                       >= 2.2      && < 2.6,
-    text                      >= 1.1.1.0  && < 2.1,
+    text                      >= 1.1.1.0  && < 2.2,
     time                      >= 1.1      && < 1.14,
     transformers              >= 0.2      && < 0.7,
     transformers-base         >= 0.4      && < 0.5,
@@ -244,6 +245,7 @@ Test-suite testsuite
     aeson,
     async                      >= 2.0.1.5  && < 2.3,
     attoparsec,
+    attoparsec-aeson,
     bytestring,
     cereal,
     clientsession,

@@ -15,6 +15,7 @@ import           Control.Monad (join)
 import           Control.Monad.State
 import           Control.Concurrent.STM
 import           Data.Aeson
+import           Data.Aeson.Parser (json)
 import qualified Data.Attoparsec.ByteString as Atto
 import qualified Data.ByteString.Lazy as LB
 import qualified Data.ByteString as B
