@@ -35,11 +35,10 @@ jobs:
           - "9.4"
           - "9.6"
           - "9.8"
-        include:
-          - { os: macOS-latest,   ghc: "9.8" }
-
-          # HsOpenSSL fails to build on Windows without openssl.
-          # - { os: windows-latest, ghc: "latest" }
+        # TODO: HsOpenSSL fails to build on Windows and macOS without openssl.
+        # include:
+        #  - { os: macOS-latest,   ghc: "9.8" }
+        #  - { os: windows-latest, ghc: "9.8" }
 
     steps:
       - uses: actions/checkout@v3
