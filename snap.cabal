@@ -153,7 +153,7 @@ Library
     directory                 >= 1.1      && < 1.4,
     directory-tree            >= 0.11     && < 0.13,
     dlist                     >= 0.5      && < 1.1,
-    filepath                  >= 1.3      && < 1.5,
+    filepath                  >= 1.3      && < 2,
     -- hashable is broken from 1.2.0.0 through 1.2.0.5
     -- snap does work with hashable 1.1.*, but some have complained that
     -- the version disjunction causes problems with dependency resolution.
@@ -170,7 +170,7 @@ Library
     snap-server               >= 1.0      && < 1.2,
     stm                       >= 2.2      && < 2.6,
     text                      >= 1.1.1.0  && < 2.2,
-    time                      >= 1.1      && < 1.14,
+    time                      >= 1.1      && < 2,
     transformers              >= 0.2      && < 0.7,
     transformers-base         >= 0.4      && < 0.5,
     unordered-containers      >= 0.1.4    && < 0.3,
