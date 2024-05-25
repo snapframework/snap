@@ -129,7 +129,7 @@ jobs:
         name: Cache
         with:
           path: ${{ steps.setup.outputs.stack-root }}
-          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-${{ matrix.resolver }}
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-nightly
 
       - name: Install dependencies
         run: |
