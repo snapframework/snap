@@ -35,20 +35,22 @@ jobs:
           - "9.4"
           - "9.6"
           - "9.8"
+          - "9.10"
         # TODO: HsOpenSSL fails to build on Windows and macOS without openssl.
         # include:
         #  - { os: macOS-latest,   ghc: "9.8" }
         #  - { os: windows-latest, ghc: "9.8" }
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Haskell
         uses: haskell-actions/setup@v2
         id: setup
         with:
           ghc-version: ${{ matrix.ghc }}
-          cabal-version: ${{ matrix.cabal }}
+          cabal-version: latest
+          cabal-update: true
 
       - name: Configure
         run: |
@@ -95,35 +97,39 @@ jobs:
           # GHC version must match https://www.stackage.org/nightly
           - stack: "latest"
             ghc: "9.8"
+            resolver: "nightly-2024-05-21"
+            # Note: this resolver is only a placeholder;
+            # it is overwritten later by `stack config set resolver nightly`.
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: haskell-actions/setup@v2
         name: Setup Haskell Stack
+        id: setup
         with:
           ghc-version: ${{ matrix.ghc }}
+          enable-stack: true
           stack-version: ${{ matrix.stack }}
+          cabal-update: false
+
 
       - name: Configure
         run: |
           cat <<EOF > stack.yaml
             packages:
               - '.'
-            resolver: nightly-2023-07-19
-            extra-deps:
-              - 'clientsession-0.9.2.0'
-              - 'snap-server-1.1.2.1'
+            resolver: ${{ matrix.resolver }}
           EOF
           stack config set system-ghc true --global
           stack config set resolver nightly
+        # The last step overwrites the resolver in stack.yaml.
 
       - uses: actions/cache@v4
         name: Cache
         with:
-          path: |
-            ~/.stack
-          key: ${{ runner.os }}-${{ steps.setup.outputs.ghc-version }}-stack
+          path: ${{ steps.setup.outputs.stack-root }}
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-${{ matrix.resolver }}
 
       - name: Install dependencies
         run: |
