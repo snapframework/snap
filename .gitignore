@@ -25,3 +25,5 @@ test/snaplets/heist/templates/good.tpl
 test/test-cabal-dev
 test/test-snap-exe
 .ghc.environment*
+/.stack-work/
+/stack*.yaml.lock
