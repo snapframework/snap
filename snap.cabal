@@ -159,7 +159,7 @@ Library
     -- hashable is broken from 1.2.0.0 through 1.2.0.5
     -- snap does work with hashable 1.1.*, but some have complained that
     -- the version disjunction causes problems with dependency resolution.
-    hashable                  >= 1.2.0.6  && < 1.5,
+    hashable                  >= 1.2.0.6  && < 2,
     heist                     >= 1.1      && < 1.2,
     lens                      >= 3.7.6    && < 5.4,
     lifted-base               >= 0.2      && < 0.3,
