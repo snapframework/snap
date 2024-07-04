@@ -13,6 +13,7 @@
 .hpc
 cabal-dev/
 cabal.sandbox.config
+cabal.project.local
 dist*/
 docs/templates/out
 site_key.txt
@@ -27,3 +28,6 @@ test/test-snap-exe
 .ghc.environment*
 /.stack-work/
 /stack*.yaml.lock
+/.envrc
+/.direnv
+/haddocks

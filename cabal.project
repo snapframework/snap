@@ -1,3 +1,18 @@
 packages: .
 
-optional-packages: deps/heist deps/io-streams deps/io-streams-haproxy deps/snap-core deps/snap-server deps/xmlhtml
+optional-packages:
+  deps/heist
+  deps/io-streams
+  deps/io-streams-haproxy
+  deps/snap-core
+  deps/snap-server
+  deps/xmlhtml
+
+package *
+  ghc-options: -j2 -haddock
+
+program-options
+  ghc-options: -j4 +RTS -A128m -n2m -RTS
+
+tests: True
+benchmarks: True

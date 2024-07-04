@@ -2,6 +2,8 @@
 
 set -e
 
+# NB: This script has bit rotted and will not work unless one is using GHC 8.2.2.
+
 # # All directory variables relative to project root
 # DIR=dist-newstyle/hpc
 # 
