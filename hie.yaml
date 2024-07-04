@@ -1,0 +1,59 @@
+cradle:
+  cabal:
+    # snap
+    - path: "src"
+      component: "lib:snap"
+
+    - path: "test/suite"
+      component: "snap:test:testsuite"
+
+    # heist
+    - path: "deps/heist/src"
+      component: "lib:heist"
+
+    - path: "deps/heist/test/suite"
+      component: "heist:test:testsuite"
+
+    # io-streams
+    - path: "deps/io-streams/src"
+      component: "lib:io-streams"
+
+    - path: "deps/io-streams/test"
+      component: "io-streams:test:testsuite"
+
+    # io-streams-haproxy
+    - path: "deps/io-streams-haproxy/src"
+      component: "lib:io-streams-haproxy"
+
+    - path: "deps/io-streams/test"
+      component: "io-streams-haproxy:test:testsuite"
+
+    # snap-core
+    - path: "deps/snap-core/src"
+      component: "lib:snap-core"
+
+    - path: "deps/snap-core/test"
+      component: "snap-core:test:testsuite"
+
+    # snap-server
+    - path: "deps/snap-server/src"
+      component: "lib:snap-server"
+
+    - path: "deps/snap-server/test"
+      component: "snap-server:test:testsuite"
+
+    - path: "deps/snap-server/pong"
+      component: "snap-server:exe:snap-test-pong-server"
+
+    - path: "deps/snap-server/testserver"
+      component: "snap-server:exe:snap-test-server"
+
+    - path: "deps/snap-server/benchmark"
+      component: "snap-server:benchmark:benchmark"
+
+    # xmlhtml
+    - path: "deps/xmlhtml/src"
+      component: "lib:xmlhtml"
+
+    - path: "deps/xmlhtml/test"
+      component: "xmlhtml:test:testsuite"
