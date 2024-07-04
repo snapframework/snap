@@ -35,12 +35,11 @@ bug-reports:    https://github.com/snapframework/snap/issues
 category:       Web, Snap
 
 tested-with:
-  GHC == 8.8.4
   GHC == 8.10.7
   GHC == 9.0.2
   GHC == 9.2.8
-  GHC == 9.4.5
-  GHC == 9.6.5
+  GHC == 9.4.8
+  GHC == 9.6.6
   GHC == 9.8.2
   GHC == 9.10.1
 
