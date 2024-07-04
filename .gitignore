@@ -27,3 +27,5 @@ test/test-snap-exe
 .ghc.environment*
 /.stack-work/
 /stack*.yaml.lock
+/.envrc
+/.direnv

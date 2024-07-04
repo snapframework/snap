@@ -36,6 +36,16 @@ The snap library is built using
 [Cabal](http://www.haskell.org/cabal/) and
 [Hackage](http://hackage.haskell.org/packages/hackage.html).
 
+## Building with Nix
+
+A Nix shell is provided and can be entered using `nix-shell`.
+
+If using `nix-direnv`, run the following:
+
+```sh
+echo 'use nix' > .envrc && direnv allow
+```
+
 ## Building the Haddock Documentation
 
 The haddock documentation can either be built for _snap_ using `cabal haddock snap`, or for the git
