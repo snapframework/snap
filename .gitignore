@@ -30,3 +30,4 @@ test/test-snap-exe
 /stack*.yaml.lock
 /.envrc
 /.direnv
+/haddocks
