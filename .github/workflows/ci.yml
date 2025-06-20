@@ -15,9 +15,10 @@ on:
   push:
     branches:
       - 'master'
-  schedule:
-    # Additionally run once per week (At 00:00 on Sunday) to maintain cache.
-    - cron: '0 0 * * 0'
+  # Disable scheduled runs since GitHub will disable the whole action after a while.
+  # schedule:
+  #   # Additionally run once per week (At 00:00 on Sunday) to maintain cache.
+  #   - cron: '0 0 * * 0'
 
 jobs:
   cabal:
@@ -35,6 +36,7 @@ jobs:
           - "9.6"
           - "9.8"
           - "9.10"
+          - "9.12"
         # TODO: HsOpenSSL fails to build on Windows and macOS without openssl.
         # include:
         #  - { os: macOS-latest,   ghc: "9.8" }
@@ -95,8 +97,8 @@ jobs:
         include:
           # GHC version must match https://www.stackage.org/nightly
           - stack: "latest"
-            ghc: "9.8"
-            resolver: "nightly-2024-05-21"
+            ghc: "9.10"
+            resolver: "nightly-2025-06-18"
             # Note: this resolver is only a placeholder;
             # it is overwritten later by `stack config set resolver nightly`.
 
