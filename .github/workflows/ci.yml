@@ -15,9 +15,10 @@ on:
   push:
     branches:
       - 'master'
-  schedule:
-    # Additionally run once per week (At 00:00 on Sunday) to maintain cache.
-    - cron: '0 0 * * 0'
+  # Disable scheduled runs since GitHub will disable the whole action after a while.
+  # schedule:
+  #   # Additionally run once per week (At 00:00 on Sunday) to maintain cache.
+  #   - cron: '0 0 * * 0'
 
 jobs:
   cabal:
