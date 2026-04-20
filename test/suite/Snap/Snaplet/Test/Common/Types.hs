@@ -19,7 +19,7 @@ data App = App
     , _foo      :: Snaplet FooSnaplet
     , _auth     :: Snaplet (AuthManager App)
     , _bar      :: Snaplet (BarSnaplet App)
-    , _session  :: Snaplet SessionManager
+    , _session  :: Snaplet (SessionManager App)
     , _embedded :: Snaplet EmbeddedSnaplet
     }
 

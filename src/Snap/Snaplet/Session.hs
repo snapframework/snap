@@ -18,7 +18,6 @@ module Snap.Snaplet.Session
 ------------------------------------------------------------------------------
 import           Control.Monad.State
 import           Data.Text                           (Text)
-import           Snap.Core
 ------------------------------------------------------------------------------
 import           Snap.Snaplet
 import           Snap.Snaplet.Session.Common
@@ -32,7 +31,7 @@ import qualified Snap.Snaplet.Session.SessionManager as SM
 ------------------------------------------------------------------------------
 -- | Wrap around a handler, committing any changes in the session at the end
 --
-withSession :: SnapletLens b SessionManager
+withSession :: SnapletLens b (SessionManager b)
             -> Handler b v a
             -> Handler b v a
 withSession l h = do
@@ -44,16 +43,16 @@ withSession l h = do
 ------------------------------------------------------------------------------
 -- | Commit changes to session within the current request cycle
 --
-commitSession :: Handler b SessionManager ()
+commitSession :: Handler b (SessionManager b) ()
 commitSession = do
     SessionManager b <- loadSession
-    liftSnap $ commit b
+    commit b
 
 
 ------------------------------------------------------------------------------
 -- | Set a key-value pair in the current session
 --
-setInSession :: Text -> Text -> Handler b SessionManager ()
+setInSession :: Text -> Text -> Handler b (SessionManager b) ()
 setInSession k v = do
     SessionManager r <- loadSession
     let r' = SM.insert k v r
@@ -63,7 +62,7 @@ setInSession k v = do
 ------------------------------------------------------------------------------
 -- | Get a key from the current session
 --
-getFromSession :: Text -> Handler b SessionManager (Maybe Text)
+getFromSession :: Text -> Handler b (SessionManager b) (Maybe Text)
 getFromSession k = do
     SessionManager r <- loadSession
     return $ SM.lookup k r
@@ -72,7 +71,7 @@ getFromSession k = do
 ------------------------------------------------------------------------------
 -- | Remove a key from the current session
 --
-deleteFromSession :: Text -> Handler b SessionManager ()
+deleteFromSession :: Text -> Handler b (SessionManager b) ()
 deleteFromSession k = do
     SessionManager r <- loadSession
     let r' = SM.delete k r
@@ -82,7 +81,7 @@ deleteFromSession k = do
 ------------------------------------------------------------------------------
 -- | Returns a CSRF Token unique to the current session
 --
-csrfToken :: Handler b SessionManager Text
+csrfToken :: Handler b (SessionManager b) Text
 csrfToken = do
     mgr@(SessionManager r) <- loadSession
     put mgr
@@ -92,7 +91,7 @@ csrfToken = do
 ------------------------------------------------------------------------------
 -- | Return session contents as an association list
 --
-sessionToList :: Handler b SessionManager [(Text, Text)]
+sessionToList :: Handler b (SessionManager b) [(Text, Text)]
 sessionToList = do
     SessionManager r <- loadSession
     return $ SM.toList r
@@ -101,17 +100,17 @@ sessionToList = do
 ------------------------------------------------------------------------------
 -- | Deletes the session cookie, effectively resetting the session
 --
-resetSession :: Handler b SessionManager ()
+resetSession :: Handler b (SessionManager b) ()
 resetSession = do
     SessionManager r <- loadSession
-    r' <- liftSnap $ SM.reset r
+    r' <- SM.reset r
     put $ SessionManager r'
 
 
 ------------------------------------------------------------------------------
 -- | Touch the session so the timeout gets refreshed
 --
-touchSession :: Handler b SessionManager ()
+touchSession :: Handler b (SessionManager b) ()
 touchSession = do
     SessionManager r <- loadSession
     let r' = SM.touch r
@@ -121,9 +120,9 @@ touchSession = do
 ------------------------------------------------------------------------------
 -- | Load the session into the manager
 --
-loadSession :: Handler b SessionManager SessionManager
+loadSession :: Handler b (SessionManager b) (SessionManager b)
 loadSession = do
     SessionManager r <- get
-    r' <- liftSnap $ load r
+    r' <- load r
     return $ SessionManager r'
 

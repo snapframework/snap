@@ -70,7 +70,7 @@ data AuthManager b = forall r. IAuthBackend r => AuthManager {
       backend               :: r
         -- ^ Storage back-end
 
-    , session               :: SnapletLens b SessionManager
+    , session               :: SnapletLens b (SessionManager b)
         -- ^ A lens pointer to a SessionManager
 
     , activeUser            :: Maybe AuthUser

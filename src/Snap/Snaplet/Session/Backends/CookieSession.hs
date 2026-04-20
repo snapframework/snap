@@ -3,6 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TypeApplications           #-}
 
 module Snap.Snaplet.Session.Backends.CookieSession
     ( initCookieSessionManager
@@ -18,7 +19,7 @@ import           Data.Serialize                      (Serialize)
 import qualified Data.Serialize                      as S
 import           Data.Text                           (Text)
 import           Data.Text.Encoding
-import           Snap.Core                           (Snap)
+import           Snap.Core                           (MonadSnap)
 import           Web.ClientSession
 
 #if !MIN_VERSION_base(4,8,0)
@@ -75,7 +76,7 @@ mkCookieSession rng = do
 ------------------------------------------------------------------------------
 -- | The manager data type to be stuffed into 'SessionManager'
 --
-data CookieSessionManager = CookieSessionManager {
+data CookieSessionManager b = CookieSessionManager {
       session               :: Maybe CookieSession
         -- ^ Per request cache for 'CookieSession'
     , siteKey               :: Key
@@ -95,7 +96,7 @@ data CookieSessionManager = CookieSessionManager {
 
 
 ------------------------------------------------------------------------------
-loadDefSession :: CookieSessionManager -> IO CookieSessionManager
+loadDefSession :: CookieSessionManager b -> IO (CookieSessionManager b)
 loadDefSession mgr@(CookieSessionManager ses _ _ _ _ rng) =
     case ses of
       Nothing -> do ses' <- mkCookieSession rng
@@ -115,22 +116,27 @@ modSession f (CookieSession t ses) = CookieSession t (f ses)
 -- 'Snap.Snaplet.Session'
 --
 initCookieSessionManager
-    :: FilePath             -- ^ Path to site-wide encryption key
+    :: forall b.
+       FilePath             -- ^ Path to site-wide encryption key
     -> ByteString           -- ^ Session cookie name
     -> Maybe ByteString     -- ^ Session cookie domain
     -> Maybe Int            -- ^ Session time-out (replay attack protection)
-    -> SnapletInit b SessionManager
+    -> SnapletInit b (SessionManager b)
 initCookieSessionManager fp cn dom to =
     makeSnaplet "CookieSession"
                 "A snaplet providing sessions via HTTP cookies."
                 Nothing $ liftIO $ do
         key <- getKey fp
         rng <- liftIO mkRNG
-        return $! SessionManager $ CookieSessionManager Nothing key cn dom to rng
+        return $! SessionManager @_
+          @(CookieSessionManager (Handler b (SessionManager b)
+                                  (SessionManager b))) $
+          CookieSessionManager Nothing key cn dom to rng
 
 
 ------------------------------------------------------------------------------
-instance ISessionManager CookieSessionManager where
+instance ISessionManager (CookieSessionManager (Handler b (SessionManager b)
+                                                a)) b where
 
     --------------------------------------------------------------------------
     load mgr@(CookieSessionManager r _ _ _ _ _) =
@@ -194,12 +200,12 @@ newtype Payload = Payload ByteString
 
 ------------------------------------------------------------------------------
 -- | Get the current client-side value
-getPayload :: CookieSessionManager -> Snap (Maybe Payload)
+getPayload :: MonadSnap m => CookieSessionManager b -> m (Maybe Payload)
 getPayload mgr = getSecureCookie (cookieName mgr) (siteKey mgr) (timeOut mgr)
 
 
 ------------------------------------------------------------------------------
 -- | Set the client-side value
-setPayload :: CookieSessionManager -> Payload -> Snap ()
+setPayload :: MonadSnap m => CookieSessionManager b -> Payload -> m ()
 setPayload mgr x = setSecureCookie (cookieName mgr) (cookieDomain mgr)
                                    (siteKey mgr) (timeOut mgr) x

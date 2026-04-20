@@ -335,20 +335,20 @@ setRememberToken sk rc rd rp token = setSecureCookie rc rd sk rp token
 ------------------------------------------------------------------------------
 -- | Set the current user's 'UserId' in the active session
 --
-setSessionUserId :: UserId -> Handler b SessionManager ()
+setSessionUserId :: UserId -> Handler b (SessionManager b) ()
 setSessionUserId (UserId t) = setInSession "__user_id" t
 
 
 ------------------------------------------------------------------------------
 -- | Remove 'UserId' from active session, effectively logging the user out.
-removeSessionUserId :: Handler b SessionManager ()
+removeSessionUserId :: Handler b (SessionManager b) ()
 removeSessionUserId = deleteFromSession "__user_id"
 
 
 ------------------------------------------------------------------------------
 -- | Get the current user's 'UserId' from the active session
 --
-getSessionUserId :: Handler b SessionManager (Maybe UserId)
+getSessionUserId :: Handler b (SessionManager b) (Maybe UserId)
 getSessionUserId = do
   uid <- getFromSession "__user_id"
   return $ liftM UserId uid

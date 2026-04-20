@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 
 {-| This module is meant to be used mainly by Session backend
 developers, who would naturally need access to ISessionManager class
@@ -8,10 +9,10 @@ backend functionality.-}
 module Snap.Snaplet.Session.SessionManager where
 
 -------------------------------------------------------------------------------
-import           Data.Text (Text)
-import           Prelude   hiding (lookup)
+import           Data.Text    (Text)
+import           Prelude      hiding (lookup)
 -------------------------------------------------------------------------------
-import           Snap.Core (Snap)
+import           Snap.Snaplet (Handler)
 -------------------------------------------------------------------------------
 
 
@@ -25,22 +26,22 @@ import           Snap.Core (Snap)
 -- 'initCookieSessionManager' in
 -- 'Snap.Snaplet.Session.Backends.CookieSession' for a built-in option
 -- that would get you started.
-data SessionManager = forall a. ISessionManager a => SessionManager a
+data SessionManager b = forall a. ISessionManager a b => SessionManager a
 
 
-class ISessionManager r where
+class ISessionManager r b | r -> b where
 
   -- | Load a session from given payload.
   --
   -- Will always be called before any other operation. If possible, cache and
   -- do nothing when called multiple times within the same request cycle.
-  load :: r -> Snap r
+  load :: r -> Handler b (SessionManager b) r
 
   -- | Commit session, return a possibly updated paylaod
-  commit :: r -> Snap ()
+  commit :: r -> Handler b (SessionManager b) ()
 
   -- | Reset session
-  reset :: r -> Snap r
+  reset :: r -> Handler b (SessionManager b) r
 
   -- | Touch session
   touch :: r -> r

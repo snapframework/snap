@@ -44,7 +44,7 @@ import           Snap.Snaplet.Session
 -- | Initialize a JSON file backed 'AuthManager'
 initJsonFileAuthManager :: AuthSettings
                             -- ^ Authentication settings for your app
-                        -> SnapletLens b SessionManager
+                        -> SnapletLens b (SessionManager b)
                             -- ^ Lens into a 'SessionManager' auth snaplet will
                            -- use
                         -> FilePath
